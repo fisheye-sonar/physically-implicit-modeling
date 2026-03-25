@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "physically-implicit-modeling"
+version = "0.1.0"
+description = ""
+authors = []
+packages = [{ include = "pim" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.4.3"
+matplotlib = "^3.10.8"
+pillow = "^12.1.1"
+h5py = "^3.16.0"
+tqdm = "^4.67.3"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+ruff = "^0.15.7"
+black = "^26.3.1"
+ipykernel = "^7.2.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+exclude = "notebooks/"
+
+[tool.ruff]
+line-length = 88
+exclude = ["notebooks"]
+
+[tool.ruff.lint]
+# E/W: pycodestyle, F: pyflakes — catches real bugs and import errors without style pedantry
+select = ["E", "W", "F"]
+ignore = [
+    "E501",  # line too long (black handles this)
+]
