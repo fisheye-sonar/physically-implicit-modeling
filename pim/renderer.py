@@ -73,7 +73,8 @@ def render_frame(
     disc = b**2 - C[None, :]                                     # (R, N)
 
     t = b - np.sqrt(np.maximum(disc, 0.0))                       # (R, N)
-    valid = (disc >= 0) & (t > 1e-9)
+    hit_y = dy[:, None] * t                                      # (R, N)  y of intersection
+    valid = (disc >= 0) & (t > 1e-9) & (hit_y >= cfg.y_near) & (hit_y <= cfg.y_far)
     t_masked = np.where(valid, t, np.inf)                        # (R, N)
 
     best_j = np.argmin(t_masked, axis=1)                         # (R,)
