@@ -20,8 +20,8 @@ from __future__ import annotations
 
 from typing import Literal, Optional
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Polygon
 
@@ -29,17 +29,18 @@ from pim.config import SimConfig
 from pim.sim import Scene
 
 # ── Aesthetic constants ───────────────────────────────────────────────────────
-_BG = np.array([0.04, 0.04, 0.08])   # very dark navy, normalised RGB
+_BG = np.array([0.04, 0.04, 0.08])  # very dark navy, normalised RGB
 _BG_HEX = "#0a0a14"
 _FRUSTUM_EDGE = "#2a3a5c"
 _TICK_COLOR = "#3a4a6a"
 _TEXT_COLOR = "#7080a0"
-_TRAIL_LEN = 25                      # frames of trajectory trail to show
+_TRAIL_LEN = 25  # frames of trajectory trail to show
 _TRAIL_ALPHA = 0.28
-_DEPTH_GAMMA = 0.6                   # brightness = 1 − 0.75·norm^γ  (near=1, far=0.25)
+_DEPTH_GAMMA = 0.6  # brightness = 1 − 0.75·norm^γ  (near=1, far=0.25)
 
 
 # ── Trail helpers ────────────────────────────────────────────────────────────
+
 
 def _trail_t0(positions_i: np.ndarray, t0: int, f: int, cfg: SimConfig) -> int:
     """Return adjusted trail start index, skipping across wrap discontinuities."""
@@ -55,6 +56,7 @@ def _trail_t0(positions_i: np.ndarray, t0: int, f: int, cfg: SimConfig) -> int:
 
 # ── Depth → brightness ───────────────────────────────────────────────────────
 
+
 def _brightness(depth: np.ndarray, cfg: SimConfig) -> np.ndarray:
     norm = (depth - cfg.y_near) / (cfg.y_far - cfg.y_near)
     norm = np.clip(norm, 0.0, 1.0)
@@ -63,9 +65,10 @@ def _brightness(depth: np.ndarray, cfg: SimConfig) -> np.ndarray:
 
 # ── Waterfall image ───────────────────────────────────────────────────────────
 
+
 def make_waterfall(
-    obs_depth: np.ndarray,      # (n_frames, obs_res)
-    obs_id: np.ndarray,         # (n_frames, obs_res) int
+    obs_depth: np.ndarray,  # (n_frames, obs_res)
+    obs_id: np.ndarray,  # (n_frames, obs_res) int
     obs_intensity: np.ndarray,  # (n_frames, obs_res) float in [0, 1]
     scene: Scene,
     mode: Literal["model", "human"] = "model",
@@ -83,12 +86,12 @@ def make_waterfall(
     img[:, :, 3] = 1.0
 
     if mode == "model":
-        gray = np.clip(obs_intensity, 0.0, 1.0)          # (T, R)
+        gray = np.clip(obs_intensity, 0.0, 1.0)  # (T, R)
         img[:, :, 0] = gray
         img[:, :, 1] = gray
         img[:, :, 2] = gray
     else:  # "human"
-        brt = _brightness(obs_depth, cfg)                 # (n_frames, obs_res)
+        brt = _brightness(obs_depth, cfg)  # (n_frames, obs_res)
         for obj_id, color in enumerate(scene.colors):
             mask = obs_id == obj_id
             for c in range(3):
@@ -102,6 +105,7 @@ def make_waterfall(
 
 
 # ── Animation ─────────────────────────────────────────────────────────────────
+
 
 def animate_scene(
     scene: Scene,
@@ -126,13 +130,15 @@ def animate_scene(
     n_frames = cfg.n_frames
     n_obj = scene.positions.shape[1]
 
-    waterfall = make_waterfall(obs_depth, obs_id, obs_intensity, scene, mode=waterfall_mode)
+    waterfall = make_waterfall(
+        obs_depth, obs_id, obs_intensity, scene, mode=waterfall_mode
+    )
 
     # ── Figure / axes ─────────────────────────────────────────────────────
     fig = plt.figure(figsize=(12, 5.5), facecolor=_BG_HEX)
     fig.subplots_adjust(left=0.06, right=0.97, top=0.90, bottom=0.10, wspace=0.12)
-    ax_w = fig.add_subplot(1, 2, 1)   # 2D environment
-    ax_f = fig.add_subplot(1, 2, 2)   # waterfall
+    ax_w = fig.add_subplot(1, 2, 1)  # 2D environment
+    ax_f = fig.add_subplot(1, 2, 2)  # waterfall
 
     for ax in (ax_w, ax_f):
         ax.set_facecolor(_BG_HEX)
@@ -147,23 +153,49 @@ def animate_scene(
     ax_w.set_aspect("equal")
     ax_w.set_xlabel("x", color=_TEXT_COLOR, fontsize=10)
     ax_w.set_ylabel("depth  y", color=_TEXT_COLOR, fontsize=10)
-    ax_w.set_title("2D environment  (latent state)", color=_TEXT_COLOR, fontsize=11, pad=8)
+    ax_w.set_title(
+        "2D environment  (latent state)", color=_TEXT_COLOR, fontsize=11, pad=8
+    )
 
     # frustum outline
-    corners = np.array([
-        [-cfg.x_near, cfg.y_near],
-        [ cfg.x_near, cfg.y_near],
-        [ cfg.x_far,  cfg.y_far],
-        [-cfg.x_far,  cfg.y_far],
-    ])
-    ax_w.add_patch(
-        Polygon(corners, closed=True, fill=False,
-                edgecolor=_FRUSTUM_EDGE, linewidth=1.8, zorder=1)
+    corners = np.array(
+        [
+            [-cfg.x_near, cfg.y_near],
+            [cfg.x_near, cfg.y_near],
+            [cfg.x_far, cfg.y_far],
+            [-cfg.x_far, cfg.y_far],
+        ]
     )
-    ax_w.text(0, cfg.y_near - 0.15, "near", ha="center", va="top",
-              color=_TEXT_COLOR, fontsize=8.5, fontfamily="monospace")
-    ax_w.text(0, cfg.y_far + 0.15, "far", ha="center", va="bottom",
-              color=_TEXT_COLOR, fontsize=8.5, fontfamily="monospace")
+    ax_w.add_patch(
+        Polygon(
+            corners,
+            closed=True,
+            fill=False,
+            edgecolor=_FRUSTUM_EDGE,
+            linewidth=1.8,
+            zorder=1,
+        )
+    )
+    ax_w.text(
+        0,
+        cfg.y_near - 0.15,
+        "near",
+        ha="center",
+        va="top",
+        color=_TEXT_COLOR,
+        fontsize=8.5,
+        fontfamily="monospace",
+    )
+    ax_w.text(
+        0,
+        cfg.y_far + 0.15,
+        "far",
+        ha="center",
+        va="bottom",
+        color=_TEXT_COLOR,
+        fontsize=8.5,
+        fontfamily="monospace",
+    )
 
     # circles + trails + reflectivity labels
     circles, trails, refl_labels = [], [], []
@@ -172,56 +204,84 @@ def animate_scene(
         refl = scene.reflectivities[i]
 
         circ = plt.Circle(
-            (x0, y0), scene.radii[i],
-            color=scene.colors[i], zorder=3,
-            linewidth=1.2, edgecolor="white", alpha=0.95,
+            (x0, y0),
+            scene.radii[i],
+            color=scene.colors[i],
+            zorder=3,
+            linewidth=1.2,
+            edgecolor="white",
+            alpha=0.95,
         )
         ax_w.add_patch(circ)
         circles.append(circ)
 
         (trail,) = ax_w.plot(
-            [x0], [y0],
-            color=scene.colors[i], linewidth=1.5,
-            alpha=_TRAIL_ALPHA, zorder=2, solid_capstyle="round",
+            [x0],
+            [y0],
+            color=scene.colors[i],
+            linewidth=1.5,
+            alpha=_TRAIL_ALPHA,
+            zorder=2,
+            solid_capstyle="round",
         )
         trails.append(trail)
 
         # reflectivity label centered inside the circle
         lbl = ax_w.text(
-            x0, y0, f"{refl:.2f}",
-            ha="center", va="center",
-            color="white", fontsize=7, fontfamily="monospace",
-            fontweight="bold", zorder=4,
+            x0,
+            y0,
+            f"{refl:.2f}",
+            ha="center",
+            va="center",
+            color="white",
+            fontsize=7,
+            fontfamily="monospace",
+            fontweight="bold",
+            zorder=4,
         )
         refl_labels.append(lbl)
 
     frame_text = ax_w.text(
-        -cfg.x_far - mx + 0.2, cfg.y_far + my - 0.15,
+        -cfg.x_far - mx + 0.2,
+        cfg.y_far + my - 0.15,
         "frame   0",
-        color=_TEXT_COLOR, fontsize=9, fontfamily="monospace", va="top",
+        color=_TEXT_COLOR,
+        fontsize=9,
+        fontfamily="monospace",
+        va="top",
     )
 
     # ── Waterfall axes ────────────────────────────────────────────────────
-    mode_tag = "model  (intensity)" if waterfall_mode == "model" else "human  (color+depth)"
+    mode_tag = (
+        "model  (intensity)" if waterfall_mode == "model" else "human  (color+depth)"
+    )
     wf_display = np.zeros((n_frames, cfg.obs_res, 4))
     wf_display[:, :, :3] = _BG
     wf_display[:, :, 3] = 1.0
 
     wf_img = ax_f.imshow(
         wf_display,
-        aspect="auto", origin="upper", interpolation="nearest",
+        aspect="auto",
+        origin="upper",
+        interpolation="nearest",
         extent=[0, cfg.obs_res, n_frames, 0],
     )
     ax_f.set_xlabel("scan position", color=_TEXT_COLOR, fontsize=10)
     ax_f.set_ylabel("frame", color=_TEXT_COLOR, fontsize=10)
-    ax_f.set_title(f"1D observation  ({mode_tag})", color=_TEXT_COLOR, fontsize=11, pad=8)
+    ax_f.set_title(
+        f"1D observation  ({mode_tag})", color=_TEXT_COLOR, fontsize=11, pad=8
+    )
     ax_f.set_xlim(0, cfg.obs_res)
     ax_f.set_ylim(n_frames, 0)
 
     # horizontal highlight that tracks the current frame on the waterfall
     (frame_line,) = ax_f.plot(
-        [0, cfg.obs_res], [0.5, 0.5],
-        color="white", linewidth=1.4, alpha=0.45, zorder=5,
+        [0, cfg.obs_res],
+        [0.5, 0.5],
+        color="white",
+        linewidth=1.4,
+        alpha=0.45,
+        zorder=5,
     )
 
     if title:
@@ -253,6 +313,7 @@ def animate_scene(
 
 
 # ── Save helper ───────────────────────────────────────────────────────────────
+
 
 def save_animation(
     anim: FuncAnimation,

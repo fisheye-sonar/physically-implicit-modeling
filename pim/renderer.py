@@ -23,9 +23,9 @@ def _fov_scale(cfg: SimConfig) -> float:
 
 
 def render_frame(
-    positions: np.ndarray,          # (n_objects, 2)
-    radii: np.ndarray,              # (n_objects,)
-    reflectivities: np.ndarray,     # (n_objects,)
+    positions: np.ndarray,  # (n_objects, 2)
+    radii: np.ndarray,  # (n_objects,)
+    reflectivities: np.ndarray,  # (n_objects,)
     cfg: SimConfig,
     rng: np.random.Generator | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -48,13 +48,13 @@ def render_frame(
     n = len(radii)
 
     # Ray directions: s ∈ [-1, 1] uniformly, d = (s·scale, 1) / ‖…‖
-    s = np.linspace(-1.0, 1.0, R)          # (R,)
+    s = np.linspace(-1.0, 1.0, R)  # (R,)
     scale = _fov_scale(cfg)
-    dx = s * scale                          # (R,)
+    dx = s * scale  # (R,)
     dy = np.ones(R)
     norm = np.hypot(dx, dy)
     dx /= norm
-    dy /= norm                              # unit ray directions
+    dy /= norm  # unit ray directions
 
     hit_depth = np.zeros(R)
     hit_id = np.full(R, -1, dtype=int)
@@ -63,25 +63,25 @@ def render_frame(
     if n == 0:
         return hit_depth, hit_id, obs_intensity
 
-    cx = positions[:, 0]    # (N,)
-    cy = positions[:, 1]    # (N,)
+    cx = positions[:, 0]  # (N,)
+    cy = positions[:, 1]  # (N,)
 
     # Ray–circle intersection (vectorised over R rays × N objects)
     # For unit ray d and circle centre c:  t = (d·c) − sqrt((d·c)² − (|c|² − r²))
     b = dx[:, None] * cx[None, :] + dy[:, None] * cy[None, :]  # (R, N)
-    C = cx**2 + cy**2 - radii**2                                 # (N,)
-    disc = b**2 - C[None, :]                                     # (R, N)
+    C = cx**2 + cy**2 - radii**2  # (N,)
+    disc = b**2 - C[None, :]  # (R, N)
 
-    t = b - np.sqrt(np.maximum(disc, 0.0))                       # (R, N)
-    hit_y = dy[:, None] * t                                      # (R, N)  y of intersection
+    t = b - np.sqrt(np.maximum(disc, 0.0))  # (R, N)
+    hit_y = dy[:, None] * t  # (R, N)  y of intersection
     valid = (disc >= 0) & (t > 1e-9) & (hit_y >= cfg.y_near) & (hit_y <= cfg.y_far)
-    t_masked = np.where(valid, t, np.inf)                        # (R, N)
+    t_masked = np.where(valid, t, np.inf)  # (R, N)
 
-    best_j = np.argmin(t_masked, axis=1)                         # (R,)
-    best_t = t_masked[np.arange(R), best_j]                      # (R,)
+    best_j = np.argmin(t_masked, axis=1)  # (R,)
+    best_t = t_masked[np.arange(R), best_j]  # (R,)
 
     hit_mask = best_t < np.inf
-    hit_depth[hit_mask] = dy[hit_mask] * best_t[hit_mask]        # y = t * dy_unit
+    hit_depth[hit_mask] = dy[hit_mask] * best_t[hit_mask]  # y = t * dy_unit
     hit_id[hit_mask] = best_j[hit_mask]
     obs_intensity[hit_mask] = reflectivities[best_j[hit_mask]]
 

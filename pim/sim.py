@@ -7,19 +7,20 @@ world is observed or visualised.
 
 from __future__ import annotations
 
-import numpy as np
 from dataclasses import dataclass
+
+import numpy as np
 
 from pim.config import SimConfig
 
 # ── Colour palette (up to 5 objects) ─────────────────────────────────────────
 # RGB in [0, 1].  Chosen for distinctness on a dark background.
 OBJECT_COLORS: list[tuple[float, float, float]] = [
-    (0.00, 0.83, 1.00),   # cyan
-    (1.00, 0.42, 0.42),   # coral
-    (1.00, 0.85, 0.24),   # amber
-    (0.42, 0.80, 0.47),   # green
-    (0.78, 0.48, 1.00),   # violet
+    (0.00, 0.83, 1.00),  # cyan
+    (1.00, 0.42, 0.42),  # coral
+    (1.00, 0.85, 0.24),  # amber
+    (0.42, 0.80, 0.47),  # green
+    (0.78, 0.48, 1.00),  # violet
 ]
 
 
@@ -36,15 +37,16 @@ class Scene:
     the object into frame f+1 (before trajectory noise is added).
     """
 
-    positions:      np.ndarray   # (n_frames, n_objects, 2)  —  [x, y] per object per frame
-    velocities:     np.ndarray   # (n_frames, n_objects, 2)  —  [vx, vy] per object per frame
-    radii:          np.ndarray   # (n_objects,)
-    colors:         np.ndarray   # (n_objects, 3)  —  RGB
-    reflectivities: np.ndarray   # (n_objects,)  —  scalar in [refl_min, refl_max]
-    config:         SimConfig
+    positions: np.ndarray  # (n_frames, n_objects, 2)  —  [x, y] per object per frame
+    velocities: np.ndarray  # (n_frames, n_objects, 2)  —  [vx, vy] per object per frame
+    radii: np.ndarray  # (n_objects,)
+    colors: np.ndarray  # (n_objects, 3)  —  RGB
+    reflectivities: np.ndarray  # (n_objects,)  —  scalar in [refl_min, refl_max]
+    config: SimConfig
 
 
 # ── Geometry helpers ──────────────────────────────────────────────────────────
+
 
 def frustum_half_width(y: float | np.ndarray, cfg: SimConfig) -> float | np.ndarray:
     """Half-width of the frustum at depth y (linear interpolation)."""
@@ -53,6 +55,7 @@ def frustum_half_width(y: float | np.ndarray, cfg: SimConfig) -> float | np.ndar
 
 
 # ── Visibility ───────────────────────────────────────────────────────────────
+
 
 def compute_visibility(scene: "Scene") -> np.ndarray:
     """Return a (n_frames, n_objects) bool array.
@@ -63,16 +66,16 @@ def compute_visibility(scene: "Scene") -> np.ndarray:
     near the near/far boundaries.
     """
     cfg = scene.config
-    pos = scene.positions          # (n_frames, n_objects, 2)
-    r   = scene.radii[None, :]    # (1, n_objects)
+    pos = scene.positions  # (n_frames, n_objects, 2)
+    r = scene.radii[None, :]  # (1, n_objects)
 
-    x = pos[:, :, 0]   # (F, N)
-    y = pos[:, :, 1]   # (F, N)
+    x = pos[:, :, 0]  # (F, N)
+    y = pos[:, :, 1]  # (F, N)
 
     in_y = (y + r > cfg.y_near) & (y - r < cfg.y_far)
 
     y_clamped = np.clip(y, cfg.y_near, cfg.y_far)
-    x_lim = frustum_half_width(y_clamped, cfg)   # (F, N)
+    x_lim = frustum_half_width(y_clamped, cfg)  # (F, N)
     in_x = np.abs(x) - r < x_lim
 
     return in_y & in_x
@@ -80,7 +83,10 @@ def compute_visibility(scene: "Scene") -> np.ndarray:
 
 # ── Reflectivity sampling ─────────────────────────────────────────────────────
 
-def _sample_reflectivities(rng: np.random.Generator, n: int, cfg: SimConfig) -> np.ndarray:
+
+def _sample_reflectivities(
+    rng: np.random.Generator, n: int, cfg: SimConfig
+) -> np.ndarray:
     """Sample n reflectivities from [refl_min, refl_max] with pairwise separation ≥ refl_min_sep."""
     if n <= 1 or cfg.refl_min_sep <= 0.0:
         return rng.uniform(cfg.refl_min, cfg.refl_max, n)
@@ -108,6 +114,7 @@ def _sample_reflectivities(rng: np.random.Generator, n: int, cfg: SimConfig) -> 
 
 # ── Simulator ─────────────────────────────────────────────────────────────────
 
+
 def simulate(cfg: SimConfig) -> Scene:
     """Generate a collision-free scene trajectory.
 
@@ -128,7 +135,7 @@ def simulate(cfg: SimConfig) -> Scene:
     min_sep = cfg.collision_margin * 2.0 * cfg.radius
 
     for _ in range(cfg.max_gen_attempts):
-        positions  = np.zeros((cfg.n_frames, n, 2))
+        positions = np.zeros((cfg.n_frames, n, 2))
         velocities = np.zeros((cfg.n_frames, n, 2))
         vels = np.zeros((n, 2))
 
@@ -148,7 +155,8 @@ def simulate(cfg: SimConfig) -> Scene:
         # reject if initial positions already too close
         init_collision = any(
             np.linalg.norm(positions[0, a] - positions[0, b]) < min_sep
-            for a in range(n) for b in range(a + 1, n)
+            for a in range(n)
+            for b in range(a + 1, n)
         )
         if init_collision:
             continue
@@ -157,13 +165,15 @@ def simulate(cfg: SimConfig) -> Scene:
         collision = False
         for f in range(1, cfg.n_frames):
             if cfg.direction_noise_std > 0 or cfg.speed_noise_std > 0:
-                speeds = np.hypot(vels[:, 0], vels[:, 1])          # (n,)
-                angles = np.arctan2(vels[:, 1], vels[:, 0])        # (n,)
+                speeds = np.hypot(vels[:, 0], vels[:, 1])  # (n,)
+                angles = np.arctan2(vels[:, 1], vels[:, 0])  # (n,)
                 if cfg.direction_noise_std > 0:
                     angles += rng.normal(0.0, cfg.direction_noise_std, n)
                 if cfg.speed_noise_std > 0:
-                    speeds *= np.maximum(0.0, 1.0 + rng.normal(0.0, cfg.speed_noise_std, n))
-                    speeds  = np.clip(speeds, cfg.speed_min * 0.3, cfg.speed_max * 2.0)
+                    speeds *= np.maximum(
+                        0.0, 1.0 + rng.normal(0.0, cfg.speed_noise_std, n)
+                    )
+                    speeds = np.clip(speeds, cfg.speed_min * 0.3, cfg.speed_max * 2.0)
                 vels[:, 0] = speeds * np.cos(angles)
                 vels[:, 1] = speeds * np.sin(angles)
 
@@ -204,7 +214,7 @@ def simulate(cfg: SimConfig) -> Scene:
 
                 new_pos[i] = [x, y]
 
-            positions[f]  = new_pos
+            positions[f] = new_pos
             velocities[f] = vels  # velocity after boundary handling at frame f
 
             # pairwise collision check

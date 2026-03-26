@@ -31,35 +31,36 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import numpy as np
 import h5py
+import numpy as np
 from tqdm import tqdm
 
 from pim.config import SimConfig
-from pim.sim import simulate, compute_visibility
 from pim.renderer import render_scene
-
+from pim.sim import compute_visibility, simulate
 
 # ── DatasetConfig ─────────────────────────────────────────────────────────────
+
 
 @dataclass
 class DatasetConfig:
     """Top-level configuration for one dataset generation run."""
 
-    n_samples:         int       = 100_000
-    sim:               SimConfig = field(default_factory=SimConfig)
-    base_seed:         int       = 0
+    n_samples: int = 100_000
+    sim: SimConfig = field(default_factory=SimConfig)
+    base_seed: int = 0
     # parallelism — set n_workers=0 to run single-process (useful for debugging)
-    n_workers:         int       = 4
+    n_workers: int = 4
     # how many samples to accumulate in RAM before flushing to HDF5
-    write_batch:       int       = 512
+    write_batch: int = 512
     # chunk size along the sample axis inside HDF5 (affects random-access speed)
-    hdf5_chunk:        int       = 64
-    compression:       str       = "gzip"
-    compression_level: int       = 4
+    hdf5_chunk: int = 64
+    compression: str = "gzip"
+    compression_level: int = 4
 
 
 # ── Worker (module-level so multiprocessing can pickle it) ────────────────────
+
 
 def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
     """Generate one sample.  Runs in worker processes.
@@ -81,69 +82,93 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
                 raise
 
     obs_depth, obs_id, obs_intensity = render_scene(scene)
-    vis = compute_visibility(scene)    # (n_frames, n)
+    vis = compute_visibility(scene)  # (n_frames, n)
     n = scene.positions.shape[1]
 
-    pos_out  = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
-    vel_out  = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
-    col_out  = np.zeros((max_obj, 3),               dtype=np.float32)
-    refl_out = np.zeros((max_obj,),                 dtype=np.float32)
-    vis_out  = np.zeros((cfg.n_frames, max_obj),    dtype=bool)
+    pos_out = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
+    vel_out = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
+    col_out = np.zeros((max_obj, 3), dtype=np.float32)
+    refl_out = np.zeros((max_obj,), dtype=np.float32)
+    vis_out = np.zeros((cfg.n_frames, max_obj), dtype=bool)
 
-    pos_out[:, :n]  = scene.positions.astype(np.float32)
-    vel_out[:, :n]  = scene.velocities.astype(np.float32)
-    col_out[:n]     = scene.colors.astype(np.float32)
-    refl_out[:n]    = scene.reflectivities.astype(np.float32)
-    vis_out[:, :n]  = vis
+    pos_out[:, :n] = scene.positions.astype(np.float32)
+    vel_out[:, :n] = scene.velocities.astype(np.float32)
+    col_out[:n] = scene.colors.astype(np.float32)
+    refl_out[:n] = scene.reflectivities.astype(np.float32)
+    vis_out[:, :n] = vis
 
     return {
-        "obs_intensity":  obs_intensity.astype(np.float32),
-        "obs_depth":      obs_depth.astype(np.float32),
-        "obs_id":         obs_id.astype(np.int8),
-        "is_visible":     vis_out,
-        "positions":      pos_out,
-        "velocities":     vel_out,
-        "colors":         col_out,
+        "obs_intensity": obs_intensity.astype(np.float32),
+        "obs_depth": obs_depth.astype(np.float32),
+        "obs_id": obs_id.astype(np.int8),
+        "is_visible": vis_out,
+        "positions": pos_out,
+        "velocities": vel_out,
+        "colors": col_out,
         "reflectivities": refl_out,
-        "n_objects":      np.uint8(n),
-        "seed":           np.int64(cfg.seed),
+        "n_objects": np.uint8(n),
+        "seed": np.int64(cfg.seed),
     }
 
 
 # ── HDF5 helpers ──────────────────────────────────────────────────────────────
+
 
 def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
     N, F, R = dcfg.n_samples, dcfg.sim.n_frames, dcfg.sim.obs_res
     C = dcfg.hdf5_chunk
     kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
 
-    hf.create_dataset("obs_intensity",  (N, F, R),           dtype="float32", chunks=(C, F, R),          **kw)
-    hf.create_dataset("obs_depth",      (N, F, R),           dtype="float32", chunks=(C, F, R),          **kw)
-    hf.create_dataset("obs_id",         (N, F, R),           dtype="int8",    chunks=(C, F, R),          **kw)
-    hf.create_dataset("is_visible",     (N, F, max_obj),     dtype="bool",    chunks=(C, F, max_obj),    **kw)
-    hf.create_dataset("positions",      (N, F, max_obj, 2),  dtype="float32", chunks=(C, F, max_obj, 2), **kw)
-    hf.create_dataset("velocities",     (N, F, max_obj, 2),  dtype="float32", chunks=(C, F, max_obj, 2), **kw)
-    hf.create_dataset("colors",         (N, max_obj, 3),     dtype="float32", chunks=(C, max_obj, 3),    **kw)
-    hf.create_dataset("reflectivities", (N, max_obj),        dtype="float32", chunks=(C, max_obj),       **kw)
-    hf.create_dataset("n_objects",      (N,),                dtype="uint8",   chunks=(min(C * F, N),),   **kw)
-    hf.create_dataset("seeds",          (N,),                dtype="int64",   chunks=(min(C * F, N),),   **kw)
+    hf.create_dataset(
+        "obs_intensity", (N, F, R), dtype="float32", chunks=(C, F, R), **kw
+    )
+    hf.create_dataset("obs_depth", (N, F, R), dtype="float32", chunks=(C, F, R), **kw)
+    hf.create_dataset("obs_id", (N, F, R), dtype="int8", chunks=(C, F, R), **kw)
+    hf.create_dataset(
+        "is_visible", (N, F, max_obj), dtype="bool", chunks=(C, F, max_obj), **kw
+    )
+    hf.create_dataset(
+        "positions",
+        (N, F, max_obj, 2),
+        dtype="float32",
+        chunks=(C, F, max_obj, 2),
+        **kw,
+    )
+    hf.create_dataset(
+        "velocities",
+        (N, F, max_obj, 2),
+        dtype="float32",
+        chunks=(C, F, max_obj, 2),
+        **kw,
+    )
+    hf.create_dataset(
+        "colors", (N, max_obj, 3), dtype="float32", chunks=(C, max_obj, 3), **kw
+    )
+    hf.create_dataset(
+        "reflectivities", (N, max_obj), dtype="float32", chunks=(C, max_obj), **kw
+    )
+    hf.create_dataset("n_objects", (N,), dtype="uint8", chunks=(min(C * F, N),), **kw)
+    hf.create_dataset("seeds", (N,), dtype="int64", chunks=(min(C * F, N),), **kw)
 
 
 def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
     end = start + len(batch)
-    hf["obs_intensity"] [start:end] = np.stack([s["obs_intensity"]  for s in batch])
-    hf["obs_depth"]     [start:end] = np.stack([s["obs_depth"]      for s in batch])
-    hf["obs_id"]        [start:end] = np.stack([s["obs_id"]         for s in batch])
-    hf["is_visible"]    [start:end] = np.stack([s["is_visible"]     for s in batch])
-    hf["positions"]     [start:end] = np.stack([s["positions"]      for s in batch])
-    hf["velocities"]    [start:end] = np.stack([s["velocities"]     for s in batch])
-    hf["colors"]        [start:end] = np.stack([s["colors"]         for s in batch])
+    hf["obs_intensity"][start:end] = np.stack([s["obs_intensity"] for s in batch])
+    hf["obs_depth"][start:end] = np.stack([s["obs_depth"] for s in batch])
+    hf["obs_id"][start:end] = np.stack([s["obs_id"] for s in batch])
+    hf["is_visible"][start:end] = np.stack([s["is_visible"] for s in batch])
+    hf["positions"][start:end] = np.stack([s["positions"] for s in batch])
+    hf["velocities"][start:end] = np.stack([s["velocities"] for s in batch])
+    hf["colors"][start:end] = np.stack([s["colors"] for s in batch])
     hf["reflectivities"][start:end] = np.stack([s["reflectivities"] for s in batch])
-    hf["n_objects"]     [start:end] = np.array([s["n_objects"]      for s in batch], dtype=np.uint8)
-    hf["seeds"]         [start:end] = np.array([s["seed"]           for s in batch], dtype=np.int64)
+    hf["n_objects"][start:end] = np.array(
+        [s["n_objects"] for s in batch], dtype=np.uint8
+    )
+    hf["seeds"][start:end] = np.array([s["seed"] for s in batch], dtype=np.int64)
 
 
 # ── Main entry point ──────────────────────────────────────────────────────────
+
 
 def generate_dataset(dcfg: DatasetConfig, output_dir: str | Path) -> None:
     """Generate a dataset and write it into ``output_dir``.
@@ -169,12 +194,10 @@ def generate_dataset(dcfg: DatasetConfig, output_dir: str | Path) -> None:
         output_dir.mkdir(parents=True)
 
     output_path = output_dir / "dataset.h5"
-    json_path   = output_dir / "dataset.json"
+    json_path = output_dir / "dataset.json"
 
     max_obj = (
-        dcfg.sim.n_objects
-        if dcfg.sim.n_objects is not None
-        else dcfg.sim.n_objects_max
+        dcfg.sim.n_objects if dcfg.sim.n_objects is not None else dcfg.sim.n_objects_max
     )
 
     # ── Config JSON ───────────────────────────────────────────────────────
@@ -182,16 +205,16 @@ def generate_dataset(dcfg: DatasetConfig, output_dir: str | Path) -> None:
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "dataset": dataclasses.asdict(dcfg),
         "schema": {
-            "obs_intensity":  f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — intensity in [0,1]; 0=background",
-            "obs_depth":      f"float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
-            "obs_id":         f"int8     (N, n_frames, obs_res)  — object index, -1=miss",
-            "is_visible":     f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
-            "positions":      f"float32  (N, n_frames, max_objects={max_obj}, 2)  — (x, y)",
-            "velocities":     f"float32  (N, n_frames, max_objects, 2)  — (vx, vy)",
-            "colors":         f"float32  (N, max_objects, 3)  — RGB, zero-padded",
+            "obs_intensity": f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — intensity in [0,1]; 0=background",
+            "obs_depth": "float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
+            "obs_id": "int8     (N, n_frames, obs_res)  — object index, -1=miss",
+            "is_visible": f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
+            "positions": f"float32  (N, n_frames, max_objects={max_obj}, 2)  — (x, y)",
+            "velocities": "float32  (N, n_frames, max_objects, 2)  — (vx, vy)",
+            "colors": "float32  (N, max_objects, 3)  — RGB, zero-padded",
             "reflectivities": f"float32  (N, max_objects={max_obj})  — per-object reflectivity, zero-padded",
-            "n_objects":      "uint8    (N,)  — true object count per sample",
-            "seeds":          "int64    (N,)  — RNG seed per sample",
+            "n_objects": "uint8    (N,)  — true object count per sample",
+            "seeds": "int64    (N,)  — RNG seed per sample",
         },
     }
     config_json = json.dumps(meta, indent=2)
@@ -199,7 +222,7 @@ def generate_dataset(dcfg: DatasetConfig, output_dir: str | Path) -> None:
 
     # ── Worker args: one per sample, each with its own seed ──────────────
     seeds = dcfg.base_seed + np.arange(dcfg.n_samples, dtype=np.int64)
-    args  = [(int(s), dcfg.sim, max_obj) for s in seeds]
+    args = [(int(s), dcfg.sim, max_obj) for s in seeds]
 
     chunksize = max(1, dcfg.write_batch // max(1, dcfg.n_workers))
 

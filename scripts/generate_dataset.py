@@ -18,32 +18,61 @@ from pim.dataset import DatasetConfig, generate_dataset
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Generate a pim dataset")
-    p.add_argument("output_dir", help="Output directory (created if absent; must be empty if it exists)")
+    p.add_argument(
+        "output_dir",
+        help="Output directory (created if absent; must be empty if it exists)",
+    )
 
     # dataset scale
-    p.add_argument("--n-samples",   type=int, default=100_000)
-    p.add_argument("--seed",        type=int, default=0,   help="Base RNG seed")
-    p.add_argument("--n-workers",   type=int, default=4,   help="Worker processes (0 = single-process)")
+    p.add_argument("--n-samples", type=int, default=100_000)
+    p.add_argument("--seed", type=int, default=0, help="Base RNG seed")
+    p.add_argument(
+        "--n-workers", type=int, default=4, help="Worker processes (0 = single-process)"
+    )
 
     # simulation
-    p.add_argument("--n-objects",   type=int, default=3)
-    p.add_argument("--frames",      type=int, default=100)
-    p.add_argument("--obs-res",     type=int, default=128)
-    p.add_argument("--boundary",        choices=["bounce", "open", "wrap"], default="bounce")
-    p.add_argument("--direction-noise", type=float, default=0.0,
-                   help="Velocity angle noise per step (radians); 0=straight, ~0.05=gentle curves")
-    p.add_argument("--speed-noise",     type=float, default=0.0,
-                   help="Fractional speed noise per step; 0=constant, ~0.05=varying")
-    p.add_argument("--position-noise",  type=float, default=0.0,
-                   help="Position diffusion std per step (world units); Brownian jitter on top of drift")
-    p.add_argument("--obs-noise-std", type=float, default=0.04,
-                   help="Observation noise std (intensity units); 0 = no noise")
+    p.add_argument("--n-objects", type=int, default=3)
+    p.add_argument("--frames", type=int, default=100)
+    p.add_argument("--obs-res", type=int, default=128)
+    p.add_argument("--boundary", choices=["bounce", "open", "wrap"], default="bounce")
+    p.add_argument(
+        "--direction-noise",
+        type=float,
+        default=0.0,
+        help="Velocity angle noise per step (radians); 0=straight, ~0.05=gentle curves",
+    )
+    p.add_argument(
+        "--speed-noise",
+        type=float,
+        default=0.0,
+        help="Fractional speed noise per step; 0=constant, ~0.05=varying",
+    )
+    p.add_argument(
+        "--position-noise",
+        type=float,
+        default=0.0,
+        help="Position diffusion std per step (world units); Brownian jitter on top of drift",
+    )
+    p.add_argument(
+        "--obs-noise-std",
+        type=float,
+        default=0.04,
+        help="Observation noise std (intensity units); 0 = no noise",
+    )
 
     # storage
-    p.add_argument("--compression-level", type=int, default=4,
-                   help="gzip compression level 0–9 (default 4)")
-    p.add_argument("--write-batch", type=int, default=512,
-                   help="Samples buffered in RAM before each HDF5 flush")
+    p.add_argument(
+        "--compression-level",
+        type=int,
+        default=4,
+        help="gzip compression level 0–9 (default 4)",
+    )
+    p.add_argument(
+        "--write-batch",
+        type=int,
+        default=512,
+        help="Samples buffered in RAM before each HDF5 flush",
+    )
     return p.parse_args()
 
 
