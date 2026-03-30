@@ -72,10 +72,26 @@ def render_frame(
     C = cx**2 + cy**2 - radii**2  # (N,)
     disc = b**2 - C[None, :]  # (R, N)
 
-    t = b - np.sqrt(np.maximum(disc, 0.0))  # (R, N)
-    hit_y = dy[:, None] * t  # (R, N)  y of intersection
-    valid = (disc >= 0) & (t > 1e-9) & (hit_y >= cfg.y_near) & (hit_y <= cfg.y_far)
-    t_masked = np.where(valid, t, np.inf)  # (R, N)
+    sqrt_disc = np.sqrt(np.maximum(disc, 0.0))  # (R, N)
+    t_front = b - sqrt_disc  # (R, N)  near intersection along ray
+    t_back = b + sqrt_disc  # (R, N)  far intersection along ray
+    hit_y_front = dy[:, None] * t_front  # (R, N)
+    hit_y_back = dy[:, None] * t_back  # (R, N)
+
+    # Normal case: front surface of disk is within frustum
+    valid_front = (
+        (disc >= 0)
+        & (t_front > 1e-9)
+        & (hit_y_front >= cfg.y_near)
+        & (hit_y_front <= cfg.y_far)
+    )
+    # Clamp case: disk straddles y_near — report hit at the near-plane entry point
+    # A disk fully in front of y_near (hit_y_back < y_near) stays invisible/non-occluding
+    t_at_near = cfg.y_near / dy[:, None]  # (R, N)  t where ray crosses y_near
+    clamp_to_near = (disc >= 0) & (hit_y_front < cfg.y_near) & (hit_y_back >= cfg.y_near)
+
+    t_eff = np.where(valid_front, t_front, np.where(clamp_to_near, t_at_near, np.inf))
+    t_masked = t_eff  # (R, N)
 
     best_j = np.argmin(t_masked, axis=1)  # (R,)
     best_t = t_masked[np.arange(R), best_j]  # (R,)

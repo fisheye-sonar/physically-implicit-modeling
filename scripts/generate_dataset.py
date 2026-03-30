@@ -59,6 +59,18 @@ def parse_args() -> argparse.Namespace:
         default=0.04,
         help="Observation noise std (intensity units); 0 = no noise",
     )
+    p.add_argument(
+        "--fixed-reflectivities",
+        action="store_true",
+        default=False,
+        help="Use uniformly spaced reflectivities (deterministic IDs) instead of random",
+    )
+    p.add_argument(
+        "--always-in-frustum",
+        action="store_true",
+        default=False,
+        help="Reject trajectories where any object ever touches a frustum edge",
+    )
 
     # storage
     p.add_argument(
@@ -88,6 +100,8 @@ def main() -> None:
         speed_noise_std=args.speed_noise,
         position_noise_std=args.position_noise,
         obs_noise_std=args.obs_noise_std,
+        fixed_reflectivities=args.fixed_reflectivities,
+        always_in_frustum=args.always_in_frustum,
     )
     dcfg = DatasetConfig(
         n_samples=args.n_samples,

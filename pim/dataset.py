@@ -17,6 +17,7 @@ spawned.  The ``n_objects`` array records the true count per sample.
   positions      (N, n_frames, max_objects, 2)   float32  (x, y) per object per frame
   velocities     (N, n_frames, max_objects, 2)   float32  velocity per object per frame
   colors         (N, max_objects, 3)             float32  RGB colour, padded with zeros
+  radii          (N, max_objects)                float32  per-object radius, padded 0
   reflectivities (N, max_objects)                float32  per-object reflectivity, padded 0
   n_objects      (N,)                            uint8    actual object count per sample
   seeds          (N,)                            int64    RNG seed used for each sample
@@ -88,12 +89,14 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
     pos_out = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
     vel_out = np.zeros((cfg.n_frames, max_obj, 2), dtype=np.float32)
     col_out = np.zeros((max_obj, 3), dtype=np.float32)
+    radii_out = np.zeros((max_obj,), dtype=np.float32)
     refl_out = np.zeros((max_obj,), dtype=np.float32)
     vis_out = np.zeros((cfg.n_frames, max_obj), dtype=bool)
 
     pos_out[:, :n] = scene.positions.astype(np.float32)
     vel_out[:, :n] = scene.velocities.astype(np.float32)
     col_out[:n] = scene.colors.astype(np.float32)
+    radii_out[:n] = scene.radii.astype(np.float32)
     refl_out[:n] = scene.reflectivities.astype(np.float32)
     vis_out[:, :n] = vis
 
@@ -105,6 +108,7 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
         "positions": pos_out,
         "velocities": vel_out,
         "colors": col_out,
+        "radii": radii_out,
         "reflectivities": refl_out,
         "n_objects": np.uint8(n),
         "seed": np.int64(cfg.seed),
@@ -145,6 +149,9 @@ def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
         "colors", (N, max_obj, 3), dtype="float32", chunks=(C, max_obj, 3), **kw
     )
     hf.create_dataset(
+        "radii", (N, max_obj), dtype="float32", chunks=(C, max_obj), **kw
+    )
+    hf.create_dataset(
         "reflectivities", (N, max_obj), dtype="float32", chunks=(C, max_obj), **kw
     )
     hf.create_dataset("n_objects", (N,), dtype="uint8", chunks=(min(C * F, N),), **kw)
@@ -160,6 +167,7 @@ def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
     hf["positions"][start:end] = np.stack([s["positions"] for s in batch])
     hf["velocities"][start:end] = np.stack([s["velocities"] for s in batch])
     hf["colors"][start:end] = np.stack([s["colors"] for s in batch])
+    hf["radii"][start:end] = np.stack([s["radii"] for s in batch])
     hf["reflectivities"][start:end] = np.stack([s["reflectivities"] for s in batch])
     hf["n_objects"][start:end] = np.array(
         [s["n_objects"] for s in batch], dtype=np.uint8
@@ -212,6 +220,7 @@ def generate_dataset(dcfg: DatasetConfig, output_dir: str | Path) -> None:
             "positions": f"float32  (N, n_frames, max_objects={max_obj}, 2)  — (x, y)",
             "velocities": "float32  (N, n_frames, max_objects, 2)  — (vx, vy)",
             "colors": "float32  (N, max_objects, 3)  — RGB, zero-padded",
+            "radii": f"float32  (N, max_objects={max_obj})  — per-object radius, zero-padded",
             "reflectivities": f"float32  (N, max_objects={max_obj})  — per-object reflectivity, zero-padded",
             "n_objects": "uint8    (N,)  — true object count per sample",
             "seeds": "int64    (N,)  — RNG seed per sample",

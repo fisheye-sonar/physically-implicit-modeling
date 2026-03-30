@@ -81,6 +81,29 @@ def compute_visibility(scene: "Scene") -> np.ndarray:
     return in_y & in_x
 
 
+# ── Frustum containment ───────────────────────────────────────────────────────
+
+
+def _fully_in_frustum(positions: np.ndarray, radius: float, cfg: SimConfig) -> bool:
+    """Return True if every object circle is fully inside the frustum at every frame.
+
+    Unlike ``compute_visibility``, which tests for partial overlap, this requires
+    the entire circle to be contained: centre is at least ``radius`` away from
+    every frustum wall.
+    """
+    x = positions[:, :, 0]  # (F, n)
+    y = positions[:, :, 1]  # (F, n)
+
+    in_y = (y - radius >= cfg.y_near) & (y + radius <= cfg.y_far)
+
+    # frustum half-width at each object's depth, then subtract radius for clearance
+    y_clamped = np.clip(y, cfg.y_near, cfg.y_far)
+    x_lim = frustum_half_width(y_clamped, cfg) - radius
+    in_x = np.abs(x) <= x_lim
+
+    return bool((in_y & in_x).all())
+
+
 # ── Reflectivity sampling ─────────────────────────────────────────────────────
 
 
@@ -129,7 +152,10 @@ def simulate(cfg: SimConfig) -> Scene:
     if n is None:
         n = int(rng.integers(cfg.n_objects_min, cfg.n_objects_max + 1))
 
-    reflectivities = _sample_reflectivities(rng, n, cfg)
+    if cfg.fixed_reflectivities:
+        reflectivities = np.linspace(cfg.refl_min, cfg.refl_max, n)
+    else:
+        reflectivities = _sample_reflectivities(rng, n, cfg)
     colors = np.array(OBJECT_COLORS[:n], dtype=float)
     radii = np.full(n, cfg.radius)
     min_sep = cfg.collision_margin * 2.0 * cfg.radius
@@ -228,7 +254,10 @@ def simulate(cfg: SimConfig) -> Scene:
             if collision:
                 break
 
-        if not collision:
+        if not collision and (
+            not cfg.always_in_frustum
+            or _fully_in_frustum(positions, cfg.radius, cfg)
+        ):
             return Scene(
                 positions=positions,
                 velocities=velocities,

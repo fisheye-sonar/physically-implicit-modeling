@@ -65,12 +65,16 @@ class SimConfig:
     obs_res: int = 128
     # Each object is assigned a reflectivity drawn from Uniform(refl_min, refl_max).
     # Rays return that object's reflectivity as intensity, with no depth falloff.
-    refl_min: float = 0.2
-    refl_max: float = 0.9
+    refl_min: float = 0.4
+    refl_max: float = 0.8
     # Minimum pairwise separation between any two objects' reflectivities.
     # 0.0 = no constraint; e.g. 0.15 ensures objects are distinguishable in
     # the intensity signal.  Requires refl_min_sep * (n_objects-1) ≤ refl_max - refl_min.
     refl_min_sep: float = 0.15
+    # If True, reflectivities are uniformly spaced between refl_min and refl_max
+    # (deterministic, same for every sample).  Overrides refl_min_sep.
+    # If False (default), reflectivities are sampled randomly each scene.
+    fixed_reflectivities: bool = False
     # Additive Gaussian noise applied to the full intensity array (incl. background).
     # Set to 0 to disable noise entirely.
     obs_noise_std: float = 0.04  # std in intensity units [0, 1]
@@ -85,6 +89,10 @@ class SimConfig:
     boundary: Literal["bounce", "open", "wrap"] = "bounce"
 
     # ---- scene generation -----------------------------------------------
+    # If True, reject any trajectory where an object's circle is not fully
+    # contained inside the frustum at every frame (i.e. never touches an edge).
+    # Uses the same rejection-sampling loop as collision avoidance.
+    always_in_frustum: bool = False
     max_gen_attempts: int = 300
     # Minimum inter-object separation = collision_margin * 2 * radius.
     # Must be large enough that objects cannot fully overlap between frames.

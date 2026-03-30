@@ -31,9 +31,9 @@ from pim.sim import Scene
 # ── Aesthetic constants ───────────────────────────────────────────────────────
 _BG = np.array([0.04, 0.04, 0.08])  # very dark navy, normalised RGB
 _BG_HEX = "#0a0a14"
-_FRUSTUM_EDGE = "#2a3a5c"
-_TICK_COLOR = "#3a4a6a"
-_TEXT_COLOR = "#7080a0"
+_FRUSTUM_EDGE = "#5c677f"
+_TICK_COLOR = "#808a9d"
+_TEXT_COLOR = "#a3adc2"
 _TRAIL_LEN = 25  # frames of trajectory trail to show
 _TRAIL_ALPHA = 0.28
 _DEPTH_GAMMA = 0.6  # brightness = 1 − 0.75·norm^γ  (near=1, far=0.25)
