@@ -9,7 +9,12 @@ from matplotlib.patches import Polygon
 from pim.sim import Scene
 from pim.viz import (
     make_waterfall,
-    _BG,          # dark background array — kept for waterfall pixel fills
+    _BG,                              # dark background array — waterfall pixel fills
+    _BG_HEX as _DARK_BG_HEX,         # "#0a0a14"
+    _FRUSTUM_EDGE as _DARK_FRUSTUM_EDGE,
+    _TICK_COLOR as _DARK_TICK_COLOR,
+    _TEXT_COLOR as _DARK_TEXT_COLOR,
+    _TRAIL_ALPHA as _DARK_TRAIL_ALPHA,
     _TRAIL_LEN,
     _trail_t0,
 )
@@ -55,12 +60,14 @@ __all__ = [
 # ── Styling ───────────────────────────────────────────────────────────────────
 
 
-def style_ax(ax) -> None:
-    """Apply light-theme styling to an Axes."""
-    ax.set_facecolor(_BG_HEX)
+def style_ax(ax, dark: bool = False) -> None:
+    """Apply light or dark theme styling to an Axes."""
+    bg   = _DARK_BG_HEX  if dark else _BG_HEX
+    tick = _DARK_TICK_COLOR if dark else _TICK_COLOR
+    ax.set_facecolor(bg)
     for spine in ax.spines.values():
-        spine.set_edgecolor(_TICK_COLOR)
-    ax.tick_params(colors=_TICK_COLOR, labelsize=9)
+        spine.set_edgecolor(tick)
+    ax.tick_params(colors=tick, labelsize=9)
 
 
 # ── Waterfall comparison ──────────────────────────────────────────────────────
@@ -74,13 +81,18 @@ def plot_waterfall_pair(
     pred_rollout: np.ndarray,
     n_context: int,
     title: str = "",
+    dark: bool = False,
 ) -> plt.Figure:
     """Side-by-side actual vs predicted waterfall.
 
     Parameters
     ----------
     pred_rollout : (T - n_context, R) — autoregressive predictions
+    dark : use the dark retrofuturistic simulator aesthetic instead of light/academic
     """
+    bg   = _DARK_BG_HEX   if dark else _BG_HEX
+    tc   = _DARK_TEXT_COLOR if dark else _TEXT_COLOR
+
     T = obs_intensity.shape[0]
     wf_actual = make_waterfall(obs_depth, obs_id, obs_intensity, scene, mode="model")
 
@@ -96,20 +108,20 @@ def plot_waterfall_pair(
     wf_pred[n_context:, :, 1] = gray
     wf_pred[n_context:, :, 2] = gray
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5), facecolor=_BG_HEX)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5), facecolor=bg)
     if title:
-        fig.suptitle(title, color=_TEXT_COLOR, fontsize=12)
+        fig.suptitle(title, color=tc, fontsize=12)
     for ax, img, ttl in zip(
         axes,
         [wf_actual, wf_pred],
         ["actual", f"predicted  (warm-up={n_context} frames)"],
     ):
-        style_ax(ax)
+        style_ax(ax, dark=dark)
         ax.imshow(img, aspect="auto", origin="upper", interpolation="nearest")
         ax.axhline(n_context - 0.5, color="#fa8850", linewidth=1.2, linestyle="--")
-        ax.set_title(ttl, color=_TEXT_COLOR, fontsize=11)
-        ax.set_xlabel("scan position", color=_TEXT_COLOR, fontsize=10)
-        ax.set_ylabel("frame", color=_TEXT_COLOR, fontsize=10)
+        ax.set_title(ttl, color=tc, fontsize=11)
+        ax.set_xlabel("scan position", color=tc, fontsize=10)
+        ax.set_ylabel("frame", color=tc, fontsize=10)
     plt.tight_layout()
     return fig
 
@@ -126,54 +138,62 @@ def animate_3panel(
     n_context: int,
     interval: int = 80,
     title: str = "",
+    dark: bool = False,
 ) -> FuncAnimation:
     """3-panel animation: 2D scene | actual waterfall | predicted waterfall.
 
     Parameters
     ----------
     pred_rollout : (T - n_context, R) — autoregressive predictions
+    dark : use the dark retrofuturistic simulator aesthetic instead of light/academic
     """
+    bg      = _DARK_BG_HEX      if dark else _BG_HEX
+    fe      = _DARK_FRUSTUM_EDGE if dark else _FRUSTUM_EDGE
+    tc      = _DARK_TEXT_COLOR   if dark else _TEXT_COLOR
+    trail_a = _DARK_TRAIL_ALPHA  if dark else _TRAIL_ALPHA
+    ec      = "white"            if dark else "#cccccc"
+
     cfg   = scene.config
     T     = obs_intensity.shape[0]
     n_obj = scene.positions.shape[1]
 
-    fig = plt.figure(figsize=(18, 5.5), facecolor=_BG_HEX)
+    fig = plt.figure(figsize=(18, 5.5), facecolor=bg)
     fig.subplots_adjust(left=0.04, right=0.98, top=0.88, bottom=0.10, wspace=0.14)
     ax_w  = fig.add_subplot(1, 3, 1)
     ax_fa = fig.add_subplot(1, 3, 2)
     ax_fp = fig.add_subplot(1, 3, 3)
 
     if title:
-        fig.suptitle(title, color=_TEXT_COLOR, fontsize=11, y=0.97)
+        fig.suptitle(title, color=tc, fontsize=11, y=0.97)
 
     for ax in (ax_w, ax_fa, ax_fp):
-        style_ax(ax)
+        style_ax(ax, dark=dark)
 
     # ── 2D world panel ────────────────────────────────────────────────────
     mx, my = 0.7, 0.7
     ax_w.set_xlim(-cfg.x_far - mx, cfg.x_far + mx)
     ax_w.set_ylim(cfg.y_near - my, cfg.y_far + my)
     ax_w.set_aspect("equal")
-    ax_w.set_xlabel("x", color=_TEXT_COLOR, fontsize=10)
-    ax_w.set_ylabel("depth  y", color=_TEXT_COLOR, fontsize=10)
-    ax_w.set_title("2D scene  (ground truth)", color=_TEXT_COLOR, fontsize=11, pad=6)
+    ax_w.set_xlabel("x", color=tc, fontsize=10)
+    ax_w.set_ylabel("depth  y", color=tc, fontsize=10)
+    ax_w.set_title("2D scene  (ground truth)", color=tc, fontsize=11, pad=6)
 
     corners = np.array([
         [-cfg.x_near, cfg.y_near], [cfg.x_near, cfg.y_near],
         [cfg.x_far,   cfg.y_far],  [-cfg.x_far, cfg.y_far],
     ])
     ax_w.add_patch(Polygon(corners, closed=True, fill=False,
-                            edgecolor=_FRUSTUM_EDGE, linewidth=1.8, zorder=1))
+                            edgecolor=fe, linewidth=1.8, zorder=1))
 
     circles, trails, refl_labels = [], [], []
     for i in range(n_obj):
         x0, y0 = scene.positions[0, i]
         circ = plt.Circle((x0, y0), scene.radii[i], color=scene.colors[i],
-                           zorder=3, linewidth=1.2, edgecolor="#cccccc", alpha=0.95)
+                           zorder=3, linewidth=1.2, edgecolor=ec, alpha=0.95)
         ax_w.add_patch(circ)
         circles.append(circ)
         (trail,) = ax_w.plot([x0], [y0], color=scene.colors[i], linewidth=1.5,
-                              alpha=_TRAIL_ALPHA, zorder=2, solid_capstyle="round")
+                              alpha=trail_a, zorder=2, solid_capstyle="round")
         trails.append(trail)
         lbl = ax_w.text(x0, y0, f"{scene.reflectivities[i]:.2f}",
                         ha="center", va="center", color="white",
@@ -182,7 +202,7 @@ def animate_3panel(
 
     frame_text = ax_w.text(
         -cfg.x_far - mx + 0.2, cfg.y_far + my - 0.15, "frame   0",
-        color=_TEXT_COLOR, fontsize=9, fontfamily="monospace", va="top",
+        color=tc, fontsize=9, fontfamily="monospace", va="top",
     )
 
     # ── Waterfall panels ──────────────────────────────────────────────────
@@ -204,9 +224,9 @@ def animate_3panel(
         (ax_fa, "actual"),
         (ax_fp, f"predicted  (rollout from frame {n_context})"),
     ]:
-        ax.set_xlabel("scan position", color=_TEXT_COLOR, fontsize=10)
-        ax.set_ylabel("frame", color=_TEXT_COLOR, fontsize=10)
-        ax.set_title(ttl, color=_TEXT_COLOR, fontsize=11, pad=6)
+        ax.set_xlabel("scan position", color=tc, fontsize=10)
+        ax.set_ylabel("frame", color=tc, fontsize=10)
+        ax.set_title(ttl, color=tc, fontsize=11, pad=6)
         ax.set_xlim(0, cfg.obs_res)
         ax.set_ylim(T, 0)
         ax.axhline(n_context - 0.5, color="#fa8850", linewidth=1.0,
