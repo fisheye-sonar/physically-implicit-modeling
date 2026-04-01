@@ -67,7 +67,11 @@ Four independent layers so future implicit/explicit/hybrid models can substitute
 - `nb_viz.style_ax(ax, dark=False)`, `nb_viz.plot_color(scene_color)` (Okabe-Ito remap)
 - `nb_viz.plot_waterfall_pair(..., dark=False)`, `nb_viz.animate_3panel(..., dark=False)`
 
-**Probe notebooks** (`probe_combined.ipynb`): trains linear and MLP position probes on GRU hidden states. Key toggles: `USE_HUNGARIAN`, `USE_AUTOREGRESSIVE`, `NUM_OBS`. Uses exact lstsq for linear probe when `USE_HUNGARIAN=False`; gradient descent otherwise.
+**Probe notebooks** (`probe_combined.ipynb`): trains linear and MLP position probes on GRU hidden states. Key toggles: `USE_HUNGARIAN`, `USE_AUTOREGRESSIVE`, `NUM_OBS`. Uses exact lstsq for linear probe when `USE_HUNGARIAN=False`; gradient descent otherwise. Includes a Counterfactual Controllability section (Section 5) that decomposes GRU hidden states via the linear probe's pseudoinverse, injects target positions directly into h, and evaluates whether the steered AR rollout tracks the post-edit ground truth.
+
+**Edits dataset** (`pim/edits_dataset.py`, `scripts/generate_edits_dataset.py`): generates sequences identical to the normal dataset except one object is teleported at `edit_frame`. HDF5 extras: `edit_frame`, `edit_object`, `edit_value`. Used by the controllability section of `probe_combined.ipynb`.
+
+**Notebook editing**: always use the `NotebookEdit` tool (and `Read`/`Grep` for inspection) when working with `.ipynb` files. Do not use Bash to manipulate notebook JSON directly.
 
 ## Visual aesthetic policy
 

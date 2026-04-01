@@ -48,10 +48,11 @@ pim/
 scripts/
   demo.py
   generate_dataset.py
+  generate_edits_dataset.py
   train_gru.py
 notebooks/
   helpers/        — shared nb_utils.py and nb_viz.py
   gru_eval.ipynb  — model evaluation (next-step MSE, autoregressive rollout)
-  probe_combined.ipynb — linear + MLP position probes
+  probe_combined.ipynb — linear + MLP position probes; counterfactual controllability via hidden-state editing
 tests/
 ```
