@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from pim.config import SimConfig
-from pim.sim import Scene
+from .config import SimConfig
+from .sim import Scene
 
 
 def _fov_scale(cfg: SimConfig) -> float:

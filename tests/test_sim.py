@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
-from pim.config import SimConfig
-from pim.sim import simulate, frustum_half_width
+from pim.simulator.config import SimConfig
+from pim.simulator.sim import simulate, frustum_half_width
 
 
 def test_positions_shape():

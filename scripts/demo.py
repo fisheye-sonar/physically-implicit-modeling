@@ -16,10 +16,10 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from pim.config import SimConfig
-from pim.renderer import render_scene
-from pim.sim import simulate
-from pim.viz import animate_scene, save_animation
+from pim.simulator.config import SimConfig
+from pim.simulator.renderer import render_scene
+from pim.simulator.sim import simulate
+from pim.simulator.viz import animate_scene, save_animation
 
 
 def parse_args() -> argparse.Namespace:

@@ -29,8 +29,8 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from pim.models.dataloader import build_dataloaders
-from pim.models.gru import GRUModel, ModelConfig
+from pim.world_models.dataloader import build_dataloaders
+from pim.world_models.gru import GRUModel, ModelConfig
 
 
 # ── Configs ───────────────────────────────────────────────────────────────────

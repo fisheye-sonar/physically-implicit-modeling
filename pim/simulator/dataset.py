@@ -36,9 +36,9 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from pim.config import SimConfig
-from pim.renderer import render_scene
-from pim.sim import compute_visibility, simulate
+from .config import SimConfig
+from .renderer import render_scene
+from .sim import Scene, compute_visibility, simulate
 
 # ── DatasetConfig ─────────────────────────────────────────────────────────────
 
@@ -58,6 +58,39 @@ class DatasetConfig:
     hdf5_chunk: int = 64
     compression: str = "gzip"
     compression_level: int = 4
+
+
+# ── Sample loader ─────────────────────────────────────────────────────────────
+
+
+def load_sample(
+    path: str, idx: int
+) -> tuple[Scene, np.ndarray, np.ndarray, np.ndarray]:
+    """Reconstruct a Scene and stored observations from one HDF5 row.
+
+    Returns
+    -------
+    scene        : Scene with positions, velocities, etc. unpadded to true n_objects
+    obs_depth    : (T, R) float32
+    obs_id       : (T, R) int8
+    obs_intensity: (T, R) float32
+    """
+    with h5py.File(path, "r") as f:
+        cfg = SimConfig(**json.loads(f.attrs["config_json"])["dataset"]["sim"])
+        n = int(f["n_objects"][idx])
+        positions      = f["positions"][idx, :, :n, :].astype(np.float64)   # (T, n, 2)
+        velocities     = f["velocities"][idx, :, :n, :].astype(np.float64)  # (T, n, 2)
+        colors         = f["colors"][idx, :n, :].astype(np.float64)          # (n, 3)
+        reflectivities = f["reflectivities"][idx, :n].astype(np.float64)     # (n,)
+        radii          = f["radii"][idx, :n].astype(np.float64)              # (n,)
+        obs_depth      = f["obs_depth"][idx].astype(np.float32)             # (T, R)
+        obs_id         = f["obs_id"][idx]                                    # (T, R)
+        obs_intensity  = f["obs_intensity"][idx].astype(np.float32)         # (T, R)
+    scene = Scene(
+        positions=positions, velocities=velocities, radii=radii,
+        colors=colors, reflectivities=reflectivities, config=cfg,
+    )
+    return scene, obs_depth, obs_id, obs_intensity
 
 
 # ── Worker (module-level so multiprocessing can pickle it) ────────────────────

@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
-from pim.config import SimConfig
-from pim.renderer import render_frame, render_scene
-from pim.sim import simulate
+from pim.simulator.config import SimConfig
+from pim.simulator.renderer import render_frame, render_scene
+from pim.simulator.sim import simulate
 
 
 def _scene(seed=0, n_objects=3, obs_res=64, noise=False):

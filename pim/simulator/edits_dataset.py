@@ -33,9 +33,9 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from pim.config import SimConfig
-from pim.renderer import render_scene
-from pim.sim import Scene, compute_visibility, frustum_half_width, simulate
+from .config import SimConfig
+from .renderer import render_scene
+from .sim import Scene, compute_visibility, frustum_half_width, simulate
 
 # Operation codes
 OP_SET_POSITION: int = 0

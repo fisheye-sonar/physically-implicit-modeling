@@ -12,8 +12,8 @@ Usage
 
 import argparse
 
-from pim.config import SimConfig
-from pim.dataset import DatasetConfig, generate_dataset
+from pim.simulator.config import SimConfig
+from pim.simulator.dataset import DatasetConfig, generate_dataset
 
 
 def parse_args() -> argparse.Namespace:

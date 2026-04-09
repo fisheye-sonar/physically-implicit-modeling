@@ -16,6 +16,9 @@ Autoregressive rollout (evaluation):
     h = None
     for t in range(T):
         pred_t, h = model.step(obs_t, h)   # obs_t: (B, R)
+
+Hidden state extraction (for probes):
+    h = model.get_hidden_states(obs)   # (B, T-1, hidden_size)
 """
 
 from __future__ import annotations
@@ -38,6 +41,8 @@ class ModelConfig:
 class GRUModel(nn.Module):
     """GRU-based implicit world model.
 
+    Implements both WorldModel and HiddenStateModel protocols.
+
     Parameters
     ----------
     cfg:
@@ -57,6 +62,10 @@ class GRUModel(nn.Module):
             dropout=cfg.dropout if cfg.num_layers > 1 else 0.0,
         )
         self.decoder = nn.Linear(cfg.hidden_size, cfg.input_dim)
+
+    @property
+    def hidden_size(self) -> int:
+        return self.cfg.hidden_size
 
     def forward(
         self,
@@ -89,7 +98,7 @@ class GRUModel(nn.Module):
     def step(
         self,
         obs_t: torch.Tensor,
-        h: torch.Tensor | None = None,
+        state: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Single-step autoregressive forward (for rollout / evaluation).
 
@@ -97,7 +106,7 @@ class GRUModel(nn.Module):
         ----------
         obs_t:
             Current observation, shape ``(B, R)``.
-        h:
+        state:
             Current hidden state, shape ``(num_layers, B, hidden_size)``.
             Defaults to zeros on first call.
 
@@ -109,6 +118,24 @@ class GRUModel(nn.Module):
             Updated hidden state, shape ``(num_layers, B, hidden_size)``.
         """
         x = F.relu(self.encoder(obs_t)).unsqueeze(1)    # (B, 1, H)
-        h_out, h_next = self.gru(x, h)                  # (B, 1, H)
+        h_out, h_next = self.gru(x, state)              # (B, 1, H)
         pred_t = self.decoder(h_out.squeeze(1))         # (B, R)
         return pred_t, h_next
+
+    @torch.no_grad()
+    def get_hidden_states(self, obs: torch.Tensor) -> torch.Tensor:
+        """Extract per-timestep hidden states via teacher-forcing.
+
+        Parameters
+        ----------
+        obs : (B, T, R) observation sequence
+
+        Returns
+        -------
+        h : (B, T-1, hidden_size)
+            h[:, t, :] is the hidden state produced after seeing obs[:, t, :].
+            Aligns with positions[:, t, :] and is_visible[:, t, :].
+        """
+        x = F.relu(self.encoder(obs[:, :-1, :]))  # (B, T-1, H)
+        h, _ = self.gru(x)                         # (B, T-1, H)
+        return h

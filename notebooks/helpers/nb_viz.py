@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Polygon
 
-from pim.sim import Scene
-from pim.viz import (
+from pim.simulator.sim import Scene, OBJECT_COLORS as _SIM_COLORS
+from pim.simulator.viz import (
     make_waterfall,
     _BG,                              # dark background array — waterfall pixel fills
     _BG_HEX as _DARK_BG_HEX,         # "#0a0a14"
@@ -18,7 +18,6 @@ from pim.viz import (
     _TRAIL_LEN,
     _trail_t0,
 )
-from pim.sim import OBJECT_COLORS as _SIM_COLORS
 
 # Light-theme styling constants for notebook result figures.
 # _BG (the numpy array used to fill waterfall image pixels) intentionally stays
