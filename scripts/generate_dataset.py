@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
         "--compression-level",
         type=int,
         default=4,
-        help="gzip compression level 0–9 (default 4)",
+        help="gzip compression level 0-9 (default 4)",
     )
     p.add_argument(
         "--write-batch",
