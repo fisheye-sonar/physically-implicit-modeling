@@ -40,7 +40,7 @@ from pim.simulator.config import SimConfig
 from pim.simulator.sim import Scene, simulate
 from pim.simulator.renderer import render_frame, render_scene
 from pim.simulator.viz import animate_scene, save_animation
-from pim.simulator.dataset import DatasetConfig, generate_dataset, load_sample
+from pim.simulator.dataset import DatasetConfig, generate_dataset, load_sample, reconstruct_clean_obs
 
 __all__ = [
     "SimConfig",
@@ -53,4 +53,5 @@ __all__ = [
     "DatasetConfig",
     "generate_dataset",
     "load_sample",
+    "reconstruct_clean_obs",
 ]

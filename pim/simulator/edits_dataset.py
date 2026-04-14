@@ -276,43 +276,38 @@ def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
 # ── Main entry point ──────────────────────────────────────────────────────────
 
 
-def generate_edits_dataset(dcfg: EditDatasetConfig, output_dir: str | Path) -> None:
-    """Generate an edits dataset and write it into ``output_dir``.
+def generate_edits_dataset(dcfg: EditDatasetConfig, h5_path: str | Path) -> dict:
+    """Generate an edits dataset and write it to ``h5_path``.
 
-    Files written:
-        <output_dir>/dataset.h5    — HDF5 data
-        <output_dir>/dataset.json  — human-readable config + schema
+    The parent directory is created if it does not exist.  If the file already
+    exists the function raises ``FileExistsError``.
+
+    Parameters
+    ----------
+    dcfg    : EditDatasetConfig
+    h5_path : path to the ``.h5`` file to create
+
+    Returns
+    -------
+    meta : dict — the metadata written into the HDF5 attrs
     """
-    output_dir = Path(output_dir)
-
-    if output_dir.exists():
-        contents = list(output_dir.iterdir())
-        if contents:
-            print(
-                f"Error: output directory '{output_dir}' already exists and is not empty "
-                f"({len(contents)} item(s) found).  Halting to avoid overwriting data."
-            )
-            return
-    else:
-        output_dir.mkdir(parents=True)
-
-    output_path = output_dir / "dataset.h5"
-    json_path   = output_dir / "dataset.json"
+    h5_path = Path(h5_path)
+    h5_path.parent.mkdir(parents=True, exist_ok=True)
+    if h5_path.exists():
+        raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
     max_obj = (
         dcfg.sim.n_objects if dcfg.sim.n_objects is not None else dcfg.sim.n_objects_max
     )
-
     eff_edit_frame = (
         dcfg.edit_frame if dcfg.edit_frame >= 0 else dcfg.sim.n_frames // 2
     )
 
-    # ── Config JSON ───────────────────────────────────────────────────────
     meta = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "dataset": dataclasses.asdict(dcfg),
         "schema": {
-            "obs_intensity":  f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — post-edit intensity; 0=background",
+            "obs_intensity":  f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — post-edit noisy intensity; 0=background",
             "obs_depth":      "float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
             "obs_id":         "int8     (N, n_frames, obs_res)  — object index, -1=miss",
             "is_visible":     f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
@@ -328,19 +323,17 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, output_dir: str | Path) -> N
             "edit_op":        "uint8    (N,)  — operation code: 0 = set_position",
             "edit_value":     "float32  (N, 2)  — new (x, y) position after edit",
             "n_edits":        "uint8    (N,)  — number of edits per sample (always 1)",
+            "_clean_obs_note": "Clean (noiseless) obs can be reconstructed via reconstruct_clean_obs(obs_id, reflectivities).",
         },
     }
     config_json = json.dumps(meta, indent=2)
-    json_path.write_text(config_json)
 
-    # ── Worker args ───────────────────────────────────────────────────────
     seeds = dcfg.base_seed + np.arange(dcfg.n_samples, dtype=np.int64)
     args = [
         (int(s), dcfg.sim, max_obj, dcfg.edit_frame,
          dcfg.edit_always_in_frustum, dcfg.max_edit_attempts)
         for s in seeds
     ]
-
     chunksize = max(1, dcfg.write_batch // max(1, dcfg.n_workers))
 
     pool = mp.Pool(dcfg.n_workers) if dcfg.n_workers > 0 else None
@@ -354,7 +347,7 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, output_dir: str | Path) -> N
         written = 0
         batch: list[dict] = []
 
-        with h5py.File(output_path, "w") as hf:
+        with h5py.File(h5_path, "w") as hf:
             hf.attrs["config_json"] = config_json
             _create_datasets(hf, dcfg, max_obj)
 
@@ -363,7 +356,7 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, output_dir: str | Path) -> N
                 total=dcfg.n_samples,
                 unit="sample",
                 dynamic_ncols=True,
-                desc="generating",
+                desc=f"generating → {h5_path.name}",
             ) as pbar:
                 for sample in iterator:
                     batch.append(sample)
@@ -384,10 +377,10 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, output_dir: str | Path) -> N
             pool.join()
 
     elapsed = time.perf_counter() - t0
-    size_mb = output_path.stat().st_size / 1e6
+    size_mb = h5_path.stat().st_size / 1e6
     print(
-        f"\n{dcfg.n_samples:,} samples  |  "
+        f"  {dcfg.n_samples:,} samples  |  "
         f"{elapsed:.1f}s  ({dcfg.n_samples / elapsed:.0f} samples/s)  |  "
-        f"{size_mb:.1f} MB  →  {output_path}"
+        f"{size_mb:.1f} MB  →  {h5_path}"
     )
-    print(f"config     →  {json_path}")
+    return meta

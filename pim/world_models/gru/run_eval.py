@@ -34,6 +34,7 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from pim.eval._helpers import collect_rollout, run_autoregressive, run_teacher_forcing
+from pim.simulator.dataset import reconstruct_clean_obs
 from pim.eval.controllability import ControllabilityMetrics
 from pim.eval.plotting import (
     PALETTE,
@@ -138,6 +139,11 @@ class SetupResult:
     T_frames: int
     obs_res: int
     metrics_history: list[dict]
+    random_obs_rmse: float  # RMSE of predicting a random frame (sqrt(2·Var(obs)))
+    obs_noise_std: float  # additive observation noise std from dataset config
+    clean_obs_actual: (
+        np.ndarray
+    )  # (N, T, R) noiseless observations from obs_id + reflectivities
 
 
 @dataclass
@@ -148,9 +154,15 @@ class C1Result:
     obs_pred_tf: np.ndarray  # (N, T-1, R)  teacher-forcing predictions
     internal_states_tf: np.ndarray  # (N, T-1, H)  hidden states
     obs_rollout: np.ndarray  # (N, T-n_context, R)  AR predictions
-    horizon_mse: np.ndarray  # (T-n_context,)  MSE at each horizon step
+    horizon_mse: (
+        np.ndarray
+    )  # (T-n_context,)  MSE at each horizon step (vs noisy target)
+    clean_horizon_mse: (
+        np.ndarray
+    )  # (T-n_context,)  MSE at each horizon step (vs clean target)
     context_lengths: np.ndarray  # (T-1,)
-    mse_by_ctx: np.ndarray  # (T-1,)  1-step MSE as function of context
+    mse_by_ctx: np.ndarray  # (T-1,)  1-step MSE as function of context (vs noisy obs, AR warmup)
+    clean_mse_by_ctx: np.ndarray  # (T-1,)  1-step MSE vs clean obs (teacher-forcing)
 
 
 @dataclass
@@ -190,23 +202,30 @@ class C4Result:
     obs_at_edit: np.ndarray  # (N, R)
     obs_post_edit: np.ndarray  # (N, T-edit_frame, R)
     edit_frame: int
-    # Per-step MSE curves (averaged over N samples)
-    steered_obs_step: np.ndarray  # (ctrl_n_rollout,)
-    unsteered_obs_step: np.ndarray  # (ctrl_n_rollout,)
-    steered_pos_step: np.ndarray  # (ctrl_n_rollout,)
-    unsteered_pos_step: np.ndarray  # (ctrl_n_rollout,)
+    # Per-step MSE curves (averaged over N samples); step 0 = edit_frame prediction
+    steered_obs_step: np.ndarray  # (ctrl_n_rollout,) vs noisy target
+    unsteered_obs_step: np.ndarray  # (ctrl_n_rollout,) vs noisy target
+    clean_steered_obs_step: np.ndarray  # (ctrl_n_rollout,) vs clean target
+    clean_unsteered_obs_step: np.ndarray  # (ctrl_n_rollout,) vs clean target
+    # Position RMSE per step; step 0 = 0 for steered linear (by construction)
+    steered_pos_step: np.ndarray  # (ctrl_n_rollout,) linear
+    unsteered_pos_step: np.ndarray  # (ctrl_n_rollout,) linear
+    mlp_steered_pos_step: np.ndarray  # (ctrl_n_rollout,) MLP
+    mlp_unsteered_pos_step: np.ndarray  # (ctrl_n_rollout,) MLP
     # First few samples for waterfall + position viz
     viz_steered: np.ndarray  # (n_viz, ctrl_n_rollout, R)
     viz_unsteered: np.ndarray  # (n_viz, ctrl_n_rollout, R)
     viz_obs_pre_edit: np.ndarray  # (n_viz, edit_frame, R) — actual pre-edit obs
-    # Steered: n_rollout+1 points — index 0 = decoded h' (aligns with GT at edit_frame)
-    viz_steered_pos: np.ndarray  # (n_viz, ctrl_n_rollout+1, n_obj, 2)
-    # Unsteered: n_rollout points at frames edit_frame+1..edit_frame+n_rollout
-    viz_unsteered_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2)
-    # GT: n_rollout+1 frames starting at edit_frame (same x-axis as viz_steered_pos)
-    viz_gt_pos: np.ndarray  # (n_viz, ctrl_n_rollout+1, n_obj, 2)
+    # Decoded positions: ctrl_n_rollout frames starting at edit_frame (step 0 = h' or h)
+    viz_steered_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2) — linear
+    viz_unsteered_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2) — linear
+    viz_steered_mlp_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2) — MLP
+    viz_unsteered_mlp_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2) — MLP
+    # GT: ctrl_n_rollout frames starting at edit_frame
+    viz_gt_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2)
     # Pre-edit context: last min(8, edit_frame) frames before edit
-    viz_pre_edit_pos: np.ndarray  # (n_viz, n_ctx_show, n_obj, 2)
+    viz_pre_edit_pos: np.ndarray  # (n_viz, n_ctx_show, n_obj, 2) — GT positions
+    viz_pre_edit_h: np.ndarray  # (n_viz, n_ctx_show, H) — hidden states for decoded pos viz
     viz_colors: np.ndarray  # (n_viz, n_obj, 3)
 
 
@@ -243,6 +262,18 @@ def setup(cfg: EvalConfig) -> SetupResult:
         positions_gt = f["positions"][:, :, : cfg.n_obj, :].astype(np.float32)
         is_visible = f["is_visible"][:, :, : cfg.n_obj].astype(bool)
         n_samples = f["obs_intensity"].shape[0]
+        obs_id_all = f["obs_id"][:].astype(np.int8)  # (N, T, R)
+        reflectivities_all = f["reflectivities"][:].astype(np.float32)  # (N, max_obj)
+        _config_dict = json.loads(f.attrs["config_json"])
+        obs_noise_std = float(_config_dict["dataset"]["sim"]["obs_noise_std"])
+
+    # Reconstruct noiseless observations (zero extra storage — derived from obs_id + reflectivities)
+    clean_obs_actual = reconstruct_clean_obs(
+        obs_id_all, reflectivities_all
+    )  # (N, T, R)
+
+    # RMSE of predicting a random independent frame: E[(x_i - x_j)^2] = 2·Var(x)
+    random_obs_rmse = float(np.sqrt(2.0 * obs_actual.var()))
 
     ds = ObservationDataset(
         cfg.test_h5_path,
@@ -273,6 +304,9 @@ def setup(cfg: EvalConfig) -> SetupResult:
         T_frames=T_frames,
         obs_res=obs_res,
         metrics_history=metrics_history,
+        random_obs_rmse=random_obs_rmse,
+        obs_noise_std=obs_noise_std,
+        clean_obs_actual=clean_obs_actual,
     )
 
 
@@ -300,6 +334,7 @@ def run_criterion1(cfg: EvalConfig, s: SetupResult) -> C1Result:
         all_rollouts.append(rollout)
     obs_rollout = np.stack(all_rollouts)
     horizon_mse = eval_horizon_mse(s.obs_actual, obs_rollout, cfg.n_context)
+    clean_horizon_mse = eval_horizon_mse(s.clean_obs_actual, obs_rollout, cfg.n_context)
     print(
         f"  horizon MSE  step 1={horizon_mse[0]:.4f}  step {len(horizon_mse)}={horizon_mse[-1]:.4f}"
     )
@@ -312,14 +347,21 @@ def run_criterion1(cfg: EvalConfig, s: SetupResult) -> C1Result:
         device=cfg.device,
     )
 
+    # 1-step MSE vs clean obs — compare TF predictions against noiseless targets
+    clean_mse_by_ctx = (
+        (obs_pred_tf - s.clean_obs_actual[:, 1:, :]) ** 2
+    ).mean(axis=(0, 2))
+
     return C1Result(
         metrics=metrics,
         obs_pred_tf=obs_pred_tf,
         internal_states_tf=internal_states_tf,
         obs_rollout=obs_rollout,
         horizon_mse=horizon_mse,
+        clean_horizon_mse=clean_horizon_mse,
         context_lengths=context_lengths,
         mse_by_ctx=mse_by_ctx,
+        clean_mse_by_ctx=clean_mse_by_ctx,
     )
 
 
@@ -449,7 +491,10 @@ def run_criterion3(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C3Result:
         [rollout_coherence(decoded_pos_roll[i])[0] for i in range(cfg.coherence_n_eval)]
     )
     mlp_per_sample_scores = np.array(
-        [rollout_coherence(mlp_decoded_pos_roll[i])[0] for i in range(cfg.coherence_n_eval)]
+        [
+            rollout_coherence(mlp_decoded_pos_roll[i])[0]
+            for i in range(cfg.coherence_n_eval)
+        ]
     )
 
     # GT coherence scores over the rollout window
@@ -496,6 +541,12 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
         edits_obs = f["obs_intensity"][:].astype(np.float32)
         edits_positions = f["positions"][:].astype(np.float32)
         edits_colors = f["colors"][:].astype(np.float32)
+        edits_obs_id = f["obs_id"][:].astype(np.int8)
+        edits_reflectivities = f["reflectivities"][:].astype(np.float32)
+
+    clean_edits_obs = reconstruct_clean_obs(
+        edits_obs_id, edits_reflectivities
+    )  # (N, T, R)
 
     edit_frame = int(edit_frames[0])
     n_ctrl = min(500, edits_obs.shape[0])
@@ -503,13 +554,17 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
     print(f"  edit_frame={edit_frame}  n_ctrl={n_ctrl}")
 
     # Warm up model to edit_frame for each sample (teacher-force on actual obs)
+    n_ctx_show = min(8, edit_frame)
     h_at_edit = np.zeros((n_ctrl, s.model.hidden_size), dtype=np.float32)
+    h_pre_edit_viz = np.zeros((n_viz, n_ctx_show, s.model.hidden_size), dtype=np.float32)
     with torch.no_grad():
         for i in tqdm(range(n_ctrl), desc="  teacher-force to edit frame", leave=False):
             obs_seq = torch.from_numpy(edits_obs[i]).float().to(cfg.device)
             h = None
             for t in range(edit_frame):
                 _, h = s.model.step(obs_seq[t].unsqueeze(0), h)
+                if i < n_viz and t >= edit_frame - n_ctx_show:
+                    h_pre_edit_viz[i, t - (edit_frame - n_ctx_show)] = h[0, 0].cpu().numpy()
             h_at_edit[i] = h[0, 0].cpu().numpy()
 
     env_state_targets = edits_positions[:n_ctrl, edit_frame, : cfg.n_obj, :].reshape(
@@ -522,6 +577,7 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
     from pim.editors.probe_steering import inject_state, probe_decomposition
 
     c2.linear_extractor.to(cfg.device).eval()
+    c2.mlp_extractor.to(cfg.device).eval()
     A, b, A_pinv = probe_decomposition(c2.linear_extractor)
 
     steered_obs_all: list[np.ndarray] = []
@@ -539,70 +595,82 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
             readback = (h_edited @ A.T + b).squeeze(0)
             inj_errs.append(float(((readback - target) ** 2).mean().item()))
 
-            obs_start = (
-                torch.from_numpy(obs_at_edit[i]).float().to(cfg.device).unsqueeze(0)
-            )
-
-            # Steered rollout — h' is index 0 so decode(h') == target exactly
-            h_gru_s = h_edited.unsqueeze(0)
-            x_s = obs_start
-            s_obs = []
+            # Steered rollout
+            # Step 0: decode h' → prediction for edit_frame; by construction linear probe reads target exactly
+            h_gru_s = h_edited.unsqueeze(0)  # (1, 1, H) = (num_layers, B, H)
+            x_s = s.model.decoder(h_edited)  # (1, R) — step 0 prediction, never shown to model
+            s_obs = [x_s.squeeze(0).cpu().numpy()]
             s_h = [h_edited.squeeze(0).cpu().numpy()]  # h' at index 0
-            for _ in range(cfg.ctrl_n_rollout):
+            for _ in range(cfg.ctrl_n_rollout - 1):
                 x_s, h_gru_s = s.model.step(x_s, h_gru_s)
                 s_obs.append(x_s.squeeze(0).cpu().numpy())
-                s_h.append(h_gru_s[-1, 0].cpu().numpy())  # post-step states at indices 1..
-            steered_obs_all.append(np.stack(s_obs))
-            steered_h_all.append(np.stack(s_h))  # length n_rollout+1
+                s_h.append(h_gru_s[-1, 0].cpu().numpy())
+            steered_obs_all.append(np.stack(s_obs))   # (ctrl_n_rollout, R)
+            steered_h_all.append(np.stack(s_h))        # (ctrl_n_rollout, H)
 
             # Unsteered rollout
-            h_gru_u = h.unsqueeze(0).unsqueeze(0)
-            x_u = obs_start
-            u_obs, u_h = [], []
-            for _ in range(cfg.ctrl_n_rollout):
+            # Step 0: decode h (no injection) → prediction for edit_frame from unedited state
+            h_gru_u = h.unsqueeze(0).unsqueeze(0)  # (1, 1, H)
+            x_u = s.model.decoder(h.unsqueeze(0))   # (1, R) — step 0 prediction
+            u_obs = [x_u.squeeze(0).cpu().numpy()]
+            u_h = [h.cpu().numpy()]
+            for _ in range(cfg.ctrl_n_rollout - 1):
                 x_u, h_gru_u = s.model.step(x_u, h_gru_u)
                 u_obs.append(x_u.squeeze(0).cpu().numpy())
                 u_h.append(h_gru_u[-1, 0].cpu().numpy())
-            unsteered_obs_all.append(np.stack(u_obs))
-            unsteered_h_all.append(np.stack(u_h))
+            unsteered_obs_all.append(np.stack(u_obs))  # (ctrl_n_rollout, R)
+            unsteered_h_all.append(np.stack(u_h))       # (ctrl_n_rollout, H)
 
     steered_obs_arr = np.stack(steered_obs_all)    # (N, ctrl_n_rollout, R)
-    unsteered_obs_arr = np.stack(unsteered_obs_all)
+    unsteered_obs_arr = np.stack(unsteered_obs_all)  # (N, ctrl_n_rollout, R)
     # steered_h_arr[i, 0] = h' (injected), [i, 1..] = post-step hidden states
-    steered_h_arr = np.stack(steered_h_all)        # (N, ctrl_n_rollout+1, H)
-    unsteered_h_arr = np.stack(unsteered_h_all)    # (N, ctrl_n_rollout, H)
+    steered_h_arr = np.stack(steered_h_all)    # (N, ctrl_n_rollout, H)
+    unsteered_h_arr = np.stack(unsteered_h_all)  # (N, ctrl_n_rollout, H)
 
+    # Step 0 = edit_frame; both obs and position GT start at edit_frame
     gt_obs = obs_post_edit[:n_ctrl, : cfg.ctrl_n_rollout]  # (N, ctrl_n_rollout, R)
     steered_obs_step = ((steered_obs_arr - gt_obs) ** 2).mean(axis=(0, 2))
     unsteered_obs_step = ((unsteered_obs_arr - gt_obs) ** 2).mean(axis=(0, 2))
 
-    # Per-step position MSE: compare post-step states (indices 1..) vs GT at ef+1..ef+n_rollout
+    clean_gt_obs = clean_edits_obs[
+        :n_ctrl, edit_frame : edit_frame + cfg.ctrl_n_rollout
+    ]
+    clean_steered_obs_step = ((steered_obs_arr - clean_gt_obs) ** 2).mean(axis=(0, 2))
+    clean_unsteered_obs_step = ((unsteered_obs_arr - clean_gt_obs) ** 2).mean(
+        axis=(0, 2)
+    )
+
+    # Per-step position MSE: all states (index 0 = h'/h at edit_frame, step 0 RMSE = 0 for steered linear)
     gt_positions_mse = edits_positions[
-        :n_ctrl, edit_frame + 1 : edit_frame + cfg.ctrl_n_rollout + 1, : cfg.n_obj, :
+        :n_ctrl, edit_frame : edit_frame + cfg.ctrl_n_rollout, : cfg.n_obj, :
     ]  # (N, ctrl_n_rollout, n_obj, 2)
     with torch.no_grad():
-        # Post-step steered states: indices 1.. of steered_h_arr
-        h_s_post = torch.from_numpy(steered_h_arr[:, 1:, :]).float().to(cfg.device)
+        h_s_t = torch.from_numpy(steered_h_arr).float().to(cfg.device)    # (N, ctrl_n_rollout, H)
         h_u_t = torch.from_numpy(unsteered_h_arr).float().to(cfg.device)
-        steered_pos_post = c2.linear_extractor(h_s_post).cpu().numpy()  # (N, n_rollout, n_obj, 2)
+        steered_pos = c2.linear_extractor(h_s_t).cpu().numpy()    # (N, ctrl_n_rollout, n_obj, 2)
         unsteered_pos = c2.linear_extractor(h_u_t).cpu().numpy()
+        mlp_steered_pos = c2.mlp_extractor(h_s_t).cpu().numpy()
+        mlp_unsteered_pos = c2.mlp_extractor(h_u_t).cpu().numpy()
 
-    steered_pos_step = ((steered_pos_post - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
+    steered_pos_step = ((steered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
     unsteered_pos_step = ((unsteered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
+    mlp_steered_pos_step = ((mlp_steered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
+    mlp_unsteered_pos_step = ((mlp_unsteered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
 
-    # Decode full steered sequence (n_rollout+1) for viz: index 0 aligns with edit_frame GT
+    # Decode viz samples (first n_viz) with both linear and MLP
     with torch.no_grad():
-        h_s_all = torch.from_numpy(steered_h_arr[:n_viz]).float().to(cfg.device)
+        h_s_viz = torch.from_numpy(steered_h_arr[:n_viz]).float().to(cfg.device)    # (n_viz, ctrl_n_rollout, H)
         h_u_viz = torch.from_numpy(unsteered_h_arr[:n_viz]).float().to(cfg.device)
-        viz_steered_pos = c2.linear_extractor(h_s_all).cpu().numpy()   # (n_viz, n_rollout+1, n_obj, 2)
-        viz_unsteered_pos = c2.linear_extractor(h_u_viz).cpu().numpy() # (n_viz, n_rollout, n_obj, 2)
+        viz_steered_pos = c2.linear_extractor(h_s_viz).cpu().numpy()      # (n_viz, ctrl_n_rollout, n_obj, 2)
+        viz_unsteered_pos = c2.linear_extractor(h_u_viz).cpu().numpy()
+        viz_steered_mlp_pos = c2.mlp_extractor(h_s_viz).cpu().numpy()
+        viz_unsteered_mlp_pos = c2.mlp_extractor(h_u_viz).cpu().numpy()
 
-    # GT positions for viz: n_rollout+1 frames starting at edit_frame
+    # GT positions for viz: ctrl_n_rollout frames starting at edit_frame
     viz_gt_pos = edits_positions[
-        :n_viz, edit_frame : edit_frame + cfg.ctrl_n_rollout + 1, : cfg.n_obj, :
+        :n_viz, edit_frame : edit_frame + cfg.ctrl_n_rollout, : cfg.n_obj, :
     ]
 
-    n_ctx_show = min(8, edit_frame)
     viz_pre_edit_pos = edits_positions[
         :n_viz, edit_frame - n_ctx_show : edit_frame, : cfg.n_obj, :
     ]
@@ -627,15 +695,22 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
         edit_frame=edit_frame,
         steered_obs_step=steered_obs_step,
         unsteered_obs_step=unsteered_obs_step,
+        clean_steered_obs_step=clean_steered_obs_step,
+        clean_unsteered_obs_step=clean_unsteered_obs_step,
         steered_pos_step=steered_pos_step,
         unsteered_pos_step=unsteered_pos_step,
+        mlp_steered_pos_step=mlp_steered_pos_step,
+        mlp_unsteered_pos_step=mlp_unsteered_pos_step,
         viz_steered=steered_obs_arr[:n_viz],
         viz_unsteered=unsteered_obs_arr[:n_viz],
         viz_obs_pre_edit=edits_obs[:n_viz, :edit_frame],
         viz_steered_pos=viz_steered_pos,
         viz_unsteered_pos=viz_unsteered_pos,
+        viz_steered_mlp_pos=viz_steered_mlp_pos,
+        viz_unsteered_mlp_pos=viz_unsteered_mlp_pos,
         viz_gt_pos=viz_gt_pos,
         viz_pre_edit_pos=viz_pre_edit_pos,
+        viz_pre_edit_h=h_pre_edit_viz,
         viz_colors=edits_colors[:n_viz, : cfg.n_obj],
     )
 
@@ -643,7 +718,9 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
 # ── Plot functions — return dict[str, Figure] ─────────────────────────────────
 
 
-def plot_setup(cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8) -> dict[str, Figure]:
+def plot_setup(
+    cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8
+) -> dict[str, Figure]:
     """Training curves + dataset overview grid."""
     figs: dict[str, Figure] = {}
 
@@ -657,12 +734,20 @@ def plot_setup(cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8) -> dict
         style_ax(ax)
         ax.plot(epochs, train_loss, color=PALETTE[0], linewidth=1.8, label="train")
         ax.plot(
-            epochs, val_loss, color=PALETTE[1], linewidth=1.8, label="val",
+            epochs,
+            val_loss,
+            color=PALETTE[1],
+            linewidth=1.8,
+            label="val",
             linestyle="--",
         )
         ax.axvline(
-            best_epoch, color=_TICK_COLOR, linewidth=1.0, linestyle=":",
-            alpha=0.7, label=f"best epoch {best_epoch}",
+            best_epoch,
+            color=_TICK_COLOR,
+            linewidth=1.0,
+            linestyle=":",
+            alpha=0.7,
+            label=f"best epoch {best_epoch}",
         )
         if log_x:
             ax.set_xscale("log")
@@ -671,11 +756,16 @@ def plot_setup(cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8) -> dict
         ax.set_ylabel("loss", color=_TEXT_COLOR, fontsize=10)
         ax.legend(frameon=False, labelcolor=_TEXT_COLOR)
         fig.suptitle(
-            s.run_name, color=_TEXT_COLOR, fontsize=12, fontweight="bold", y=0.99,
+            s.run_name,
+            color=_TEXT_COLOR,
+            fontsize=12,
+            fontweight="bold",
+            y=0.99,
         )
         ax.set_title(
             "training curves" + (" (log-log)" if log_x else ""),
-            color=_TEXT_COLOR, fontsize=10,
+            color=_TEXT_COLOR,
+            fontsize=10,
         )
         plt.tight_layout()
         figs[key] = fig
@@ -683,13 +773,15 @@ def plot_setup(cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8) -> dict
     # Dataset overview — dark simulator aesthetic
     n_cols = n_dataset_show // 2
     fig_ds, axes = plt.subplots(
-        2, n_cols,
+        2,
+        n_cols,
         figsize=(n_cols * 1.8, 6),
         facecolor=_DARK_BG_HEX,
     )
     fig_ds.suptitle(
         "dataset overview — stored observations",
-        color=_DARK_TEXT_COLOR, fontsize=12,
+        color=_DARK_TEXT_COLOR,
+        fontsize=12,
     )
     for ax, idx in zip(axes.flat, range(n_dataset_show)):
         scene_i, obs_depth_i, obs_id_i, obs_intensity_i = load_sample(
@@ -707,20 +799,52 @@ def plot_setup(cfg: EvalConfig, s: SetupResult, n_dataset_show: int = 8) -> dict
 
 
 def plot_criterion1(cfg: EvalConfig, s: SetupResult, c1: C1Result) -> dict[str, Figure]:
-    """MSE vs context length only. Horizon MSE is shown in Criterion 3."""
+    """RMSE vs context length only. Horizon RMSE is shown in Criterion 3."""
     figs: dict[str, Figure] = {}
 
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
-    ax.plot(c1.context_lengths, c1.mse_by_ctx, color=PALETTE[0], linewidth=1.8)
+    ax.plot(
+        c1.context_lengths,
+        np.sqrt(c1.mse_by_ctx),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="vs noisy obs (AR warm-up)",
+    )
+    ax.plot(
+        c1.context_lengths,
+        np.sqrt(c1.clean_mse_by_ctx),
+        color=PALETTE[0],
+        linewidth=1.8,
+        linestyle="--",
+        label="vs clean obs (TF warm-up)",
+    )
+    ax.axhline(
+        s.random_obs_rmse,
+        color=_TICK_COLOR,
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.7,
+        label=f"random baseline ({s.random_obs_rmse:.3f})",
+    )
+    ax.axhline(
+        s.obs_noise_std,
+        color=PALETTE[2],
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.8,
+        label=f"applied noise σ ({s.obs_noise_std:.3f})",
+    )
     ax.set_xlabel("context frames", color=_TEXT_COLOR, fontsize=10)
-    ax.set_ylabel("observation MSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
-        f"1-step prediction MSE vs context length  (warm-up={cfg.n_context})",
-        color=_TEXT_COLOR, fontsize=11,
+        f"1-step prediction RMSE vs context length  (warm-up={cfg.n_context})",
+        color=_TEXT_COLOR,
+        fontsize=11,
     )
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     plt.tight_layout()
     figs["mse_by_context"] = fig
 
@@ -736,32 +860,63 @@ def plot_criterion2(
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
-    # Per-object MSE bar
-    lin_per_obj = c2.recovery_linear.per_component_mse.reshape(cfg.n_obj, 2).mean(1)
-    mlp_per_obj = c2.recovery_mlp.per_component_mse.reshape(cfg.n_obj, 2).mean(1)
-    obj_labels = [f"obj {i}" for i in range(cfg.n_obj)]
+    # Per-object RMSE bar (averaged over X+Y), with "overall" appended
+    lin_per_obj_rmse = np.sqrt(
+        c2.recovery_linear.per_component_mse.reshape(cfg.n_obj, 2).mean(1)
+    )
+    mlp_per_obj_rmse = np.sqrt(
+        c2.recovery_mlp.per_component_mse.reshape(cfg.n_obj, 2).mean(1)
+    )
+    lin_overall_rmse = np.sqrt(c2.recovery_linear.overall_mse)
+    mlp_overall_rmse = np.sqrt(c2.recovery_mlp.overall_mse)
+    obj_labels = [f"obj {i}" for i in range(cfg.n_obj)] + ["overall"]
     figs["recovery_per_object"] = plot_per_component_bars(
         obj_labels,
-        {"linear": lin_per_obj, "MLP": mlp_per_obj},
-        title="Per-object position recovery MSE",
+        {
+            "linear": np.append(lin_per_obj_rmse, lin_overall_rmse),
+            "MLP": np.append(mlp_per_obj_rmse, mlp_overall_rmse),
+        },
+        title="Per-object position recovery RMSE",
     )
 
-    # Recovery MSE vs context length
+    # Overall X vs Y RMSE (averaged over all objects)
+    # per_component_mse layout: [x0, y0, x1, y1, ...] → even indices = X, odd = Y
+    lin_x_rmse = float(np.sqrt(c2.recovery_linear.per_component_mse[0::2].mean()))
+    lin_y_rmse = float(np.sqrt(c2.recovery_linear.per_component_mse[1::2].mean()))
+    mlp_x_rmse = float(np.sqrt(c2.recovery_mlp.per_component_mse[0::2].mean()))
+    mlp_y_rmse = float(np.sqrt(c2.recovery_mlp.per_component_mse[1::2].mean()))
+    figs["recovery_per_coord"] = plot_per_component_bars(
+        ["X (overall)", "Y (overall)"],
+        {
+            "linear": np.array([lin_x_rmse, lin_y_rmse]),
+            "MLP": np.array([mlp_x_rmse, mlp_y_rmse]),
+        },
+        title="Position recovery RMSE by coordinate",
+    )
+
+    # Recovery RMSE vs context length
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
     ax.plot(
         np.arange(1, len(c2.recovery_linear.mse_by_context) + 1),
-        c2.recovery_linear.mse_by_context,
-        color=PALETTE[0], linewidth=1.8, label="linear",
+        np.sqrt(c2.recovery_linear.mse_by_context),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="linear",
     )
     ax.plot(
         np.arange(1, len(c2.recovery_mlp.mse_by_context) + 1),
-        c2.recovery_mlp.mse_by_context,
-        color=PALETTE[1], linewidth=1.8, label="MLP", linestyle="--",
+        np.sqrt(c2.recovery_mlp.mse_by_context),
+        color=PALETTE[1],
+        linewidth=1.8,
+        label="MLP",
+        linestyle="--",
     )
     ax.set_xlabel("context frames", color=_TEXT_COLOR, fontsize=10)
-    ax.set_ylabel("position recovery MSE", color=_TEXT_COLOR, fontsize=10)
-    ax.set_title("Position recovery MSE vs context length", color=_TEXT_COLOR, fontsize=11)
+    ax.set_ylabel("position recovery RMSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_title(
+        "Position recovery RMSE vs context length", color=_TEXT_COLOR, fontsize=11
+    )
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
     ax.legend(frameon=False, labelcolor=_TEXT_COLOR)
@@ -792,23 +947,35 @@ def plot_criterion2(
         fig, axes = plt.subplots(1, 2, figsize=(13, 4), facecolor=_BG_HEX)
         fig.suptitle(
             f"Sample {i}  —  position recovery (teacher forcing)",
-            color=_TEXT_COLOR, fontsize=11, fontweight="bold",
+            color=_TEXT_COLOR,
+            fontsize=11,
+            fontweight="bold",
         )
         for ax, coord, coord_lbl in zip(axes, [0, 1], ["x", "y (depth)"]):
             style_ax(ax)
             for obj in range(cfg.n_obj):
                 color = plot_color(colors_all[i, obj])
                 ax.plot(
-                    timesteps, gt_pos[:, obj, coord],
-                    color=color, linewidth=1.8,
+                    timesteps,
+                    gt_pos[:, obj, coord],
+                    color=color,
+                    linewidth=1.8,
                 )
                 ax.scatter(
-                    vis_t, lin_pos[vis, obj, coord],
-                    color=color, s=18, marker="x", alpha=0.75,
+                    vis_t,
+                    lin_pos[vis, obj, coord],
+                    color=color,
+                    s=18,
+                    marker="x",
+                    alpha=0.75,
                 )
                 ax.scatter(
-                    vis_t, mlp_pos[vis, obj, coord],
-                    color=color, s=18, marker="o", alpha=0.75,
+                    vis_t,
+                    mlp_pos[vis, obj, coord],
+                    color=color,
+                    s=18,
+                    marker="o",
+                    alpha=0.75,
                 )
             ax.set_xlabel("frame", color=_TEXT_COLOR, fontsize=9)
             ax.set_ylabel(coord_lbl, color=_TEXT_COLOR, fontsize=9)
@@ -818,15 +985,27 @@ def plot_criterion2(
         handles = [
             Line2D([0], [0], color="gray", linewidth=1.8, label="GT"),
             Line2D(
-                [0], [0], color="gray", marker="x", linestyle="none",
-                markersize=6, label="linear",
+                [0],
+                [0],
+                color="gray",
+                marker="x",
+                linestyle="none",
+                markersize=6,
+                label="linear",
             ),
             Line2D(
-                [0], [0], color="gray", marker="o", linestyle="none",
-                markersize=6, label="MLP",
+                [0],
+                [0],
+                color="gray",
+                marker="o",
+                linestyle="none",
+                markersize=6,
+                label="MLP",
             ),
         ]
-        axes[0].legend(handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
+        axes[0].legend(
+            handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8
+        )
         plt.tight_layout()
         figs[f"recovery_traj_{i}"] = fig
 
@@ -842,21 +1021,51 @@ def plot_criterion3(
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
-    # Observation drift (= horizon MSE from C1, displayed here)
+    # Observation drift (= horizon RMSE from C1, displayed here)
+    _steps = np.arange(1, len(c1.horizon_mse) + 1)
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
     ax.plot(
-        np.arange(1, len(c1.horizon_mse) + 1), c1.horizon_mse,
-        color=PALETTE[0], linewidth=1.8,
+        _steps,
+        np.sqrt(c1.horizon_mse),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="vs noisy obs",
+    )
+    ax.plot(
+        _steps,
+        np.sqrt(c1.clean_horizon_mse),
+        color=PALETTE[0],
+        linewidth=1.8,
+        linestyle="--",
+        label="vs clean obs",
+    )
+    ax.axhline(
+        s.random_obs_rmse,
+        color=_TICK_COLOR,
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.7,
+        label=f"random baseline ({s.random_obs_rmse:.3f})",
+    )
+    ax.axhline(
+        s.obs_noise_std,
+        color=PALETTE[2],
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.8,
+        label=f"applied noise σ ({s.obs_noise_std:.3f})",
     )
     ax.set_xlabel("steps ahead", color=_TEXT_COLOR, fontsize=10)
-    ax.set_ylabel("observation MSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
         f"Observation drift  (warm-up={cfg.rollout_n_context}, rollout={cfg.rollout_n_rollout})",
-        color=_TEXT_COLOR, fontsize=11,
+        color=_TEXT_COLOR,
+        fontsize=11,
     )
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     plt.tight_layout()
     figs["observation_drift"] = fig
 
@@ -872,7 +1081,9 @@ def plot_criterion3(
     ax.bar(names, means, color=[PALETTE[3], PALETTE[0], PALETTE[1]], width=0.5)
     ax.set_ylabel("mean coherence score", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
-        "Trajectory coherence (lower = smoother)", color=_TEXT_COLOR, fontsize=11,
+        "Trajectory coherence (lower = smoother)",
+        color=_TEXT_COLOR,
+        fontsize=11,
     )
     ax.tick_params(colors=_TICK_COLOR)
     for spine in ax.spines.values():
@@ -901,7 +1112,7 @@ def plot_criterion3(
         colors_i = scene_i.colors
 
         pos_v = s.positions_gt[i, :, : cfg.n_obj]  # (T, n_obj, 2)
-        lin_roll_v = c3.decoded_pos_roll[i]          # (n_roll, n_obj, 2)
+        lin_roll_v = c3.decoded_pos_roll[i]  # (n_roll, n_obj, 2)
         mlp_roll_v = c3.mlp_decoded_pos_roll[i]
 
         s_gt = c3.gt_per_sample_scores[i]
@@ -916,30 +1127,50 @@ def plot_criterion3(
         fig.suptitle(
             f"Sample {i}  —  AR rollout positions  "
             f"coherence: GT={s_gt:.3f}  linear={s_lin:.3f}  MLP={s_mlp:.3f}",
-            color=_TEXT_COLOR, fontsize=11, fontweight="bold",
+            color=_TEXT_COLOR,
+            fontsize=11,
+            fontweight="bold",
         )
         for ax, coord, coord_lbl in zip(axes, [0, 1], ["x", "y (depth)"]):
             style_ax(ax)
             for obj in range(cfg.n_obj):
                 color = plot_color(colors_i[obj])
                 ax.plot(
-                    _ctx_frames, pos_v[n_ctx - _n_ctx_show : n_ctx, obj, coord],
-                    color=color, linewidth=1.5, alpha=0.3,
+                    _ctx_frames,
+                    pos_v[n_ctx - _n_ctx_show : n_ctx, obj, coord],
+                    color=color,
+                    linewidth=1.5,
+                    alpha=0.3,
                 )
                 ax.plot(
-                    _roll_frames, pos_v[n_ctx : n_ctx + n_roll, obj, coord],
-                    color=color, linewidth=1.8, alpha=0.9,
+                    _roll_frames,
+                    pos_v[n_ctx : n_ctx + n_roll, obj, coord],
+                    color=color,
+                    linewidth=1.8,
+                    alpha=0.9,
                 )
                 ax.scatter(
-                    _roll_frames, lin_roll_v[:, obj, coord],
-                    color=color, s=20, marker="x", alpha=0.9,
+                    _roll_frames,
+                    lin_roll_v[:, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="x",
+                    alpha=0.9,
                 )
                 ax.scatter(
-                    _roll_frames, mlp_roll_v[:, obj, coord],
-                    color=color, s=20, marker="o", alpha=0.9,
+                    _roll_frames,
+                    mlp_roll_v[:, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="o",
+                    alpha=0.9,
                 )
             ax.axvline(
-                n_ctx - 0.5, color=_TICK_COLOR, linewidth=1.0, linestyle="--", alpha=0.5,
+                n_ctx - 0.5,
+                color=_TICK_COLOR,
+                linewidth=1.0,
+                linestyle="--",
+                alpha=0.5,
             )
             ax.set_xlabel("frame", color=_TEXT_COLOR, fontsize=9)
             ax.set_ylabel(coord_lbl, color=_TEXT_COLOR, fontsize=9)
@@ -949,15 +1180,27 @@ def plot_criterion3(
         handles = [
             Line2D([0], [0], color="gray", linewidth=1.8, label="GT"),
             Line2D(
-                [0], [0], color="gray", marker="x", linestyle="none",
-                markersize=6, label="linear",
+                [0],
+                [0],
+                color="gray",
+                marker="x",
+                linestyle="none",
+                markersize=6,
+                label="linear",
             ),
             Line2D(
-                [0], [0], color="gray", marker="o", linestyle="none",
-                markersize=6, label="MLP",
+                [0],
+                [0],
+                color="gray",
+                marker="o",
+                linestyle="none",
+                markersize=6,
+                label="MLP",
             ),
         ]
-        axes[0].legend(handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
+        axes[0].legend(
+            handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8
+        )
         plt.tight_layout()
         figs[f"rollout_traj_{i}"] = fig
 
@@ -981,10 +1224,16 @@ def plot_criterion3(
         fig_3.suptitle(
             f"Sample {i}  —  rollout coherence  "
             f"GT={s_gt:.3f}  linear={s_lin:.3f}  MLP={s_mlp:.3f}",
-            color=_DARK_TEXT_COLOR, fontsize=11, y=0.99,
+            color=_DARK_TEXT_COLOR,
+            fontsize=11,
+            y=0.99,
         )
         fig_3.subplots_adjust(
-            left=0.05, right=0.97, top=0.90, bottom=0.12, wspace=0.18,
+            left=0.05,
+            right=0.97,
+            top=0.90,
+            bottom=0.12,
+            wspace=0.18,
         )
 
         ax_fa = fig_3.add_subplot(1, 3, 1)
@@ -999,7 +1248,11 @@ def plot_criterion3(
             _style_ax_dark(ax)
             ax.imshow(img, aspect="auto", origin="upper", interpolation="nearest")
             ax.axhline(
-                n_ctx - 0.5, color="#fa8850", linewidth=1.2, linestyle="--", alpha=0.7,
+                n_ctx - 0.5,
+                color="#fa8850",
+                linewidth=1.2,
+                linestyle="--",
+                alpha=0.7,
             )
             ax.set_title(ttl, color=_DARK_TEXT_COLOR, fontsize=10)
             ax.set_xlabel("ray position", color=_DARK_TEXT_COLOR, fontsize=9)
@@ -1012,21 +1265,34 @@ def plot_criterion3(
         for obj in range(cfg.n_obj):
             color = colors_i[obj]
             ax_2d.plot(
-                pos_v[:, obj, 0], pos_v[:, obj, 1],
-                color=color, linewidth=1.0, alpha=0.25,
+                pos_v[:, obj, 0],
+                pos_v[:, obj, 1],
+                color=color,
+                linewidth=1.0,
+                alpha=0.25,
             )
             ax_2d.plot(
                 pos_v[n_ctx : n_ctx + n_roll, obj, 0],
                 pos_v[n_ctx : n_ctx + n_roll, obj, 1],
-                color=color, linewidth=2.0, alpha=0.9,
+                color=color,
+                linewidth=2.0,
+                alpha=0.9,
             )
             ax_2d.scatter(
-                lin_roll_v[:, obj, 0], lin_roll_v[:, obj, 1],
-                color=color, s=18, marker="x", alpha=0.9,
+                lin_roll_v[:, obj, 0],
+                lin_roll_v[:, obj, 1],
+                color=color,
+                s=18,
+                marker="x",
+                alpha=0.9,
             )
             ax_2d.scatter(
-                mlp_roll_v[:, obj, 0], mlp_roll_v[:, obj, 1],
-                color=color, s=18, marker="o", alpha=0.9,
+                mlp_roll_v[:, obj, 0],
+                mlp_roll_v[:, obj, 1],
+                color=color,
+                s=18,
+                marker="o",
+                alpha=0.9,
             )
 
         figs[f"rollout_3panel_{i}"] = fig_3
@@ -1039,35 +1305,111 @@ def plot_criterion4(
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
-    steps = np.arange(1, cfg.ctrl_n_rollout + 1)
+    steps = np.arange(cfg.ctrl_n_rollout)  # 0-indexed; step 0 = edit_frame prediction
 
-    # Per-step observation MSE
+    # Per-step observation RMSE
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
-    ax.plot(steps, c4.unsteered_obs_step, color=PALETTE[1], linewidth=1.8, label="unsteered")
-    ax.plot(steps, c4.steered_obs_step, color=PALETTE[0], linewidth=1.8, label="steered")
-    ax.set_xlabel("rollout step", color=_TEXT_COLOR, fontsize=10)
-    ax.set_ylabel("observation MSE", color=_TEXT_COLOR, fontsize=10)
-    ax.set_title(
-        "Per-step observation MSE: steered vs unsteered", color=_TEXT_COLOR, fontsize=11,
+    ax.plot(
+        steps,
+        np.sqrt(c4.unsteered_obs_step),
+        color=PALETTE[1],
+        linewidth=1.8,
+        label="unsteered (vs noisy)",
     )
-    ax.legend(frameon=False, labelcolor=_TEXT_COLOR)
+    ax.plot(
+        steps,
+        np.sqrt(c4.steered_obs_step),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="steered (vs noisy)",
+    )
+    ax.plot(
+        steps,
+        np.sqrt(c4.clean_unsteered_obs_step),
+        color=PALETTE[1],
+        linewidth=1.8,
+        linestyle="--",
+        label="unsteered (vs clean)",
+    )
+    ax.plot(
+        steps,
+        np.sqrt(c4.clean_steered_obs_step),
+        color=PALETTE[0],
+        linewidth=1.8,
+        linestyle="--",
+        label="steered (vs clean)",
+    )
+    ax.axhline(
+        s.random_obs_rmse,
+        color=_TICK_COLOR,
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.7,
+        label=f"random baseline ({s.random_obs_rmse:.3f})",
+    )
+    ax.axhline(
+        s.obs_noise_std,
+        color=PALETTE[2],
+        linewidth=1.2,
+        linestyle=":",
+        alpha=0.8,
+        label=f"applied noise σ ({s.obs_noise_std:.3f})",
+    )
+    ax.set_xlabel("rollout step (0 = edit frame)", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_title(
+        "Per-step observation RMSE: steered vs unsteered",
+        color=_TEXT_COLOR,
+        fontsize=11,
+    )
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
     plt.tight_layout()
     figs["ctrl_obs_mse"] = fig
 
-    # Per-step position MSE
+    # Per-step position RMSE — linear and MLP; step 0 steered linear = 0 by construction
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
-    ax.plot(steps, c4.unsteered_pos_step, color=PALETTE[1], linewidth=1.8, label="unsteered")
-    ax.plot(steps, c4.steered_pos_step, color=PALETTE[0], linewidth=1.8, label="steered")
-    ax.set_xlabel("rollout step", color=_TEXT_COLOR, fontsize=10)
-    ax.set_ylabel("position MSE", color=_TEXT_COLOR, fontsize=10)
-    ax.set_title(
-        "Per-step position MSE: steered vs unsteered", color=_TEXT_COLOR, fontsize=11,
+    ax.plot(
+        steps,
+        np.sqrt(c4.unsteered_pos_step),
+        color=PALETTE[1],
+        linewidth=1.8,
+        label="unsteered (linear)",
     )
-    ax.legend(frameon=False, labelcolor=_TEXT_COLOR)
+    ax.plot(
+        steps,
+        np.sqrt(c4.steered_pos_step),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="steered (linear)",
+    )
+    ax.plot(
+        steps,
+        np.sqrt(c4.mlp_unsteered_pos_step),
+        color=PALETTE[1],
+        linewidth=1.8,
+        linestyle="--",
+        label="unsteered (MLP)",
+    )
+    ax.plot(
+        steps,
+        np.sqrt(c4.mlp_steered_pos_step),
+        color=PALETTE[0],
+        linewidth=1.8,
+        linestyle="--",
+        label="steered (MLP)",
+    )
+    ax.set_xlabel("rollout step (0 = edit frame)", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("position RMSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_title(
+        "Per-step position RMSE: steered vs unsteered  (linear solid, MLP dashed)",
+        color=_TEXT_COLOR,
+        fontsize=11,
+    )
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
     plt.tight_layout()
@@ -1077,44 +1419,109 @@ def plot_criterion4(
 
     ef = c4.edit_frame
     n_ctx_show = c4.viz_pre_edit_pos.shape[1]  # min(8, edit_frame)
-    ctx_frames = np.arange(ef - n_ctx_show, ef)          # pre-edit context frame indices
-    roll_frames = np.arange(ef, ef + cfg.ctrl_n_rollout + 1)  # n_rollout+1 frames from ef
+    ctx_frames = np.arange(ef - n_ctx_show, ef)  # pre-edit context frame indices
+    roll_frames = np.arange(ef, ef + cfg.ctrl_n_rollout)  # ctrl_n_rollout frames from ef
+
+    c2.linear_extractor.eval()
+    c2.mlp_extractor.eval()
 
     for i in range(n_viz):
         colors_i = c4.viz_colors[i]  # (n_obj, 3)
 
+        # Decode pre-edit hidden states for this sample
+        with torch.no_grad():
+            h_pre = (
+                torch.from_numpy(c4.viz_pre_edit_h[i]).float().to(cfg.device)
+            )  # (n_ctx_show, H)
+            pre_lin_pos = c2.linear_extractor(h_pre).cpu().numpy()  # (n_ctx_show, n_obj, 2)
+            pre_mlp_pos = c2.mlp_extractor(h_pre).cpu().numpy()
+
         # ── x/y position line plots (frame-indexed, with pre-edit context) ─
         fig, axes = plt.subplots(1, 2, figsize=(13, 4), facecolor=_BG_HEX)
         fig.suptitle(
-            f"Sample {i}  —  steered positions  (edit at frame {ef},  "
-            f"step 0 = injected h', linear × should hit GT exactly)",
-            color=_TEXT_COLOR, fontsize=11, fontweight="bold",
+            f"Sample {i}  —  steered vs unsteered positions  (edit at frame {ef},  "
+            f"step 0 = edit frame; steered linear × hits GT exactly at step 0)",
+            color=_TEXT_COLOR,
+            fontsize=11,
+            fontweight="bold",
         )
         for ax, coord, coord_lbl in zip(axes, [0, 1], ["x", "y (depth)"]):
             style_ax(ax)
             for obj in range(cfg.n_obj):
                 color = plot_color(colors_i[obj])
-                # Pre-edit context — GT faint
+                # Pre-edit context — GT faint solid
                 ax.plot(
-                    ctx_frames, c4.viz_pre_edit_pos[i, :, obj, coord],
-                    color=color, linewidth=1.5, alpha=0.3,
+                    ctx_frames,
+                    c4.viz_pre_edit_pos[i, :, obj, coord],
+                    color=color,
+                    linewidth=1.5,
+                    alpha=0.3,
                 )
-                # Post-edit GT — solid (n_rollout+1 frames starting at ef)
+                # Pre-edit decoded positions — linear × and MLP ○, faint
+                ax.scatter(
+                    ctx_frames,
+                    pre_lin_pos[:, obj, coord],
+                    color=color,
+                    s=14,
+                    marker="x",
+                    alpha=0.3,
+                )
+                ax.scatter(
+                    ctx_frames,
+                    pre_mlp_pos[:, obj, coord],
+                    color=color,
+                    s=14,
+                    marker="o",
+                    alpha=0.3,
+                    facecolors=color,
+                )
+                # Post-edit GT — solid
                 ax.plot(
-                    roll_frames, c4.viz_gt_pos[i, :, obj, coord],
-                    color=color, linewidth=1.8, alpha=0.9,
+                    roll_frames,
+                    c4.viz_gt_pos[i, :, obj, coord],
+                    color=color,
+                    linewidth=1.8,
+                    alpha=0.9,
                 )
-                # Steered probe × — n_rollout+1 points; index 0 decodes h' → target exactly
+                # Steered decoded — linear × solid, MLP ○ solid
                 ax.scatter(
-                    roll_frames, c4.viz_steered_pos[i, :, obj, coord],
-                    color=color, s=20, marker="x", alpha=0.9,
+                    roll_frames,
+                    c4.viz_steered_pos[i, :, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="x",
+                    alpha=0.9,
                 )
-                # Unsteered probe ○ — n_rollout points starting at ef+1
                 ax.scatter(
-                    roll_frames[1:], c4.viz_unsteered_pos[i, :, obj, coord],
-                    color=color, s=20, marker="o", alpha=0.75, facecolors="none",
+                    roll_frames,
+                    c4.viz_steered_mlp_pos[i, :, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="o",
+                    alpha=0.9,
                 )
-            ax.axvline(ef - 0.5, color=_TICK_COLOR, linewidth=1.0, linestyle="--", alpha=0.5)
+                # Unsteered decoded — linear × open, MLP ○ open
+                ax.scatter(
+                    roll_frames,
+                    c4.viz_unsteered_pos[i, :, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="x",
+                    alpha=0.6,
+                    facecolors="none",
+                )
+                ax.scatter(
+                    roll_frames,
+                    c4.viz_unsteered_mlp_pos[i, :, obj, coord],
+                    color=color,
+                    s=20,
+                    marker="o",
+                    alpha=0.6,
+                    facecolors="none",
+                )
+            ax.axvline(
+                ef - 0.5, color=_TICK_COLOR, linewidth=1.0, linestyle="--", alpha=0.5
+            )
             ax.set_xlabel("frame", color=_TEXT_COLOR, fontsize=9)
             ax.set_ylabel(coord_lbl, color=_TEXT_COLOR, fontsize=9)
             ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
@@ -1124,14 +1531,28 @@ def plot_criterion4(
             Line2D([0], [0], color="gray", linewidth=1.8, label="GT"),
             Line2D(
                 [0], [0], color="gray", marker="x", linestyle="none",
-                markersize=6, label="steered (h' injected)",
+                markersize=6, label="linear decoder",
             ),
             Line2D(
                 [0], [0], color="gray", marker="o", linestyle="none",
-                markersize=6, markerfacecolor="none", label="unsteered",
+                markersize=6, label="MLP decoder",
+            ),
+            Line2D(
+                [0], [0], color="gray", marker="s", linestyle="none",
+                markersize=6, alpha=0.9, label="steered (solid fill)",
+            ),
+            Line2D(
+                [0], [0], color="gray", marker="s", linestyle="none",
+                markersize=6, alpha=0.6, markerfacecolor="none", label="unsteered (open)",
+            ),
+            Line2D(
+                [0], [0], color="gray", marker="s", linestyle="none",
+                markersize=6, alpha=0.3, label="pre-edit (faint)",
             ),
         ]
-        axes[0].legend(handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
+        axes[0].legend(
+            handles=handles, frameon=False, labelcolor=_TEXT_COLOR, fontsize=8
+        )
         plt.tight_layout()
         figs[f"ctrl_pos_traj_{i}"] = fig
 
@@ -1145,13 +1566,14 @@ def plot_criterion4(
                 [c4.viz_obs_pre_edit[i], c4.obs_post_edit[i, : cfg.ctrl_n_rollout]],
                 axis=0,
             ),
-            0, 1,
+            0,
+            1,
         )
 
-        # Steered/unsteered: pre-edit actual (dimmed) + model predictions
+        # Steered/unsteered: pre-edit actual (full brightness) + model predictions
         def _build_panel(pred_obs: np.ndarray) -> np.ndarray:
             panel = np.zeros((total_frames, R), dtype=np.float32)
-            panel[: c4.edit_frame] = np.clip(c4.viz_obs_pre_edit[i], 0, 1) * 0.35
+            panel[: c4.edit_frame] = np.clip(c4.viz_obs_pre_edit[i], 0, 1)
             panel[c4.edit_frame :] = np.clip(pred_obs, 0, 1)
             return panel
 
@@ -1162,10 +1584,16 @@ def plot_criterion4(
         fig_3.suptitle(
             f"Sample {i}  —  counterfactual controllability  "
             f"(edit at frame {c4.edit_frame})",
-            color=_DARK_TEXT_COLOR, fontsize=11, y=0.99,
+            color=_DARK_TEXT_COLOR,
+            fontsize=11,
+            y=0.99,
         )
         fig_3.subplots_adjust(
-            left=0.05, right=0.97, top=0.90, bottom=0.12, wspace=0.18,
+            left=0.05,
+            right=0.97,
+            top=0.90,
+            bottom=0.12,
+            wspace=0.18,
         )
 
         ax_gt = fig_3.add_subplot(1, 3, 1)
@@ -1179,12 +1607,20 @@ def plot_criterion4(
         ):
             _style_ax_dark(ax)
             ax.imshow(
-                obs_img, aspect="auto", origin="upper", interpolation="nearest",
-                cmap="gray", vmin=0, vmax=1,
+                obs_img,
+                aspect="auto",
+                origin="upper",
+                interpolation="nearest",
+                cmap="gray",
+                vmin=0,
+                vmax=1,
             )
             ax.axhline(
-                c4.edit_frame - 0.5, color="#fa8850", linewidth=1.2,
-                linestyle="--", alpha=0.7,
+                c4.edit_frame - 0.5,
+                color="#fa8850",
+                linewidth=1.2,
+                linestyle="--",
+                alpha=0.7,
             )
             ax.set_title(ttl, color=_DARK_TEXT_COLOR, fontsize=10)
             ax.set_xlabel("ray position", color=_DARK_TEXT_COLOR, fontsize=9)

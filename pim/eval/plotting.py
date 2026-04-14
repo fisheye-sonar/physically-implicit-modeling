@@ -150,14 +150,16 @@ def plot_per_component_bars(
     component_labels: Sequence[str],
     mse_arrays: dict[str, np.ndarray],
     *,
-    title: str = "Per-component MSE",
+    title: str = "Per-component RMSE",
+    ylabel: str = "RMSE",
 ) -> plt.Figure:
-    """Bar chart of per-component MSE for one or more methods.
+    """Bar chart of per-component RMSE for one or more methods.
 
     Parameters
     ----------
     component_labels : labels for each state component
-    mse_arrays       : dict mapping method name → (n_components,) MSE array
+    mse_arrays       : dict mapping method name → (n_components,) RMSE array
+    ylabel           : y-axis label (default "RMSE")
     """
     n_comp = len(component_labels)
     n_methods = len(mse_arrays)
@@ -174,7 +176,7 @@ def plot_per_component_bars(
     ax.set_xticks(x)
     ax.set_xticklabels(component_labels, rotation=30, ha="right",
                        color=_TEXT_COLOR, fontsize=9)
-    ax.set_ylabel("MSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel(ylabel, color=_TEXT_COLOR, fontsize=10)
     ax.set_title(title, color=_TEXT_COLOR, fontsize=11)
     ax.tick_params(colors=_TICK_COLOR, labelsize=9)
     if n_methods > 1:
