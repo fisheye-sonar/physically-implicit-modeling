@@ -30,17 +30,17 @@ naturally from the geometry.  Optional Gaussian noise can be added.
 
 Explicit interface points  (for future model comparisons)
 ---------------------------------------------------------
-- Latent state       →  ``sim.Scene.positions``
-- State update       →  ``sim.simulate`` / the inner stepping loop in sim.py
-- Observation render →  ``renderer.render_frame`` / ``renderer.render_scene``
-- Visual render      →  ``viz.animate_scene``  (human-facing only)
+- Latent state       →  ``simulator.sim.Scene.positions``
+- State update       →  ``simulator.sim.simulate``
+- Observation render →  ``simulator.renderer.render_frame`` / ``render_scene``
+- Visual render      →  ``simulator.viz.animate_scene``  (human-facing only)
 """
 
-from pim.config import SimConfig
-from pim.sim import Scene, simulate
-from pim.renderer import render_frame, render_scene
-from pim.viz import animate_scene, save_animation
-from pim.dataset import DatasetConfig, generate_dataset
+from pim.simulator.config import SimConfig
+from pim.simulator.sim import Scene, simulate
+from pim.simulator.renderer import render_frame, render_scene
+from pim.simulator.viz import animate_scene, save_animation
+from pim.simulator.dataset import DatasetConfig, generate_dataset, load_sample, reconstruct_clean_obs
 
 __all__ = [
     "SimConfig",
@@ -52,4 +52,6 @@ __all__ = [
     "save_animation",
     "DatasetConfig",
     "generate_dataset",
+    "load_sample",
+    "reconstruct_clean_obs",
 ]

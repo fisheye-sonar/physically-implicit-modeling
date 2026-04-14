@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from pim.config import SimConfig
+from .config import SimConfig
 
 # ── Colour palette (up to 5 objects) ─────────────────────────────────────────
 # RGB in [0, 1].  Chosen for distinctness on a dark background.
@@ -255,8 +255,7 @@ def simulate(cfg: SimConfig) -> Scene:
                 break
 
         if not collision and (
-            not cfg.always_in_frustum
-            or _fully_in_frustum(positions, cfg.radius, cfg)
+            not cfg.always_in_frustum or _fully_in_frustum(positions, cfg.radius, cfg)
         ):
             return Scene(
                 positions=positions,

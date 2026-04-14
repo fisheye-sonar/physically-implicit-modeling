@@ -25,8 +25,8 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Polygon
 
-from pim.config import SimConfig
-from pim.sim import Scene
+from .config import SimConfig
+from .sim import Scene
 
 # ── Aesthetic constants ───────────────────────────────────────────────────────
 _BG = np.array([0.04, 0.04, 0.08])  # very dark navy, normalised RGB

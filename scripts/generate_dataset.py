@@ -1,95 +1,107 @@
 #!/usr/bin/env python3
 """
-Generate a dataset of toy-world observation sequences.
+Generate a complete dataset suite: train, val, test, and edits splits.
+
+All splits share the same simulator config.  Seeds are assigned
+non-overlappingly: train starts at --seed, val follows, test follows,
+edits follows.
 
 Usage
 -----
-    python scripts/generate_dataset.py data/train.h5
-    python scripts/generate_dataset.py data/train.h5 --n-samples 100000 --n-workers 8
-    python scripts/generate_dataset.py data/small.h5 --n-samples 1000 --n-objects 3
-    python scripts/generate_dataset.py data/wrap.h5  --boundary wrap --n-samples 50000
+    python scripts/generate_dataset.py data/my_run
+
+    python scripts/generate_dataset.py data/my_run \\
+        --n-objects 2 --frames 40 --obs-noise-std 0.2 \\
+        --fixed-reflectivities --always-in-frustum \\
+        --n-train 100000 --n-val 10000 --n-test 10000 --n-edits 5000 \\
+        --n-workers 8
+
+Output
+------
+    <output_dir>/train.h5
+    <output_dir>/val.h5
+    <output_dir>/test.h5
+    <output_dir>/edits.h5
+    <output_dir>/dataset.json   ← master metadata for all splits
 """
 
 import argparse
+import dataclasses
+import json
+import time
+from pathlib import Path
 
-from pim.config import SimConfig
-from pim.dataset import DatasetConfig, generate_dataset
+from pim.simulator.config import SimConfig
+from pim.simulator.dataset import DatasetConfig, generate_dataset
+from pim.simulator.edits_dataset import EditDatasetConfig, generate_edits_dataset
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="Generate a pim dataset")
+    p = argparse.ArgumentParser(
+        description="Generate a pim dataset suite (train / val / test / edits)",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
     p.add_argument(
         "output_dir",
-        help="Output directory (created if absent; must be empty if it exists)",
+        help="Parent directory for the suite (created if absent; must be empty if it exists)",
     )
 
-    # dataset scale
-    p.add_argument("--n-samples", type=int, default=100_000)
-    p.add_argument("--seed", type=int, default=0, help="Base RNG seed")
-    p.add_argument(
-        "--n-workers", type=int, default=4, help="Worker processes (0 = single-process)"
-    )
+    # ── Split sizes ───────────────────────────────────────────────────────
+    g = p.add_argument_group("split sizes")
+    g.add_argument("--n-train", type=int, default=100_000, metavar="N")
+    g.add_argument("--n-val",   type=int, default=10_000,  metavar="N")
+    g.add_argument("--n-test",  type=int, default=10_000,  metavar="N")
+    g.add_argument("--n-edits", type=int, default=5_000,   metavar="N")
 
-    # simulation
-    p.add_argument("--n-objects", type=int, default=3)
-    p.add_argument("--frames", type=int, default=100)
-    p.add_argument("--obs-res", type=int, default=128)
-    p.add_argument("--boundary", choices=["bounce", "open", "wrap"], default="bounce")
-    p.add_argument(
-        "--direction-noise",
-        type=float,
-        default=0.0,
-        help="Velocity angle noise per step (radians); 0=straight, ~0.05=gentle curves",
-    )
-    p.add_argument(
-        "--speed-noise",
-        type=float,
-        default=0.0,
-        help="Fractional speed noise per step; 0=constant, ~0.05=varying",
-    )
-    p.add_argument(
-        "--position-noise",
-        type=float,
-        default=0.0,
-        help="Position diffusion std per step (world units); Brownian jitter on top of drift",
-    )
-    p.add_argument(
-        "--obs-noise-std",
-        type=float,
-        default=0.04,
-        help="Observation noise std (intensity units); 0 = no noise",
-    )
-    p.add_argument(
-        "--fixed-reflectivities",
-        action="store_true",
-        default=False,
-        help="Use uniformly spaced reflectivities (deterministic IDs) instead of random",
-    )
-    p.add_argument(
-        "--always-in-frustum",
-        action="store_true",
-        default=False,
-        help="Reject trajectories where any object ever touches a frustum edge",
-    )
+    # ── Simulation (shared across all splits) ─────────────────────────────
+    g = p.add_argument_group("simulation config (shared)")
+    g.add_argument("--n-objects",  type=int,   default=2)
+    g.add_argument("--frames",     type=int,   default=40)
+    g.add_argument("--obs-res",    type=int,   default=128)
+    g.add_argument("--boundary",   choices=["bounce", "open", "wrap"], default="open")
+    g.add_argument("--direction-noise", type=float, default=0.0,
+                   help="Velocity angle noise per step (radians)")
+    g.add_argument("--speed-noise",     type=float, default=0.0,
+                   help="Fractional speed noise per step")
+    g.add_argument("--position-noise",  type=float, default=0.0,
+                   help="Position diffusion std per step (world units)")
+    g.add_argument("--obs-noise-std",   type=float, default=0.04,
+                   help="Observation noise std (intensity units); 0 = no noise")
+    g.add_argument("--fixed-reflectivities", action="store_true", default=False,
+                   help="Uniformly spaced reflectivities (deterministic IDs)")
+    g.add_argument("--always-in-frustum",    action="store_true", default=False,
+                   help="Reject trajectories where any object touches a frustum edge")
 
-    # storage
-    p.add_argument(
-        "--compression-level",
-        type=int,
-        default=4,
-        help="gzip compression level 0–9 (default 4)",
-    )
-    p.add_argument(
-        "--write-batch",
-        type=int,
-        default=512,
-        help="Samples buffered in RAM before each HDF5 flush",
-    )
+    # ── Edit-split config ─────────────────────────────────────────────────
+    g = p.add_argument_group("edits split config")
+    g.add_argument("--edit-frame", type=int, default=-1,
+                   help="Frame at which position edit is applied (-1 = T//2)")
+    g.add_argument("--edit-always-in-frustum", action="store_true", default=False,
+                   help="Reject edits that cause the moved object to leave the frustum")
+    g.add_argument("--max-edit-attempts", type=int, default=50,
+                   help="Max retries to find a non-colliding edit position")
+
+    # ── Parallelism / storage ─────────────────────────────────────────────
+    g = p.add_argument_group("parallelism / storage")
+    g.add_argument("--seed",             type=int, default=0,   help="Base RNG seed for train split")
+    g.add_argument("--n-workers",        type=int, default=4,   help="Worker processes (0 = single-process)")
+    g.add_argument("--write-batch",      type=int, default=512, help="Samples buffered in RAM before each HDF5 flush")
+    g.add_argument("--compression-level",type=int, default=4,   help="gzip compression level 0-9")
+
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+    output_dir = Path(args.output_dir)
+
+    if output_dir.exists() and any(output_dir.iterdir()):
+        print(
+            f"Error: '{output_dir}' already exists and is not empty.  "
+            "Halting to avoid overwriting data."
+        )
+        return
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     sim = SimConfig(
         n_objects=args.n_objects,
@@ -103,16 +115,86 @@ def main() -> None:
         fixed_reflectivities=args.fixed_reflectivities,
         always_in_frustum=args.always_in_frustum,
     )
-    dcfg = DatasetConfig(
-        n_samples=args.n_samples,
-        sim=sim,
-        base_seed=args.seed,
+
+    # Seeds are assigned non-overlappingly so no sample appears in two splits.
+    seed_train = args.seed
+    seed_val   = args.seed + args.n_train
+    seed_test  = args.seed + args.n_train + args.n_val
+    seed_edits = args.seed + args.n_train + args.n_val + args.n_test
+
+    shared_storage = dict(
         n_workers=args.n_workers,
         write_batch=args.write_batch,
         compression_level=args.compression_level,
     )
 
-    generate_dataset(dcfg, args.output_dir)
+    splits_meta: dict[str, dict] = {}
+    suite_start = time.perf_counter()
+
+    # ── Train ─────────────────────────────────────────────────────────────
+    print("train")
+    dcfg_train = DatasetConfig(
+        n_samples=args.n_train, sim=sim, base_seed=seed_train, **shared_storage
+    )
+    meta_train = generate_dataset(dcfg_train, output_dir / "train.h5")
+    splits_meta["train"] = {"n_samples": args.n_train, "base_seed": seed_train}
+
+    # ── Val ───────────────────────────────────────────────────────────────
+    print("val")
+    dcfg_val = DatasetConfig(
+        n_samples=args.n_val, sim=sim, base_seed=seed_val, **shared_storage
+    )
+    generate_dataset(dcfg_val, output_dir / "val.h5")
+    splits_meta["val"] = {"n_samples": args.n_val, "base_seed": seed_val}
+
+    # ── Test ──────────────────────────────────────────────────────────────
+    print("test")
+    dcfg_test = DatasetConfig(
+        n_samples=args.n_test, sim=sim, base_seed=seed_test, **shared_storage
+    )
+    generate_dataset(dcfg_test, output_dir / "test.h5")
+    splits_meta["test"] = {"n_samples": args.n_test, "base_seed": seed_test}
+
+    # ── Edits ─────────────────────────────────────────────────────────────
+    print("edits")
+    dcfg_edits = EditDatasetConfig(
+        n_samples=args.n_edits,
+        sim=sim,
+        base_seed=seed_edits,
+        edit_frame=args.edit_frame,
+        edit_always_in_frustum=args.edit_always_in_frustum,
+        max_edit_attempts=args.max_edit_attempts,
+        **shared_storage,
+    )
+    generate_edits_dataset(dcfg_edits, output_dir / "edits.h5")
+    eff_edit_frame = args.edit_frame if args.edit_frame >= 0 else args.frames // 2
+    splits_meta["edits"] = {
+        "n_samples": args.n_edits,
+        "base_seed": seed_edits,
+        "edit_frame": eff_edit_frame,
+        "edit_always_in_frustum": args.edit_always_in_frustum,
+        "max_edit_attempts": args.max_edit_attempts,
+    }
+
+    # ── Master dataset.json ───────────────────────────────────────────────
+    master = {
+        "generated_at": meta_train["generated_at"],
+        "sim": dataclasses.asdict(sim),
+        "splits": splits_meta,
+        "generation": {
+            "n_workers": args.n_workers,
+            "write_batch": args.write_batch,
+            "compression": "gzip",
+            "compression_level": args.compression_level,
+        },
+        "schema": meta_train["schema"],
+    }
+    json_path = output_dir / "dataset.json"
+    json_path.write_text(json.dumps(master, indent=2))
+
+    total_elapsed = time.perf_counter() - suite_start
+    print(f"\ndone in {total_elapsed:.1f}s  →  {output_dir}")
+    print(f"dataset.json  →  {json_path}")
 
 
 if __name__ == "__main__":
