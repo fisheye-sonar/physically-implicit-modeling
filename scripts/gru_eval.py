@@ -24,8 +24,17 @@ from datetime import datetime
 from pathlib import Path
 
 # Allow running from repo root without install
-sys.path.insert(0, str(Path(__file__).parent.parent))
+_REPO_ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(_REPO_ROOT))
+# notebooks/helpers is not a package under pim — add it directly
+sys.path.insert(0, str(_REPO_ROOT / "notebooks"))
 
+import torch
+
+from helpers.nb_viz import animate_ar_gt_vs_predicted, animate_gt_vs_predicted
+from pim.eval._helpers import run_autoregressive
+from pim.simulator.dataset import load_sample
+from pim.simulator.viz import save_animation
 from pim.world_models.gru.run_eval import (
     EvalConfig,
     plot_criterion1,
@@ -167,6 +176,43 @@ def main() -> None:
     save_figures(all_figs, output_dir)
     save_metrics(results, output_dir)
     save_config(cfg, s, output_dir)
+
+    # Generate animations for sample 0 (requires c1 + c2)
+    if "c1" in results and "c2" in results:
+        c1, c2 = results["c1"], results["c2"]
+        scene, obs_depth, obs_id, obs_intensity = load_sample(cfg.test_h5_path, 0)
+
+        # Animation 1: TF decoded positions (full sequence)
+        print("Generating GT vs decoded animation — TF (sample 0)...")
+        with torch.no_grad():
+            h_tf = torch.from_numpy(c1.internal_states_tf[0]).float().to(cfg.device)
+            decoded_pos_tf = c2.linear_extractor(h_tf).cpu().numpy()  # (T-1, n_obj, 2)
+        anim_tf = animate_gt_vs_predicted(
+            scene, obs_depth, obs_id, obs_intensity,
+            decoded_pos_tf,
+            title="Sample 0  |  GT (solid) vs decoded positions (dashed)",
+            dark=True,
+        )
+        save_animation(anim_tf, str(output_dir / "gt_vs_decoded.gif"), fps=12)
+
+        # Animation 2: AR rollout from T//2 with decoded positions + predicted waterfall
+        n_context_ar = s.T_frames // 2
+        print(f"Generating GT vs decoded animation — AR from frame {n_context_ar} (sample 0)...")
+        pred_rollout_ar, internal_states_ar = run_autoregressive(
+            s.model, obs_intensity, n_context_ar, cfg.device
+        )
+        with torch.no_grad():
+            h_ar = torch.from_numpy(internal_states_ar).float().to(cfg.device)
+            decoded_pos_ar = c2.linear_extractor(h_ar).cpu().numpy()  # (T, n_obj, 2)
+        anim_ar = animate_ar_gt_vs_predicted(
+            scene, obs_depth, obs_id, obs_intensity,
+            pred_rollout_ar,
+            decoded_pos_ar,
+            n_context=n_context_ar,
+            title=f"Sample 0  |  AR rollout from frame {n_context_ar}  —  GT (solid) vs decoded (dashed)",
+            dark=True,
+        )
+        save_animation(anim_ar, str(output_dir / "gt_vs_decoded_ar.gif"), fps=12)
 
     print(f"\nDone. Results in {output_dir}")
 

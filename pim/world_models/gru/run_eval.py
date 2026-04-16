@@ -147,6 +147,9 @@ class SetupResult:
     metrics_history: list[dict]
     random_obs_rmse: float  # RMSE of predicting a random frame (sqrt(2·Var(obs)))
     obs_noise_std: float  # additive observation noise std from dataset config
+    obs_noise_floor_rmse: float  # empirical RMSE of noisy vs clean obs (true post-clipping floor)
+    random_pos_rmse: float  # RMSE of predicting a random position (sqrt(2·Var(pos)))
+    position_noise_std: float  # per-step position diffusion noise std from dataset config
     clean_obs_actual: (
         np.ndarray
     )  # (N, T, R) noiseless observations from obs_id + reflectivities
@@ -277,6 +280,9 @@ def setup(cfg: EvalConfig) -> SetupResult:
         reflectivities_all = f["reflectivities"][:].astype(np.float32)  # (N, max_obj)
         _config_dict = json.loads(f.attrs["config_json"])
         obs_noise_std = float(_config_dict["dataset"]["sim"]["obs_noise_std"])
+        position_noise_std = float(
+            _config_dict["dataset"]["sim"]["position_noise_std"]
+        )
 
     # Reconstruct noiseless observations (zero extra storage — derived from obs_id + reflectivities)
     clean_obs_actual = reconstruct_clean_obs(
@@ -285,6 +291,14 @@ def setup(cfg: EvalConfig) -> SetupResult:
 
     # RMSE of predicting a random independent frame: E[(x_i - x_j)^2] = 2·Var(x)
     random_obs_rmse = float(np.sqrt(2.0 * obs_actual.var()))
+    # Empirical noise floor: RMSE between noisy and clean obs, capturing clipping effect
+    # (background pixels at 0 only receive the positive tail of the noise, so the true
+    # floor is below obs_noise_std — this measures it directly)
+    obs_noise_floor_rmse = float(
+        np.sqrt(((obs_actual - clean_obs_actual) ** 2).mean())
+    )
+    # Same logic for positions — sqrt(2·Var) over all (N, T, n_obj, coord)
+    random_pos_rmse = float(np.sqrt(2.0 * positions_gt.var()))
 
     ds = ObservationDataset(
         cfg.test_h5_path,
@@ -317,6 +331,9 @@ def setup(cfg: EvalConfig) -> SetupResult:
         metrics_history=metrics_history,
         random_obs_rmse=random_obs_rmse,
         obs_noise_std=obs_noise_std,
+        obs_noise_floor_rmse=obs_noise_floor_rmse,
+        random_pos_rmse=random_pos_rmse,
+        position_noise_std=position_noise_std,
         clean_obs_actual=clean_obs_actual,
     )
 
@@ -833,7 +850,13 @@ def plot_setup(
     return figs
 
 
-def plot_criterion1(cfg: EvalConfig, s: SetupResult, c1: C1Result) -> dict[str, Figure]:
+def plot_criterion1(
+    cfg: EvalConfig,
+    s: SetupResult,
+    c1: C1Result,
+    *,
+    show_obs_baselines: bool = True,
+) -> dict[str, Figure]:
     """RMSE vs context length only. Horizon RMSE is shown in Criterion 3."""
     figs: dict[str, Figure] = {}
 
@@ -854,22 +877,31 @@ def plot_criterion1(cfg: EvalConfig, s: SetupResult, c1: C1Result) -> dict[str, 
         linestyle="--",
         label="vs clean obs (TF warm-up)",
     )
-    ax.axhline(
-        s.random_obs_rmse,
-        color=_TICK_COLOR,
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.7,
-        label=f"random baseline ({s.random_obs_rmse:.3f})",
-    )
-    ax.axhline(
-        s.obs_noise_std,
-        color=PALETTE[2],
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.8,
-        label=f"applied noise σ ({s.obs_noise_std:.3f})",
-    )
+    if show_obs_baselines:
+        ax.axhline(
+            s.random_obs_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_obs_rmse:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"applied noise σ ({s.obs_noise_std:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_floor_rmse,
+            color=PALETTE[3],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"noise floor RMSE ({s.obs_noise_floor_rmse:.3f})",
+        )
     ax.set_xlabel("context frames", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
@@ -892,6 +924,8 @@ def plot_criterion2(
     c1: C1Result,
     c2: C2Result,
     n_traj: int = 3,
+    *,
+    show_pos_baselines: bool = False,
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
@@ -947,6 +981,23 @@ def plot_criterion2(
         label="MLP",
         linestyle="--",
     )
+    if show_pos_baselines:
+        ax.axhline(
+            s.random_pos_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_pos_rmse:.3f})",
+        )
+        ax.axhline(
+            s.position_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"position noise σ ({s.position_noise_std:.3f})",
+        )
     ax.set_xlabel("context frames", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("position recovery RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
@@ -954,7 +1005,7 @@ def plot_criterion2(
     )
     ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
     ax.tick_params(colors=_TICK_COLOR)
-    ax.legend(frameon=False, labelcolor=_TEXT_COLOR)
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     plt.tight_layout()
     figs["recovery_by_context"] = fig
 
@@ -1052,6 +1103,9 @@ def plot_criterion3(
     s: SetupResult,
     c3: C3Result,
     n_viz: int = 3,
+    *,
+    show_obs_baselines: bool = True,
+    show_pos_baselines: bool = False,
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
@@ -1074,22 +1128,31 @@ def plot_criterion3(
         linestyle="--",
         label="vs clean obs",
     )
-    ax.axhline(
-        s.random_obs_rmse,
-        color=_TICK_COLOR,
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.7,
-        label=f"random baseline ({s.random_obs_rmse:.3f})",
-    )
-    ax.axhline(
-        s.obs_noise_std,
-        color=PALETTE[2],
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.8,
-        label=f"applied noise σ ({s.obs_noise_std:.3f})",
-    )
+    if show_obs_baselines:
+        ax.axhline(
+            s.random_obs_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_obs_rmse:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"applied noise σ ({s.obs_noise_std:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_floor_rmse,
+            color=PALETTE[3],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"noise floor RMSE ({s.obs_noise_floor_rmse:.3f})",
+        )
     ax.set_xlabel("steps ahead", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
@@ -1102,6 +1165,66 @@ def plot_criterion3(
     ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
     plt.tight_layout()
     figs["observation_drift"] = fig
+
+    # Decoded position drift — per-step position RMSE vs GT
+    _n_ctx = cfg.rollout_n_context
+    _n_roll = cfg.rollout_n_rollout
+    gt_pos_roll = s.positions_gt[
+        : cfg.coherence_n_eval, _n_ctx : _n_ctx + _n_roll, : cfg.n_obj, :
+    ]  # (N, n_roll, n_obj, 2)
+    lin_pos_mse = ((c3.decoded_pos_roll - gt_pos_roll) ** 2).mean(
+        axis=(0, 2, 3)
+    )  # (n_roll,)
+    mlp_pos_mse = ((c3.mlp_decoded_pos_roll - gt_pos_roll) ** 2).mean(
+        axis=(0, 2, 3)
+    )  # (n_roll,)
+
+    fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
+    style_ax(ax)
+    ax.plot(
+        _steps,
+        np.sqrt(lin_pos_mse),
+        color=PALETTE[0],
+        linewidth=1.8,
+        label="linear",
+    )
+    ax.plot(
+        _steps,
+        np.sqrt(mlp_pos_mse),
+        color=PALETTE[1],
+        linewidth=1.8,
+        linestyle="--",
+        label="MLP",
+    )
+    if show_pos_baselines:
+        ax.axhline(
+            s.random_pos_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_pos_rmse:.3f})",
+        )
+        ax.axhline(
+            s.position_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"position noise σ ({s.position_noise_std:.3f})",
+        )
+    ax.set_xlabel("steps ahead", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("position RMSE", color=_TEXT_COLOR, fontsize=10)
+    ax.set_title(
+        f"Decoded position drift  (warm-up={cfg.rollout_n_context}, rollout={cfg.rollout_n_rollout})",
+        color=_TEXT_COLOR,
+        fontsize=11,
+    )
+    ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
+    ax.tick_params(colors=_TICK_COLOR)
+    ax.legend(frameon=False, labelcolor=_TEXT_COLOR, fontsize=8)
+    plt.tight_layout()
+    figs["position_drift"] = fig
 
     # Coherence bar chart: GT vs linear vs MLP
     fig, ax = plt.subplots(figsize=(5, 4), facecolor=_BG_HEX)
@@ -1336,7 +1459,13 @@ def plot_criterion3(
 
 
 def plot_criterion4(
-    cfg: EvalConfig, s: SetupResult, c2: C2Result, c4: C4Result
+    cfg: EvalConfig,
+    s: SetupResult,
+    c2: C2Result,
+    c4: C4Result,
+    *,
+    show_obs_baselines: bool = True,
+    show_pos_baselines: bool = False,
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
@@ -1375,22 +1504,31 @@ def plot_criterion4(
         linestyle="--",
         label="steered (vs clean)",
     )
-    ax.axhline(
-        s.random_obs_rmse,
-        color=_TICK_COLOR,
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.7,
-        label=f"random baseline ({s.random_obs_rmse:.3f})",
-    )
-    ax.axhline(
-        s.obs_noise_std,
-        color=PALETTE[2],
-        linewidth=1.2,
-        linestyle=":",
-        alpha=0.8,
-        label=f"applied noise σ ({s.obs_noise_std:.3f})",
-    )
+    if show_obs_baselines:
+        ax.axhline(
+            s.random_obs_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_obs_rmse:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"applied noise σ ({s.obs_noise_std:.3f})",
+        )
+        ax.axhline(
+            s.obs_noise_floor_rmse,
+            color=PALETTE[3],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"noise floor RMSE ({s.obs_noise_floor_rmse:.3f})",
+        )
     ax.set_xlabel("rollout step (0 = edit frame)", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("observation RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
@@ -1437,6 +1575,23 @@ def plot_criterion4(
         linestyle="--",
         label="steered (MLP)",
     )
+    if show_pos_baselines:
+        ax.axhline(
+            s.random_pos_rmse,
+            color=_TICK_COLOR,
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.7,
+            label=f"random baseline ({s.random_pos_rmse:.3f})",
+        )
+        ax.axhline(
+            s.position_noise_std,
+            color=PALETTE[2],
+            linewidth=1.2,
+            linestyle=":",
+            alpha=0.8,
+            label=f"position noise σ ({s.position_noise_std:.3f})",
+        )
     ax.set_xlabel("rollout step (0 = edit frame)", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("position RMSE", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
