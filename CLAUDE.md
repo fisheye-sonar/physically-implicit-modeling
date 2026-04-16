@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-PhysicallyImplicitModeling — early-stage Python research project exploring implicit vs explicit world representations in a toy dynamical environment.
+PhysicallyImplicitModeling — Python research project investigating what internal states world models form when trained on observations. Core questions: does the learned state correspond to the underlying environment state or just to observation predictivity? Is it recoverable via linear/nonlinear probes? Stable over long rollouts? And is it a manipulable system — where targeted latent edits produce coherent behavioral changes — or an opaque compression? Studied across architectures (GRU, RSSM) and dataset conditions in a controlled toy environment.
 
 ## Commands
 
@@ -17,12 +17,13 @@ python scripts/demo.py
 python scripts/demo.py --seed 7 --n-objects 4 --waterfall-mode human
 python scripts/demo.py --fixed-reflectivities --always-in-frustum
 
-# generate dataset
-python scripts/generate_dataset.py data/my_run --n-samples 100000 --n-workers 8
-python scripts/generate_dataset.py data/my_run --fixed-reflectivities --always-in-frustum
+# generate dataset (all splits: train/val/test/edits)
+python scripts/generate_dataset.py data/my_run
+python scripts/generate_dataset.py data/my_run --n-train 100000 --n-workers 8 --fixed-reflectivities
 
-# train GRU
+# train GRU / RSSM
 python scripts/train_gru.py
+python scripts/train_rssm.py
 
 # lint / format
 poetry run ruff check pim tests
@@ -39,15 +40,18 @@ Five independent layers organized into clearly separated packages:
 | `pim/simulator/` | `sim.py simulate()` | Linear motion + noise + boundary handling; rejection sampling for collision avoidance |
 | `pim/simulator/` | `renderer.py` | Analytical ray casting → `(obs_depth, obs_id, obs_intensity)`; only intersections within `[y_near, y_far]` are valid |
 | `pim/simulator/` | `viz.py` | Dark-theme matplotlib animation (2D world + waterfall); simulator aesthetic |
-| `pim/simulator/` | `dataset.py` | Multiprocessing HDF5 writer; `generate_dataset(dcfg, output_dir)`; `load_sample(path, idx)` |
-| `pim/simulator/` | `edits_dataset.py` | Edits dataset: teleports one object at `edit_frame` |
+| `pim/simulator/` | `dataset.py` | Multiprocessing HDF5 writer; `generate_dataset(dcfg, h5_path)`; `load_sample(path, idx)` |
+| `pim/simulator/` | `edits_dataset.py` | Edits dataset: teleports one object at `edit_frame`; `generate_edits_dataset(cfg, h5_path)` |
 | `pim/world_models/` | `protocol.py` | `WorldModel` + `HiddenStateModel` typing Protocols |
 | `pim/world_models/` | `dataloader.py` | `ObservationDataset`, `build_dataloaders` |
 | `pim/world_models/gru/` | `model.py` | `GRUModel`: encoder→GRU→decoder; `.step()`, `.get_hidden_states()`, `.hidden_size` |
 | `pim/world_models/gru/` | `run_eval.py` | `EvalConfig`, `setup()`, `run_criterion{1-4}()`, `plot_criterion{1-4}()`, `run_all()`, `save_*()` |
+| `pim/world_models/rssm/` | `model.py` | `RSSMModel`: det recurrent `h_t` (GRUCell) + stoch latent `s_t`; ELBO training; `.observe_step()`, `.imagine_step()`, `.decode()` |
+| `pim/world_models/rssm/` | `run_eval.py` | Same interface as GRU eval; hidden states are `cat([h_t, s_t])`; AR rollout uses pure prior |
 | `pim/extractors/` | `base.py` | `StateDefinition(name, state_shape, extract_fn)` — describes any physical quantity to recover |
 | `pim/extractors/` | `linear.py` | `LinearExtractor(hidden_size, state_def)` — compatible with probe pseudoinverse |
 | `pim/extractors/` | `mlp.py` | `MLPExtractor(hidden_size, state_def, hidden_dim)` — nonlinear probe |
+| `pim/extractors/` | `matching.py` | `identity_mse()` / `hungarian_mse()` — permutation-invariant losses for extractor training |
 | `pim/extractors/` | `training.py` | `fit_lstsq()` (exact), `train_extractor()` (gradient) |
 | `pim/editors/` | `probe_steering.py` | `probe_decomposition()`, `inject_state()` — hidden-state steering via pseudoinverse |
 | `pim/eval/` | `_helpers.py` | `run_autoregressive()`, `run_teacher_forcing()`, `collect_rollout()` — inference only |
@@ -91,14 +95,16 @@ Five independent layers organized into clearly separated packages:
 - `nb_viz.plot_waterfall_pair(..., dark=False)`, `nb_viz.animate_3panel(..., dark=False)`
 - `pim.eval._helpers`: `run_autoregressive()`, `run_teacher_forcing()`, `collect_rollout()`
 
-**Evaluation script** (`scripts/gru_eval.py`): CLI wrapper — runs `run_all()` then saves all figures + `metrics.json` + `eval_config.json` to a timestamped output directory. Supports `--criteria 1 2` to run a subset. All logic lives in `pim/world_models/gru/run_eval.py`.
+**Evaluation scripts** (`scripts/gru_eval.py`, `scripts/rssm_eval.py`): CLI wrappers — run `run_all()` then save all figures + `metrics.json` + `eval_config.json` to a timestamped output directory. Supports `--criteria 1 2` to run a subset. All logic lives in `pim/world_models/{gru,rssm}/run_eval.py`.
 
-**Evaluation notebook** (`gru_eval.ipynb`): thin shell — each cell calls one `run_eval` function. Imports from `pim.world_models.gru.run_eval`. Covers all four criteria.
-1. Setup & Quick Validation — load model, lin-log + log-log training curves, dataset waterfall
+**Evaluation notebooks** (`gru_eval.ipynb`, `rssm_eval.ipynb`): thin shells — each cell calls one `run_eval` function. Both cover the same four criteria:
+1. Setup & Quick Validation — load model, training curves, dataset waterfall
 2. Criterion 1 — Predictive Quality (next-step MSE, horizon sweep, MSE by context)
 3. Criterion 2 — Recovery (LinearExtractor + MLPExtractor probe, bar chart, trajectory viz)
 4. Criterion 3 — Rollout Consistency (observation drift, trajectory coherence, coherence distribution)
 5. Criterion 4 — Counterfactual Controllability (probe-steered edits, steered vs unsteered vs GT)
+
+**`dataset_viz.ipynb`**: standalone dataset exploration notebook.
 
 **Notebook editing**: always use the `NotebookEdit` tool (and `Read`/`Grep` for inspection) when working with `.ipynb` files. Do not use Bash to manipulate notebook JSON directly.
 

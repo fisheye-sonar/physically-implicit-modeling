@@ -242,22 +242,25 @@ def plot_trajectory_comparison(
 def plot_coherence_distribution(
     scores: dict[str, np.ndarray],
     *,
-    title: str = "Rollout coherence score distribution",
+    title: str = "Rollout smoothness score distribution",
+    colors: list | None = None,
 ) -> plt.Figure:
-    """Histogram of coherence scores for one or more methods.
+    """Histogram of smoothness scores for one or more methods.
 
     Parameters
     ----------
     scores : dict mapping method name → (N,) array of per-sample scores
+    colors : optional list of colors, one per entry in scores; defaults to PALETTE cycle
     """
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
 
     for k, (name, vals) in enumerate(scores.items()):
-        ax.hist(vals, bins=30, alpha=0.6, color=PALETTE[k % len(PALETTE)],
+        color = colors[k] if colors is not None else PALETTE[k % len(PALETTE)]
+        ax.hist(vals, bins=30, alpha=0.6, color=color,
                 label=f"{name}  (μ={vals.mean():.3f})", density=True)
 
-    ax.set_xlabel("coherence score (lower = smoother)", color=_TEXT_COLOR, fontsize=10)
+    ax.set_xlabel("smoothness score (lower = smoother)", color=_TEXT_COLOR, fontsize=10)
     ax.set_ylabel("density", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(title, color=_TEXT_COLOR, fontsize=11)
     ax.tick_params(colors=_TICK_COLOR, labelsize=9)

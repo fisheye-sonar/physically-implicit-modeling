@@ -34,15 +34,14 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from pim.eval._helpers import collect_rollout, run_autoregressive, run_teacher_forcing
-from pim.simulator.dataset import reconstruct_clean_obs
 from pim.eval.controllability import ControllabilityMetrics
 from pim.eval.plotting import (
-    PALETTE,
     _BG_HEX,
     _TEXT_COLOR,
     _TICK_COLOR,
-    plot_color,
+    PALETTE,
     plot_coherence_distribution,
+    plot_color,
     plot_per_component_bars,
     style_ax,
 )
@@ -64,17 +63,24 @@ from pim.extractors.linear import LinearExtractor
 from pim.extractors.matching import hungarian_mse, identity_mse
 from pim.extractors.mlp import MLPExtractor
 from pim.extractors.training import fit_lstsq, train_extractor
-from pim.simulator.dataset import load_sample
+from pim.simulator.dataset import load_sample, reconstruct_clean_obs
 from pim.simulator.viz import (
     _BG as _DARK_BG_ARRAY,
+)
+from pim.simulator.viz import (
     _BG_HEX as _DARK_BG_HEX,
+)
+from pim.simulator.viz import (
     _TEXT_COLOR as _DARK_TEXT_COLOR,
+)
+from pim.simulator.viz import (
     _TICK_COLOR as _DARK_TICK_COLOR,
+)
+from pim.simulator.viz import (
     make_waterfall,
 )
 from pim.world_models.dataloader import ObservationDataset
 from pim.world_models.gru import GRUModel, ModelConfig
-
 
 # ── Dark theme helper (simulator aesthetic for waterfall panels) ──────────────
 
@@ -161,7 +167,9 @@ class C1Result:
         np.ndarray
     )  # (T-n_context,)  MSE at each horizon step (vs clean target)
     context_lengths: np.ndarray  # (T-1,)
-    mse_by_ctx: np.ndarray  # (T-1,)  1-step MSE as function of context (vs noisy obs, AR warmup)
+    mse_by_ctx: (
+        np.ndarray
+    )  # (T-1,)  1-step MSE as function of context (vs noisy obs, AR warmup)
     clean_mse_by_ctx: np.ndarray  # (T-1,)  1-step MSE vs clean obs (teacher-forcing)
 
 
@@ -181,14 +189,15 @@ class C2Result:
 class C3Result:
     """Criterion 3 — Rollout Consistency."""
 
-    drift_mse: np.ndarray  # (n_rollout,)
+    drift_mse: np.ndarray  # (n_rollout,)  vs noisy obs
+    clean_drift_mse: np.ndarray  # (n_rollout,)  vs clean obs
     coherence_metrics: CoherenceMetrics
     mlp_coherence_metrics: CoherenceMetrics
     decoded_pos_roll: np.ndarray  # (N_eval, n_rollout, n_obj, 2) — linear
     mlp_decoded_pos_roll: np.ndarray  # (N_eval, n_rollout, n_obj, 2) — MLP
-    per_sample_scores: np.ndarray  # (N_eval,) — linear coherence scores
-    mlp_per_sample_scores: np.ndarray  # (N_eval,) — MLP coherence scores
-    gt_per_sample_scores: np.ndarray  # (N_eval,) — GT coherence scores
+    per_sample_scores: np.ndarray  # (N_eval,) — linear smoothness scores
+    mlp_per_sample_scores: np.ndarray  # (N_eval,) — MLP smoothness scores
+    gt_per_sample_scores: np.ndarray  # (N_eval,) — GT smoothness scores
     obs_rollout_co: np.ndarray  # (N_eval, n_rollout, R) — predicted observations
 
 
@@ -225,7 +234,9 @@ class C4Result:
     viz_gt_pos: np.ndarray  # (n_viz, ctrl_n_rollout, n_obj, 2)
     # Pre-edit context: last min(8, edit_frame) frames before edit
     viz_pre_edit_pos: np.ndarray  # (n_viz, n_ctx_show, n_obj, 2) — GT positions
-    viz_pre_edit_h: np.ndarray  # (n_viz, n_ctx_show, H) — hidden states for decoded pos viz
+    viz_pre_edit_h: (
+        np.ndarray
+    )  # (n_viz, n_ctx_show, H) — hidden states for decoded pos viz
     viz_colors: np.ndarray  # (n_viz, n_obj, 3)
 
 
@@ -348,9 +359,9 @@ def run_criterion1(cfg: EvalConfig, s: SetupResult) -> C1Result:
     )
 
     # 1-step MSE vs clean obs — compare TF predictions against noiseless targets
-    clean_mse_by_ctx = (
-        (obs_pred_tf - s.clean_obs_actual[:, 1:, :]) ** 2
-    ).mean(axis=(0, 2))
+    clean_mse_by_ctx = ((obs_pred_tf - s.clean_obs_actual[:, 1:, :]) ** 2).mean(
+        axis=(0, 2)
+    )
 
     return C1Result(
         metrics=metrics,
@@ -475,6 +486,11 @@ def run_criterion3(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C3Result:
         obs_rollout_co,
         cfg.rollout_n_context,
     )
+    clean_drift_mse = eval_observation_drift(
+        s.clean_obs_actual[: cfg.coherence_n_eval],
+        obs_rollout_co,
+        cfg.rollout_n_context,
+    )
 
     # Decode positions with both extractors
     c2.linear_extractor.eval()
@@ -508,17 +524,18 @@ def run_criterion3(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C3Result:
     )
 
     print(
-        f"  linear coherence  mean={coherence_metrics.mean_score:.4f}  "
+        f"  linear smoothness  mean={coherence_metrics.mean_score:.4f}  "
         f"jump ratio={coherence_metrics.mean_jump_ratio:.2f}"
     )
     print(
-        f"  MLP    coherence  mean={mlp_coherence_metrics.mean_score:.4f}  "
+        f"  MLP    smoothness  mean={mlp_coherence_metrics.mean_score:.4f}  "
         f"jump ratio={mlp_coherence_metrics.mean_jump_ratio:.2f}"
     )
-    print(f"  GT     coherence  mean={gt_per_sample_scores.mean():.4f}")
+    print(f"  GT     smoothness  mean={gt_per_sample_scores.mean():.4f}")
 
     return C3Result(
         drift_mse=drift_mse,
+        clean_drift_mse=clean_drift_mse,
         coherence_metrics=coherence_metrics,
         mlp_coherence_metrics=mlp_coherence_metrics,
         decoded_pos_roll=decoded_pos_roll,
@@ -556,7 +573,9 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
     # Warm up model to edit_frame for each sample (teacher-force on actual obs)
     n_ctx_show = min(8, edit_frame)
     h_at_edit = np.zeros((n_ctrl, s.model.hidden_size), dtype=np.float32)
-    h_pre_edit_viz = np.zeros((n_viz, n_ctx_show, s.model.hidden_size), dtype=np.float32)
+    h_pre_edit_viz = np.zeros(
+        (n_viz, n_ctx_show, s.model.hidden_size), dtype=np.float32
+    )
     with torch.no_grad():
         for i in tqdm(range(n_ctrl), desc="  teacher-force to edit frame", leave=False):
             obs_seq = torch.from_numpy(edits_obs[i]).float().to(cfg.device)
@@ -564,7 +583,9 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
             for t in range(edit_frame):
                 _, h = s.model.step(obs_seq[t].unsqueeze(0), h)
                 if i < n_viz and t >= edit_frame - n_ctx_show:
-                    h_pre_edit_viz[i, t - (edit_frame - n_ctx_show)] = h[0, 0].cpu().numpy()
+                    h_pre_edit_viz[i, t - (edit_frame - n_ctx_show)] = (
+                        h[0, 0].cpu().numpy()
+                    )
             h_at_edit[i] = h[0, 0].cpu().numpy()
 
     env_state_targets = edits_positions[:n_ctrl, edit_frame, : cfg.n_obj, :].reshape(
@@ -598,20 +619,22 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
             # Steered rollout
             # Step 0: decode h' → prediction for edit_frame; by construction linear probe reads target exactly
             h_gru_s = h_edited.unsqueeze(0)  # (1, 1, H) = (num_layers, B, H)
-            x_s = s.model.decoder(h_edited)  # (1, R) — step 0 prediction, never shown to model
+            x_s = s.model.decoder(
+                h_edited
+            )  # (1, R) — step 0 prediction, never shown to model
             s_obs = [x_s.squeeze(0).cpu().numpy()]
             s_h = [h_edited.squeeze(0).cpu().numpy()]  # h' at index 0
             for _ in range(cfg.ctrl_n_rollout - 1):
                 x_s, h_gru_s = s.model.step(x_s, h_gru_s)
                 s_obs.append(x_s.squeeze(0).cpu().numpy())
                 s_h.append(h_gru_s[-1, 0].cpu().numpy())
-            steered_obs_all.append(np.stack(s_obs))   # (ctrl_n_rollout, R)
-            steered_h_all.append(np.stack(s_h))        # (ctrl_n_rollout, H)
+            steered_obs_all.append(np.stack(s_obs))  # (ctrl_n_rollout, R)
+            steered_h_all.append(np.stack(s_h))  # (ctrl_n_rollout, H)
 
             # Unsteered rollout
             # Step 0: decode h (no injection) → prediction for edit_frame from unedited state
             h_gru_u = h.unsqueeze(0).unsqueeze(0)  # (1, 1, H)
-            x_u = s.model.decoder(h.unsqueeze(0))   # (1, R) — step 0 prediction
+            x_u = s.model.decoder(h.unsqueeze(0))  # (1, R) — step 0 prediction
             u_obs = [x_u.squeeze(0).cpu().numpy()]
             u_h = [h.cpu().numpy()]
             for _ in range(cfg.ctrl_n_rollout - 1):
@@ -619,12 +642,12 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
                 u_obs.append(x_u.squeeze(0).cpu().numpy())
                 u_h.append(h_gru_u[-1, 0].cpu().numpy())
             unsteered_obs_all.append(np.stack(u_obs))  # (ctrl_n_rollout, R)
-            unsteered_h_all.append(np.stack(u_h))       # (ctrl_n_rollout, H)
+            unsteered_h_all.append(np.stack(u_h))  # (ctrl_n_rollout, H)
 
-    steered_obs_arr = np.stack(steered_obs_all)    # (N, ctrl_n_rollout, R)
+    steered_obs_arr = np.stack(steered_obs_all)  # (N, ctrl_n_rollout, R)
     unsteered_obs_arr = np.stack(unsteered_obs_all)  # (N, ctrl_n_rollout, R)
     # steered_h_arr[i, 0] = h' (injected), [i, 1..] = post-step hidden states
-    steered_h_arr = np.stack(steered_h_all)    # (N, ctrl_n_rollout, H)
+    steered_h_arr = np.stack(steered_h_all)  # (N, ctrl_n_rollout, H)
     unsteered_h_arr = np.stack(unsteered_h_all)  # (N, ctrl_n_rollout, H)
 
     # Step 0 = edit_frame; both obs and position GT start at edit_frame
@@ -645,23 +668,35 @@ def run_criterion4(cfg: EvalConfig, s: SetupResult, c2: C2Result) -> C4Result:
         :n_ctrl, edit_frame : edit_frame + cfg.ctrl_n_rollout, : cfg.n_obj, :
     ]  # (N, ctrl_n_rollout, n_obj, 2)
     with torch.no_grad():
-        h_s_t = torch.from_numpy(steered_h_arr).float().to(cfg.device)    # (N, ctrl_n_rollout, H)
+        h_s_t = (
+            torch.from_numpy(steered_h_arr).float().to(cfg.device)
+        )  # (N, ctrl_n_rollout, H)
         h_u_t = torch.from_numpy(unsteered_h_arr).float().to(cfg.device)
-        steered_pos = c2.linear_extractor(h_s_t).cpu().numpy()    # (N, ctrl_n_rollout, n_obj, 2)
+        steered_pos = (
+            c2.linear_extractor(h_s_t).cpu().numpy()
+        )  # (N, ctrl_n_rollout, n_obj, 2)
         unsteered_pos = c2.linear_extractor(h_u_t).cpu().numpy()
         mlp_steered_pos = c2.mlp_extractor(h_s_t).cpu().numpy()
         mlp_unsteered_pos = c2.mlp_extractor(h_u_t).cpu().numpy()
 
     steered_pos_step = ((steered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
     unsteered_pos_step = ((unsteered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
-    mlp_steered_pos_step = ((mlp_steered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
-    mlp_unsteered_pos_step = ((mlp_unsteered_pos - gt_positions_mse) ** 2).mean(axis=(0, 2, 3))
+    mlp_steered_pos_step = ((mlp_steered_pos - gt_positions_mse) ** 2).mean(
+        axis=(0, 2, 3)
+    )
+    mlp_unsteered_pos_step = ((mlp_unsteered_pos - gt_positions_mse) ** 2).mean(
+        axis=(0, 2, 3)
+    )
 
     # Decode viz samples (first n_viz) with both linear and MLP
     with torch.no_grad():
-        h_s_viz = torch.from_numpy(steered_h_arr[:n_viz]).float().to(cfg.device)    # (n_viz, ctrl_n_rollout, H)
+        h_s_viz = (
+            torch.from_numpy(steered_h_arr[:n_viz]).float().to(cfg.device)
+        )  # (n_viz, ctrl_n_rollout, H)
         h_u_viz = torch.from_numpy(unsteered_h_arr[:n_viz]).float().to(cfg.device)
-        viz_steered_pos = c2.linear_extractor(h_s_viz).cpu().numpy()      # (n_viz, ctrl_n_rollout, n_obj, 2)
+        viz_steered_pos = (
+            c2.linear_extractor(h_s_viz).cpu().numpy()
+        )  # (n_viz, ctrl_n_rollout, n_obj, 2)
         viz_unsteered_pos = c2.linear_extractor(h_u_viz).cpu().numpy()
         viz_steered_mlp_pos = c2.mlp_extractor(h_s_viz).cpu().numpy()
         viz_unsteered_mlp_pos = c2.mlp_extractor(h_u_viz).cpu().numpy()
@@ -1015,26 +1050,25 @@ def plot_criterion2(
 def plot_criterion3(
     cfg: EvalConfig,
     s: SetupResult,
-    c1: C1Result,
     c3: C3Result,
     n_viz: int = 3,
 ) -> dict[str, Figure]:
     figs: dict[str, Figure] = {}
 
-    # Observation drift (= horizon RMSE from C1, displayed here)
-    _steps = np.arange(1, len(c1.horizon_mse) + 1)
+    # Observation drift — AR rollout with rollout_n_context warm-up
+    _steps = np.arange(1, cfg.rollout_n_rollout + 1)
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
     ax.plot(
         _steps,
-        np.sqrt(c1.horizon_mse),
+        np.sqrt(c3.drift_mse),
         color=PALETTE[0],
         linewidth=1.8,
         label="vs noisy obs",
     )
     ax.plot(
         _steps,
-        np.sqrt(c1.clean_horizon_mse),
+        np.sqrt(c3.clean_drift_mse),
         color=PALETTE[0],
         linewidth=1.8,
         linestyle="--",
@@ -1079,9 +1113,9 @@ def plot_criterion3(
         c3.mlp_per_sample_scores.mean(),
     ]
     ax.bar(names, means, color=[PALETTE[3], PALETTE[0], PALETTE[1]], width=0.5)
-    ax.set_ylabel("mean coherence score", color=_TEXT_COLOR, fontsize=10)
+    ax.set_ylabel("mean smoothness score", color=_TEXT_COLOR, fontsize=10)
     ax.set_title(
-        "Trajectory coherence (lower = smoother)",
+        "Trajectory smoothness (lower = smoother)",
         color=_TEXT_COLOR,
         fontsize=11,
     )
@@ -1089,16 +1123,17 @@ def plot_criterion3(
     for spine in ax.spines.values():
         spine.set_edgecolor(_TICK_COLOR)
     plt.tight_layout()
-    figs["coherence_bar"] = fig
+    figs["smoothness_bar"] = fig
 
-    # Coherence distribution — GT + linear + MLP
-    figs["coherence_distribution"] = plot_coherence_distribution(
+    # Smoothness distribution — GT + linear + MLP
+    figs["smoothness_distribution"] = plot_coherence_distribution(
         {
             "GT": c3.gt_per_sample_scores,
             "linear": c3.per_sample_scores,
             "MLP": c3.mlp_per_sample_scores,
         },
-        title="Trajectory coherence score distribution  (AR rollout)",
+        title="Trajectory smoothness score distribution  (AR rollout)",
+        colors=[PALETTE[3], PALETTE[0], PALETTE[1]],
     )
 
     n_ctx = cfg.rollout_n_context
@@ -1126,7 +1161,7 @@ def plot_criterion3(
         fig, axes = plt.subplots(1, 2, figsize=(13, 4), facecolor=_BG_HEX)
         fig.suptitle(
             f"Sample {i}  —  AR rollout positions  "
-            f"coherence: GT={s_gt:.3f}  linear={s_lin:.3f}  MLP={s_mlp:.3f}",
+            f"smoothness: GT={s_gt:.3f}  linear={s_lin:.3f}  MLP={s_mlp:.3f}",
             color=_TEXT_COLOR,
             fontsize=11,
             fontweight="bold",
@@ -1222,7 +1257,7 @@ def plot_criterion3(
 
         fig_3 = plt.figure(figsize=(18, 5.5), facecolor=_DARK_BG_HEX)
         fig_3.suptitle(
-            f"Sample {i}  —  rollout coherence  "
+            f"Sample {i}  —  rollout smoothness  "
             f"GT={s_gt:.3f}  linear={s_lin:.3f}  MLP={s_mlp:.3f}",
             color=_DARK_TEXT_COLOR,
             fontsize=11,
@@ -1420,7 +1455,9 @@ def plot_criterion4(
     ef = c4.edit_frame
     n_ctx_show = c4.viz_pre_edit_pos.shape[1]  # min(8, edit_frame)
     ctx_frames = np.arange(ef - n_ctx_show, ef)  # pre-edit context frame indices
-    roll_frames = np.arange(ef, ef + cfg.ctrl_n_rollout)  # ctrl_n_rollout frames from ef
+    roll_frames = np.arange(
+        ef, ef + cfg.ctrl_n_rollout
+    )  # ctrl_n_rollout frames from ef
 
     c2.linear_extractor.eval()
     c2.mlp_extractor.eval()
@@ -1433,14 +1470,15 @@ def plot_criterion4(
             h_pre = (
                 torch.from_numpy(c4.viz_pre_edit_h[i]).float().to(cfg.device)
             )  # (n_ctx_show, H)
-            pre_lin_pos = c2.linear_extractor(h_pre).cpu().numpy()  # (n_ctx_show, n_obj, 2)
+            pre_lin_pos = (
+                c2.linear_extractor(h_pre).cpu().numpy()
+            )  # (n_ctx_show, n_obj, 2)
             pre_mlp_pos = c2.mlp_extractor(h_pre).cpu().numpy()
 
         # ── x/y position line plots (frame-indexed, with pre-edit context) ─
         fig, axes = plt.subplots(1, 2, figsize=(13, 4), facecolor=_BG_HEX)
         fig.suptitle(
-            f"Sample {i}  —  steered vs unsteered positions  (edit at frame {ef},  "
-            f"step 0 = edit frame; steered linear × hits GT exactly at step 0)",
+            f"Sample {i}  —  steered positions  (edit at frame {ef},  step 0 = edit frame)",
             color=_TEXT_COLOR,
             fontsize=11,
             fontweight="bold",
@@ -1500,25 +1538,6 @@ def plot_criterion4(
                     marker="o",
                     alpha=0.9,
                 )
-                # Unsteered decoded — linear × open, MLP ○ open
-                ax.scatter(
-                    roll_frames,
-                    c4.viz_unsteered_pos[i, :, obj, coord],
-                    color=color,
-                    s=20,
-                    marker="x",
-                    alpha=0.6,
-                    facecolors="none",
-                )
-                ax.scatter(
-                    roll_frames,
-                    c4.viz_unsteered_mlp_pos[i, :, obj, coord],
-                    color=color,
-                    s=20,
-                    marker="o",
-                    alpha=0.6,
-                    facecolors="none",
-                )
             ax.axvline(
                 ef - 0.5, color=_TICK_COLOR, linewidth=1.0, linestyle="--", alpha=0.5
             )
@@ -1530,24 +1549,32 @@ def plot_criterion4(
         handles = [
             Line2D([0], [0], color="gray", linewidth=1.8, label="GT"),
             Line2D(
-                [0], [0], color="gray", marker="x", linestyle="none",
-                markersize=6, label="linear decoder",
+                [0],
+                [0],
+                color="gray",
+                marker="x",
+                linestyle="none",
+                markersize=6,
+                label="linear decoder",
             ),
             Line2D(
-                [0], [0], color="gray", marker="o", linestyle="none",
-                markersize=6, label="MLP decoder",
+                [0],
+                [0],
+                color="gray",
+                marker="o",
+                linestyle="none",
+                markersize=6,
+                label="MLP decoder",
             ),
             Line2D(
-                [0], [0], color="gray", marker="s", linestyle="none",
-                markersize=6, alpha=0.9, label="steered (solid fill)",
-            ),
-            Line2D(
-                [0], [0], color="gray", marker="s", linestyle="none",
-                markersize=6, alpha=0.6, markerfacecolor="none", label="unsteered (open)",
-            ),
-            Line2D(
-                [0], [0], color="gray", marker="s", linestyle="none",
-                markersize=6, alpha=0.3, label="pre-edit (faint)",
+                [0],
+                [0],
+                color="gray",
+                marker="s",
+                linestyle="none",
+                markersize=6,
+                alpha=0.3,
+                label="pre-edit (faint)",
             ),
         ]
         axes[0].legend(
@@ -1661,10 +1688,10 @@ def save_metrics(results: dict, output_dir: Path) -> None:
     if "c3" in results:
         c3 = results["c3"]
         metrics["criterion3"] = {
-            "linear_coherence_mean": c3.coherence_metrics.mean_score,
-            "mlp_coherence_mean": c3.mlp_coherence_metrics.mean_score,
-            "gt_coherence_mean": float(c3.gt_per_sample_scores.mean()),
-            "linear_coherence_std": c3.coherence_metrics.std_score,
+            "linear_smoothness_mean": c3.coherence_metrics.mean_score,
+            "mlp_smoothness_mean": c3.mlp_coherence_metrics.mean_score,
+            "gt_smoothness_mean": float(c3.gt_per_sample_scores.mean()),
+            "linear_smoothness_std": c3.coherence_metrics.std_score,
             "mean_jump_ratio": c3.coherence_metrics.mean_jump_ratio,
         }
     if "c4" in results:
