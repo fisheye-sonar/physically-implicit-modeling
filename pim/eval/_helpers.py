@@ -1,10 +1,8 @@
 """Inference helpers — the only place in pim/eval/ that calls models.
 
-These functions bridge world models and the pure-array eval functions.
-They run inference and return numpy arrays that eval functions consume.
-
-All functions are decorated with @torch.no_grad() and accept numpy or tensor
-inputs for convenience.
+Model-agnostic via the HiddenStateModel SSM protocol (step, predict_step,
+flat_state, observe_sequence). Functions here run inference and return numpy
+arrays that the rest of pim/eval/ consumes.
 """
 
 from __future__ import annotations
@@ -12,139 +10,179 @@ from __future__ import annotations
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
 
-from pim.world_models.protocol import HiddenStateModel, WorldModel
+from pim.world_models.protocol import HiddenStateModel
 
 
-@torch.no_grad()
-def run_autoregressive(
-    model: WorldModel,
-    obs: np.ndarray,      # (T, R) single sample
-    n_context: int,
-    device: str = "cpu",
-) -> tuple[np.ndarray, np.ndarray | None]:
-    """Warm up on obs[:n_context], then roll out autoregressively.
-
-    Parameters
-    ----------
-    model     : WorldModel
-    obs       : (T, R) float32 single observation sequence
-    n_context : frames used to build hidden state before rollout begins
-
-    Returns
-    -------
-    obs_rollout     : (T - n_context, R) float32 — predicted observations
-    internal_states : (T - 1, H) float32 if model is HiddenStateModel, else None
-                      Hidden states for all T-1 steps (context + rollout).
-    """
-    T = obs.shape[0]
-    obs_t = torch.from_numpy(obs).float().to(device)
-
-    h = None
-    all_h = []   # collect hidden states if available
-    is_hsm = isinstance(model, HiddenStateModel)
-
-    # Context warm-up
-    last_pred = None
-    for t in range(n_context):
-        pred_t, h = model.step(obs_t[t].unsqueeze(0), h)
-        if is_hsm:
-            # h shape: (num_layers, 1, H) — take last layer, squeeze batch
-            all_h.append(h[-1, 0].cpu().numpy())
-        last_pred = pred_t
-
-    # Autoregressive rollout
-    preds = []
-    x = last_pred
-    for _ in range(T - n_context):
-        x, h = model.step(x, h)
-        preds.append(x.squeeze(0).cpu().numpy())
-        if is_hsm:
-            all_h.append(h[-1, 0].cpu().numpy())
-
-    obs_rollout = np.stack(preds, axis=0)           # (T - n_context, R)
-    internal_states = np.stack(all_h) if all_h else None  # (T-1, H) or None
-    return obs_rollout, internal_states
+def _as_obs_tensor(obs: np.ndarray | torch.Tensor, device: str) -> torch.Tensor:
+    if isinstance(obs, torch.Tensor):
+        return obs.float().to(device)
+    return torch.from_numpy(obs).float().to(device)
 
 
 @torch.no_grad()
-def run_teacher_forcing(
+def teacher_force(
     model: HiddenStateModel,
     loader: DataLoader,
     device: str = "cpu",
     obs_key: str = "obs_intensity",
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Run teacher-forcing over a full loader; collect predictions + hidden states.
-
-    Parameters
-    ----------
-    model    : HiddenStateModel (must implement get_hidden_states)
-    loader   : DataLoader yielding batches with obs_key
-    device   : torch device string
-    obs_key  : key in batch dict for the observation sequence
+    """Single-pass teacher forcing over a full loader.
 
     Returns
     -------
-    obs_pred        : (N, T-1, R) float32 — teacher-forcing predictions
-    internal_states : (N, T-1, H) float32 — hidden states from get_hidden_states
+    obs_pred : (N, T-1, R) — next-step predictions; obs_pred[i, t] ≈ obs[i, t+1]
+    states   : (N, T-1, H) — flat hidden state aligned to obs[:, :-1]
     """
     all_pred, all_h = [], []
-
     for batch in loader:
-        obs = batch[obs_key].float().to(device)     # (B, T, R)
-        pred, _ = model(obs)                         # (B, T-1, R)
-        h = model.get_hidden_states(obs)             # (B, T-1, H)
+        obs = batch[obs_key].float().to(device)
+        pred, h = model.observe_sequence(obs)
         all_pred.append(pred.cpu().numpy())
         all_h.append(h.cpu().numpy())
+    return np.concatenate(all_pred, axis=0), np.concatenate(all_h, axis=0)
 
-    obs_pred = np.concatenate(all_pred, axis=0)         # (N, T-1, R)
-    internal_states = np.concatenate(all_h, axis=0)     # (N, T-1, H)
-    return obs_pred, internal_states
+
+def _ar_single(
+    model: HiddenStateModel,
+    obs: np.ndarray,
+    n_context: int,
+    n_rollout: int,
+    device: str,
+    *,
+    collect_hidden: bool,
+) -> tuple[np.ndarray | None, np.ndarray | None, np.ndarray]:
+    """Core single-sample AR loop: context via model.step, rollout via model.predict_step."""
+    obs_t = _as_obs_tensor(obs, device)
+
+    state = None
+    last_pred = None
+    h_ctx, h_roll, obs_roll = [], [], []
+
+    for t in range(n_context):
+        last_pred, state = model.step(obs_t[t].unsqueeze(0), state)
+        if collect_hidden:
+            h_ctx.append(model.flat_state(state).squeeze(0).cpu().numpy())
+
+    if last_pred is None:
+        raise ValueError("n_context must be at least 1")
+
+    for _ in range(n_rollout):
+        obs_roll.append(last_pred.squeeze(0).cpu().numpy())
+        last_pred, state = model.predict_step(state)
+        if collect_hidden:
+            h_roll.append(model.flat_state(state).squeeze(0).cpu().numpy())
+
+    h_context = np.stack(h_ctx) if collect_hidden else None
+    h_rollout = np.stack(h_roll) if collect_hidden else None
+    return h_context, h_rollout, np.stack(obs_roll)
 
 
 @torch.no_grad()
-def collect_rollout(
+def autoregressive_rollout(
     model: HiddenStateModel,
-    obs: np.ndarray,      # (T, R)
+    obs: np.ndarray,
     n_context: int,
-    n_rollout: int,
     device: str = "cpu",
-) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Collect context and rollout hidden states + rollout observations.
-
-    Parameters
-    ----------
-    model     : HiddenStateModel
-    obs       : (T, R) observation sequence
-    n_context : frames for context warm-up
-    n_rollout : frames to roll out autoregressively
+) -> tuple[np.ndarray, np.ndarray]:
+    """Single-sample AR rollout: warm up on obs[:n_context], then roll out to end.
 
     Returns
     -------
-    h_context   : (n_context, H) hidden states during context
-    h_rollout   : (n_rollout, H) hidden states during rollout
-    obs_rollout : (n_rollout, R) predicted observations during rollout
+    obs_rollout : (T - n_context, R) — obs_rollout[0] predicts obs[n_context]
+    states      : (T, H) — flat hidden states for context + rollout (concatenated)
     """
-    obs_t = torch.from_numpy(obs).float().to(device)
-    h = None
-    h_ctx, h_roll, obs_roll = [], [], []
-
-    # Context warm-up (teacher forcing)
-    last_pred = None
-    for t in range(n_context):
-        pred_t, h = model.step(obs_t[t].unsqueeze(0), h)
-        h_ctx.append(h[-1, 0].cpu().numpy())
-        last_pred = pred_t
-
-    # Autoregressive rollout
-    x = last_pred
-    for _ in range(n_rollout):
-        x, h = model.step(x, h)
-        h_roll.append(h[-1, 0].cpu().numpy())
-        obs_roll.append(x.squeeze(0).cpu().numpy())
-
-    return (
-        np.stack(h_ctx),    # (n_context, H)
-        np.stack(h_roll),   # (n_rollout, H)
-        np.stack(obs_roll), # (n_rollout, R)
+    T = obs.shape[0]
+    h_ctx, h_roll, obs_roll = _ar_single(
+        model, obs, n_context, T - n_context, device, collect_hidden=True
     )
+    assert h_ctx is not None and h_roll is not None
+    return obs_roll, np.concatenate([h_ctx, h_roll], axis=0)
+
+
+@torch.no_grad()
+def autoregressive_rollouts(
+    model: HiddenStateModel,
+    obs_array: np.ndarray,
+    n_context: int,
+    device: str = "cpu",
+    *,
+    desc: str = "AR rollout",
+) -> np.ndarray:
+    """Batched AR rollout over many samples.
+
+    Parameters
+    ----------
+    obs_array : (N, T, R)
+
+    Returns
+    -------
+    obs_rollout : (N, T - n_context, R)
+    """
+    T = obs_array.shape[1]
+    rollouts = []
+    for i in tqdm(range(len(obs_array)), desc=desc, leave=False):
+        _, _, obs_roll = _ar_single(
+            model, obs_array[i], n_context, T - n_context, device, collect_hidden=False
+        )
+        rollouts.append(obs_roll)
+    return np.stack(rollouts)
+
+
+@torch.no_grad()
+def collect_rollouts(
+    model: HiddenStateModel,
+    obs_array: np.ndarray,
+    n_context: int,
+    n_rollout: int,
+    device: str = "cpu",
+    *,
+    desc: str = "rollouts",
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Fixed-window rollout for many samples: warm up n_context, roll out n_rollout.
+
+    Parameters
+    ----------
+    obs_array : (N, T, R)
+
+    Returns
+    -------
+    h_context   : (N, n_context, H)
+    h_rollout   : (N, n_rollout, H)
+    obs_rollout : (N, n_rollout, R) — obs_rollout[i, 0] predicts obs_array[i, n_context]
+    """
+    h_ctxs, h_rolls, obs_rolls = [], [], []
+    for i in tqdm(range(len(obs_array)), desc=desc, leave=False):
+        h_ctx, h_roll, obs_roll = _ar_single(
+            model, obs_array[i], n_context, n_rollout, device, collect_hidden=True
+        )
+        h_ctxs.append(h_ctx)
+        h_rolls.append(h_roll)
+        obs_rolls.append(obs_roll)
+    return np.stack(h_ctxs), np.stack(h_rolls), np.stack(obs_rolls)
+
+
+@torch.no_grad()
+def decode_states_multi(
+    probes,  # list[ProbeSpec]
+    states: np.ndarray,
+    device: str = "cpu",
+) -> dict[str, np.ndarray]:
+    """Apply each probe to the same hidden-state array.
+
+    Parameters
+    ----------
+    probes : list of ProbeSpec
+    states : (..., H) hidden states (any leading shape)
+
+    Returns
+    -------
+    decoded : dict[probe.name -> (..., *state_shape)] decoded states per probe
+    """
+    h = torch.from_numpy(states).float().to(device)
+    out: dict[str, np.ndarray] = {}
+    for p in probes:
+        p.probe.to(device).eval()
+        out[p.name] = p.probe(h).cpu().numpy()
+    return out

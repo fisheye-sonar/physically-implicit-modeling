@@ -53,7 +53,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions import Normal, kl_divergence
 
-
 # ── State type ────────────────────────────────────────────────────────────────
 
 
@@ -64,6 +63,7 @@ class RSSMState(NamedTuple):
     s : (B, stoch_size) — stochastic latent (posterior sample during training,
                           prior sample during imagination)
     """
+
     h: torch.Tensor
     s: torch.Tensor
 
@@ -73,11 +73,11 @@ class RSSMState(NamedTuple):
 
 @dataclass
 class ModelConfig:
-    input_dim: int = 128    # obs_res — overridden from dataset at train time
-    embed_dim: int = 128    # observation encoder output dimension
-    det_size: int = 200     # GRUCell hidden size (deterministic state h)
-    stoch_size: int = 30    # stochastic latent dimension (state s)
-    hidden_dim: int = 200   # MLP width for prior, posterior, and decoder nets
+    input_dim: int = 128  # obs_res — overridden from dataset at train time
+    embed_dim: int = 128  # observation encoder output dimension
+    det_size: int = 200  # GRUCell hidden size (deterministic state h)
+    stoch_size: int = 30  # stochastic latent dimension (state s)
+    hidden_dim: int = 200  # MLP width for prior, posterior, and decoder nets
 
 
 # ── Model ─────────────────────────────────────────────────────────────────────
@@ -189,11 +189,11 @@ class RSSMModel(nn.Module):
         prior     : p(s_t | h_t)
         posterior : q(s_t | h_t, e_t)
         """
-        h = self.gru_cell(state.s, state.h)    # (B, det_size)
-        e = self.encoder(obs_t)                 # (B, embed_dim)
+        h = self.gru_cell(state.s, state.h)  # (B, det_size)
+        e = self.encoder(obs_t)  # (B, embed_dim)
         prior = self._prior(h)
         posterior = self._posterior(h, e)
-        s = posterior.rsample()                 # reparameterized
+        s = posterior.rsample()  # reparameterized
         return RSSMState(h, s), prior, posterior
 
     def imagine_step(
@@ -211,9 +211,9 @@ class RSSMModel(nn.Module):
         next_state : RSSMState — prior state at t+1 = (h_{t+1}, s_{t+1})
         prior      : p(s_{t+1} | h_{t+1})
         """
-        h = self.gru_cell(state.s, state.h)    # (B, det_size)
+        h = self.gru_cell(state.s, state.h)  # (B, det_size)
         prior = self._prior(h)
-        s = prior.rsample()                     # prior sample
+        s = prior.rsample()  # prior sample
         return RSSMState(h, s), prior
 
     def decode(self, state: RSSMState) -> torch.Tensor:
@@ -228,6 +228,57 @@ class RSSMModel(nn.Module):
         obs_hat : (..., R) predicted observation
         """
         return self.decoder(self._flat_state(state))
+
+    # ── SSM protocol methods ──────────────────────────────────────────────────
+
+    def flat_state(self, state: RSSMState) -> torch.Tensor:
+        """cat([h, s]) → (B, det_size + stoch_size)."""
+        return self._flat_state(state)
+
+    def state_from_flat(self, flat: torch.Tensor) -> RSSMState:
+        """(B, det_size + stoch_size) → RSSMState."""
+        return self._state_from_flat(flat)
+
+    @torch.no_grad()
+    def observe_sequence(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Single-pass observe: predictions + flat posterior states.
+
+        Uses stochastic rsample (matching training behaviour) rather than
+        the posterior mean used by get_hidden_states.
+
+        Parameters
+        ----------
+        obs : (B, T, R)
+
+        Returns
+        -------
+        pred   : (B, T-1, R)  next-step predictions via imagination
+        h_flat : (B, T-1, hidden_size)  flat posterior states cat([h_t, s_t])
+        """
+        B, T, _ = obs.shape
+        state = self._initial_state(B, obs.device)
+        preds, hidden_states = [], []
+        for t in range(T - 1):
+            state, _, _ = self.observe_step(obs[:, t], state)  # stochastic rsample
+            next_state, _ = self.imagine_step(state)
+            preds.append(self.decode(next_state))
+            hidden_states.append(self._flat_state(state))
+        return torch.stack(preds, dim=1), torch.stack(hidden_states, dim=1)
+
+    def predict_step(self, state: RSSMState) -> tuple[torch.Tensor, RSSMState]:
+        """Free-running step: pure prior imagination, no observation used.
+
+        Parameters
+        ----------
+        state : current RSSMState
+
+        Returns
+        -------
+        pred_next  : (B, R) — decoded prediction for the next frame
+        state_next : RSSMState after one imagination step
+        """
+        next_state, _ = self.imagine_step(state)
+        return self.decode(next_state), next_state
 
     # ── Protocol interface ────────────────────────────────────────────────────
 
@@ -320,4 +371,4 @@ class RSSMModel(nn.Module):
             mu, _ = stats.chunk(2, dim=-1)
             state = RSSMState(h, mu)
             all_h.append(self._flat_state(state))
-        return torch.stack(all_h, dim=1)   # (B, T-1, hidden_size)
+        return torch.stack(all_h, dim=1)  # (B, T-1, hidden_size)

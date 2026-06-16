@@ -8,15 +8,17 @@ from model architecture.
 
 from __future__ import annotations
 
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim import Adam
 
-from .linear import LinearExtractor
 from .matching import identity_mse
+
+if TYPE_CHECKING:
+    from .linear import LinearExtractor
 
 
 def train_extractor(
@@ -100,7 +102,7 @@ def train_extractor(
 
 
 def fit_lstsq(
-    extractor: LinearExtractor,
+    extractor: "LinearExtractor",
     internal_states: np.ndarray,  # (N, T, H)
     env_states_gt: np.ndarray,  # (N, T, *state_shape)
     *,

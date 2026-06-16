@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from typing import Callable
+
+import numpy as np
 import torch
 import torch.nn as nn
 
 from .base import StateDefinition
+from .matching import identity_mse
+from .training import train_extractor
 
 
 class MLPExtractor(nn.Module):
@@ -22,13 +27,17 @@ class MLPExtractor(nn.Module):
         Defines the output shape and target quantity.
     mlp_hidden : int
         Width of the hidden layer.
+    n_epochs, lr : gradient-descent training hyperparameters.
     """
 
     def __init__(
         self,
         hidden_size: int,
         state_def: StateDefinition,
+        *,
         mlp_hidden: int = 128,
+        n_epochs: int = 30,
+        lr: float = 5e-3,
     ) -> None:
         super().__init__()
         self.state_def = state_def
@@ -37,17 +46,26 @@ class MLPExtractor(nn.Module):
             nn.ReLU(),
             nn.Linear(mlp_hidden, state_def.output_dim),
         )
+        self.n_epochs = n_epochs
+        self.lr = lr
 
     def forward(self, h: torch.Tensor) -> torch.Tensor:
-        """Map hidden states to decoded env state.
-
-        Parameters
-        ----------
-        h : (..., hidden_size)
-
-        Returns
-        -------
-        decoded : (..., *state_shape)
-        """
-        flat = self.net(h)  # (..., output_dim)
+        flat = self.net(h)
         return flat.reshape(*h.shape[:-1], *self.state_def.state_shape)
+
+    def fit(
+        self,
+        internal_states: np.ndarray,
+        env_states_gt: np.ndarray,
+        *,
+        mask: np.ndarray | None = None,
+        loss_fn: Callable = identity_mse,
+        device: str = "cpu",
+    ) -> float:
+        """Train this probe in place via gradient descent. Returns final train loss."""
+        losses = train_extractor(
+            self, internal_states, env_states_gt,
+            n_epochs=self.n_epochs, lr=self.lr,
+            loss_fn=loss_fn, mask=mask, device=device,
+        )
+        return losses[-1]

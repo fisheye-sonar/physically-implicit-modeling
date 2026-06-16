@@ -139,3 +139,66 @@ class GRUModel(nn.Module):
         x = F.relu(self.encoder(obs[:, :-1, :]))  # (B, T-1, H)
         h, _ = self.gru(x)                         # (B, T-1, H)
         return h
+
+    # ── SSM protocol methods ──────────────────────────────────────────────────
+
+    def flat_state(self, state: torch.Tensor) -> torch.Tensor:
+        """Last recurrent layer: (num_layers, B, H) → (B, H)."""
+        return state[-1]
+
+    def state_from_flat(self, flat: torch.Tensor) -> torch.Tensor:
+        """(B, H) → (1, B, H) GRU hidden state (num_layers=1)."""
+        return flat.unsqueeze(0)
+
+    def decode(self, state: torch.Tensor) -> torch.Tensor:
+        """Decode the last-layer hidden state to an observation (no advance).
+
+        Parameters
+        ----------
+        state : (num_layers, B, H)
+
+        Returns
+        -------
+        obs : (B, R)
+        """
+        return self.decoder(state[-1])
+
+    @torch.no_grad()
+    def observe_sequence(
+        self, obs: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Single-pass teacher-forcing: predictions + flat hidden states.
+
+        Parameters
+        ----------
+        obs : (B, T, R)
+
+        Returns
+        -------
+        pred   : (B, T-1, R)
+        h_flat : (B, T-1, hidden_size)
+        """
+        x = F.relu(self.encoder(obs[:, :-1, :]))  # (B, T-1, H)
+        h_seq, _ = self.gru(x)                     # (B, T-1, H)
+        pred = self.decoder(h_seq)                  # (B, T-1, R)
+        return pred, h_seq
+
+    def predict_step(
+        self, state: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        """Free-running step: decode current h, feed decoded obs back through step.
+
+        Returns the prediction for the NEXT frame and the updated state.
+
+        Parameters
+        ----------
+        state : (num_layers, B, H)
+
+        Returns
+        -------
+        pred_next  : (B, R) — prediction for frame t+1
+        state_next : (num_layers, B, H)
+        """
+        obs_hat = self.decoder(state[-1])           # (B, R) — decode current h
+        pred_next, state_next = self.step(obs_hat, state)
+        return pred_next, state_next
