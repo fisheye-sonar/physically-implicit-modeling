@@ -229,6 +229,44 @@ class RSSMModel(nn.Module):
         """
         return self.decoder(self._flat_state(state))
 
+    def _forward_with_dists(
+        self, obs: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+        """Training forward pass exposing raw prior/posterior parameters.
+
+        Used by the training loop when KL balancing requires stop-gradient
+        control over which network receives the KL gradient.
+
+        Parameters
+        ----------
+        obs : (B, T, R)
+
+        Returns
+        -------
+        recons   : (B, T, R)
+        prior_mu : (B, T, stoch_size)
+        prior_std: (B, T, stoch_size)
+        post_mu  : (B, T, stoch_size)
+        post_std : (B, T, stoch_size)
+        """
+        B, T, _ = obs.shape
+        state = self._initial_state(B, obs.device)
+        recons, p_mus, p_stds, q_mus, q_stds = [], [], [], [], []
+        for t in range(T):
+            state, prior, posterior = self.observe_step(obs[:, t], state)
+            recons.append(self.decode(state))
+            p_mus.append(prior.loc)
+            p_stds.append(prior.scale)
+            q_mus.append(posterior.loc)
+            q_stds.append(posterior.scale)
+        return (
+            torch.stack(recons, dim=1),
+            torch.stack(p_mus, dim=1),
+            torch.stack(p_stds, dim=1),
+            torch.stack(q_mus, dim=1),
+            torch.stack(q_stds, dim=1),
+        )
+
     # ── SSM protocol methods ──────────────────────────────────────────────────
 
     def flat_state(self, state: RSSMState) -> torch.Tensor:

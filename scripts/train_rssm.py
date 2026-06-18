@@ -48,6 +48,7 @@ import h5py
 import numpy as np
 import torch
 import torch.nn.functional as F
+from torch.distributions import Normal, kl_divergence
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
@@ -67,8 +68,10 @@ class TrainConfig:
     batch_size: int = 256
     lr: float = 3e-4
     weight_decay: float = 1e-4
-    kl_weight: float = 0.0  # β in β-VAE / ELBO
+    kl_weight: float = 1.0  # β in β-VAE / ELBO
     kl_warmup_epochs: int = 10  # linearly ramp kl_weight from 0 over this many epochs
+    free_nats: float = 3.0  # minimum KL per timestep (PlaNet/Dreamer default); 0 = disabled
+    kl_balance_alpha: float = 0.0  # DreamerV2 KL balancing (0 = off, 0.8 = Dreamer default)
     # System
     num_workers: int = 4
     device: str = "auto"
@@ -128,6 +131,18 @@ def _parse_args() -> TrainConfig:
         default=defaults.kl_warmup_epochs,
         help="Linearly ramp kl_weight from 0 over this many epochs (0 = disabled)",
     )
+    p.add_argument(
+        "--free-nats",
+        type=float,
+        default=defaults.free_nats,
+        help="Minimum KL per timestep before penalty kicks in; 0 = disabled (PlaNet default: 3.0)",
+    )
+    p.add_argument(
+        "--kl-balance-alpha",
+        type=float,
+        default=defaults.kl_balance_alpha,
+        help="DreamerV2 KL balancing: alpha*KL(sg(q)||p) + (1-alpha)*KL(q||sg(p)); 0 = off (Dreamer default: 0.8)",
+    )
 
     # System
     p.add_argument(
@@ -177,6 +192,8 @@ def _parse_args() -> TrainConfig:
         weight_decay=a.weight_decay,
         kl_weight=a.kl_weight,
         kl_warmup_epochs=a.kl_warmup_epochs,
+        free_nats=a.free_nats,
+        kl_balance_alpha=a.kl_balance_alpha,
         num_workers=a.num_workers,
         device=a.device,
         seed=a.seed,
@@ -267,6 +284,8 @@ def _run_epoch(
     kl_w: float,
     optimizer: torch.optim.Optimizer | None,
     batch_bar: tqdm | None = None,
+    free_nats: float = 0.0,
+    kl_balance_alpha: float = 0.0,
 ) -> tuple[float, float, float]:
     """Run one epoch.  Pass optimizer=None for validation (no-grad).
 
@@ -285,9 +304,27 @@ def _run_epoch(
     with ctx:
         for batch in loader:
             obs = batch["obs_intensity"].to(device)  # (B, T, R)
-            recons, kl_terms = model(obs)  # (B, T, R), (B, T)
+
+            if kl_balance_alpha > 0.0:
+                # DreamerV2 KL balancing: train prior harder, regularise posterior less.
+                # alpha fraction of gradient flows only to the prior (posterior stopped);
+                # (1-alpha) fraction flows only to the posterior (prior stopped).
+                recons, p_mu, p_std, q_mu, q_std = model._forward_with_dists(obs)
+                kl_prior = kl_divergence(
+                    Normal(q_mu.detach(), q_std.detach()), Normal(p_mu, p_std)
+                ).sum(-1)  # (B, T) — trains prior only
+                kl_post = kl_divergence(
+                    Normal(q_mu, q_std), Normal(p_mu.detach(), p_std.detach())
+                ).sum(-1)  # (B, T) — trains posterior only
+                kl_terms = kl_balance_alpha * kl_prior + (1.0 - kl_balance_alpha) * kl_post
+            else:
+                recons, kl_terms = model(obs)  # (B, T, R), (B, T)
 
             recon_loss = F.mse_loss(recons, obs)
+            # Free nats: clamp per-(batch, timestep) KL before averaging so the
+            # gradient vanishes once the stochastic component is informative enough.
+            if free_nats > 0.0:
+                kl_terms = torch.clamp(kl_terms, min=free_nats)
             kl_loss = kl_terms.mean()
             loss = recon_loss + kl_w * kl_loss
 
@@ -370,7 +407,7 @@ def main() -> None:
     )
     print(f"Train    : {n_train:,} samples  ({tcfg.train_h5})")
     print(f"Val      : {n_val:,} samples  ({tcfg.val_h5})")
-    print(f"KL weight: {tcfg.kl_weight}  warm-up={tcfg.kl_warmup_epochs} epochs")
+    print(f"KL weight: {tcfg.kl_weight}  warm-up={tcfg.kl_warmup_epochs} epochs  free_nats={tcfg.free_nats}  kl_balance_alpha={tcfg.kl_balance_alpha}")
     print()
 
     # ── Training loop ─────────────────────────────────────────────────────
@@ -389,11 +426,13 @@ def main() -> None:
                 leave=False,
             ) as batch_bar:
                 train_loss, train_recon, train_kl = _run_epoch(
-                    model, train_loader, device, kl_w, optimizer, batch_bar
+                    model, train_loader, device, kl_w, optimizer, batch_bar,
+                    free_nats=tcfg.free_nats, kl_balance_alpha=tcfg.kl_balance_alpha,
                 )
                 batch_bar.set_description(f"epoch {epoch} [val]")
                 val_loss, val_recon, val_kl = _run_epoch(
-                    model, val_loader, device, kl_w, optimizer=None, batch_bar=batch_bar
+                    model, val_loader, device, kl_w, optimizer=None, batch_bar=batch_bar,
+                    free_nats=tcfg.free_nats, kl_balance_alpha=tcfg.kl_balance_alpha,
                 )
 
             epoch_bar.set_postfix(

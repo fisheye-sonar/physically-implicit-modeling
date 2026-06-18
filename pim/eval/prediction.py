@@ -21,14 +21,15 @@ from pim.world_models.protocol import WorldModel
 @dataclass
 class PredictionMetrics:
     """Results from a single-step prediction evaluation."""
+
     mean_mse: float
     std_mse: float
-    per_sample_mse: np.ndarray   # (N,)
+    per_sample_mse: np.ndarray  # (N,)
 
 
 def eval_single_step(
-    obs_actual: np.ndarray,      # (N, T, R)
-    obs_predicted: np.ndarray,   # (N, T-1, R)  teacher-forcing predictions
+    obs_actual: np.ndarray,  # (N, T, R)
+    obs_predicted: np.ndarray,  # (N, T-1, R)  teacher-forcing predictions
 ) -> PredictionMetrics:
     """Next-step MSE under teacher forcing.
 
@@ -42,9 +43,9 @@ def eval_single_step(
     -------
     PredictionMetrics with mean, std, and per-sample MSE
     """
-    targets = obs_actual[:, 1:, :]     # (N, T-1, R)
+    targets = obs_actual[:, 1:, :]  # (N, T-1, R)
     sq_err = (obs_predicted - targets) ** 2
-    per_sample_mse = sq_err.mean(axis=(1, 2))   # (N,)
+    per_sample_mse = sq_err.mean(axis=(1, 2))  # (N,)
     return PredictionMetrics(
         mean_mse=float(per_sample_mse.mean()),
         std_mse=float(per_sample_mse.std()),
@@ -53,8 +54,8 @@ def eval_single_step(
 
 
 def eval_horizon_mse(
-    obs_actual: np.ndarray,      # (N, T, R)
-    obs_rollout: np.ndarray,     # (N, T_rollout, R)  AR predictions
+    obs_actual: np.ndarray,  # (N, T, R)
+    obs_rollout: np.ndarray,  # (N, T_rollout, R)  AR predictions
     n_context: int,
 ) -> np.ndarray:
     """MSE of autoregressive predictions at each horizon step.
@@ -72,7 +73,7 @@ def eval_horizon_mse(
     n_rollout = obs_rollout.shape[1]
     targets = obs_actual[:, n_context : n_context + n_rollout, :]  # (N, T_rollout, R)
     sq_err = (obs_rollout - targets) ** 2
-    return sq_err.mean(axis=(0, 2))   # (T_rollout,)
+    return sq_err.mean(axis=(0, 2))  # (T_rollout,)
 
 
 @torch.no_grad()
@@ -111,7 +112,7 @@ def eval_mse_by_context(
     counts = np.zeros(max_t)
 
     for batch in loader:
-        obs = batch[obs_key].float().to(device)   # (B, T, R)
+        obs = batch[obs_key].float().to(device)  # (B, T, R)
         B = obs.shape[0]
 
         for t in range(1, max_t + 1):
@@ -123,9 +124,9 @@ def eval_mse_by_context(
             # Roll out n_steps_ahead - 1 more steps (we have 1 pred already)
             x = pred
             for _ in range(n_steps_ahead - 1):
-                x, h = model.step(x, h)
+                x, h = model.predict_step(h)
 
-            target = obs[:, t + n_steps_ahead - 1, :]   # (B, R)
+            target = obs[:, t + n_steps_ahead - 1, :]  # (B, R)
             sq_err = ((x - target) ** 2).mean(dim=1).sum().item()
             sum_sq_err[t - 1] += sq_err
             counts[t - 1] += B
