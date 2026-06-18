@@ -28,6 +28,7 @@ from pim.eval.controllability import (
     WarmUpResult,
     eval_controllability,
     eval_position_controllability,
+    rollout_gradient_steered,
     rollout_steered,
     rollout_unsteered,
     warm_up_to_edit,
@@ -89,6 +90,7 @@ __all__ = [
     "warm_up_to_edit",
     "rollout_steered",
     "rollout_unsteered",
+    "rollout_gradient_steered",
     "eval_controllability",
     "eval_position_controllability",
 ]

@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from tqdm.auto import tqdm
 
+from pim.editors.gradient_steering import gradient_steer
 from pim.editors.probe_steering import inject_state, probe_decomposition
 from pim.extractors.linear import LinearExtractor
 from pim.world_models.protocol import HiddenStateModel
@@ -139,6 +140,53 @@ def rollout_steered(
         readback = (h_edited @ A.T + b).squeeze(0)
         inj_errs.append(float(((readback - tgt.squeeze(0)) ** 2).mean().item()))
         obs, hs = _rollout(model, h_edited, n_rollout)
+        all_obs.append(obs)
+        all_h.append(hs)
+    return RolloutResult(
+        obs=np.stack(all_obs),
+        h=np.stack(all_h),
+        injection_error=float(np.mean(inj_errs)),
+    )
+
+
+def rollout_gradient_steered(
+    model: HiddenStateModel,
+    h_at_edit: np.ndarray,           # (N, H)
+    targets: np.ndarray,             # (N, output_dim)
+    probe: torch.nn.Module,
+    n_rollout: int,
+    *,
+    n_steps: int = 200,
+    lr: float = 0.01,
+    reg_weight: float = 0.0,
+    device: str = "cpu",
+    desc: str = "gradient-steered rollouts",
+) -> RolloutResult:
+    """Gradient-steer each h to match target via the probe, then roll out.
+
+    Optimises h* = argmin ||probe(h*) - target||² + reg_weight*||h* - h_orig||²
+    using Adam, then runs an unguided rollout from h*.
+
+    Parameters
+    ----------
+    probe       : any differentiable extractor (MLPExtractor or LinearExtractor).
+    n_steps     : gradient steps per sample.
+    lr          : Adam learning rate.
+    reg_weight  : L2 anchor weight (0 = disabled).
+    """
+    probe = probe.to(device).eval()
+    N = h_at_edit.shape[0]
+    all_obs, all_h, inj_errs = [], [], []
+    for i in tqdm(range(N), desc=desc, leave=False):
+        h = torch.from_numpy(h_at_edit[i]).float().to(device).unsqueeze(0)
+        tgt = torch.from_numpy(targets[i]).float().to(device).unsqueeze(0).reshape(1, -1)
+        h_edited, final_mse = gradient_steer(
+            h, tgt, probe,
+            n_steps=n_steps, lr=lr, reg_weight=reg_weight,
+        )
+        inj_errs.append(final_mse)
+        with torch.no_grad():
+            obs, hs = _rollout(model, h_edited, n_rollout)
         all_obs.append(obs)
         all_h.append(hs)
     return RolloutResult(
