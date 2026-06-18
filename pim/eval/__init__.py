@@ -1,25 +1,94 @@
-"""pim.eval — model-agnostic evaluation modules."""
+"""pim.eval — model-agnostic evaluation: pure functions over numpy arrays.
 
-from pim.eval._helpers import run_autoregressive, run_teacher_forcing, collect_rollout
-from pim.eval.prediction import eval_single_step, eval_horizon_mse, eval_mse_by_context, PredictionMetrics
-from pim.eval.recovery import eval_recovery, RecoveryMetrics
-from pim.eval.rollout import eval_observation_drift, eval_trajectory_coherence, rollout_coherence, CoherenceMetrics
-from pim.eval.controllability import eval_controllability, ControllabilityMetrics
+Layout:
+  _helpers.py         — inference (the only module that calls models)
+  baselines.py        — reference RMSE baselines from dataset arrays
+  prediction.py       — single-step / horizon / mse-by-context metrics
+  recovery.py         — fit_probes, eval_recovery_multi
+  rollout.py          — observation drift, position drift, coherence
+  controllability.py  — warm_up_to_edit, rollout_steered/unsteered, eval_controllability
+"""
+
+from pim.eval._helpers import (
+    autoregressive_rollout,
+    autoregressive_rollouts,
+    collect_rollouts,
+    decode_states_multi,
+    teacher_force,
+)
+from pim.eval.baselines import (
+    ObsBaselines,
+    PosBaselines,
+    compute_obs_baselines,
+    compute_pos_baselines,
+)
+from pim.eval.controllability import (
+    ControllabilityMetrics,
+    RolloutResult,
+    WarmUpResult,
+    eval_controllability,
+    eval_position_controllability,
+    rollout_steered,
+    rollout_unsteered,
+    warm_up_to_edit,
+)
+from pim.eval.prediction import (
+    PredictionMetrics,
+    eval_horizon_mse,
+    eval_mse_by_context,
+    eval_single_step,
+)
+from pim.eval.recovery import (
+    RecoveryMetrics,
+    eval_recovery,
+    eval_recovery_multi,
+    fit_probes,
+)
+from pim.eval.rollout import (
+    CoherenceMetrics,
+    eval_observation_drift,
+    eval_position_drift,
+    eval_trajectory_coherence,
+    per_sample_coherence,
+    rollout_coherence,
+)
 
 __all__ = [
-    "run_autoregressive",
-    "run_teacher_forcing",
-    "collect_rollout",
+    # _helpers
+    "teacher_force",
+    "autoregressive_rollout",
+    "autoregressive_rollouts",
+    "collect_rollouts",
+    "decode_states_multi",
+    # baselines
+    "ObsBaselines",
+    "PosBaselines",
+    "compute_obs_baselines",
+    "compute_pos_baselines",
+    # prediction
+    "PredictionMetrics",
     "eval_single_step",
     "eval_horizon_mse",
     "eval_mse_by_context",
-    "PredictionMetrics",
-    "eval_recovery",
+    # recovery
     "RecoveryMetrics",
-    "eval_observation_drift",
-    "eval_trajectory_coherence",
-    "rollout_coherence",
+    "fit_probes",
+    "eval_recovery",
+    "eval_recovery_multi",
+    # rollout
     "CoherenceMetrics",
-    "eval_controllability",
+    "rollout_coherence",
+    "per_sample_coherence",
+    "eval_observation_drift",
+    "eval_position_drift",
+    "eval_trajectory_coherence",
+    # controllability
+    "WarmUpResult",
+    "RolloutResult",
     "ControllabilityMetrics",
+    "warm_up_to_edit",
+    "rollout_steered",
+    "rollout_unsteered",
+    "eval_controllability",
+    "eval_position_controllability",
 ]
