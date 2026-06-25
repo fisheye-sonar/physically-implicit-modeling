@@ -211,3 +211,6 @@ __marimo__/
 datasets/
 outputs/
 runs/
+
+# Personal Claude Code permission posture (machine-specific; keep out of the repo)
+.claude/settings.local.json
