@@ -18,6 +18,7 @@ advancing, so the linear probe at step 0 reads the injected target exactly.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -36,6 +37,7 @@ class WarmUpResult:
     h_at_edit: np.ndarray            # (N, H)
     h_pre_edit: np.ndarray           # (n_viz, n_ctx_show, H) — last frames before edit
     n_ctx_show: int
+    viz_indices: list[int]           # sample indices captured in h_pre_edit, in row order
 
 
 @dataclass
@@ -69,34 +71,47 @@ def warm_up_to_edit(
     *,
     n_viz: int = 3,
     n_ctx_show: int = 8,
+    viz_indices: Sequence[int] | None = None,
     device: str = "cpu",
     desc: str = "warm-up to edit",
 ) -> WarmUpResult:
     """Teacher-force each sample to edit_frame; collect flat hidden state at edit.
 
-    Also captures the last n_ctx_show pre-edit hidden states for the first
-    n_viz samples (used by trajectory viz plots).
+    Also captures the last n_ctx_show pre-edit hidden states for the samples in
+    ``viz_indices`` (used by trajectory viz plots). When ``viz_indices`` is None,
+    the first ``n_viz`` samples are captured. The chosen indices are returned on
+    the result so downstream viz can index the full-length rollout arrays.
     """
     N = obs_seqs.shape[0]
     H = model.hidden_size
     n_ctx_show = min(n_ctx_show, edit_frame)
-    n_viz = min(n_viz, N)
+
+    if viz_indices is None:
+        viz_list = list(range(min(n_viz, N)))
+    else:
+        viz_list = [int(i) for i in viz_indices]
+    viz_pos = {idx: k for k, idx in enumerate(viz_list)}
 
     h_at_edit = np.zeros((N, H), dtype=np.float32)
-    h_pre_edit = np.zeros((n_viz, n_ctx_show, H), dtype=np.float32)
+    h_pre_edit = np.zeros((len(viz_list), n_ctx_show, H), dtype=np.float32)
 
     for i in tqdm(range(N), desc=desc, leave=False):
         obs_t = torch.from_numpy(obs_seqs[i]).float().to(device)
         state = None
         for t in range(edit_frame):
             _, state = model.step(obs_t[t].unsqueeze(0), state)
-            if i < n_viz and t >= edit_frame - n_ctx_show:
-                h_pre_edit[i, t - (edit_frame - n_ctx_show)] = (
+            if i in viz_pos and t >= edit_frame - n_ctx_show:
+                h_pre_edit[viz_pos[i], t - (edit_frame - n_ctx_show)] = (
                     model.flat_state(state).squeeze(0).cpu().numpy()
                 )
         h_at_edit[i] = model.flat_state(state).squeeze(0).cpu().numpy()
 
-    return WarmUpResult(h_at_edit=h_at_edit, h_pre_edit=h_pre_edit, n_ctx_show=n_ctx_show)
+    return WarmUpResult(
+        h_at_edit=h_at_edit,
+        h_pre_edit=h_pre_edit,
+        n_ctx_show=n_ctx_show,
+        viz_indices=viz_list,
+    )
 
 
 @torch.no_grad()
