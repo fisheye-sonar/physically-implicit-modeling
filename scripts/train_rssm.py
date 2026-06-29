@@ -84,6 +84,8 @@ class TrainConfig:
     det_size: int = 200
     stoch_size: int = 30
     hidden_dim: int = 200
+    enc_layers: int = 1
+    dec_layers: int = 1
 
 
 # ── CLI parsing ───────────────────────────────────────────────────────────────
@@ -160,6 +162,8 @@ def _parse_args() -> TrainConfig:
     p.add_argument("--det-size", type=int, default=defaults.det_size)
     p.add_argument("--stoch-size", type=int, default=defaults.stoch_size)
     p.add_argument("--hidden-dim", type=int, default=defaults.hidden_dim)
+    p.add_argument("--enc-layers", type=int, default=defaults.enc_layers)
+    p.add_argument("--dec-layers", type=int, default=defaults.dec_layers)
 
     a = p.parse_args()
 
@@ -203,6 +207,8 @@ def _parse_args() -> TrainConfig:
         det_size=a.det_size,
         stoch_size=a.stoch_size,
         hidden_dim=a.hidden_dim,
+        enc_layers=a.enc_layers,
+        dec_layers=a.dec_layers,
     )
 
 
@@ -374,6 +380,8 @@ def main() -> None:
         det_size=tcfg.det_size,
         stoch_size=tcfg.stoch_size,
         hidden_dim=tcfg.hidden_dim,
+        enc_layers=tcfg.enc_layers,
+        dec_layers=tcfg.dec_layers,
     )
     model = RSSMModel(mcfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -411,7 +419,12 @@ def main() -> None:
     print()
 
     # ── Training loop ─────────────────────────────────────────────────────
-    best_val_loss = float("inf")
+    # Select the best checkpoint by reconstruction loss, NOT total ELBO loss.
+    # With KL warm-up + free-nats the total loss is artificially low during
+    # warm-up (kl_weight≈0) and jumps by the free-nats floor afterwards, so
+    # best-by-total-loss freezes on an undertrained warm-up epoch. Recon loss is
+    # the predictive quantity we care about and is invariant to the KL schedule.
+    best_val_recon = float("inf")
     n_train_batches = len(train_loader)
     n_val_batches = len(val_loader)
 
@@ -469,11 +482,11 @@ def main() -> None:
             }
             torch.save(ckpt, latest_path)
 
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
+            if val_recon < best_val_recon:
+                best_val_recon = val_recon
                 torch.save(ckpt, best_path)
 
-    print(f"\nDone.  Best val ELBO loss: {best_val_loss:.4f}")
+    print(f"\nDone.  Best val recon loss: {best_val_recon:.4f}")
     print(f"Checkpoints: {run_dir}")
 
 
