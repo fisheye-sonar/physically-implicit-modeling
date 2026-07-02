@@ -3,7 +3,21 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-06-24 (end of day)_
+_Last updated: 2026-06-29 (RSSM refinement session)_
+
+## 2026-06-29 — RSSM refinement (engineering, branch `rssm_refinement` off main)
+Good-faith predictor-tuning of the RSSM (item #4 of the 2026-06-24 sequence). Full write-up:
+**`research/scratch/2026-06-29-rssm-refinement.md`**. Headline: best RSSM now competitive —
+near-horizon clean-obs MSE 0.01726 vs GRU 0.01515 (~14% gap), **beats GRU at long horizon**,
+recoverability fell 0.55→0.32 as a byproduct (no position supervision). Fixed a real bug
+(best-checkpoint was selected by total ELBO → froze on an undertrained warm-up epoch; now
+by recon loss). Levers = lr(3e-4)+free_nats(3)+epochs; architecture is NOT the lever (plateau).
+Qualitative gap confirmed (Sevan's eye-test): RSSM-mean fades the 2nd object; RSSM-**sampled**
+rollout jitters/forks — analyze in prior-mean mode. Best ckpt: `runs/rssm/4_dset4_refined_best/`
+(gitignored — reproducible from config+seed0). NEXT: parallel GRU tuning pass for a fair compare.
+New substrate (committed): `scripts/sweep_rssm.py`, `scripts/compare_rollouts.py`, RSSM `sample`
+toggle + enc/dec depth, recon-based ckpt selection. Watcher-heartbeat used for monitoring (see
+auto-memory `feedback-watcher-heartbeat`; ScheduleWakeup did not fire in this env).
 
 ## Current state
 
