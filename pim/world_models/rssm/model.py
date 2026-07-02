@@ -78,9 +78,41 @@ class ModelConfig:
     det_size: int = 200  # GRUCell hidden size (deterministic state h)
     stoch_size: int = 30  # stochastic latent dimension (state s)
     hidden_dim: int = 200  # MLP width for prior, posterior, and decoder nets
+    enc_layers: int = 1  # encoder hidden layers (1 = original single Linear+ReLU)
+    dec_layers: int = 1  # decoder hidden layers (1 = original single-hidden MLP)
 
 
 # ── Model ─────────────────────────────────────────────────────────────────────
+
+
+def _stack(
+    in_dim: int,
+    hidden_dim: int,
+    out_dim: int,
+    *,
+    n_hidden: int,
+    act: type[nn.Module],
+    final_act: bool,
+) -> nn.Sequential:
+    """Build an MLP with ``n_hidden`` hidden layers.
+
+    With the defaults used by the encoder (n_hidden=0, final_act=True) and the
+    decoder (n_hidden=1, final_act=False) this reproduces the original modules
+    layer-for-layer, so pre-existing checkpoints load unchanged.
+    """
+    layers: list[nn.Module] = []
+    if n_hidden == 0:
+        layers.append(nn.Linear(in_dim, out_dim))
+        if final_act:
+            layers.append(act())
+        return nn.Sequential(*layers)
+    layers += [nn.Linear(in_dim, hidden_dim), act()]
+    for _ in range(n_hidden - 1):
+        layers += [nn.Linear(hidden_dim, hidden_dim), act()]
+    layers.append(nn.Linear(hidden_dim, out_dim))
+    if final_act:
+        layers.append(act())
+    return nn.Sequential(*layers)
 
 
 class RSSMModel(nn.Module):
@@ -102,11 +134,16 @@ class RSSMModel(nn.Module):
         super().__init__()
         self.cfg = cfg
 
-        # Observation encoder: o_t → e_t
-        self.encoder = nn.Sequential(
-            nn.Linear(cfg.input_dim, cfg.embed_dim),
-            nn.ReLU(),
-        )
+        # When False, prior/posterior use their mean instead of a sample. Training
+        # keeps this True (reparameterised sampling); predictive eval flips it off
+        # so the imagined rollout measures the model's deterministic prediction
+        # rather than being penalised by per-step sampling noise.
+        self.sample: bool = True
+
+        # Observation encoder: o_t → e_t.  enc_layers=1 reproduces the original
+        # single Linear+ReLU exactly (preserving state_dict keys for old ckpts).
+        self.encoder = _stack(cfg.input_dim, cfg.embed_dim, cfg.embed_dim,
+                              n_hidden=cfg.enc_layers - 1, act=nn.ReLU, final_act=True)
 
         # Deterministic recurrent core: GRUCell(s_{t-1}, h_{t-1}) → h_t
         # Input = stoch_size (s_{t-1}), hidden = det_size
@@ -126,12 +163,11 @@ class RSSMModel(nn.Module):
             nn.Linear(cfg.hidden_dim, 2 * cfg.stoch_size),
         )
 
-        # Observation decoder: (h_t, s_t) → o_hat_t
-        self.decoder = nn.Sequential(
-            nn.Linear(cfg.det_size + cfg.stoch_size, cfg.hidden_dim),
-            nn.ELU(),
-            nn.Linear(cfg.hidden_dim, cfg.input_dim),
-        )
+        # Observation decoder: (h_t, s_t) → o_hat_t.  dec_layers=1 reproduces the
+        # original single-hidden MLP exactly.
+        self.decoder = _stack(cfg.det_size + cfg.stoch_size, cfg.hidden_dim,
+                             cfg.input_dim, n_hidden=cfg.dec_layers, act=nn.ELU,
+                             final_act=False)
 
     # ── Properties ────────────────────────────────────────────────────────────
 
@@ -193,7 +229,7 @@ class RSSMModel(nn.Module):
         e = self.encoder(obs_t)  # (B, embed_dim)
         prior = self._prior(h)
         posterior = self._posterior(h, e)
-        s = posterior.rsample()  # reparameterized
+        s = posterior.rsample() if self.sample else posterior.mean
         return RSSMState(h, s), prior, posterior
 
     def imagine_step(
@@ -213,7 +249,7 @@ class RSSMModel(nn.Module):
         """
         h = self.gru_cell(state.s, state.h)  # (B, det_size)
         prior = self._prior(h)
-        s = prior.rsample()  # prior sample
+        s = prior.rsample() if self.sample else prior.mean
         return RSSMState(h, s), prior
 
     def decode(self, state: RSSMState) -> torch.Tensor:
