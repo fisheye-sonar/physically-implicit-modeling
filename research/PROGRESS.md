@@ -3,7 +3,46 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-06-29 (RSSM refinement session)_
+_Last updated: 2026-07-02 (RSSM structure investigation setup)_
+
+## 2026-07-02 — RSSM state geometry & editability investigation (notebook setup)
+
+Created `notebooks/experiments/rssm_structure/rssm_state_geometry.ipynb`. This is the
+item #5 from the 2026-06-24 proposed sequence: "re-run the diagnostic on the refined RSSM".
+
+**Notebook covers (single file, 8 sections, Figs 1–8):**
+1. PCA spectrum of the 320-dim flat state (256 det + 64 stoch); det/stoch separately;
+   tangent curvature angle vs global.
+2. Position + velocity recoverability (linear + MLP; h-only vs s-only vs full state; temporal features).
+3. Fiber collapse `h ≈ g(pos,vel)` — residual fraction + R² on h.
+4. On-manifold vs off-manifold edits (pseudoinv / global PCA manifold / local tangent).
+5. Generative sensitivity (probe vs PCA vs random at matched |Δh|; det-only variant).
+6. Waterfalls for top obs-change samples.
+7. GRU vs RSSM comparison table (Figs 1–8 scalar numbers side-by-side vs all GRU refs).
+
+**Model:** `runs/rssm/4_dset4_refined_best/` (det_size=256, stoch_size=64, 500ep, lr=3e-4).
+`model.sample=False` throughout (prior-mean, deterministic — consistent with refinement eval).
+
+**DONE — executed clean (0 error cells), worker verified.** Full write-up:
+`research/scratch/2026-07-02-rssm-state-geometry.md` (→ FLAG FOR PROMOTION). PNGs in
+`/tmp/rssm_state_geometry/` (fig1–8). Headline numbers verified on-disk against notebook output.
+
+**Verdict: the GRU story REPLICATES on the refined RSSM — the KL-structured latent is NOT
+more canonical/editable; in the sharpest respect it is worse.**
+- Geometry: 34/320 dims @90%, tangent 65.2° (more curved than GRU's 56°), real resid 2.86.
+- Recoverability: pos R² lin 0.857 / MLP 0.933 (≈GRU); vel single-h 0.43, 2-frame MLP 0.695 (≈GRU
+  temporal pattern). **Position lives in deterministic `h` (det-only lin R² 0.841 ≈ full 0.857),
+  NOT stochastic `s` (0.594)** — refutes "s = compact world state"; `s` is a low-rank (6/64) code.
+- **Editing (sharpest): pseudoinverse edit hits probe target exactly (readout RMSE 0.000) yet
+  moves obs by 0.0% of a swap and reverts in 1 step** — strongest readable≠controllable case in
+  either model. RSSM pos-probe direction is decoder-inert (σ 0.017 vs PCA 2.79, ~165×). This
+  DIVERGES from the GRU, where the matched-magnitude probe dir was generative. Global-manifold
+  edit moves obs 36.5% of swap (≈GRU 37%).
+- CAVEAT (flagged shaky): fiber-resid 0.605 vs GRU 0.347 is NOT apples-to-apples (full 320-d incl.
+  KL-regularized `s` which legitimately isn't a function of (pos,vel)); needs a det-only refit
+  before quoting a magnitude. Direction (non-canonical/curved) robust; magnitude not.
+
+**Awaiting Sevan:** promotion call on the scratch note; whether to do the det-only fiber refit.
 
 ## 2026-06-29 — RSSM refinement (engineering, branch `rssm_refinement` off main)
 Good-faith predictor-tuning of the RSSM (item #4 of the 2026-06-24 sequence). Full write-up:
