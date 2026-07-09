@@ -3,46 +3,121 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-02 (RSSM structure investigation setup)_
+_Last updated: 2026-07-09 (promotions + folder rename)_
 
-## 2026-07-02 — RSSM state geometry & editability investigation (notebook setup)
+## 2026-07-09 — Promotions, folder rename, git/nbstripout triage
 
-Created `notebooks/experiments/rssm_structure/rssm_state_geometry.ipynb`. This is the
-item #5 from the 2026-06-24 proposed sequence: "re-run the diagnostic on the refined RSSM".
+**Folder rename DONE:** Sevan renamed `notebooks/experiments/manifold_editing/` → `editability/`.
+Swept **all** downstream path references (findings, directions, scratch, PROGRESS, folder README) —
+`grep manifold_editing` now returns 0. Notebook internals unaffected (relative paths, same depth).
 
-**Notebook covers (single file, 8 sections, Figs 1–8):**
-1. PCA spectrum of the 320-dim flat state (256 det + 64 stoch); det/stoch separately;
-   tangent curvature angle vs global.
-2. Position + velocity recoverability (linear + MLP; h-only vs s-only vs full state; temporal features).
-3. Fiber collapse `h ≈ g(pos,vel)` — residual fraction + R² on h.
-4. On-manifold vs off-manifold edits (pseudoinv / global PCA manifold / local tangent).
-5. Generative sensitivity (probe vs PCA vs random at matched |Δh|; det-only variant).
-6. Waterfalls for top obs-change samples.
-7. GRU vs RSSM comparison table (Figs 1–8 scalar numbers side-by-side vs all GRU refs).
+**4 candidates PROMOTED to `findings/` (Sevan-approved), with preliminary/scoped hedging:**
+- `findings/editability.md` (was too conclusive about "the GRU" → now scoped to *this
+  pure-next-step-prediction GRU checkpoint*, not GRUs in general) ← `candidate-editability`.
+- `findings/state-geometry.md` ← `candidate-state-geometry`.
+- `findings/architecture-independence.md` (NEW) ← `candidate-rssm-replication`.
+- `findings/predictive-quality.md` (NEW) ← `candidate-predictive-quality`.
+Each opens with a **Scope (preliminary)** banner: claims are about *these trained checkpoints* at this
+stage, not the architectures in general. Candidates marked ✅ PROMOTED, kept as backing detail.
+`findings/README.md` index updated.
 
-**Model:** `runs/rssm/4_dset4_refined_best/` (det_size=256, stoch_size=64, 500ep, lr=3e-4).
-`model.sample=False` throughout (prior-mean, deterministic — consistent with refinement eval).
+**git / nbstripout triage (Sevan's error):** nothing corrupted. (1) The `BrokenPipeError` is benign —
+git ran the `nbstripout` clean filter on the large notebooks during the branch switch and closed the
+pipe early; the checkout completed (clean tree, right HEAD `2dc6b4f`). (2) **Real consequence:**
+`nbstripout` (clean filter, `required=true`) strips notebook outputs on commit, so after the
+main→branch roundtrip the working-copy notebooks now have **0 embedded figures** (`00_master_editability`
++ `diagnostic_corrections`). The figures survive only as `/tmp` PNGs → **copied to gitignored
+`runs/_review_figures/{master_editability,diagnostic_corrections}/`** so they're not lost to a /tmp wipe.
+DECISION FOR SEVAN: to review the master notebook *with* figures you must either re-run it, view the
+saved PNGs, or (if you want persistent inline figures) exempt presentation notebooks from nbstripout /
+export an HTML. Nothing to fix in the repo itself.
 
-**DONE — executed clean (0 error cells), worker verified.** Full write-up:
-`research/scratch/2026-07-02-rssm-state-geometry.md` (→ FLAG FOR PROMOTION). PNGs in
-`/tmp/rssm_state_geometry/` (fig1–8). Headline numbers verified on-disk against notebook output.
+**learn-to-edit: HELD** (Sevan's call). Brief stays `proposed`; not launched.
 
-**Verdict: the GRU story REPLICATES on the refined RSSM — the KL-structured latent is NOT
-more canonical/editable; in the sharpest respect it is worse.**
-- Geometry: 34/320 dims @90%, tangent 65.2° (more curved than GRU's 56°), real resid 2.86.
-- Recoverability: pos R² lin 0.857 / MLP 0.933 (≈GRU); vel single-h 0.43, 2-frame MLP 0.695 (≈GRU
-  temporal pattern). **Position lives in deterministic `h` (det-only lin R² 0.841 ≈ full 0.857),
-  NOT stochastic `s` (0.594)** — refutes "s = compact world state"; `s` is a low-rank (6/64) code.
-- **Editing (sharpest): pseudoinverse edit hits probe target exactly (readout RMSE 0.000) yet
-  moves obs by 0.0% of a swap and reverts in 1 step** — strongest readable≠controllable case in
-  either model. RSSM pos-probe direction is decoder-inert (σ 0.017 vs PCA 2.79, ~165×). This
-  DIVERGES from the GRU, where the matched-magnitude probe dir was generative. Global-manifold
-  edit moves obs 36.5% of swap (≈GRU 37%).
-- CAVEAT (flagged shaky): fiber-resid 0.605 vs GRU 0.347 is NOT apples-to-apples (full 320-d incl.
-  KL-regularized `s` which legitimately isn't a function of (pos,vel)); needs a det-only refit
-  before quoting a magnitude. Direction (non-canonical/curved) robust; magnitude not.
+**Dynamics thrust — reframed (Sevan):** velocity lives in the *state* (nonlinear/entangled), so the
+next question is **how the GRU *uses* positions and velocities to update its state** (mechanism of the
+transition), not "state vs dynamics." This is the natural successor thread once editability is banked.
 
-**Awaiting Sevan:** promotion call on the scratch note; whether to do the det-only fiber refit.
+**Uncommitted now:** the rename sweep + 4 promotions + 2 new findings + folder README fix +
+`runs/_review_figures/` (gitignored). Ready to commit on request.
+
+## 2026-07-08 — Editability reorganization session
+
+**Branch:** `editability_reorganization` (off the merged RSSM work; HEAD 6bcc3a9). NB: the prior
+`2026-07-02` RSSM-investigation PROGRESS section lived on `editability_rssm_replicate`'s working tree,
+not this branch — but the substantive artifacts are all HERE (notebook `rssm_structure/
+rssm_state_geometry.ipynb`, restored scratch note, and `candidate-rssm-replication.md`).
+
+**Corrections worker — DONE (2026-07-08):** `directions/diagnostic-corrections.md` → notebook
+`editability/diagnostic_corrections.ipynb` + note `scratch/2026-07-08-diagnostic-corrections.md`
+(verified on disk). Results folded into findings + candidates:
+1. **Velocity 2×2 → "velocity is temporal" RETIRED (both models).** single-frame MLP ≈ 2-frame MLP
+   (Δ ≤ 0.007 late-t; GRU sf-MLP R² 0.94), `dh` worse than single-frame. Velocity is instantaneously
+   readable, just **nonlinearly** — the old 0.47→0.76 gap was the linear→MLP axis, not single→temporal.
+   *Strategic:* undercuts the planned "velocity-in-the-dynamics" thrust — velocity is in the STATE
+   (nonlinear/entangled), not the transition. Reframe that thrust before running it.
+2. **RSSM det-only fiber = 0.368 ≈ GRU 0.337** (full-320 0.602 was the stochastic `s` at 0.891). The
+   "RSSM less canonical" claim is DEAD — det cores are on par; KL structure buys no canonicity.
+3. **Small-k geodesic — SHAKY (worker-flagged), overturned my brief's expectation.** Walked states hug
+   the manifold MORE than real states (honest leave-out resid 0.11–0.30 < real 0.58–0.79); obs moves a
+   lot but readout only 30–46% reached. Reinterpretation: bottleneck is reachability *along* the curved
+   manifold, not off-manifold ejection. Weak swap denominator → exploratory, NOT promoted.
+
+**Master notebook worker — DONE + VERIFIED (2026-07-08):** `directions/master-editability-notebook.md`
+→ `editability/00_master_editability.ipynb` (primary/entry notebook; note
+`scratch/2026-07-08-master-editability.md`; PNGs `/tmp/master_editability/fig0–7`). Verified on disk:
+33 cells, **0 error outputs**, 8 embedded figures; every corrected number present in outputs (velocity
+0.944/0.951, fiber 0.337/0.368/0.602/0.891, reversion 0.011→0.275). Visually spot-checked Fig 5 (unified
+5-editor waterfall, dark theme, green=target/red=ghost — reads clearly) and Fig 6 (the reversion: GT
+sticks, MLP-gradient reaches target @step0 then climbs back by ~step4 with the quantitative curve). Repo
+clean — the worker's OOM-recovery runner scripts stayed in `/tmp`, none leaked into git. Only nit: RSSM
+scree @90% recomputed = 35 vs cited 34 (subsample; noted in-notebook). **Aesthetic caveat for Sevan:**
+§4 uses **waterfalls**, not the 1D-line overlay you said you liked from `geodesic_walk_k150` — waterfalls
+show more, but the 1D-line version can be added if you prefer it.
+
+**Directory reorg (Sevan item 4d) — judgment call:** did NOT rename `editability/`. Sizing showed
+~17 markdown files reference the path (incl. provenance scratch notes, which shouldn't be rewritten to a
+new path). Instead expressed structure via a **primary/working/scratch convention** documented in
+`notebooks/experiments/editability/README.md` (primary = `00_master_editability.ipynb`), plus a
+naming fix (local-tangent projection [one-shot] ≠ PCA geodesic [iterative]). A full pillar rename remains
+available as a coordinated reference sweep if Sevan wants it.
+
+**Done this session (orchestrator, CPU, in parallel with the worker):**
+- **Findings corrected** (Sevan-authorized, NOT promotions): `editability.md` summary → non-canonical /
+  readable≠controllable (supersedes "target unreachability") + 2026-07-08 log entry flagging the
+  velocity 2×2 in-progress (do not cite "velocity is temporal" until it lands); `state-geometry.md`
+  summary → intrinsic dim ~5–7 + curvature ~56° + local-resid tautology retraction; fixed stale
+  editability notebook ref.
+- **Scratch consolidated** → 4 self-contained candidates (kept separate, not squished):
+  `candidate-editability`, `candidate-state-geometry`, `candidate-rssm-replication`,
+  `candidate-predictive-quality`. Raw dated notes retained as provenance; scratch/README points at them.
+- **Learn-to-edit brief** written (`directions/learn-to-edit.md`, `[reframe]`, status **proposed**):
+  Variant A frozen editor (information-presence test), Variant B light fine-tune (inducibility +
+  re-measure canonicality). Ready for Sevan to mark active and kick off next turn.
+- **Recovered** `scratch/2026-07-02-rssm-state-geometry.md` (was untracked + disturbed during a scratch
+  tidy; restored from commit 7719825, now staged/tracked — no longer at risk).
+
+**Promotions HELD for Sevan's post-lunch read** — the 4 candidates. Recommendation: promote editability
+(after the velocity 2×2), state-geometry, rssm-replication (hold the fiber *magnitude* pending the
+det-only refit), and the RSSM generative-quality gap. Each candidate ends with its own recommendation.
+
+**RSSM eval refinement (Sevan item 2):** specific case (non-canonicality measured on the full 320-d
+incl. stochastic `s`) handled NOW by the worker's det-only refit; broader note (RSSM evals should
+report h-only / s-only / full consistently, not default to full-state) captured in
+`candidate-rssm-replication`.
+
+**Session tasks — all DONE** (Sevan's 6 items): (1) small-k geodesic ✓, (2) velocity-MLP-on-h_t ✓
+[temporal retired], (3) master notebook ✓ + reorg [light-touch, flagged], (4) learn-to-edit brief ✓
+[proposed], (5) unified waterfall comparison ✓ [Fig 5/6], (6) git [Sevan's earlier push/merge/branch].
+
+**Uncommitted:** a clean body of finished work on `editability_reorganization` (master + corrections
+notebooks, 4 candidates, 3 briefs, findings corrections, folder README, restored 2026-07-02 note staged).
+NOT committed — waiting on Sevan (harness rule: commit only when asked). Ready to commit on request.
+
+**HELD for Sevan (decisions):** promotion calls on the 4 `candidate-*.md`; mark `learn-to-edit` active to
+launch next; the pillar-rename; the §4 waterfall-vs-1D-line aesthetic choice; and — the strategic one —
+**reframe the dynamics-identifiability thrust** now that velocity is shown to live in the state
+(nonlinear/entangled coordinate), not the transition.
 
 ## 2026-06-29 — RSSM refinement (engineering, branch `rssm_refinement` off main)
 Good-faith predictor-tuning of the RSSM (item #4 of the 2026-06-24 sequence). Full write-up:
@@ -82,7 +157,7 @@ auto-memory `feedback-watcher-heartbeat`; ScheduleWakeup did not fire in this en
 
 ## Done this session (2026-06-24) — all 4 verified on disk
 
-All notebooks under `notebooks/experiments/manifold_editing/`. Each worker wrote its own scratch
+All notebooks under `notebooks/experiments/editability/`. Each worker wrote its own scratch
 note + numbered notebook (plots + printed tables). Orchestrator verified every headline number
 against the notebooks' printed outputs (not the sign-offs).
 
@@ -171,7 +246,7 @@ later be kept as the *reference editor* (honestly captioned: best of a set that 
   ~5–7 brackets the physical 8 DOF; 38–73-dim hull = curved embedding, not DOF.
 - **`findings/editability.md` (correction owed):** supersede "target unreachability under manifold
   constraint" → non-canonical state / curved `(pos,vel)→h` embedding / velocity-in-dynamics /
-  "readable ≠ controllable." Fix stale notebook path on line 6 (→ `…/manifold_editing/`).
+  "readable ≠ controllable." Fix stale notebook path on line 6 (→ `…/editability/`).
 
 ## Meta / strategy (in discussion, 2026-06-24 EOD — not yet ratified)
 
@@ -198,7 +273,7 @@ later be kept as the *reference editor* (honestly captioned: best of a set that 
 
 ## Substrate / harness state
 
-- **Notebooks reorganized** into `notebooks/experiments/manifold_editing/` (Sevan's move). All
+- **Notebooks reorganized** into `notebooks/experiments/editability/` (Sevan's move). All
   internal relative paths normalized to the new 3-deep location; KB markdown refs updated. New
   convention in CLAUDE.md: **number every cell (`# [N]`) and every figure (`Fig K`)**.
 - **Briefs written this session:** `directions/canonical-state-editing.md` `[reframe]`,

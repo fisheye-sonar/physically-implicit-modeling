@@ -1,7 +1,7 @@
 # Canonical-State Editing — (pos,vel) fiber collapse + obs-driven probe (2026-06-24)
 
 **Direction:** `research/directions/canonical-state-editing.md` (`[reframe]`, sub-Q2+Q3).
-**Notebook:** `notebooks/experiments/manifold_editing/canonical_state_editing.ipynb` (executed on GPU, RTX 5090).
+**Notebook:** `notebooks/experiments/editability/canonical_state_editing.ipynb` (executed on GPU, RTX 5090).
 **PNGs:** `/tmp/canonical_state/fig1..fig5`.
 **Model/data:** `runs/gru/3_dset3_gru_persistentids_inview_400epochs/best_model.pt` (val_loss 0.0236), `datasets/4_fixed_refl_inview` (2 obj, fixed refl, constant velocity, dt=1). H=256, states_tf=(10000,39,256). Velocities read DIRECTLY from HDF5 `velocities`, aligned `[:, :-1, :2, :]` (verified constant over time: temporal std 1.3e-8; mean |v| ≈ 0.05).
 

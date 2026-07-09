@@ -1,7 +1,7 @@
 # 2026-06-23 — PCA component -> decoded position selectivity
 
 **Direction:** `directions/pca-component-position-analysis.md` (`[in-frame]`, sub-Q 1+3).
-**Notebook:** `notebooks/experiments/manifold_editing/pca_component_position.ipynb` (self-contained, runs top-to-bottom on GPU; RTX 5090).
+**Notebook:** `notebooks/experiments/editability/pca_component_position.ipynb` (self-contained, runs top-to-bottom on GPU; RTX 5090).
 **Context:** GRU `3_dset3_gru_persistentids_inview_400epochs` (epoch 191, val_loss=0.02359),
 dataset `4_fixed_refl_inview`, N_OBJ=2, USE_HUNGARIAN=False, edit_frame=20.
 Sweep: 64 warmed-up base states, PCs 0-5, alpha in {-3..3}sigma, 10-step rollouts, linear

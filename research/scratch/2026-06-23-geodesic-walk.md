@@ -1,7 +1,7 @@
 # 2026-06-23 — Geodesic walk: editability via on-manifold readout-targeting
 
 **Direction:** `directions/geodesic-walk.md` (`[in-frame]`, sub-Q3).
-**Notebook:** `notebooks/experiments/manifold_editing/geodesic_walk.ipynb` (runs top-to-bottom on GPU).
+**Notebook:** `notebooks/experiments/editability/geodesic_walk.ipynb` (runs top-to-bottom on GPU).
 **PNGs:** `/tmp/geodesic/{1_convergence,2_obs_space_metrics,3_scans,4_waterfalls}.png`
 **Context:** GRU `3_dset3_..._400epochs`, dataset `4_fixed_refl_inview`, N=64 edits,
 K=30 geodesic iters, step_frac=0.34, linear position probe.

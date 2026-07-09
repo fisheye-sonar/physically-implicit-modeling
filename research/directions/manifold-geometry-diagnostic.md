@@ -3,7 +3,7 @@
 **Tag:** `[in-frame]` · **Sub-question:** 1 (geometry) · **Status:** in progress (2026-06-24) ·
 **Complexity:** low-medium (one notebook, cheap)
 
-> Run as one notebook: `notebooks/experiments/manifold_editing/manifold_geometry_diagnostic.ipynb`.
+> Run as one notebook: `notebooks/experiments/editability/manifold_geometry_diagnostic.ipynb`.
 > Number every cell (`# [N]`) and figure (`Fig K — …`). Plots AND printed tables. PNGs to
 > `/tmp/manifold_geometry/`.
 
@@ -69,6 +69,6 @@ summary curvature scale (e.g. the `d` at which the mean principal angle hits ~30
 
 ## Context
 
-- Checkpoint/data as the other manifold_editing notebooks. Primitives: `fit_state_subspace`,
+- Checkpoint/data as the other editability notebooks. Primitives: `fit_state_subspace`,
   `fit_local_subspace`, `offmanifold_residual`, `project_to_subspace` (`pim/editors`). Principal
   angles: `scipy.linalg.subspace_angles` or SVD of basis products.

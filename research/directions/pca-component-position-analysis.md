@@ -4,7 +4,7 @@
 **Status:** in progress (2026-06-23) · **Complexity:** low (no new `pim/` code)
 
 > **Interim — NOT promoted; under active investigation.** First pass in
-> `notebooks/experiments/manifold_editing/pca_component_position.ipynb`; numbers in
+> `notebooks/experiments/editability/pca_component_position.ipynb`; numbers in
 > `research/scratch/2026-06-23-pca-component-position.md`. The agent's *decoded-position*
 > table read PC0 as a global x-shift (both objects move, R²≈1.0). **But Sevan's read of the
 > observation waterfalls disagrees:** across many (not all) samples PC0 moves only the **dim**
@@ -34,7 +34,7 @@ the probe direction is nearly orthogonal to the high-variance PCA directions.
 
 ## What to run
 
-In new cells of `notebooks/experiments/manifold_editing/editability_structure.ipynb` (reuses
+In new cells of `notebooks/experiments/editability/editability_structure.ipynb` (reuses
 `states_tf`, `subspace`, `warm`, `linear` already computed there; `N_OBJ=2`,
 `USE_HUNGARIAN=False`):
 
