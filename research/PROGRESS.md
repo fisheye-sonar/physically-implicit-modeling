@@ -3,7 +3,85 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-06-29 (RSSM refinement session)_
+_Last updated: 2026-07-08 (editability reorganization session — in progress)_
+
+## 2026-07-08 — Editability reorganization session (IN PROGRESS)
+
+**Branch:** `editability_reorganization` (off the merged RSSM work; HEAD 6bcc3a9). NB: the prior
+`2026-07-02` RSSM-investigation PROGRESS section lived on `editability_rssm_replicate`'s working tree,
+not this branch — but the substantive artifacts are all HERE (notebook `rssm_structure/
+rssm_state_geometry.ipynb`, restored scratch note, and `candidate-rssm-replication.md`).
+
+**Corrections worker — DONE (2026-07-08):** `directions/diagnostic-corrections.md` → notebook
+`manifold_editing/diagnostic_corrections.ipynb` + note `scratch/2026-07-08-diagnostic-corrections.md`
+(verified on disk). Results folded into findings + candidates:
+1. **Velocity 2×2 → "velocity is temporal" RETIRED (both models).** single-frame MLP ≈ 2-frame MLP
+   (Δ ≤ 0.007 late-t; GRU sf-MLP R² 0.94), `dh` worse than single-frame. Velocity is instantaneously
+   readable, just **nonlinearly** — the old 0.47→0.76 gap was the linear→MLP axis, not single→temporal.
+   *Strategic:* undercuts the planned "velocity-in-the-dynamics" thrust — velocity is in the STATE
+   (nonlinear/entangled), not the transition. Reframe that thrust before running it.
+2. **RSSM det-only fiber = 0.368 ≈ GRU 0.337** (full-320 0.602 was the stochastic `s` at 0.891). The
+   "RSSM less canonical" claim is DEAD — det cores are on par; KL structure buys no canonicity.
+3. **Small-k geodesic — SHAKY (worker-flagged), overturned my brief's expectation.** Walked states hug
+   the manifold MORE than real states (honest leave-out resid 0.11–0.30 < real 0.58–0.79); obs moves a
+   lot but readout only 30–46% reached. Reinterpretation: bottleneck is reachability *along* the curved
+   manifold, not off-manifold ejection. Weak swap denominator → exploratory, NOT promoted.
+
+**Master notebook worker — DONE + VERIFIED (2026-07-08):** `directions/master-editability-notebook.md`
+→ `manifold_editing/00_master_editability.ipynb` (primary/entry notebook; note
+`scratch/2026-07-08-master-editability.md`; PNGs `/tmp/master_editability/fig0–7`). Verified on disk:
+33 cells, **0 error outputs**, 8 embedded figures; every corrected number present in outputs (velocity
+0.944/0.951, fiber 0.337/0.368/0.602/0.891, reversion 0.011→0.275). Visually spot-checked Fig 5 (unified
+5-editor waterfall, dark theme, green=target/red=ghost — reads clearly) and Fig 6 (the reversion: GT
+sticks, MLP-gradient reaches target @step0 then climbs back by ~step4 with the quantitative curve). Repo
+clean — the worker's OOM-recovery runner scripts stayed in `/tmp`, none leaked into git. Only nit: RSSM
+scree @90% recomputed = 35 vs cited 34 (subsample; noted in-notebook). **Aesthetic caveat for Sevan:**
+§4 uses **waterfalls**, not the 1D-line overlay you said you liked from `geodesic_walk_k150` — waterfalls
+show more, but the 1D-line version can be added if you prefer it.
+
+**Directory reorg (Sevan item 4d) — judgment call:** did NOT rename `manifold_editing/`. Sizing showed
+~17 markdown files reference the path (incl. provenance scratch notes, which shouldn't be rewritten to a
+new path). Instead expressed structure via a **primary/working/scratch convention** documented in
+`notebooks/experiments/manifold_editing/README.md` (primary = `00_master_editability.ipynb`), plus a
+naming fix (local-tangent projection [one-shot] ≠ PCA geodesic [iterative]). A full pillar rename remains
+available as a coordinated reference sweep if Sevan wants it.
+
+**Done this session (orchestrator, CPU, in parallel with the worker):**
+- **Findings corrected** (Sevan-authorized, NOT promotions): `editability.md` summary → non-canonical /
+  readable≠controllable (supersedes "target unreachability") + 2026-07-08 log entry flagging the
+  velocity 2×2 in-progress (do not cite "velocity is temporal" until it lands); `state-geometry.md`
+  summary → intrinsic dim ~5–7 + curvature ~56° + local-resid tautology retraction; fixed stale
+  editability notebook ref.
+- **Scratch consolidated** → 4 self-contained candidates (kept separate, not squished):
+  `candidate-editability`, `candidate-state-geometry`, `candidate-rssm-replication`,
+  `candidate-predictive-quality`. Raw dated notes retained as provenance; scratch/README points at them.
+- **Learn-to-edit brief** written (`directions/learn-to-edit.md`, `[reframe]`, status **proposed**):
+  Variant A frozen editor (information-presence test), Variant B light fine-tune (inducibility +
+  re-measure canonicality). Ready for Sevan to mark active and kick off next turn.
+- **Recovered** `scratch/2026-07-02-rssm-state-geometry.md` (was untracked + disturbed during a scratch
+  tidy; restored from commit 7719825, now staged/tracked — no longer at risk).
+
+**Promotions HELD for Sevan's post-lunch read** — the 4 candidates. Recommendation: promote editability
+(after the velocity 2×2), state-geometry, rssm-replication (hold the fiber *magnitude* pending the
+det-only refit), and the RSSM generative-quality gap. Each candidate ends with its own recommendation.
+
+**RSSM eval refinement (Sevan item 2):** specific case (non-canonicality measured on the full 320-d
+incl. stochastic `s`) handled NOW by the worker's det-only refit; broader note (RSSM evals should
+report h-only / s-only / full consistently, not default to full-state) captured in
+`candidate-rssm-replication`.
+
+**Session tasks — all DONE** (Sevan's 6 items): (1) small-k geodesic ✓, (2) velocity-MLP-on-h_t ✓
+[temporal retired], (3) master notebook ✓ + reorg [light-touch, flagged], (4) learn-to-edit brief ✓
+[proposed], (5) unified waterfall comparison ✓ [Fig 5/6], (6) git [Sevan's earlier push/merge/branch].
+
+**Uncommitted:** a clean body of finished work on `editability_reorganization` (master + corrections
+notebooks, 4 candidates, 3 briefs, findings corrections, folder README, restored 2026-07-02 note staged).
+NOT committed — waiting on Sevan (harness rule: commit only when asked). Ready to commit on request.
+
+**HELD for Sevan (decisions):** promotion calls on the 4 `candidate-*.md`; mark `learn-to-edit` active to
+launch next; the pillar-rename; the §4 waterfall-vs-1D-line aesthetic choice; and — the strategic one —
+**reframe the dynamics-identifiability thrust** now that velocity is shown to live in the state
+(nonlinear/entangled coordinate), not the transition.
 
 ## 2026-06-29 — RSSM refinement (engineering, branch `rssm_refinement` off main)
 Good-faith predictor-tuning of the RSSM (item #4 of the 2026-06-24 sequence). Full write-up:

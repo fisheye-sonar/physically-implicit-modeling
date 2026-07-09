@@ -54,6 +54,8 @@ Marking `done` is a commitment, so it's a human power — same line as promotion
 
 | Direction | Tag | Sub-Q | Status |
 |---|---|---|---|
+| [`diagnostic-corrections.md`](diagnostic-corrections.md) | `[in-frame]` | 1, 2, 3 | in progress |
+| [`learn-to-edit.md`](learn-to-edit.md) | `[reframe]` | 3 | proposed |
 | [`canonical-state-editing.md`](canonical-state-editing.md) | `[reframe]` | 2, 3 | in progress |
 | [`manifold-geometry-diagnostic.md`](manifold-geometry-diagnostic.md) | `[in-frame]` | 1 | in progress |
 | [`pca-component-position-analysis.md`](pca-component-position-analysis.md) | `[in-frame]` | 1, 3 | in progress |

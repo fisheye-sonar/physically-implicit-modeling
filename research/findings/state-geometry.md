@@ -6,13 +6,17 @@ dataset `4_fixed_refl_inview`, 2 objects, fixed reflectivities.
 
 ## Current understanding (mutable summary)
 
-The GRU's visited hidden states (256-dim) occupy a **low-dimensional, curved
-manifold**. ~38 dims carry 90% of variance with a sharp elbow at ~5–10 dims
-(~70%). The model uses roughly 15% of its representational capacity for the core
-dynamics. The manifold's **curvature matters**: a flat global PCA subspace and a
-local tangent subspace point in different directions, so a global-PCA off-manifold
-residual is *blind* to edits that stay in the kept subspace but leave the curved
-surface.
+The GRU's visited hidden states (256-dim) occupy a **low-dimensional, strongly
+curved manifold**. The **honest intrinsic dimension is ~5–7** (TwoNN 5.2, MLE 6.9),
+which brackets the physical 8 DOF; the fatter global-PCA hull (10/38/73 dims at
+70/90/95% variance) counts the *curved embedding*, not the true degrees of freedom.
+The manifold is genuinely curved: local tangent planes reorient by **~56° at
+nearest-neighbor spacing** and never align with the global PCA subspace (principal
+angle 48°→26° across k, never ~0). Because of this curvature a global-PCA
+off-manifold residual is *blind* to edits that stay in the kept subspace but leave
+the curved surface; the honest detector is the local residual against each state's
+own neighborhood — which for real states **floors at ~0.75–0.84 and never collapses
+to 0** (an earlier "local resid ≈0" was a projection tautology; see log).
 
 ## Log
 
