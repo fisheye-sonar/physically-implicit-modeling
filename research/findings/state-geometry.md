@@ -4,6 +4,11 @@
 Model/data context unless noted: GRU `3_dset3_gru_persistentids_inview_400epochs`,
 dataset `4_fixed_refl_inview`, 2 objects, fixed reflectivities.
 
+> **Scope (preliminary, 2026-07-09).** Characterizes the visited-state manifold of *this specific
+> checkpoint* — a GRU trained purely for next-observation prediction on `dataset 4`. Not a general
+> claim about GRU/world-model geometry; a different objective, dataset, or scale could shift the
+> numbers. Read "the GRU" as "this pure-next-step-prediction GRU."
+
 ## Current understanding (mutable summary)
 
 The GRU's visited hidden states (256-dim) occupy a **low-dimensional, strongly

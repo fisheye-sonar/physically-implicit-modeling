@@ -1,11 +1,14 @@
 # CANDIDATE FINDING — Editability: the GRU state is predictively sufficient but non-canonical
 
+**✅ PROMOTED → `findings/editability.md` (2026-07-09)**, with preliminary/scoped hedging (this
+pure-next-step-prediction GRU checkpoint, not GRUs in general). Kept as backing detail.
+
 **Consolidates:** `archive/2026-06-24-canonical-state-editing.md` (keystone),
 `archive/2026-06-24-geodesic-walk-k150.md` (subsumed), `archive/2026-06-23-geodesic-walk.md`
 (superseded), `archive/2026-06-23-pca-component-position.md` (parked/metric-dependent).
 **Model/data:** GRU `3_dset3_gru_persistentids_inview_400epochs` (val_loss 0.0236),
 `4_fixed_refl_inview`, 2 obj, constant-velocity, H=256. Notebooks under
-`notebooks/experiments/manifold_editing/`.
+`notebooks/experiments/editability/`.
 **Sub-question:** 3 (editability). **Status:** candidate for promotion → `findings/editability.md`
 (whose summary is already corrected to this framing as of 2026-07-08).
 

@@ -4,7 +4,7 @@
 **Status:** in progress (2026-07-08) · **Complexity:** low-medium (one notebook, three self-contained
 corrections that share one bootstrap)
 
-> Run as ONE notebook: `notebooks/experiments/manifold_editing/diagnostic_corrections.ipynb`
+> Run as ONE notebook: `notebooks/experiments/editability/diagnostic_corrections.ipynb`
 > (use the **NotebookEdit** tool). Number every cell (`# [N]`) and figure (`Fig K — …`, panels
 > `(a)/(b)/(c)`). Produce BOTH rich plots AND printed metric tables. Export PNGs to
 > `/tmp/diagnostic_corrections/`.
@@ -29,7 +29,7 @@ honestly; if a fix overturns a prior claim, say so plainly — do not soften.
 
 ## Bootstrap (cold-start — run from a fresh kernel)
 
-Notebook is **3 levels deep** (`notebooks/experiments/manifold_editing/`):
+Notebook is **3 levels deep** (`notebooks/experiments/editability/`):
 `sys.path.insert(0,"../../..")` (repo root, `import pim`) and `"../.."` (for `helpers`).
 Working references to mirror: `canonical_state_editing.ipynb`, `geodesic_walk_k150.ipynb` (GRU) and
 `../rssm_structure/rssm_state_geometry.ipynb` (RSSM).

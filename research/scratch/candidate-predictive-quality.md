@@ -1,5 +1,7 @@
 # CANDIDATE FINDING — Predictive quality: refined RSSM is competitive but has a generative gap
 
+**✅ PROMOTED → `findings/predictive-quality.md` (2026-07-09)**, with preliminary/scoped hedging. Kept as backing detail.
+
 **Consolidates:** `archive/2026-06-29-rssm-refinement.md` (engineering + qualitative).
 **Model/data:** best RSSM `runs/rssm/4_dset4_refined_best/` (det256+stoch64, lr 3e-4, free_nats 3,
 500 ep, seed 0), vs GRU r3, on `4_fixed_refl_inview`. Deterministic (prior-mean) eval.

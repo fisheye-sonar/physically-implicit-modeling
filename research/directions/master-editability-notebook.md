@@ -5,7 +5,7 @@
 
 > Build ONE clean, **presentation-grade, visual-heavy** notebook that is the single readable synthesis
 > of the whole editability / canonical-state investigation, **GRU and refined RSSM side by side**.
-> Location: `notebooks/experiments/manifold_editing/00_master_editability.ipynb` (the `00_` marks it the
+> Location: `notebooks/experiments/editability/00_master_editability.ipynb` (the `00_` marks it the
 > primary/entry notebook of this pillar). Use **NotebookEdit**; do not modify other notebooks.
 > Number every cell `# [N]` and every figure `Fig K — …` with lettered sub-panels `(a)/(b)/(c)`
 > (CLAUDE.md). Produce BOTH rich plots (Sevan judges from these) AND printed metric tables (self-verify).

@@ -36,7 +36,7 @@ Marking `done` is a commitment, so it's a human power — same line as promotion
   2026-06-23 PCA cold-start test: the brief said "reuse `states_tf` …" but the
   test-hygiene rule forbids opening the notebook that defines it — a direct
   contradiction.)* Until the shared setup helpers are factored into `pim/`, spell
-  the bootstrap out; `notebooks/experiments/manifold_editing/pca_component_position.ipynb` is a
+  the bootstrap out; `notebooks/experiments/editability/pca_component_position.ipynb` is a
   working reference for the standard cold-start setup.
 - **Define every metric and threshold.** If the brief asks a binary question
   ("is it selective?"), state the decision rule. If a magnitude is interpreted,

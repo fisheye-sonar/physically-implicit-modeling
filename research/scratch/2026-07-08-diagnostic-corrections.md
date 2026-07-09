@@ -3,7 +3,7 @@
 → FLAG FOR PROMOTION
 
 Corrections pass on three suspect numbers in the GRU + RSSM notes. Notebook:
-`notebooks/experiments/manifold_editing/diagnostic_corrections.ipynb` (executed on GPU).
+`notebooks/experiments/editability/diagnostic_corrections.ipynb` (executed on GPU).
 Models: GRU `runs/gru/3_dset3_gru_persistentids_inview_400epochs` (H=256, val_loss 0.0236),
 refined RSSM `runs/rssm/4_dset4_refined_best` (det=256, stoch=64, total 320; `sample=False`,
 posterior-mean states). Data `datasets/4_fixed_refl_inview`, n_obj_keep=2, teacher-forced test

@@ -20,6 +20,12 @@ append-only** entries inside each. This is the "what's true" record.
   curvature of the GRU visited-state set (sub-question 1).
 - [`editability.md`](editability.md) — causal manipulability of hidden states:
   which edits succeed, which the dynamics reject, and why (sub-question 3).
+- [`architecture-independence.md`](architecture-independence.md) — the
+  non-canonical / readable≠controllable failure replicates on a refined RSSM; the
+  KL-structured latent buys no canonicity (cross-cutting; preliminary, 2 checkpoints).
+- [`predictive-quality.md`](predictive-quality.md) — observation fidelity: the
+  refined RSSM is a competitive predictor with a generative gap (affordance 1).
 
-_(identifiability / probe-recovery findings — sub-question 2 — not yet a separate
-concept file; add when there's a promoted result.)_
+_(A standalone identifiability / probe-recovery file — sub-question 2 — is still
+folded into `editability.md` (recoverability + velocity) and `architecture-independence.md`;
+split out when it earns its own concept.)_

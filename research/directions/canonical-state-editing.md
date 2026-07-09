@@ -3,7 +3,7 @@
 **Tag:** `[reframe]` · **Sub-question:** 2 (identifiability) + 3 (editability) ·
 **Status:** in progress (2026-06-24) · **Complexity:** medium-high (one notebook, several sections)
 
-> **Run THIS as one notebook:** `notebooks/experiments/manifold_editing/canonical_state_editing.ipynb`.
+> **Run THIS as one notebook:** `notebooks/experiments/editability/canonical_state_editing.ipynb`.
 > Number every code cell (`# [N]`) and every figure (`Fig K — …`, panels `(a)/(b)/(c)`), per the
 > CLAUDE.md convention. Produce BOTH rich plots (Sevan judges from these) AND printed metric
 > tables (the agent self-verifies from these). Export key PNGs to `/tmp/canonical_state/`.
@@ -32,9 +32,9 @@ incompleteness. Either outcome is a finding — do not soften whichever way it l
 
 ## Bootstrap (cold-start — run from a fresh kernel)
 
-Mirror `notebooks/experiments/manifold_editing/geodesic_walk_k150.ipynb` and
+Mirror `notebooks/experiments/editability/geodesic_walk_k150.ipynb` and
 `pca_component_position.ipynb` (both are working references). The notebook lives **3 levels deep**
-(`notebooks/experiments/manifold_editing/`), so relative paths are:
+(`notebooks/experiments/editability/`), so relative paths are:
 `sys.path.insert(0,"../../..")` (repo root, for `import pim`) and `"../.."` (for `helpers`);
 `CHECKPOINT_PATH="../../../runs/gru/3_dset3_gru_persistentids_inview_400epochs/best_model.pt"`,
 `DATA_DIR="../../../datasets/4_fixed_refl_inview"`. Bootstrap steps:

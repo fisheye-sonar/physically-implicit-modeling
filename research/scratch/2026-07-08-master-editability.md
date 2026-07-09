@@ -5,7 +5,7 @@ editability / canonical-state pillar. It introduces **no new science**; the prom
 live in the `candidate-*.md` files (`candidate-editability.md`, `candidate-rssm-replication.md`,
 `candidate-state-geometry.md`, `candidate-predictive-quality.md`). Do not promote from this note.
 
-**Notebook:** `notebooks/experiments/manifold_editing/00_master_editability.ipynb` (executed on GPU,
+**Notebook:** `notebooks/experiments/editability/00_master_editability.ipynb` (executed on GPU,
 numbered cells `# [N]`, numbered figures `Fig K`). **PNGs:** `/tmp/master_editability/`.
 
 **Models/data:** GRU `runs/gru/3_dset3_gru_persistentids_inview_400epochs` (H=256, val_loss 0.0236),

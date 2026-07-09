@@ -1,10 +1,12 @@
 # CANDIDATE FINDING — State geometry: low intrinsic dim, strongly curved, tautology-corrected
 
+**✅ PROMOTED → `findings/state-geometry.md` (2026-07-09)**, with preliminary/scoped hedging. Kept as backing detail.
+
 **Consolidates:** `archive/2026-06-24-manifold-geometry-diagnostic.md` (primary),
 geometry content from `archive/2026-06-23-pca-component-position.md`.
 **Model/data:** GRU `3_dset3_gru_persistentids_inview_400epochs` (val_loss 0.0236),
 `4_fixed_refl_inview`, H=256; visited-state bank 200k of 390k teacher-forced states.
-Notebook: `notebooks/experiments/manifold_editing/manifold_geometry_diagnostic.ipynb`.
+Notebook: `notebooks/experiments/editability/manifold_geometry_diagnostic.ipynb`.
 **Sub-question:** 1 (geometry). **Status:** candidate → `findings/state-geometry.md` (summary already
 corrected to this as of 2026-07-08).
 

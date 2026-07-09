@@ -1,4 +1,4 @@
-# manifold_editing/ — Editability & canonical-state pillar (GRU)
+# editability/ — Editability & canonical-state pillar (GRU)
 
 Working notebooks for sub-questions 1–3 (geometry / identifiability / editability) on the GRU.
 The refined-RSSM counterpart lives in `../rssm_structure/`; the two are unified in the master notebook.
@@ -22,8 +22,6 @@ The refined-RSSM counterpart lives in `../rssm_structure/`; the two are unified 
 - **PCA geodesic** = the *iterative* multi-step local-tangent walk. Use these names distinctly.
 
 ## Note on directory structure
-A fuller pillar rename (`manifold_editing/` → `editability/`, split `geometry/`, etc.) was considered
-2026-07-08 but deferred: ~17 markdown files (incl. provenance scratch notes) reference this path, and
-rewriting provenance to a new path is undesirable. Structure is expressed here via the primary/working
-convention instead. A coordinated rename remains available if Sevan wants it — it's a reference sweep,
-not a code change.
+Renamed `manifold_editing/` → `editability/` on 2026-07-09 (Sevan's call); all downstream path
+references across `research/` (findings, directions, scratch, PROGRESS) were swept in the same change.
+The refined-RSSM diagnostics still live in the sibling `../rssm_structure/`.

@@ -7,7 +7,7 @@
 
 ## ⟳ CONFIRMATION RUN (2026-06-24) — execute THIS section
 
-The first pass (K=30, in `notebooks/experiments/manifold_editing/geodesic_walk.ipynb`) found the on-manifold
+The first pass (K=30, in `notebooks/experiments/editability/geodesic_walk.ipynb`) found the on-manifold
 geodesic *crawls* toward the target readout (RMSE 1.71→1.13) and never reaches it, with a
 decaying step size. That is consistent with a **curvature barrier (true plateau)** but the K=30
 data cannot rule out **slow-but-would-converge**. Your job is the clean confirmation. Two things
@@ -35,8 +35,8 @@ Also (cheap, do it): at the **final** iterate of each geodesic variant, regenera
 waterfalls (object reach target? ghost gone?) so the obs-space conclusion is anchored at large K,
 not just K=30.
 
-Work in a **new** notebook `notebooks/experiments/manifold_editing/geodesic_walk_k150.ipynb`. You may **read**
-(not modify) `notebooks/experiments/manifold_editing/geodesic_walk.ipynb` as the structural template — copy its
+Work in a **new** notebook `notebooks/experiments/editability/geodesic_walk_k150.ipynb`. You may **read**
+(not modify) `notebooks/experiments/editability/geodesic_walk.ipynb` as the structural template — copy its
 cold-start bootstrap and helpers, bump `K_ITERS`, add the constant-step variant and the tail-fit
 decision. Everything else (deliverables, both-spaces requirement) follows the sections below.
 
@@ -60,7 +60,7 @@ one-shot editor, but it's exactly the right primitive for per-step projection).
 
 This brief runs in its **own new notebook**; do not assume a live kernel. Reconstruct
 from the checkpoint/data paths in Context, mirroring
-`notebooks/experiments/manifold_editing/pca_component_position.ipynb`, which already does exactly this:
+`notebooks/experiments/editability/pca_component_position.ipynb`, which already does exactly this:
 load model + linear probe; teacher-force the test set → `states_tf`; `fit_state_subspace`
 → `subspace`; `warm_up_to_edit` → `warm` / `h_at_edit`; reuse its `rollout_from_flat` /
 `decode_pos` helpers. (These are duplicated across notebooks pending a factor-out into

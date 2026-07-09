@@ -3,7 +3,7 @@
 **Date:** 2026-06-24 · **Direction:** `manifold-geometry-diagnostic.md` (`[in-frame]`, sub-Q1) ·
 **Status:** → FLAG FOR PROMOTION (do not promote / mark done / edit RESEARCH.md — human's call)
 
-Notebook: `notebooks/experiments/manifold_editing/manifold_geometry_diagnostic.ipynb` (executed on
+Notebook: `notebooks/experiments/editability/manifold_geometry_diagnostic.ipynb` (executed on
 GPU, RTX 5090). PNGs: `/tmp/manifold_geometry/{fig1_intrinsic_dimension,fig2_neighborhood_sweep,fig3_curvature}.png`.
 
 Setup: GRU `3_dset3_gru_persistentids_inview_400epochs` (epoch 191, val_loss 0.0236), H=256,

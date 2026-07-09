@@ -1,5 +1,8 @@
 # CANDIDATE FINDING — Architecture-independence: the RSSM replicates the GRU failure (KL structure buys no canonicity)
 
+**✅ PROMOTED → `findings/architecture-independence.md` (2026-07-09)**, with preliminary/scoped hedging
+(two checkpoints, not a law). Kept as backing detail.
+
 **Consolidates:** `archive/2026-07-02-rssm-state-geometry.md`.
 **Model/data:** refined RSSM `runs/rssm/4_dset4_refined_best/best_model.pt` (epoch 500,
 det256+stoch64 ⇒ flat H=320, `model.sample=False`), `4_fixed_refl_inview`.

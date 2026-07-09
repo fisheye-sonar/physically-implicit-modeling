@@ -3,8 +3,15 @@
 *Sub-question 3 — are targeted latent edits coherent, intended behavioral changes?*
 Model/data context unless noted: GRU `3_dset3_gru_persistentids_inview_400epochs`,
 dataset `4_fixed_refl_inview`, 2 objects, N=500 edit samples.
-Notebooks: `notebooks/experiments/manifold_editing/` (`canonical_state_editing`,
+Notebooks: `notebooks/experiments/editability/` (`canonical_state_editing`,
 `geodesic_walk_k150`, `manifold_geometry_diagnostic`).
+
+> **Scope (preliminary, 2026-07-09).** These claims concern the *specific trained checkpoint* under
+> study — a GRU trained **purely to predict the next observation** (no state supervision), on
+> `dataset 4`, at this stage of the investigation. They are **not** claims about GRUs / recurrent
+> world models in general. A different training objective (e.g. an editability- or
+> disentanglement-aware loss), dataset, or scale could change them. Read "the GRU" below as "this
+> pure-next-step-prediction GRU."
 
 ## Current understanding (mutable summary)
 
@@ -13,7 +20,7 @@ earlier "decode≠generate" reading was a magnitude-scaling artifact). But editi
 still fails, and the barrier is **not** "target unreachability under a manifold
 constraint" (superseded — the target readout *is* substantially reachable
 on-manifold via a constant-step geodesic, RMSE→0.35). The real barrier is that
-**`h` is predictively sufficient but non-canonical**: (i) ~35% of `h` is not a
+**this GRU's `h` is predictively sufficient but non-canonical**: (i) ~35% of `h` is not a
 (nonlinear) function of the world's minimal `(pos,vel)` sufficient statistic (the
 decode fiber is not collapsed); (ii) the `(pos,vel)→h` embedding is strongly curved
 (linear→MLP fiber-residual drop ~0.53), so linear/min-norm edits leave the manifold;
@@ -34,7 +41,7 @@ moves the obs partly by *scrambling*, not clean relocation).
 ### 2026-07-08 — Summary rewritten; velocity is instantaneously NONLINEAR, not temporal · `established`
 The current-understanding summary now leads with **non-canonicality / readable≠controllable** (from
 the 2026-06-24 keystone), replacing the superseded "target unreachability under manifold constraint."
-**Velocity correction (resolved, `manifold_editing/diagnostic_corrections.ipynb`):** the keystone's
+**Velocity correction (resolved, `editability/diagnostic_corrections.ipynb`):** the keystone's
 "velocity is a temporal feature" was a confound — it compared single-frame **linear** (0.47) against
 2-frame **MLP** (0.76), changing two axes at once. The 2×2 {linear,MLP}×{single,2-frame} on both GRU
 and RSSM shows single-frame MLP ≈ 2-frame MLP (Δ ≤ 0.007 late-t both models; GRU single-frame MLP R²

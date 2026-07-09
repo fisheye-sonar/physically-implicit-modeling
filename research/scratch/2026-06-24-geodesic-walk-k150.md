@@ -3,7 +3,7 @@
 → FLAG FOR PROMOTION
 
 **Direction:** `research/directions/geodesic-walk.md` (⟳ CONFIRMATION RUN section).
-**Notebook:** `notebooks/experiments/manifold_editing/geodesic_walk_k150.ipynb` (executed on GPU, RTX 5090).
+**Notebook:** `notebooks/experiments/editability/geodesic_walk_k150.ipynb` (executed on GPU, RTX 5090).
 **PNGs:** `/tmp/geodesic_k150/{1_convergence,2_obs_space_metrics,3_scans,4_waterfalls}.png`
 **Scale:** N=64, K=150, STEP_FRAC=0.34, same checkpoint/data/probe as the K=30 pass.
 **NOT promoted to findings; direction not marked done; RESEARCH.md untouched.**
@@ -104,7 +104,7 @@ dragged most of the way to target. So:
 
 ## Files
 
-- Notebook: `notebooks/experiments/manifold_editing/geodesic_walk_k150.ipynb`
+- Notebook: `notebooks/experiments/editability/geodesic_walk_k150.ipynb`
 - Figures: `/tmp/geodesic_k150/1_convergence.png` (RMSE/resid/step both variants),
   `/tmp/geodesic_k150/2_obs_space_metrics.png` (reach-target / obs-change / ghost vs rollout step),
   `/tmp/geodesic_k150/3_scans.png` (1D scans vs target render, final iterate),

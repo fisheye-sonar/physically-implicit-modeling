@@ -55,7 +55,7 @@ Lightly fine-tune the model (or a small adapter) on the edits split so that inje
   editor read as a controllability result.
 
 ## Bootstrap (cold-start)
-Mirror `notebooks/experiments/manifold_editing/canonical_state_editing.ipynb`. Paths 3-deep
+Mirror `notebooks/experiments/editability/canonical_state_editing.ipynb`. Paths 3-deep
 (`../../..` repo, `../../../runs`, `../../../datasets`). GRU
 `runs/gru/3_dset3_gru_persistentids_inview_400epochs/best_model.pt`, data `datasets/4_fixed_refl_inview`.
 `eval.warm_up_to_edit(model, edits.obs[:N], edits.edit_frame)` → `warm`, `h_at_edit`; the edits HDF5
