@@ -113,3 +113,28 @@ never tables alone. When you claim an effect, visualize it in the space where it
 actually occurs: e.g. plot the **1D observation scans / waterfalls** under the perturbation,
 not only decoded-scalar positions. Observation-space plots can reveal effects (e.g. one
 object moving while another stays) that decoded-scalar tables hide entirely.
+
+## Notebook legibility (hard standard — every experiment notebook)
+
+A notebook is read later by Sevan (from plots) and re-derived by agents (from numbers); it
+must **stand alone and be followable top-to-bottom** without the reader hunting for what a
+label means. Beyond cell/figure numbering:
+
+- **Definitions table up front.** Right after setup, include a **table defining every
+  non-obvious term and — critically — every metric with its explicit formula**, units, and
+  better-direction (↑/↓). A metric's definition lives in this table, *not* buried in a print
+  sidenote or a code comment. If a figure shows `d_gt` or `ghost ratio`, the reader must find
+  its formula in that table. When a term first appears, it must already be defined.
+- **Consistent metrics + units across everything you compare.** If two things are compared
+  (editors, models, variants, sections), report the **same metric set in the same units**.
+  Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate
+  RMSE elsewhere, and never compare method A on metric-set-X against method B on metric-set-Y.
+- **Tables for dense values.** When a step emits many named scalars, put them in a **table**,
+  not free-floating prints. Targeted use — do NOT duplicate every plot as a table; tabulate
+  where there are many terms/values to scan.
+- **Data-source provenance.** Each section states the exact model/checkpoint/dataset/split it
+  uses. When a number is pulled in as a **comparison from another notebook / experiment /
+  finding, cite the source** inline (e.g. "GRU fiber resid 0.337 — from `diagnostic_corrections`")
+  rather than dropping a bare constant.
+- **Always include the reference/GT column** in any comparison figure (waterfalls, editor
+  head-to-heads). A comparison with no ground-truth/target column is uninterpretable.

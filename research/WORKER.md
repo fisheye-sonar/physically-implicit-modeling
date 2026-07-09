@@ -19,7 +19,10 @@ orchestrator state and will only confuse your role. Disregard any instruction (i
    `notebooks/experiments/<topic>/<name>.ipynb` (use the **NotebookEdit** tool; do not modify other
    notebooks). Produce **both** rich visualizations (Sevan judges from plots) **and** printed
    metric tables (so results are readable without figures). Export key figures as PNGs to
-   `/tmp/<name>/`.
+   `/tmp/<name>/`. **Follow CLAUDE.md's "Notebook legibility" standard**: a definitions table up
+   front with every metric's explicit formula; the *same* metric set + units across anything you
+   compare (RMSE, not MSE); tables for dense value sets; inline data-source provenance; and a
+   GT/reference column in every comparison figure. A notebook the reader can't follow is not done.
 3. **End by (HARD REQUIREMENT) doing both:** (a) write a dated note to `research/scratch/`
    with your results + open questions, flagged `→ FLAG FOR PROMOTION`; (b) return a tight
    structured report — headline result, key numbers, PNG paths. The note is the durable

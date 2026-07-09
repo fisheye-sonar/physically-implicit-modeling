@@ -3,7 +3,63 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-09 (promotions + folder rename)_
+_Last updated: 2026-07-09 (learn-to-edit launched + nbstripout terminal fix)_
+
+## 2026-07-09 (pm) — learn-to-edit launched, nbstripout flood fixed
+
+**Branch:** `learn_to_edit` (Sevan made it; the 2026-07-09 promotions/rename are committed+merged via PR #7).
+
+**HARNESS UPGRADE (durable, from Sevan's learn_to_edit review — points 1 & 5):** added a **"Notebook
+legibility" hard standard** to `CLAUDE.md` (workers read it) + a pointer in `WORKER.md`. Requires, in every
+experiment notebook: a **definitions table up front with each metric's explicit formula** (not buried); the
+**same metric set + units across anything compared** (RMSE, not MSE); **tables for dense value sets**; inline
+**data-source provenance** for borrowed constants; and a **GT/reference column in every comparison figure**.
+This is the fix "for the long run, not just this notebook."
+
+**learn_to_edit v2 REVISION — DONE + VERIFIED.** `editability/learn_to_edit.ipynb` revised in place (27 cells,
+0 errors, 8 figs; RMSE now used throughout; definitions table added; note addendum in
+`scratch/2026-07-09-learn-to-edit.md`). Verified on disk incl. the GT column now in the FT waterfalls (Fig 5d)
+and the new Variant-B data-scaling figure (Fig 4B). **Verdict UNCHANGED** — the new B fine-tune budget sweep
+reinforces v1: held-out d_gt improves only slowly (0.287→0.273 over 128→1024), ghost drops modestly,
+**sel_err gets monotonically WORSE with budget** (all worse than ORIG's 0.129), h_edit stays off-manifold
+(~2.7–2.9 vs real ~1.75), and fine-tuning slightly **de-canonicalizes** (fiber 0.382→0.407). Editability
+still not cleanly induced. Deeper follow-ups (heavier FT, λ sweep, RSSM) remain parked for Sevan's call.
+
+**Note (not acted on):** a ~35-min-old ipykernel (7 procs, ~part of 4.6 GB GPU) persists — most likely
+Sevan's own VSCode review kernel (predates the worker; stable kernel file), so NOT killed. GPU has headroom;
+kill it only if it's a stray.
+
+**nbstripout terminal flood — FIXED.** The `BrokenPipeError` was flooding Sevan's terminal (git prompt kept
+re-invoking the clean filter, which printed a Python traceback on every early-closed pipe). Fix (local
+`.git/config`, persists across branches): clean filter now runs python with `signal.signal(SIGPIPE,
+SIG_DFL)` so a broken pipe dies silently instead of printing a traceback, and `filter.nbstripout.required
+= false` so a filter hiccup can't hard-fail git. Verified: early-closed pipe exits with no traceback;
+stripping still works (0 outputs in cleaned stream). Also killed an orphaned 88-min Jupyter kernel
+(leaked from earlier `setsid nohup` worker runs) — GPU now clear (1.5/32 GB). Discarded a stray
+kernelspec-only diff on `editability_structure.ipynb`.
+
+**Learn-to-edit — DONE + VERIFIED (both variants working end-to-end).** `editability/learn_to_edit.ipynb`
+(15 cells, 0 errors, 7 figs), note `scratch/2026-07-09-learn-to-edit.md` (→ FLAG FOR PROMOTION). Verified
+on disk (numbers present, no orphaned kernels). **RESULT: NEGATIVE — editability could NOT be cleanly
+induced on this GRU**, neither by a frozen learned editor (A) nor a light fine-tune (B); both show the
+**memorization signature** (train obs-loss collapses, held-out barely beats unsteered, selectivity gets
+WORSE). Nuance: the info IS present (A overfits train; the obs-gradient oracle solves per-sample but
+off-manifold at resid 6.8; more data helps d_gt/ghost *slowly*) — it's just **not reachable by a fixed/
+amortized function few-shot, and only off-manifold per-sample**. B also **failed to canonicalize** (fiber
+flat 0.382→0.383; readability down; dims up) → doesn't falsify editability⟺canonical, just fails to
+support it. Strength: **medium**, not "impossible." **HELD for Sevan (judgment call on a negative
+result):** the main threats-to-validity / flip-tests are (i) a **heavier Variant B fine-tune** (current was
+light, 1.5k iters — a stronger intervention could still induce editability = a positive result), (ii) a
+**λ sweep** mapping the on-manifold↔reach-the-edit tension, (iii) the **RSSM pass**. Did NOT auto-launch
+these — interpreting/extending a negative result is the human judgment call. Offer stands to launch on request.
+
+**Master notebook — REVISION FEEDBACK from Sevan (deferred behind learn-to-edit; captured in
+`directions/master-editability-notebook.md` REVISIONS section):**
+- §4 waterfalls are disliked AND possibly **wrong** — the "Unsteered" panel "looks like a model's output,"
+  not an unsteered rollout. **Investigate as a potential bug**, not just aesthetics.
+- Drop the purplish colormap → **classic academic style** (the light/Okabe-Ito theme).
+- **Add the next-step line plots** (the 1D-line style Sevan liked from `geodesic_walk_k150`).
+- Sevan will give fuller notebook feedback later.
 
 ## 2026-07-09 — Promotions, folder rename, git/nbstripout triage
 

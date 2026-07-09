@@ -1,7 +1,19 @@
 # Direction: Master Editability Notebook — clean visual synthesis (GRU + RSSM)
 
-**Tag:** `[in-frame]` · **Sub-question:** 1+2+3 (synthesis) · **Status:** in progress (2026-07-08) ·
+**Tag:** `[in-frame]` · **Sub-question:** 1+2+3 (synthesis) · **Status:** v1 built; REVISIONS PENDING (2026-07-09) ·
 **Complexity:** high (large, presentation-grade notebook; consolidation, not new science)
+
+> ## REVISIONS PENDING (Sevan, 2026-07-09) — address on the next master-notebook pass
+> 1. **§4 waterfalls (Fig 5/6) are disliked AND possibly WRONG.** The **"Unsteered" panel looks like a
+>    model's output, not an unsteered rollout** — **investigate as a potential bug** (is it plotting the
+>    model's *generated* obs instead of the true unsteered/GT rollout? check the data feeding each column)
+>    before/while restyling. Correctness first.
+> 2. **Drop the purplish colormap → classic academic style** (the light / Okabe-Ito theme Sevan prefers),
+>    even for the waterfalls. The old classic look was preferred.
+> 3. **Add the next-step 1D line plots** (the style from `geodesic_walk_k150.ipynb` that Sevan liked —
+>    make them clearer than that version).
+> 4. Fuller notebook feedback from Sevan is still to come — do not do a full rebuild until it lands; this
+>    list is the confirmed subset.
 
 > Build ONE clean, **presentation-grade, visual-heavy** notebook that is the single readable synthesis
 > of the whole editability / canonical-state investigation, **GRU and refined RSSM side by side**.
