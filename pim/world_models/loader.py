@@ -1,7 +1,8 @@
 """Checkpoint and dataset loaders — model-agnostic where possible.
 
 load_checkpoint dispatches on the keys in ckpt["model_config"]: it picks
-GRUModel if the config has 'num_layers', RSSMModel if it has 'det_size'.
+GRUModel if the config has 'num_layers', RSSMModel if it has 'det_size',
+DiTModel if it has 'n_sample_steps'.
 
 load_dataset reads a directory containing dataset.json + test.h5 + edits.h5
 (and train.h5 + val.h5; these are not needed for eval but are part of the
@@ -22,6 +23,8 @@ from torch.utils.data import DataLoader
 
 from pim.simulator.dataset import reconstruct_clean_obs
 from pim.world_models.dataloader import ObservationDataset
+from pim.world_models.dit import DiTModel
+from pim.world_models.dit import ModelConfig as DiTConfig
 from pim.world_models.gru import GRUModel
 from pim.world_models.gru import ModelConfig as GRUConfig
 from pim.world_models.protocol import HiddenStateModel
@@ -115,6 +118,8 @@ def load_checkpoint(
 
     if "det_size" in mcfg_dict:
         model: HiddenStateModel = RSSMModel(RSSMConfig(**mcfg_dict)).to(device)
+    elif "n_sample_steps" in mcfg_dict:
+        model = DiTModel(DiTConfig(**mcfg_dict)).to(device)
     elif "num_layers" in mcfg_dict or "hidden_size" in mcfg_dict:
         model = GRUModel(GRUConfig(**mcfg_dict)).to(device)
     else:

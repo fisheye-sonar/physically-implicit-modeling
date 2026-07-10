@@ -3,7 +3,69 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-09 (promotions + folder rename)_
+_Last updated: 2026-07-09 (DiT world model — engineering, branch `diff_transformer`)_
+
+## 2026-07-09 — DiT world model (engineering session, branch `diff_transformer`)
+
+**Goal (Sevan):** add a diffusion-transformer world model to the framework — deterministic
+given input, timestep conditioning only, observation-space (no latent DiT), trained like
+GRU/RSSM (next-step, one obs at a time, causality enforced), protocol-compatible, small.
+
+**Substrate built (all tested, 49 tests pass):**
+- `pim/world_models/dit/` (blocks.py + model.py): causal diffusion-forcing DiT.
+  One token per frame = concat(obs_t, noised obs_{t+1}); per-token τ + AdaLN-Zero; RoPE;
+  banded causal attention (window W=16 default). Rectified flow, v-prediction.
+- **State:** sliding window of last W raw obs = the ONLY thing carried forward (KV cache
+  is a derived function of it). `state_view` runtime toggle: `obs_window` (default,
+  invertible → editors work), `activations` (final-block token feats @ τ=1, GRU-h
+  analogue), `kv_cache` (post-RoPE K/V, large, subset probing only). Protocol UNCHANGED.
+- **Two deterministic predict modes** (`predict_mode`): `"mean"` = single τ=1 readout
+  averaged over a fixed seeded ε-bank ⇒ conditional mean (GRU-comparable; default);
+  `"sample"` = K-step Euler ODE from fixed ε ⇒ distribution-typical prediction.
+- `scripts/train_dit.py` (flow-matching loss; selects best ckpt by mean-mode next-step
+  MSE, NOT diffusion loss); loader dispatch on `n_sample_steps`; `in_memory` option in
+  `build_dataloaders` (**30× faster** than gzip-HDF5 random reads — GRU/RSSM training was
+  dataloader-bound all along); `--in-memory` flag added to train_gru.py too.
+
+**Key diagnostic (worth remembering):** diffusion loss ↓ monotonically while SAMPLED
+next-step MSE ↑ after ~epoch 10 — the model transitions from conditional-mean-ish
+predictions to distribution-typical samples that include a hallucinated obs-noise
+realisation (σ_clip² ≈ 0.0237 after [0,1] clipping, not 0.04). Resolved by the mean-mode
+readout: at τ=1 the optimal velocity field is v*(x,1) = x − E[x₀|ctx] for every x, so
+ε − v̂(ε,1,ctx) averaged over a small fixed ε-bank reads out the conditional mean.
+Converged ckpt + mean readout: val clean next-step MSE ≈ 0.0139 (GRU ref ≈ 0.015).
+
+**RESULT — GRU parity reached.** Iteration path (val clean next-step MSE): baseline d128/L4
+0.0144 → +p_one (explicit τ=1 readout training) 0.0138 → d192/L6 0.0116 → **flagship
+d192/L6/400ep 0.0112 vs GRU-dset4 0.0109** (2.8% gap). Lever analysis: capacity binds
+(d64 collapses), window does NOT (W=4≈W=16≈W=32 — constant-velocity needs ~4 frames),
+epochs don't (at d128). 3-way rollout compare: near-horizon clean MSE GRU 0.0150 <
+**DiT-mean 0.0162** < RSSM-mean 0.0173; DiT-mean sharpness closest to GT of all models
+(TV 2.37 vs GT 2.19; GRU 2.79, RSSM 2.9). Full detail + honest caveats (faster
+long-horizon drift past the window; sample-mode noise resonance in open loop) in
+**`research/scratch/2026-07-09-dit-world-model.md`**.
+
+**Checkpoints (gitignored, reproducible from config+seed):** flagship
+`runs/dit/7_dset4_dit_big_400ep/best_model.pt`; default-config `runs/dit/4_dset4_dit_pone`;
+fair GRU `runs/gru/7_dset4_gru_400epochs`. **Eval artifacts:** `outputs/eval/
+7_dset4_dit_big_400ep/20260709_195521/` (28 figs), `outputs/eval/7_dset4_gru_400epochs/
+20260709_185117/`, `outputs/eval/compare_gru_rssm_dit/` (horizon curve, waterfalls,
+sharpness — the Sevan-facing figures).
+
+**Uncommitted on `diff_transformer`:** new `pim/world_models/dit/` + `tests/test_dit.py`
+(18 tests) + `scripts/train_dit.py`; edits to `loader.py` (dispatch), `world_models/
+__init__.py`, `dataloader.py` (in_memory), `train_gru.py` (--in-memory + dead import),
+`compare_rollouts.py` (--dit); scratch note; this PROGRESS entry. All tests pass (49),
+ruff clean on touched files (pre-existing failures in tests/test_{extractors,renderer,
+sim}.py left alone — flagged for Sevan). Commit awaiting Sevan per harness rule.
+
+**Science backlog seeded by this work (NOT executed — needs Sevan steering):** probe
+`activations`/`kv_cache` views vs GRU-h (smoke check: activations linearly decode position
+2× better than raw window); DiT-native editability (obs-window state makes edits trivial
+by construction — rewrite the buffer with counterfactual renders; probe-steering is a
+no-op on raw windows, but note it's equally a no-op on THIS GRU: 0.0865 vs 0.0870);
+bounded-window vs recurrence for *persistence* (the north-star question — DiT drifts
+faster past W steps open-loop); sample-mode noise resonance.
 
 ## 2026-07-09 — Promotions, folder rename, git/nbstripout triage
 
