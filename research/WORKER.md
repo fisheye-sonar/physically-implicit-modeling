@@ -19,7 +19,10 @@ orchestrator state and will only confuse your role. Disregard any instruction (i
    `notebooks/experiments/<topic>/<name>.ipynb` (use the **NotebookEdit** tool; do not modify other
    notebooks). Produce **both** rich visualizations (Sevan judges from plots) **and** printed
    metric tables (so results are readable without figures). Export key figures as PNGs to
-   `/tmp/<name>/`.
+   `/tmp/<name>/`. **Follow CLAUDE.md's "Notebook legibility" standard**: a definitions table up
+   front with every metric's explicit formula; the *same* metric set + units across anything you
+   compare (RMSE, not MSE); tables for dense value sets; inline data-source provenance; and a
+   GT/reference column in every comparison figure. A notebook the reader can't follow is not done.
 3. **End by (HARD REQUIREMENT) doing both:** (a) write a dated note to `research/scratch/`
    with your results + open questions, flagged `→ FLAG FOR PROMOTION`; (b) return a tight
    structured report — headline result, key numbers, PNG paths. The note is the durable
@@ -29,6 +32,14 @@ orchestrator state and will only confuse your role. Disregard any instruction (i
 
 - **Do NOT orchestrate** — no spawning sub-agents, no "waiting on other jobs." Stop when your
   one task is done and reported.
+- **Do NOT background your notebook execution and stop.** Run the notebook to completion **in
+  this turn**, as a **blocking/foreground** execution you wait on (NotebookEdit's own run, or a
+  *synchronous* `jupyter nbconvert --to notebook --execute --inplace` whose exit you wait for).
+  **NEVER** launch the execution via `run_in_background` or `setsid nohup` and then stop "to wait
+  for it" — that **orphans the run** (and can orphan Jupyter kernels holding GPU) and breaks the
+  contract. Your task is finished only when the notebook has **actually finished executing (0 error
+  cells)**, you have **verified the written outputs**, and you have written the scratch note +
+  returned the report. If a run is long, wait for it — do not hand back a job still in flight.
 - **Do NOT write `research/findings/`** (the orchestrator drafts the findings diff for human
   approval — not you), **do NOT** mark the direction `done`, **do NOT** edit `RESEARCH.md`. Those
   are not a worker's calls. Write your `scratch/` note and flag for review.
