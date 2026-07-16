@@ -32,6 +32,14 @@ orchestrator state and will only confuse your role. Disregard any instruction (i
 
 - **Do NOT orchestrate** — no spawning sub-agents, no "waiting on other jobs." Stop when your
   one task is done and reported.
+- **Do NOT background your notebook execution and stop.** Run the notebook to completion **in
+  this turn**, as a **blocking/foreground** execution you wait on (NotebookEdit's own run, or a
+  *synchronous* `jupyter nbconvert --to notebook --execute --inplace` whose exit you wait for).
+  **NEVER** launch the execution via `run_in_background` or `setsid nohup` and then stop "to wait
+  for it" — that **orphans the run** (and can orphan Jupyter kernels holding GPU) and breaks the
+  contract. Your task is finished only when the notebook has **actually finished executing (0 error
+  cells)**, you have **verified the written outputs**, and you have written the scratch note +
+  returned the report. If a run is long, wait for it — do not hand back a job still in flight.
 - **Do NOT write `research/findings/`** (the orchestrator drafts the findings diff for human
   approval — not you), **do NOT** mark the direction `done`, **do NOT** edit `RESEARCH.md`. Those
   are not a worker's calls. Write your `scratch/` note and flag for review.

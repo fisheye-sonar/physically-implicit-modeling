@@ -3,7 +3,123 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-09 (learn-to-edit launched + nbstripout terminal fix)_
+_Last updated: 2026-07-15 (master-notebook S4/S5 review — v4 worker running)_
+
+## 2026-07-15 (later) — master-notebook S4/S5 review (Sevan, 31 items)
+
+**Bugs CONFIRMED by code inspection (Sevan caught both):**
+- **Fig 5 "GT" column was NOT ground truth** — it plotted the model rollout from the teacher-forced
+  post-edit state `h_gt` (hence ghost traces / extra streaks). Fix: GT column = sim `edits.clean_obs`;
+  the model rollout from `h_gt` stays as its own labeled "True-state swap (model rollout)" column.
+- **"MLP-gradient" was a misnomer** — it is the DECODER/obs-gradient editor (Adam on h vs GT obs). The
+  repo's actual MLP-probe steering primitive (`pim.editors.gradient_steer`, from the mlp_steering PR) was
+  never in the line-up. Renamed → "Decoder gradient"; "MLP-probe gradient" ADDED as a new editor.
+- Also: the per-step `→target` metric compared against the STATIC edit-frame target render (so even the
+  true-state swap "drifts" from it) — redefined vs the time-evolving sim clean obs at ef+s.
+- Sevan's read of the decoder-gradient failure is right: it **collapses off-distribution**, it does not
+  "revert" — language fixed everywhere + a revert/collapse/drift precision rule added to CLAUDE.md.
+
+**HARNESS (durable, CLAUDE.md):** mechanism-based method names (no repo-name collisions); reference scale
++ units for every magnitude; PCA-prefixed estimator names ("honest" banned); revert-vs-collapse-vs-drift
+language; calibrated claims (quantities in body, interpretation only in Summary); comparison sets grow
+(new editor/model = added column/row, not a redesign).
+
+**v4 (S4 rebuild, both models) — DONE + VERIFIED** (26/26 cells, 0 errors, sync execution, S0–S3
+byte-identical; Fig 5a visually verified: GT column = clean sim render, 8 full-size cols, 6 shared
+context frames, top legend, decoder-gradient collapse visible). Editor line-up per model: Readout
+injection / MLP-probe gradient (new, `gradient_steer`) / Global-PCA projection / PCA geodesic / Decoder
+gradient (renamed, oracle) + GT(sim)/Unsteered/True-state-swap refs. Figs: 4 (row/model), 5a/5b, 6a/6b
+(step-0 scans), 6c (geodesic budget). **NEW SCIENCE from v4 (held for Sevan; feeds candidates/findings
+after his read):**
+- **The true-state swap itself is sluggish** — obs-change only 0.129 (GRU) / 0.059 (RSSM) with ghost-ray
+  ratio 0.665 / 0.884: a single-frame belief update barely moves the rendered scene, so *every* editor's
+  ceiling is low. Reframes "editing fails": even reality's own state, injected, doesn't visually teleport
+  the object in one frame.
+- **Geodesic K=600: ASYMPTOTES** (GRU 1.75→1.03 plateau by ~iter 135, flat to 600; RSSM no descent).
+  Resolves Sevan's "did it just need longer?" — NO. And GRU's plateau readout (1.03) is *better* than the
+  true-swap's readout (1.61) while its obs stay ≈unsteered → readout and obs accuracy nearly decoupled.
+- **No non-oracle editor beats the true-state swap on GT next-step RMSE, on either model.**
+- **Old "reverts by ~step 4" was partly a metric artifact** (static-render target); decoder-gradient on
+  GRU **collapses off-distribution** (distance-to-unsteered stays flat ≈0.31 — never returns); RSSM's is
+  milder (best next-step 0.131, smears by ~step 12).
+- Worker-flagged caveats: ±1-frame decode-convention offset (GRU predicts next / RSSM reconstructs
+  current) footnoted; geodesic's tiny leave-out residual partly tautological (last op is a local-PCA
+  projection); RSSM geodesic non-descent may be step-size-limited (no sweep run).
+**v5 (S5 Summary redesign) — DONE + VERIFIED** (0 errors, sync ~9 min, S0–S4 code unchanged — diff-checked;
+only print-string fixes in two §0/§1 cells). §5 = "Summary — what these experiments say about the learned
+state" with a clearly-marked "Our reading (interpretation)" block; calibrated phrasing ("≈34% of ‖h‖ not
+explained by any g(pos,vel) we fit — largely but not fully a function of the physical state"; "close to
+the 8 physical DOF (GRU slightly below, RSSM above)"); collapse-not-revert throughout. **Fig 7 — Summary**
+visually verified: (a) capability bars (both models, values on both bars), (b) ONE cross-architecture
+scatter (readout RMSE symlog × GT next-step RMSE; color=editor, circle=GRU/square=RSSM, legend outside) —
+replaces the old 7b (negative-% bars) and 7c (Fig-3a duplicate). Consolidated summary cell → demarcated
+markdown tables under "Current results (updated 2026-07-15)". `fig7_summary.png` (stale fig7_synthesis
+removed).
+
+**ENTIRE S4/S5 31-item feedback batch: COMPLETE.** Master notebook now fully review-passed §0–§5.
+
+**2026-07-16 — correction + proposed experiment (from discussion):** Sevan refuted my "true-state swap =
+editing ceiling" claim, and he's right: the one-frame-evidence state is the optimum of *observation-
+mediated single-frame* belief updating — a LOWER bound for latent editing, not a ceiling (editors have
+direct write access to `h`, unconstrained by filter dynamics). **Proposed: counterfactual-history state**
+— back-extrapolate the edited object from the target with preserved velocity (other object true history),
+render clean obs 0..ef, teacher-force → `h*`; inject at the edit frame. Since rollout is fully determined
+by `h`, this should render the teleport cleanly and persist → existence proof that a clean-edit state
+exists in h-space; the failure then localizes entirely to the **edit map's reachability**, sharpening the
+learn-to-edit negative result. Caveat: back-extrapolation may exit the frustum early (train data was
+always-in-frustum) — teacher-force only last ~10 counterfactual frames as mitigation. Also re-files the
+sluggish-swap result as a **belief-inertia** measurement (dynamics/coherent-rollout thread; natural
+K-frames-of-evidence convergence curve).
+
+**LAUNCHED as a SEPARATE reference notebook** (Sevan: keep it out of the master to avoid bloat; expected
+to succeed ~tautologically; promote only if surprising). Worker RUNNING →
+`notebooks/experiments/editability/counterfactual_history_state.ipynb`; brief
+`directions/counterfactual-history-state.md`; note will be `scratch/2026-07-16-counterfactual-history-state.md`.
+The belief-inertia / K-frames-of-evidence convergence curve remains a separate future idea (dynamics thread).
+**Awaiting Sevan:** (1) read-through of the rebuilt §4/§5 (esp. the sluggish-swap + geodesic-asymptote
+results and the ±1-frame decode-convention caveat); (2) promotion calls — the v4 results likely warrant
+updating `candidate-editability` / `candidate-rssm-replication` (sluggish swap reframes the editing story;
+RSSM intrinsic-dim 9.6–10 still unpromoted); (3) **commit** — the branch holds all master-notebook
+revisions (v2–v5), learn_to_edit v1+v2, harness upgrades, briefs, scratch addenda — none committed yet.
+
+## 2026-07-15 — master-notebook review continues (Sevan; S2/S3)
+
+- **HARNESS (durable):** strengthened `CLAUDE.md` "Notebook legibility" — (i) **clearly-demarcated tables**
+  (display'd DataFrame / markdown, NOT aligned-monospace prints); (ii) **plain language, no shorthand**
+  (`~=`/`=>`/`<<`/ALL-CAPS jargon banned; titles state what's shown, not the result); (iii) **define every
+  implementation detail** (thresholds/subsets like "late-t = t≥15") where used.
+- **NOTEBOOK v3 (S2/S3) — worker RUNNING (with the new synchronous-execution rule):** `directions/
+  master-editability-notebook.md` "REVISION PASS v3". S2: loose print-tables → demarcated DataFrames; plain
+  titles + `Current results` block; **switch all-t → early-t (t<15) vs late-t (t≥15)** with definitions;
+  simplify Fig 2 bars (2a single-frame {lin,MLP} × GRU/RSSM early/late; 2b single-frame only; 2c same),
+  keep single-vs-2-frame in the table. S3: `Current results` block; demarcated fiber table; Fig 3 plain
+  title + value labels on BOTH bars + headroom so legend doesn't overlap. S0/S1/S4/S5 untouched.
+- **Answered (chat):** item-4 early-t/late-t definition; flagged the all-t→early-t interpretation for Sevan.
+- §4/§5 review still pending Sevan's continued pass.
+
+## 2026-07-09 (eve) — master-notebook section-by-section review (Sevan; intro/S0/S1)
+
+Sevan is reviewing `00_master_editability.ipynb` section by section (today: intro, S0, S1; **S2+ tomorrow**).
+Two kinds of action taken:
+- **HARNESS (durable):** added a **"Synthesis notebooks (source-of-truth tier)"** standard to `CLAUDE.md`:
+  separate the invariant spine from dated **`Current results (updated YYYY-MM-DD)`** blocks; build every
+  figure/table to hold **N world models** (color-coded per WM, no results-in-titles, compute don't-"~same");
+  keep lightweight. This tier = provisional proposals for `pim`.
+- **NOTEBOOK v2 (intro/S0/S1) — DONE + VERIFIED.** `00_master_editability.ipynb` re-ran clean (0 errors, 8
+  figs; S2–S5 intact). Verified: Fig 0 redrawn (clean architecture-agnostic pipeline, no colinear arrows);
+  Fig 1 rebuilt for N models; S0 belief-state/CM note; dated `Current results` blocks. **NEW RESULT (held):
+  RSSM intrinsic dim COMPUTED — TwoNN 9.6 / MLE 10.0, HIGHER than GRU (5.2/6.9) and ABOVE 8** (GRU brackets
+  8; RSSM above) — updates the old "geometry ~same" hand-wave; consistent with the belief/stochastic-latent
+  view. NOT promoted — `findings/architecture-independence.md` should gain this once Sevan judges it.
+- **Recovery:** the v2 worker **orphaned its notebook execution** (`run_in_background` nbconvert) and stopped
+  early — orchestrator watched it to completion, fixed unfilled `@TOKEN@` placeholders it left (surgical JSON
+  edit, figures preserved), and wrote the scratch addendum it skipped.
+- **HARNESS FIX (root cause):** added a hard rule to `WORKER.md` — workers must run notebook execution to
+  completion **synchronously in-turn**; NEVER `run_in_background`/`setsid nohup` the execution and stop
+  (orphans the run + GPU kernels). This is the 2nd such failure; now explicit.
+- §2–§5 review + §4 waterfall items still pending Sevan's continued pass.
+- **Answered (in-chat):** the computational-mechanics question (causal/belief state) and the tangent-rotation
+  method — see chat; the CM point may later refine RESEARCH.md framing (Sevan's call).
 
 ## 2026-07-09 (pm) — learn-to-edit launched, nbstripout flood fixed
 

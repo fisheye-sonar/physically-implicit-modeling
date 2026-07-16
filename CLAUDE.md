@@ -129,12 +129,59 @@ label means. Beyond cell/figure numbering:
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate
   RMSE elsewhere, and never compare method A on metric-set-X against method B on metric-set-Y.
-- **Tables for dense values.** When a step emits many named scalars, put them in a **table**,
-  not free-floating prints. Targeted use — do NOT duplicate every plot as a table; tabulate
-  where there are many terms/values to scan.
+- **Tables for dense values — clearly demarcated.** When a step emits many named scalars, render a
+  **clearly demarcated table** (a `display(Markdown(...))` table — visible row/column structure; **pandas
+  is not in the `.pim` venv**, so don't reach for a DataFrame), **not** an aligned-monospace `print()`
+  block. Targeted use — do NOT duplicate every plot as a table; tabulate where there are many terms/values
+  to scan.
+- **Plain language, not shorthand.** Figure/panel/section titles, print headers, and prose are for a human
+  reader — spell things out. No internal shorthand (`~=`, `=>`, `<<`, `!=`, ALL-CAPS jargon like
+  "nonlinear-INSTANTANEOUS"): write "≈", "→", "much less than", "≠", or plain words. A **title states what
+  is shown, not the current result** — results belong in the dated `Current results` block, never in a
+  figure/section title.
+- **Define every implementation detail where it's used.** Any threshold, subset, or cutoff a reader would
+  ask about (e.g. "late-t = frames t ≥ 15") must appear in the definitions table or a clearly identifiable
+  note — never left as an unexplained label on an axis or in a print.
+- **Name methods by their mechanism.** A method's name must say what it actually does: "decoder gradient"
+  (gradient descent on `h` through the decoder against a target observation), "MLP-probe gradient" (steer
+  `h` until a frozen MLP probe reads the target). Never name a method after an incidental implementation
+  detail, and never reuse a name that already means something else in this repo.
+- **Every reported magnitude needs a reference scale and units.** A residual/distance alone is
+  uninterpretable — always show the matched reference next to it (e.g. the same metric on real states) and
+  state the normalization (raw ‖·‖ vs fraction). Name the estimator in the metric name: "global-PCA hull
+  residual", "leave-out local-PCA residual" — never a bare "manifold residual" or a pet adjective
+  ("honest").
+- **Precise failure-mode language.** "Reverts" = returns toward the unsteered/pre-edit trajectory.
+  "Collapses" = output degenerates off-distribution. "Drifts" = diverges without returning. Look at the
+  actual rollout before choosing the word; they are different dynamics outcomes.
 - **Data-source provenance.** Each section states the exact model/checkpoint/dataset/split it
   uses. When a number is pulled in as a **comparison from another notebook / experiment /
   finding, cite the source** inline (e.g. "GRU fiber resid 0.337 — from `diagnostic_corrections`")
   rather than dropping a bare constant.
 - **Always include the reference/GT column** in any comparison figure (waterfalls, editor
   head-to-heads). A comparison with no ground-truth/target column is uninterpretable.
+
+## Synthesis notebooks (source-of-truth tier)
+
+Some notebooks sit a tier above one-off experiments: a **single source of truth** that consolidates a
+research thread across architectures and proposes the language/metrics we may later fold into `pim`
+(e.g. `notebooks/experiments/editability/00_master_editability.ipynb`). They are **provisional
+proposals**, not the codebase — don't over-index on idiosyncrasies. Extra standards for this tier:
+
+- **Separate the invariant spine from dated results.** Definitions, metric formulas, and the pipeline
+  are stable. Every *result* (a number that moves as models/experiments evolve) lives in a clearly
+  marked **`Current results (updated YYYY-MM-DD)`** block — never woven into a section header, a
+  definition, or a figure title. The reader must tell "what this measures" apart from "what it reads now."
+- **Build every figure and table to hold N world models.** No two-model hardcoding: metric categories
+  on one axis, **one color-coded bar/series per world model** side-by-side, shared legend; never put a
+  model's result in a panel title. Adding a 3rd architecture is a data change, not a re-layout. Report
+  the *same* estimator for every model — **compute it, don't write "~same."**
+- **Lightweight:** recompute only the cheap things; cite the rest with source-notebook provenance
+  (keep the header's source list current as the thread evolves).
+- **Comparison sets grow — plan for it.** Editor line-ups and world-model line-ups will gain members;
+  lay out comparison figures/tables so a new method or model is an added column/row (wider figure,
+  single legend at the top of the figure), not a redesign.
+- **Calibrated claims; interpretation lives in the Summary.** Body sections state quantities ("~34% of
+  ‖h‖ is not explained by (pos,vel)") without verdict adjectives — don't binarize graded quantities
+  ("non-canonical") in body prose. Forward interpretations are confined to the final **Summary** section,
+  clearly marked as interpretation, and still quantified.
