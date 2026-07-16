@@ -103,6 +103,16 @@ Four invariants you cannot infer from any single file:
   (white bg, Okabe-Ito, `style_ax(ax)`). Simulator artifacts (2D scene,
   waterfalls, "model running in the sim") → dark theme (`#0a0a14`, `dark=True`).
   When in doubt: metrics → light, simulator output → dark.
+- **Waterfalls — fixed spec (do NOT invent a colormap).** Observation waterfalls use
+  **`cmap="gray"` on the dark background** — the `notebooks/world_model_eval.ipynb` /
+  `notebooks/experiments/editability/00_master_editability.ipynb` **Fig 5a** style, which is the
+  canonical reference. **NEVER magma / viridis / the pink-purple scheme.** Every waterfall comparison
+  also has: a **GT (sim clean-obs) reference column**; ~6 **pre-edit context frames** — the **actual
+  (noisy) observations the model was teacher-forced on** (`edits.obs` / `test.obs`), NOT the clean render
+  (only the GT column is clean) — above a marked **edit-frame line**; vertical **green = target** /
+  **red-dashed = ghost** locators; a **figure-top
+  legend** (not inside a panel); a **single what-is-shown title** (no results); and it is sized **wide
+  enough that every column stays full-size** (add columns by widening, never by shrinking).
 
 ## Visualization for analysis
 

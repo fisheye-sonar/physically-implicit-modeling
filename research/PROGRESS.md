@@ -3,7 +3,85 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-15 (master-notebook S4/S5 review — v4 worker running)_
+_Last updated: 2026-07-16 (editability_multi_exploration — 3 experiments DONE + VERIFIED, awaiting Sevan's review)_
+
+## 2026-07-16 (later) — NEW BRANCH `editability_multi_exploration`: 3 parallel experiments briefed
+
+Sevan opened branch `editability_multi_exploration` to run **three editability lines at once**. Master
+notebook `00_master_editability` is OFF-LIMITS (no new edits/results); all work goes in NEW notebooks,
+scratch-only, promotion deferred to Sevan's review. Focus: **GRU primary, RSSM where cheap** (RSSM: examine
+deterministic `h` — primary world-state carrier — and stochastic `s` separately). NOT the DiT.
+
+**Key feasibility fact:** a GRU trains 400 epochs in **~8.5 min** on this GPU (dataset 4, 256 hidden) →
+retraining for Exp 2/3 is cheap; the RSSM is the only expensive leg. Dataset 4 = `4_fixed_refl_inview`
+(T=40, R=128, edit_frame=20, 2 obj, 90k train). Master baselines: GRU
+`3_dset3_gru_persistentids_inview_400epochs`, RSSM `4_dset4_refined_best`; matched dataset-4 GRU baseline =
+`7_dset4_gru_400epochs`.
+
+**Three briefs written (status `proposed`, awaiting Sevan to mark active):**
+1. `directions/multistep-steering.md` `[in-frame]` — Exp 1: (1a) interleaved closed-loop latent steering
+   (push a little → decode → feed back → push, re-asserting the unedited object's target) vs one-shot;
+   (1b) freeze-time teacher forcing (interpolate the edit over N∈1..15 frames, TF, then unfreeze). No
+   retraining. Deliverable = editability success/failure only (NOT full master spread).
+2. `directions/action-conditioned-structure.md` `[reframe]` — Exp 2. **Reframed by Sevan:** the question
+   is whether **training on (random) discrete-token actions** with real causal effect **induces
+   causal/editable latent structure**, tested by **discarding the action channel (no-op) and re-running
+   the master latent editors** — NOT editing via the action channel (that's a secondary completeness
+   check, expected limited since nudges ≪ edit teleports). Discrete tokens {no-op, obj0±x/±y, obj1±x/±y},
+   no-op dominant/sparse actions. Requires new sim nudge + action-augmented dataset + action-conditioned
+   GRU (must conform to `HiddenStateModel` protocol at no-op so the master suite runs unchanged) + train.
+   Proposed optional control (perturbed-passive: same nudged trajectories, token withheld) to separate
+   "perturbation diversity" from "action-knowledge" — the enactivist crux. Replicates master §1–§4.
+3. `directions/multistep-prediction-objective.md` `[reframe]` — Exp 3: multi-step rollout training
+   objective (free-running w-step BPTT), w∈{2,5} vs single-step baseline. Watch blur/mode-collapse.
+   GRU primary; RSSM nice-to-have, **≤2–3h cap, cut if slower**. Replicates master §1–§4.
+
+**ALL THREE COMPLETE + VERIFIED (2026-07-16). Nothing promoted — all scratch, awaiting Sevan's review.**
+Three workers launched in parallel (Sevan approved incl. the Exp 2 perturbed-passive control). Each verified
+on disk (0 error cells, notes, PNGs). Consolidated results:
+
+- **Exp 1 — `notebooks/experiments/editability/multistep_steering.ipynb`** (10 cells, 0 err; note
+  `scratch/2026-07-16-multistep-steering.md`; PNGs `/tmp/multistep_steering/`). **Freeze-time TF (1b) is a
+  clean WIN on GRU+RSSM** — rendering the edit in over N frames (sweet spot N≈3–8) monotonically lands the
+  edit + removes ghost (GRU ghost 0.333→0.123; RSSM 0.485→0.130), deployable (we render the target). **Interleaved
+  latent steering (1a) does NOT win** — closed-loop push only eats ghost by dragging BOTH objects (collateral
+  explodes); one-shot latent inject is inert → reproduces *readable≠controllable*. Velocity artifact from
+  freezing is real (bends GRU RMSE→GT back up past N≈5) but degrades dynamics, not placement. Caveat: N=64.
+
+- **Exp 3 — `notebooks/experiments/multistep/multistep_objective_structure.ipynb`** (15 cells, 0 err; note
+  `scratch/2026-07-16-multistep-objective-structure.md`; script `scripts/train_gru_multistep.py`; ckpts
+  `runs/gru_multistep/w{2,5}_dset4_gru_400epochs`; 11 PNGs `/tmp/multistep_objective/`). **Clean NEGATIVE:** a
+  free-running w-step rollout objective (w∈{2,5}) buys open-loop rollout accuracy (0.208→0.188) and GT-matched
+  sharpness (**no blur** — watch-item cleared) but **no editability and no canonicality gain** — §4 pathology
+  (decoder-inert probe, belief sluggishness, off-manifold oracle collapse) replicates unchanged across w; if
+  anything canonicality mildly *degrades* (fiber resid 0.357→0.457, pos-linear R² 0.84→0.76). RSSM leg CUT
+  (per cap). Refutes the brief's "coherence-under-iterated-dynamics ⇒ editable state" intuition.
+
+- **Exp 2 — `notebooks/experiments/actions/action_conditioned_structure.ipynb`** (22 cells, 0 err; note
+  `scratch/2026-07-16-action-conditioned-structure.md`; substrate `pim/simulator/actions.py` +
+  `pim/world_models/action_gru.py`; dataset `datasets/5_action_augmented`; ckpts `runs/gru/8_action_cond_gru_400ep`
+  + `runs/gru/9_perturbed_passive_gru_400ep`; 8 PNGs `/tmp/action_conditioned/`). **NUANCED (partial positive):**
+  three GRUs on byte-identical trajectories (baseline / perturbed-passive control / action-cond). **Action-training
+  improves the PASSIVE latent's identifiability + canonicality — localized to action-KNOWLEDGE (3→2), not
+  perturbation (1→3):** pos-linear R² 0.838→0.890, vel-linear R² 0.582→0.659, MLP fiber resid 0.379→0.324.
+  **BUT editability did NOT follow** — §4 editors still fail on all three (readable≠controllable persists); the
+  canonicality gain is necessary-direction but not sufficient-magnitude. Side result: *unexplained* perturbations
+  (model 3) reduce belief inertia (true-swap obs-change 0.121→0.202, ghost 0.680→0.347) — a coherent-rollout effect.
+  **Worker FAILURE (recovered):** the Exp 2 worker built the pipeline + dataset and launched the full nbconvert
+  but **backgrounded it and stopped** (the recurring orphan-the-run failure — 3rd occurrence) *and* never wrote
+  its scratch note. Orchestrator **adopted the running nbconvert** (rather than kill+restart), watched it to
+  completion (0 err), verified all 3 models/figures, and **wrote the scratch note by reconstructing from the
+  notebook's printed tables** (per ORCHESTRATION "reconstruct from artifacts"). Harness upgrade candidate: the
+  synchronous-execution rule in WORKER.md is being ignored a 3rd time → escalate to enforcement.
+
+**AWAITING SEVAN:** (1) read-through + artifact-or-signal calls on all three (esp. Exp 2's identifiability/
+canonicality-yes-but-editability-no nuance, and whether Exp 1's freeze-time win + Exp 3's clean null warrant
+`findings/` entries); (2) promotion decisions; (3) **commit** — the branch `editability_multi_exploration` holds
+all of it, uncommitted (3 notebooks, 2 pim modules, 1 script, 3 briefs, 3 notes, PROGRESS/README edits). Master
+notebook untouched throughout (per Sevan's constraint). One long-lived GPU kernel (PID 946778, ~3.4h) left
+alone — predates the session, likely Sevan's VSCode review kernel.
+
+
 
 ## 2026-07-15 (later) — master-notebook S4/S5 review (Sevan, 31 items)
 
