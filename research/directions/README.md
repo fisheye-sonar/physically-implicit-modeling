@@ -64,6 +64,8 @@ Marking `done` is a commitment, so it's a human power — same line as promotion
 | [`multistep-steering.md`](multistep-steering.md) | `[in-frame]` | 3 | in progress |
 | [`action-conditioned-structure.md`](action-conditioned-structure.md) | `[reframe]` | 2, 3 | in progress |
 | [`multistep-prediction-objective.md`](multistep-prediction-objective.md) | `[reframe]` | 1, 2, 3 | in progress |
+| [`multistep-objective-rssm.md`](multistep-objective-rssm.md) | `[in-frame]` | 1, 2, 3 | in progress |
+| [`curvature-metric-normalization.md`](curvature-metric-normalization.md) | `[in-frame]` | 1 | proposed |
 
 ## Parked ideas (not yet written up)
 

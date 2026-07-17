@@ -59,8 +59,12 @@ is structural, not a budget/geometry artifact**. If anything the objective mildl
 direction + single-frame belief inertia), **not** an artifact of a next-step-only loss that a rollout
 objective would fix — refuting the "coherence-under-iterated-dynamics ⇒ editable state" intuition for this GRU.
 *Scope:* this GRU family, dataset 4 (noisy), `w∈{1,2,5}` only; probes in-sample (cross-`w` deltas are the
-load-bearing quantities). **OWED:** an RSSM replication (the architecture *built* for latent overshooting) —
-brief `directions/multistep-objective-rssm.md`, pending execution; the null may or may not replicate there.
+load-bearing quantities). **RSSM replication — DONE (2026-07-16, scratch, pending Sevan's artifact-or-signal
+review before folding in):** the negative **replicates** on the RSSM (latent-overshooting objective, `W∈{2,5}`;
+no editor reaches the true-state swap) AND the objective is *additionally harmful* there — it blurs the decoder
+(rollout TV/GT 1.23→0.43, objects fade), worsens single-step + open-loop prediction, collapses the linear hull
+(36→10 dims), and reduces linear readability + canonicality. So for the architecture built for multi-step, the
+objective buys no editability and costs predictive quality. See `scratch/2026-07-16-multistep-objective-rssm.md`.
 Notebook `notebooks/experiments/multistep/multistep_objective_structure.ipynb`; training helper
 `scripts/train_gru_multistep.py`; note `scratch/2026-07-16-multistep-objective-structure.md`. *(Two metric
 caveats noted in that thread — not affecting this result: the curvature/tangent-rotation number is not

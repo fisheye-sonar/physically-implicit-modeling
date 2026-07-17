@@ -61,9 +61,35 @@ go-ahead** (he'll greenlight an overnight run after the small fixes land).
   answers the item-12 leakage question), E3 2D world **GIF** (`action_demo.gif`). Action scratch note updated
   with a validity addendum (noise-matched, no confound; causal-use confirmed; shallow-shortcut caveat).
 
-**Action promotion still HELD by Sevan** pending his read of the exposition. RSSM multistep run still HELD for
-his overnight go-ahead. Tangent-curvature fix still OWED (deferred, see top-of-file reminder + directions brief).
-Master notebook untouched throughout.
+**Action promotion still HELD by Sevan** pending his read of the exposition. Tangent-curvature fix still OWED
+(deferred, see top-of-file reminder + directions brief). Master notebook untouched throughout.
+
+## 2026-07-16 (late) — RSSM multistep replication RUNNING (Sevan green-lit; he's out)
+Sevan green-lit the RSSM multistep run + left. Executing autonomously (orchestrator-driven for reliability, not a
+worker). **Objective:** PlaNet-style **latent overshooting** — new script `scripts/train_rssm_multistep.py`
+(standard ELBO + imagine W steps through the prior from each posterior state, obs-recon of the future + KL(sg(post)‖
+imagined-prior); starts subsampled n_start=8). **W∈{1(pure ELBO),2,5}**, matched **150-epoch** budget (reduced from
+the refined RSSM's 500 to fit the 2-3h cap; det 256 / stoch 64; ~11s/ep baseline). Training 3 RSSMs sequentially in
+bg (~112 min) → `runs/rssm_multistep/w{1,2,5}_dset4`. Analysis notebook **built + validated**:
+`notebooks/experiments/multistep/multistep_objective_rssm.ipynb` (adapted from the GRU multistep notebook: RSSM
+checkpoints, `sample=False` prior-mean eval, §0/§1/§2/§3/§4 + a NEW **§3b det-vs-stoch split**; all cells compile;
+core RSSM editor pipeline + det/stoch logic validated against the refined RSSM — det carries ~all pos/vel code &
+is far more canonical than stoch, as expected). Pending: training finish → run notebook → verify → scratch note.
+Caveat baked into the notebook: 150-epoch undertraining (cross-W is the load-bearing comparison) + the un-normalized
+curvature metric.
+
+**RSSM RESULT — DONE + VERIFIED (0 error cells, 12 figs; note `scratch/2026-07-16-multistep-objective-rssm.md`).**
+Training done (w1 recon 0.0247 / w2 0.0323 / w5 0.0365; 109 min). Notebook ran clean after a one-line ckpt patch
+(added `val_loss` key the loader needs). **Verdict: the GRU negative REPLICATES on the RSSM, and the objective is
+additionally HARMFUL there** — no editor reaches the true-state swap for any W (readable≠controllable, unchanged);
+AND multi-step overshoot **blurs the decoder** (rollout TV/GT 1.23→0.43 — objects fade; OPPOSITE the GRU's no-blur),
+**worsens** single-step (next-step RMSE 0.113→0.166) and open-loop (0.204→0.247) prediction, **collapses the linear
+hull** (36→10 dims @90%), and reduces linear readability (pos 0.82→0.64) + canonicality (MLP fiber 0.42→0.52). det
+h carries ~all (pos,vel) (det≈full, intrinsic ~4); overshoot de-canonicalises the det core. Caveat: overshoot
+best-recon ckpts are early (w2 ep64, w5 ep25) → harm understated if anything. Finding `editability.md` OWED-RSSM
+line updated (marked done-scratch, pending Sevan's review). **This completes ALL work Sevan assigned; awaiting his
+return** — promotion calls (multistep RSSM leg; action-conditioning still held pending his exposition read; the
+counterfactual metric is now fixed and ready to draft as a finding on his word) + the deferred curvature-metric fix.
 
 
 
