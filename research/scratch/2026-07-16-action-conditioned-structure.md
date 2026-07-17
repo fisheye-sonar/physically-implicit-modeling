@@ -98,6 +98,25 @@ canonicality moved ~0.05–0.07 while the editing gap is much larger. This *shar
 belief-inertia reduction from *unexplained* perturbations (model 3) is an independent, interpretable
 coherent-rollout effect worth its own note.
 
+## Validity checks + exposition (added 2026-07-16, review round)
+- **No noise confound (checked).** The action training data (`datasets/5_action_augmented`) was generated
+  from `SIM4` at `obs_noise_std=0.2` — the **same noise as dataset 4** (verified: identical noise signature).
+  So models 2/3 are noise-matched to the baseline (model 1 = `7_dset4`); the improvements are not a
+  clean-vs-noisy artifact. (The `obs_noise_std=0.0` in the notebook is only the exposition/edit render.)
+- **The action channel is causally used — not a trivial leakage bypass (item-12 check).** A new
+  exposition section (**E1–E3**, inserted before §1) shows: (E1) a demo trajectory with random tokens and
+  each token's observation-space effect; (E2) a **change-the-action sanity check** — identical input up to
+  `t0`, then feed no-op vs a nudge token → the model's predicted rollout **diverges** (mean|Δobs| > 0, e.g.
+  ~0.03 for obj0+x, ~0.13 for obj1+x on the demo) → the model genuinely conditions on the action; (E3) a 2D
+  world GIF. Because the nudge perturbs the *world state* and the scene is re-rendered (the ray-shift depends
+  on the object's depth via the frustum), the model cannot predict the next frame from the token alone — it
+  must bind the action to *which* object is *where*. A **shallow "token→local band-shift" shortcut is only
+  partially available** (bounded by the depth-dependence); this is a plausible contributor to why the effect
+  is modest, and a reason a **larger/compositional nudge** might strengthen it.
+- **Perceptual magnitude:** the 0.7-unit nudge is small relative to a full frustum-spanning edit teleport —
+  consistent with the action-channel edit falling short of a big target (secondary result). Figures:
+  `/tmp/action_conditioned/{expo_actions_obs,expo_change_action}.png`, `action_demo.gif`.
+
 ## Caveats / open questions (for the artifact-or-signal call)
 - **In-sample probes; N=64 edits.** Cross-model deltas are the trusted quantities; absolute values optimistic.
   The linear-R² and fiber-residual deltas are consistent and directionally clean, but modest — worth a rerun at

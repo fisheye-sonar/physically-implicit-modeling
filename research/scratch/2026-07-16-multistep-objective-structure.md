@@ -32,12 +32,12 @@ identifiability where they were.
 - **Data:** `datasets/4_fixed_refl_inview` (T=40, R=128, edit_frame=20, 2 objects); teacher-forced **test** split
   (10k) for §1–§3, **edits** split (first 64) for §4. All probes in-sample (comparisons load-bearing).
 - **Notebook (executed, 0 error cells):** `notebooks/experiments/multistep/multistep_objective_structure.ipynb`.
-- **Figures:** `/tmp/multistep_objective/` — figS_sharpness, fig1_geometry, fig2_recoverability, fig3_fiber,
+- **Figures:** `/tmp/multistep_objective/` — fig0_sharpness, fig1_geometry, fig2_recoverability, fig3_fiber,
   fig4_editor_metrics, fig5{a,b,c}_waterfalls_w{1,2,5}, fig6{a,b,c}_scans_w{1,2,5}.
 
 ## Results by section (w=1 / w=2 / w=5)
 
-**§S Sharpness & next-step quality (the blur watch-item).**
+**§0 Sharpness & next-step quality (the blur watch-item).**
 - Teacher-forced next-step RMSE vs clean: **0.104 / 0.106 / 0.109** — multi-step slightly *worse* on the 1-step metric (small).
 - Open-loop horizon RMSE (warm 10, free-run 30): **0.208 / 0.197 / 0.188** — multi-step *improves* rollout accuracy (as designed).
 - Rollout total-variation sharpness (÷ GT TV): **1.28 / 1.22 / 1.07**. `w=1` is *over-sharp* (speckly, 1.28×GT); multi-step
@@ -104,4 +104,4 @@ under iterated dynamics ⇒ editable state" hypothesis.
 - Training helper: `scripts/train_gru_multistep.py` (new; nothing existing modified).
 - Checkpoints (gitignored): `runs/gru_multistep/w2_dset4_gru_400epochs/`, `runs/gru_multistep/w5_dset4_gru_400epochs/`.
 - Notebook: `notebooks/experiments/multistep/multistep_objective_structure.ipynb` (executed, 0 error cells).
-- Figures: `/tmp/multistep_objective/*.png` (11 PNGs; see §S/§1–§4 above).
+- Figures: `/tmp/multistep_objective/*.png` (11 PNGs; see §0/§1–§4 above).

@@ -3,7 +3,69 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-16 (editability_multi_exploration — 3 experiments DONE + VERIFIED, awaiting Sevan's review)_
+_Last updated: 2026-07-16 (editability_multi_exploration — Sevan's review round: promotion + fixes in progress)_
+
+> **⏳ OWED / REMINDER FOR SEVAN (deferred, do when back — needs thought):** the **tangent-rotation
+> "curvature" metric is not distance/scale-normalized**, so its absolute degrees are a sample-density &
+> latent-scale artifact (this is why master says 56° and the newer notebooks say ~20° — NOT a real
+> difference). Fix spec + options in `directions/curvature-metric-normalization.md`. Does **not** change any
+> current finding's conclusion (intrinsic dim + linear hull are the load-bearing geometry numbers). Also
+> OWED: the same **static-target-render / target-fill metric inflates** as the edited object moves away
+> (frozen target rays) — fixed in counterfactual + multistep_steering this round, but `00_master_editability`
+> likely has it too and is under a no-edit hold until Sevan re-opens it.
+
+## 2026-07-16 (review round) — Sevan's feedback on the 3 experiments: promotion, fixes, harness
+
+**Clearance delivered (gates promotion): ALL models trained on NOISY obs (`obs_noise_std=0.2`).** Verified:
+dataset 3 (counterfactual/master GRU), dataset 4 (multistep + action baseline), dataset 5 (action models 2/3,
+confirmed noise-matched to dataset 4 — the `obs_noise_std=0.0` in the action notebook is only cell 18, a
+demo/edit render, NOT training data). So multistep + counterfactual are cleared, and there is **no noise
+confound** in the action baseline-vs-treatment comparison.
+
+**Sevan's two methodological catches — both CONFIRMED correct:**
+- **Static-target / target-fill metric confound.** `target-fill(s)=mean(rollout@targetrays)/mean(GT@targetrays)`
+  with **target rays frozen at the edit frame** → as the object moves away, `GT@targetrays→background≈0`, the
+  ratio inflates >1 and trends upward for every method (explains h*_shared 1.4, unsteered 0.655). Same flaw in
+  `multistep_steering`'s "RMSE vs static target render" (`s_target`) and probably in master. Sound metrics
+  (obs-RMSE vs the **moving** clean GT, ghost ratio) are unaffected. → fixing the metric to track the object.
+- **Curvature not normalized** (see reminder above).
+
+**PROMOTED (Sevan's explicit approval):** multi-step-objective **NEGATIVE** result → `findings/editability.md`
+2026-07-16 entry (multi-step rollout training buys rollout accuracy + GT-matched sharpness/no-blur, but NO
+editability/canonicality gain — editing failure is structural, not a next-step-loss artifact). RSSM
+replication noted as OWED in the entry.
+
+**HARNESS FIX (root cause of the worker orphan-the-run failure).** Diagnosis: a **subagent is NOT re-invoked
+when a background job finishes** (that notification goes to the parent), and the **10-min Bash cap** makes a
+30-min/3-training notebook impossible to run as one foreground blocking call → workers are structurally pushed
+into "background it and stop → orphan." `WORKER.md` rewritten: (1) **decouple training into standalone
+foreground script calls** (a GRU is ~9 min < cap) + keep the analysis notebook light (loads checkpoints only);
+(2) if a run must exceed the cap, **poll in-turn with back-to-back foreground calls, never return while
+pending** (ending the turn early = task failure). This is a design fix, not a sterner warning.
+
+**RSSM multistep replication:** brief written `directions/multistep-objective-rssm.md` — **HOLDING for Sevan's
+go-ahead** (he'll greenlight an overnight run after the small fixes land).
+
+**NOTEBOOK-EDIT PASS — DONE + VERIFIED (all 4 re-ran, 0 error cells, no retraining):**
+- (a) **counterfactual** — frozen-target metric fixed to **track the object per-step** (target-fill now →1
+  sanely, no >1 inflation) + **h*_shared W-sweep (W=1..10)** added (`fig4_Wsweep.png`): more counterfactual
+  context monotonically lowers RMSE→GT (0.240→0.183), ghost (0.77→0.39), raises target-fill (0.53→0.88); only
+  **~7–9% of the displacement is reachable by linear position injection** (the reachability point, quantified).
+- (b) **multistep_objective** — "Fig S"→"Fig 0", §S→§0, 30° reference line + panel-c legend removed; stale
+  `figS_sharpness.png` deleted.
+- (c) **multistep_steering** — confounded static-target curve replaced with an object-tracking metric
+  (panel 1a; 1a conclusion unchanged — interleaved doesn't beat one-shot, heavy collateral).
+- (d) **action** — **exposition section E1–E3 inserted before §1**: E1 actions↔obs effect (0.7-unit nudges
+  visible as step-jumps in object x/y + marked waterfall), E2 **change-the-action sanity** (flip the token at
+  t0 → rollout shifts, mean|Δobs| 0.027 obj0+x / 0.134 obj1+x → **the action channel is causally used**,
+  answers the item-12 leakage question), E3 2D world **GIF** (`action_demo.gif`). Action scratch note updated
+  with a validity addendum (noise-matched, no confound; causal-use confirmed; shallow-shortcut caveat).
+
+**Action promotion still HELD by Sevan** pending his read of the exposition. RSSM multistep run still HELD for
+his overnight go-ahead. Tangent-curvature fix still OWED (deferred, see top-of-file reminder + directions brief).
+Master notebook untouched throughout.
+
+
 
 ## 2026-07-16 (later) — NEW BRANCH `editability_multi_exploration`: 3 parallel experiments briefed
 

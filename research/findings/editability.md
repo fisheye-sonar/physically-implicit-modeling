@@ -38,6 +38,35 @@ moves the obs partly by *scrambling*, not clean relocation).
 
 ## Log
 
+### 2026-07-16 — A multi-step (rollout) TRAINING objective does not induce editability (GRU) · `established`
+Tested whether the editing failure is an artifact of the pure next-step training loss. Trained GRUs with a
+**free-running multi-step rollout objective** (teacher-force context, then free-run `w` steps feeding the
+model's own decoded predictions, BPTT through the whole imagination, MSE on all `w` frames), `w∈{1,2,5}`,
+same architecture/data/hidden/epochs — only the objective changes. Data `datasets/4_fixed_refl_inview`
+(**noisy**, `obs_noise_std=0.2`), `w=1` = the standard single-step baseline (`runs/gru/7_dset4_gru_400epochs`);
+`w=2,5` = `runs/gru_multistep/w{2,5}_dset4_gru_400epochs`.
+**Result — clean NEGATIVE.** The multi-step objective does what it's designed to on the *rollout* (open-loop
+horizon RMSE 0.208→0.197→0.188; rollout total-variation sharpness moves *toward* GT, 1.28→1.07, **not** below
+— so **no blurry mean-hedging / mode-collapse**) but **buys no editability and no identifiability/canonicality**:
+the whole §4 pathology — a **decoder-inert** position-probe direction, **belief sluggishness** (even the
+true-state swap moves the obs only ~0.12), and **off-manifold oracle collapse** — replicates essentially
+unchanged across `w`. No non-oracle editor approaches the true-state swap for any `w` (best-editor GT
+next-step RMSE ≈ Unsteered, ~0.27, vs swap ~0.20). The PCA-geodesic even drives the *readout* progressively
+lower with higher `w` (1.20→0.99) while obs/ghost/next-step barely move → the state↔observation **decoupling
+is structural, not a budget/geometry artifact**. If anything the objective mildly *degrades* canonicality
+(MLP fiber residual 0.357→0.382→0.457; position-linear R² 0.84→0.82→0.76; linear hull + curvature inflate).
+**Reading:** the editing difficulty here is a **structural** property of the learned code (decoder-inert probe
+direction + single-frame belief inertia), **not** an artifact of a next-step-only loss that a rollout
+objective would fix — refuting the "coherence-under-iterated-dynamics ⇒ editable state" intuition for this GRU.
+*Scope:* this GRU family, dataset 4 (noisy), `w∈{1,2,5}` only; probes in-sample (cross-`w` deltas are the
+load-bearing quantities). **OWED:** an RSSM replication (the architecture *built* for latent overshooting) —
+brief `directions/multistep-objective-rssm.md`, pending execution; the null may or may not replicate there.
+Notebook `notebooks/experiments/multistep/multistep_objective_structure.ipynb`; training helper
+`scripts/train_gru_multistep.py`; note `scratch/2026-07-16-multistep-objective-structure.md`. *(Two metric
+caveats noted in that thread — not affecting this result: the curvature/tangent-rotation number is not
+distance-normalised, and any static-target-render metric inflates as the object moves; §4 here uses the
+time-evolving clean GT.)*
+
 ### 2026-07-08 — Summary rewritten; velocity is instantaneously NONLINEAR, not temporal · `established`
 The current-understanding summary now leads with **non-canonicality / readable≠controllable** (from
 the 2026-06-24 keystone), replacing the superseded "target unreachability under manifold constraint."
