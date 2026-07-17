@@ -3,7 +3,173 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-15 (master-notebook S4/S5 review — v4 worker running)_
+_Last updated: 2026-07-16 (editability_multi_exploration — Sevan's review round: promotion + fixes in progress)_
+
+> **⏳ OWED / REMINDER FOR SEVAN (deferred, do when back — needs thought):** the **tangent-rotation
+> "curvature" metric is not distance/scale-normalized**, so its absolute degrees are a sample-density &
+> latent-scale artifact (this is why master says 56° and the newer notebooks say ~20° — NOT a real
+> difference). Fix spec + options in `directions/curvature-metric-normalization.md`. Does **not** change any
+> current finding's conclusion (intrinsic dim + linear hull are the load-bearing geometry numbers). Also
+> OWED: the same **static-target-render / target-fill metric inflates** as the edited object moves away
+> (frozen target rays) — fixed in counterfactual + multistep_steering this round, but `00_master_editability`
+> likely has it too and is under a no-edit hold until Sevan re-opens it.
+
+## 2026-07-16 (review round) — Sevan's feedback on the 3 experiments: promotion, fixes, harness
+
+**Clearance delivered (gates promotion): ALL models trained on NOISY obs (`obs_noise_std=0.2`).** Verified:
+dataset 3 (counterfactual/master GRU), dataset 4 (multistep + action baseline), dataset 5 (action models 2/3,
+confirmed noise-matched to dataset 4 — the `obs_noise_std=0.0` in the action notebook is only cell 18, a
+demo/edit render, NOT training data). So multistep + counterfactual are cleared, and there is **no noise
+confound** in the action baseline-vs-treatment comparison.
+
+**Sevan's two methodological catches — both CONFIRMED correct:**
+- **Static-target / target-fill metric confound.** `target-fill(s)=mean(rollout@targetrays)/mean(GT@targetrays)`
+  with **target rays frozen at the edit frame** → as the object moves away, `GT@targetrays→background≈0`, the
+  ratio inflates >1 and trends upward for every method (explains h*_shared 1.4, unsteered 0.655). Same flaw in
+  `multistep_steering`'s "RMSE vs static target render" (`s_target`) and probably in master. Sound metrics
+  (obs-RMSE vs the **moving** clean GT, ghost ratio) are unaffected. → fixing the metric to track the object.
+- **Curvature not normalized** (see reminder above).
+
+**PROMOTED (Sevan's explicit approval):** multi-step-objective **NEGATIVE** result → `findings/editability.md`
+2026-07-16 entry (multi-step rollout training buys rollout accuracy + GT-matched sharpness/no-blur, but NO
+editability/canonicality gain — editing failure is structural, not a next-step-loss artifact). RSSM
+replication noted as OWED in the entry.
+
+**HARNESS FIX (root cause of the worker orphan-the-run failure).** Diagnosis: a **subagent is NOT re-invoked
+when a background job finishes** (that notification goes to the parent), and the **10-min Bash cap** makes a
+30-min/3-training notebook impossible to run as one foreground blocking call → workers are structurally pushed
+into "background it and stop → orphan." `WORKER.md` rewritten: (1) **decouple training into standalone
+foreground script calls** (a GRU is ~9 min < cap) + keep the analysis notebook light (loads checkpoints only);
+(2) if a run must exceed the cap, **poll in-turn with back-to-back foreground calls, never return while
+pending** (ending the turn early = task failure). This is a design fix, not a sterner warning.
+
+**RSSM multistep replication:** brief written `directions/multistep-objective-rssm.md` — **HOLDING for Sevan's
+go-ahead** (he'll greenlight an overnight run after the small fixes land).
+
+**NOTEBOOK-EDIT PASS — DONE + VERIFIED (all 4 re-ran, 0 error cells, no retraining):**
+- (a) **counterfactual** — frozen-target metric fixed to **track the object per-step** (target-fill now →1
+  sanely, no >1 inflation) + **h*_shared W-sweep (W=1..10)** added (`fig4_Wsweep.png`): more counterfactual
+  context monotonically lowers RMSE→GT (0.240→0.183), ghost (0.77→0.39), raises target-fill (0.53→0.88); only
+  **~7–9% of the displacement is reachable by linear position injection** (the reachability point, quantified).
+- (b) **multistep_objective** — "Fig S"→"Fig 0", §S→§0, 30° reference line + panel-c legend removed; stale
+  `figS_sharpness.png` deleted.
+- (c) **multistep_steering** — confounded static-target curve replaced with an object-tracking metric
+  (panel 1a; 1a conclusion unchanged — interleaved doesn't beat one-shot, heavy collateral).
+- (d) **action** — **exposition section E1–E3 inserted before §1**: E1 actions↔obs effect (0.7-unit nudges
+  visible as step-jumps in object x/y + marked waterfall), E2 **change-the-action sanity** (flip the token at
+  t0 → rollout shifts, mean|Δobs| 0.027 obj0+x / 0.134 obj1+x → **the action channel is causally used**,
+  answers the item-12 leakage question), E3 2D world **GIF** (`action_demo.gif`). Action scratch note updated
+  with a validity addendum (noise-matched, no confound; causal-use confirmed; shallow-shortcut caveat).
+
+**Action promotion still HELD by Sevan** pending his read of the exposition. Tangent-curvature fix still OWED
+(deferred, see top-of-file reminder + directions brief). Master notebook untouched throughout.
+
+## 2026-07-16 (late) — RSSM multistep replication RUNNING (Sevan green-lit; he's out)
+Sevan green-lit the RSSM multistep run + left. Executing autonomously (orchestrator-driven for reliability, not a
+worker). **Objective:** PlaNet-style **latent overshooting** — new script `scripts/train_rssm_multistep.py`
+(standard ELBO + imagine W steps through the prior from each posterior state, obs-recon of the future + KL(sg(post)‖
+imagined-prior); starts subsampled n_start=8). **W∈{1(pure ELBO),2,5}**, matched **150-epoch** budget (reduced from
+the refined RSSM's 500 to fit the 2-3h cap; det 256 / stoch 64; ~11s/ep baseline). Training 3 RSSMs sequentially in
+bg (~112 min) → `runs/rssm_multistep/w{1,2,5}_dset4`. Analysis notebook **built + validated**:
+`notebooks/experiments/multistep/multistep_objective_rssm.ipynb` (adapted from the GRU multistep notebook: RSSM
+checkpoints, `sample=False` prior-mean eval, §0/§1/§2/§3/§4 + a NEW **§3b det-vs-stoch split**; all cells compile;
+core RSSM editor pipeline + det/stoch logic validated against the refined RSSM — det carries ~all pos/vel code &
+is far more canonical than stoch, as expected). Pending: training finish → run notebook → verify → scratch note.
+Caveat baked into the notebook: 150-epoch undertraining (cross-W is the load-bearing comparison) + the un-normalized
+curvature metric.
+
+**RSSM RESULT — DONE + VERIFIED (0 error cells, 12 figs; note `scratch/2026-07-16-multistep-objective-rssm.md`).**
+Training done (w1 recon 0.0247 / w2 0.0323 / w5 0.0365; 109 min). Notebook ran clean after a one-line ckpt patch
+(added `val_loss` key the loader needs). **Verdict: the GRU negative REPLICATES on the RSSM, and the objective is
+additionally HARMFUL there** — no editor reaches the true-state swap for any W (readable≠controllable, unchanged);
+AND multi-step overshoot **blurs the decoder** (rollout TV/GT 1.23→0.43 — objects fade; OPPOSITE the GRU's no-blur),
+**worsens** single-step (next-step RMSE 0.113→0.166) and open-loop (0.204→0.247) prediction, **collapses the linear
+hull** (36→10 dims @90%), and reduces linear readability (pos 0.82→0.64) + canonicality (MLP fiber 0.42→0.52). det
+h carries ~all (pos,vel) (det≈full, intrinsic ~4); overshoot de-canonicalises the det core. Caveat: overshoot
+best-recon ckpts are early (w2 ep64, w5 ep25) → harm understated if anything. Finding `editability.md` OWED-RSSM
+line updated (marked done-scratch, pending Sevan's review). **This completes ALL work Sevan assigned; awaiting his
+return** — promotion calls (multistep RSSM leg; action-conditioning still held pending his exposition read; the
+counterfactual metric is now fixed and ready to draft as a finding on his word) + the deferred curvature-metric fix.
+
+
+
+## 2026-07-16 (later) — NEW BRANCH `editability_multi_exploration`: 3 parallel experiments briefed
+
+Sevan opened branch `editability_multi_exploration` to run **three editability lines at once**. Master
+notebook `00_master_editability` is OFF-LIMITS (no new edits/results); all work goes in NEW notebooks,
+scratch-only, promotion deferred to Sevan's review. Focus: **GRU primary, RSSM where cheap** (RSSM: examine
+deterministic `h` — primary world-state carrier — and stochastic `s` separately). NOT the DiT.
+
+**Key feasibility fact:** a GRU trains 400 epochs in **~8.5 min** on this GPU (dataset 4, 256 hidden) →
+retraining for Exp 2/3 is cheap; the RSSM is the only expensive leg. Dataset 4 = `4_fixed_refl_inview`
+(T=40, R=128, edit_frame=20, 2 obj, 90k train). Master baselines: GRU
+`3_dset3_gru_persistentids_inview_400epochs`, RSSM `4_dset4_refined_best`; matched dataset-4 GRU baseline =
+`7_dset4_gru_400epochs`.
+
+**Three briefs written (status `proposed`, awaiting Sevan to mark active):**
+1. `directions/multistep-steering.md` `[in-frame]` — Exp 1: (1a) interleaved closed-loop latent steering
+   (push a little → decode → feed back → push, re-asserting the unedited object's target) vs one-shot;
+   (1b) freeze-time teacher forcing (interpolate the edit over N∈1..15 frames, TF, then unfreeze). No
+   retraining. Deliverable = editability success/failure only (NOT full master spread).
+2. `directions/action-conditioned-structure.md` `[reframe]` — Exp 2. **Reframed by Sevan:** the question
+   is whether **training on (random) discrete-token actions** with real causal effect **induces
+   causal/editable latent structure**, tested by **discarding the action channel (no-op) and re-running
+   the master latent editors** — NOT editing via the action channel (that's a secondary completeness
+   check, expected limited since nudges ≪ edit teleports). Discrete tokens {no-op, obj0±x/±y, obj1±x/±y},
+   no-op dominant/sparse actions. Requires new sim nudge + action-augmented dataset + action-conditioned
+   GRU (must conform to `HiddenStateModel` protocol at no-op so the master suite runs unchanged) + train.
+   Proposed optional control (perturbed-passive: same nudged trajectories, token withheld) to separate
+   "perturbation diversity" from "action-knowledge" — the enactivist crux. Replicates master §1–§4.
+3. `directions/multistep-prediction-objective.md` `[reframe]` — Exp 3: multi-step rollout training
+   objective (free-running w-step BPTT), w∈{2,5} vs single-step baseline. Watch blur/mode-collapse.
+   GRU primary; RSSM nice-to-have, **≤2–3h cap, cut if slower**. Replicates master §1–§4.
+
+**ALL THREE COMPLETE + VERIFIED (2026-07-16). Nothing promoted — all scratch, awaiting Sevan's review.**
+Three workers launched in parallel (Sevan approved incl. the Exp 2 perturbed-passive control). Each verified
+on disk (0 error cells, notes, PNGs). Consolidated results:
+
+- **Exp 1 — `notebooks/experiments/editability/multistep_steering.ipynb`** (10 cells, 0 err; note
+  `scratch/2026-07-16-multistep-steering.md`; PNGs `/tmp/multistep_steering/`). **Freeze-time TF (1b) is a
+  clean WIN on GRU+RSSM** — rendering the edit in over N frames (sweet spot N≈3–8) monotonically lands the
+  edit + removes ghost (GRU ghost 0.333→0.123; RSSM 0.485→0.130), deployable (we render the target). **Interleaved
+  latent steering (1a) does NOT win** — closed-loop push only eats ghost by dragging BOTH objects (collateral
+  explodes); one-shot latent inject is inert → reproduces *readable≠controllable*. Velocity artifact from
+  freezing is real (bends GRU RMSE→GT back up past N≈5) but degrades dynamics, not placement. Caveat: N=64.
+
+- **Exp 3 — `notebooks/experiments/multistep/multistep_objective_structure.ipynb`** (15 cells, 0 err; note
+  `scratch/2026-07-16-multistep-objective-structure.md`; script `scripts/train_gru_multistep.py`; ckpts
+  `runs/gru_multistep/w{2,5}_dset4_gru_400epochs`; 11 PNGs `/tmp/multistep_objective/`). **Clean NEGATIVE:** a
+  free-running w-step rollout objective (w∈{2,5}) buys open-loop rollout accuracy (0.208→0.188) and GT-matched
+  sharpness (**no blur** — watch-item cleared) but **no editability and no canonicality gain** — §4 pathology
+  (decoder-inert probe, belief sluggishness, off-manifold oracle collapse) replicates unchanged across w; if
+  anything canonicality mildly *degrades* (fiber resid 0.357→0.457, pos-linear R² 0.84→0.76). RSSM leg CUT
+  (per cap). Refutes the brief's "coherence-under-iterated-dynamics ⇒ editable state" intuition.
+
+- **Exp 2 — `notebooks/experiments/actions/action_conditioned_structure.ipynb`** (22 cells, 0 err; note
+  `scratch/2026-07-16-action-conditioned-structure.md`; substrate `pim/simulator/actions.py` +
+  `pim/world_models/action_gru.py`; dataset `datasets/5_action_augmented`; ckpts `runs/gru/8_action_cond_gru_400ep`
+  + `runs/gru/9_perturbed_passive_gru_400ep`; 8 PNGs `/tmp/action_conditioned/`). **NUANCED (partial positive):**
+  three GRUs on byte-identical trajectories (baseline / perturbed-passive control / action-cond). **Action-training
+  improves the PASSIVE latent's identifiability + canonicality — localized to action-KNOWLEDGE (3→2), not
+  perturbation (1→3):** pos-linear R² 0.838→0.890, vel-linear R² 0.582→0.659, MLP fiber resid 0.379→0.324.
+  **BUT editability did NOT follow** — §4 editors still fail on all three (readable≠controllable persists); the
+  canonicality gain is necessary-direction but not sufficient-magnitude. Side result: *unexplained* perturbations
+  (model 3) reduce belief inertia (true-swap obs-change 0.121→0.202, ghost 0.680→0.347) — a coherent-rollout effect.
+  **Worker FAILURE (recovered):** the Exp 2 worker built the pipeline + dataset and launched the full nbconvert
+  but **backgrounded it and stopped** (the recurring orphan-the-run failure — 3rd occurrence) *and* never wrote
+  its scratch note. Orchestrator **adopted the running nbconvert** (rather than kill+restart), watched it to
+  completion (0 err), verified all 3 models/figures, and **wrote the scratch note by reconstructing from the
+  notebook's printed tables** (per ORCHESTRATION "reconstruct from artifacts"). Harness upgrade candidate: the
+  synchronous-execution rule in WORKER.md is being ignored a 3rd time → escalate to enforcement.
+
+**AWAITING SEVAN:** (1) read-through + artifact-or-signal calls on all three (esp. Exp 2's identifiability/
+canonicality-yes-but-editability-no nuance, and whether Exp 1's freeze-time win + Exp 3's clean null warrant
+`findings/` entries); (2) promotion decisions; (3) **commit** — the branch `editability_multi_exploration` holds
+all of it, uncommitted (3 notebooks, 2 pim modules, 1 script, 3 briefs, 3 notes, PROGRESS/README edits). Master
+notebook untouched throughout (per Sevan's constraint). One long-lived GPU kernel (PID 946778, ~3.4h) left
+alone — predates the session, likely Sevan's VSCode review kernel.
+
+
 
 ## 2026-07-15 (later) — master-notebook S4/S5 review (Sevan, 31 items)
 

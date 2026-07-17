@@ -32,14 +32,31 @@ orchestrator state and will only confuse your role. Disregard any instruction (i
 
 - **Do NOT orchestrate** — no spawning sub-agents, no "waiting on other jobs." Stop when your
   one task is done and reported.
-- **Do NOT background your notebook execution and stop.** Run the notebook to completion **in
-  this turn**, as a **blocking/foreground** execution you wait on (NotebookEdit's own run, or a
-  *synchronous* `jupyter nbconvert --to notebook --execute --inplace` whose exit you wait for).
-  **NEVER** launch the execution via `run_in_background` or `setsid nohup` and then stop "to wait
-  for it" — that **orphans the run** (and can orphan Jupyter kernels holding GPU) and breaks the
-  contract. Your task is finished only when the notebook has **actually finished executing (0 error
-  cells)**, you have **verified the written outputs**, and you have written the scratch note +
-  returned the report. If a run is long, wait for it — do not hand back a job still in flight.
+- **Do NOT end your turn with any run still in flight — you are NOT re-invoked when it finishes.**
+  You are a subagent: your turn ends the moment you return a message, and a background job's
+  completion notification goes to your **parent (the orchestrator), not to you**. So if you launch
+  training or `nbconvert` with `run_in_background` / `setsid nohup` and then stop "to wait for the
+  notification," the run is **orphaned** (and can orphan Jupyter kernels holding GPU) and your task
+  **fails**. This has happened repeatedly — it is the #1 worker failure. Your task is done ONLY when
+  the run has **actually finished (0 error cells)**, you have **verified the outputs on disk**, and
+  written the scratch note. **Ending your turn with a run unfinished is a task failure**, even if you
+  "set up a monitor."
+
+  **The 10-min Bash cap makes this a real constraint** (you cannot block-wait on a 30-min notebook in
+  one foreground call). Handle it one of these two ways — **preferred first**:
+
+  1. **Decouple training from analysis so nothing needs backgrounding.** Train each model with a
+     **standalone foreground** Bash call to a *script* (pass `timeout: 600000`); a GRU is ~9 min < the
+     cap, so each finishes synchronously in-turn and writes its checkpoint. **Never put multi-model
+     training inside the analysis notebook.** Then run the **analysis** notebook (which only *loads* the
+     checkpoints and computes metrics/figures) via a single foreground `nbconvert` — keep it light
+     enough to finish under the cap.
+  2. **If one execution genuinely exceeds ~8 min** and can't be split, launch it with `run_in_background`
+     writing a **sentinel that covers BOTH outcomes** at the very end (e.g. append `EXIT=$?` to a log),
+     then **stay in-turn** by issuing **repeated foreground poll calls** (`Bash timeout: 600000` running
+     `for i in $(seq 1 38); do grep -q EXIT run.log && break; kill -0 <pid> 2>/dev/null || break; sleep 15; done`)
+     back-to-back until the sentinel appears — **do not return between polls**. Only then verify 0 error
+     cells, write the note, and report.
 - **Do NOT write `research/findings/`** (the orchestrator drafts the findings diff for human
   approval — not you), **do NOT** mark the direction `done`, **do NOT** edit `RESEARCH.md`. Those
   are not a worker's calls. Write your `scratch/` note and flag for review.
