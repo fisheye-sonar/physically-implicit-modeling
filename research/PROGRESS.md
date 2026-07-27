@@ -3,7 +3,48 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-16 (editability_multi_exploration — Sevan's review round: promotion + fixes in progress)_
+_Last updated: 2026-07-17 (branch `action_conditioning` — object-individuation experiment launched)_
+
+## 2026-07-17 — NEW branch `action_conditioning`: action-space → object-individuation experiment
+Prior editability_multi_exploration work is **committed + merged** (PR #9; RSSM multistep negative replicated).
+Sevan set up clean branch `action_conditioning`. After a long design discussion (the reframe below), launched the
+follow-up to Exp-2's actions.
+
+**The reframe (important — this is the through-line now):** the real target is **object individuation**, not
+"editability" per se. Question: does training a world model on an **interaction affordance** (moving objects)
+reorganize its *passive* latent into a **separable, grabbable object handle** that **generalizes to interventions it
+was never trained on** — vs just wiring a trained "button"? "Realism" of the latent world (structural-realist /
+pragmatic stance) = the structure supports untrained interventions + persistence. Editability was always a probe for
+objecthood. Sevan's framing shift: treat the GRU+latent **as the world** ("the latent world"), not a model *of* one.
+
+**Brief:** `directions/action-space-object-individuation.md` (active). Independent variable = **action-space type**:
+`dxdy` (large relative), `teleport` (absolute in-frustum placement — saturates content, forces ghost-removal),
+`axis_x` (x-only restricted — the **content-generalization** probe: train x, test y). Confound triad kept (baseline
+`7_dset4` / perturbed-passive-teleport control / action-conditioned). **All eval on the PASSIVE latent (action OFF)**
+with the master §4 editors — so the test is **interface generalization** (does the affordance live in the *state*,
+grabbable by a foreign write-mechanism, or only in the input→dynamics pathway?). Headline readouts: **object-handle
+selectivity** (reach / collateral / ghost / persistence), **content generalization** (M_axis y-vs-x), interface
+generalization, + light §1–§3 + an exposition (show the affordances; confirm they're perceptually large this time).
+A **clean negative** is a strong result (motivates explicit scaffolding — RESEARCH.md endgame). GRU only first pass;
+RSSM later. **Worker LAUNCHED** (uses the fixed WORKER.md decoupled-execution rule: train via foreground script
+calls, keep the notebook light). Awaiting completion → verify artifacts → scratch note review with Sevan.
+
+**RESULT — DONE + VERIFIED (0 error cells, 4 ckpts, 14 figs; note `scratch/2026-07-17-action-space-object-individuation.md`,
+FLAG FOR PROMOTION). Worker did NOT orphan (decoupled-execution fix held).** CLEAN NEGATIVE on the primary readout:
+**no action space individuates a grabbable object handle in the passive latent.** With the canonical structural editor
+(PCA geodesic, an untrained write-mechanism) targeting object k on the passive/no-op latent: **ghost never clears
+(0.90–0.93 for ALL five models** vs true-state-swap 0.44–0.67, decoder-gradient oracle 0.09), and edits are **non-selective
+(≈0.56–0.58** — the other object is disturbed nearly as much). Holds for every affordance (dxdy/teleport/axis_x) + the
+confound triad; **baseline actually has the best reach (36.7%)** so the affordances don't help the handle at all. Actions
+were genuinely large this time (|Δobs| 0.19–0.22, 2–7× Exp-2). Content generalization moot (M_axis ≈ baseline; the y>x
+reach asymmetry is a lateral-vs-depth geometry artifact in baseline too). **Weaker POSITIVE, localized to action-knowledge:**
+large affordances make the passive latent more canonical / linearly-readable (fiber Pert-pass 0.488 → M_teleport 0.316 →
+M_axis 0.282 vs baseline 0.395; vel-linear R² up) — replicates+strengthens Exp-2, but that's representation *legibility*,
+not *manipulability*. **Interpretation:** objecthood lives in the input→dynamics pathway (a button), not the state (a
+grabbable handle) — the affordance doesn't transfer across write-mechanisms. Readable ≠ grabbable. This is the
+"you-can't-lose" negative that **motivates explicit object scaffolding** (RESEARCH.md endgame). Awaiting Sevan: read +
+artifact-or-signal + promotion call; whether to (a) probe a manipulation-type reach / persistence test, (b) go
+constructive (explicit-slot architecture), or (c) an RSSM check. Caveats: GRU only, N=48 edits, in-sample probes.
 
 > **⏳ OWED / REMINDER FOR SEVAN (deferred, do when back — needs thought):** the **tangent-rotation
 > "curvature" metric is not distance/scale-normalized**, so its absolute degrees are a sample-density &
