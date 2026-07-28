@@ -23,7 +23,7 @@ is a stronger negative than the GRU's (where multi-step was roughly neutral / mi
   the refined RSSM's 500 to fit the ≤3h cap — the **cross-`W` comparison is the load-bearing quantity**). Best-recon
   checkpoints: `runs/rssm_multistep/w{1,2,5}_dset4` (best val_recon 0.0247 / 0.0323 / 0.0365).
 - **Eval:** `sample=False` (prior-mean, deterministic). Teacher-forced **test** split (§0–§3), edits split (§4, N=64).
-  Probes in-sample. Notebook `notebooks/experiments/multistep/multistep_objective_rssm.ipynb` (0 error cells).
+  Probes in-sample. Notebook `notebooks/experiments/editability/multistep/multistep_objective_rssm.ipynb` (0 error cells).
   Figures `/tmp/multistep_objective_rssm/`.
 
 ## Results by section (w=1 / w=2 / w=5)
@@ -92,7 +92,7 @@ model, the rollout objective's main effect is **predictive-quality degradation v
 
 ## Pointers
 - Training: `scripts/train_rssm_multistep.py`; checkpoints `runs/rssm_multistep/w{1,2,5}_dset4` (gitignored).
-- Notebook: `notebooks/experiments/multistep/multistep_objective_rssm.ipynb` (0 error cells, 12 figures).
+- Notebook: `notebooks/experiments/editability/multistep/multistep_objective_rssm.ipynb` (0 error cells, 12 figures).
 - Figures `/tmp/multistep_objective_rssm/`: fig0_sharpness (the blur), fig1_geometry, fig2_recoverability, fig3_fiber,
   **fig3b_det_stoch**, fig4_editor_metrics, fig5{a,b,c}_waterfalls, fig6{a,b,c}_scans.
 - Companion (GRU): `findings/editability.md` 2026-07-16 entry + `scratch/2026-07-16-multistep-objective-structure.md`.

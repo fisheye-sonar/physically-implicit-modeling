@@ -3,7 +3,7 @@
 **Tag:** `[reframe]` · **Sub-question:** 3 (editability/objecthood) + 2 (identifiability) · **Status:** active
 (2026-07-17) · **Complexity:** high (new continuous-action sim + model + 3 datasets + 4 GRUs + rich analysis)
 
-> Standalone experiment, **new** notebook `notebooks/experiments/actions/action_space_object_individuation.ipynb`.
+> Standalone experiment, **new** notebook `notebooks/experiments/editability/actions/action_space_object_individuation.ipynb`.
 > **Do NOT touch** the master notebook or the Exp-2 notebook. GRU only (RSSM is a later follow-up).
 
 ## Why this exists (read carefully — this is NOT "bigger actions")
@@ -100,7 +100,7 @@ Action-knowledge gap = (perturbed-passive → action-conditioned) delta on the h
 
 ## Deliverables
 - New sim + model modules; datasets in `datasets/` (gitignored ok); checkpoints in `runs/gru/`.
-- Executed `notebooks/experiments/actions/action_space_object_individuation.ipynb` (0 error cells; run the analysis
+- Executed `notebooks/experiments/editability/actions/action_space_object_individuation.ipynb` (0 error cells; run the analysis
   synchronously — training decoupled into foreground script calls). Produce BOTH rich plots (obs-space waterfalls +
   the handle scorecard bars, all models side by side, GT/reference columns) AND printed metric tables + a definitions
   table. PNGs → `/tmp/action_space_object/`.
@@ -114,7 +114,7 @@ Action-knowledge gap = (perturbed-passive → action-conditioned) delta on the h
 ## Bootstrap
 Baseline `runs/gru/7_dset4_gru_400epochs`; data `datasets/4_fixed_refl_inview` (its `sim` config = the dataset-4
 `SimConfig`; frustum x_near 1.5 / x_far 6.0 / y_near 3.0 / y_far 12.0, radius 0.5). Mirror
-`notebooks/experiments/actions/action_conditioned_structure.ipynb` (Exp-2) for the passive-eval pipeline, the 3-model
+`notebooks/experiments/editability/actions/action_conditioned_structure.ipynb` (Exp-2) for the passive-eval pipeline, the 3-model
 confound logic, the editor line-up, and the E1–E3 exposition; mirror `00_master_editability.ipynb` §4 for the editing
 metrics. Reuse `pim/simulator/edits_dataset._sample_in_frustum` for teleport targets. Paths 3-deep (`../../..`).
 Two known metric caveats to inherit correctly: evaluate against the **time-evolving clean GT** (not a frozen target

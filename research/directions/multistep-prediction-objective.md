@@ -5,7 +5,7 @@
 capped at ≤2–3h total and cut if slower)
 
 > A **standalone experiment in its own new notebook** —
-> `notebooks/experiments/multistep/multistep_objective_structure.ipynb`. **Do NOT touch the master
+> `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb`. **Do NOT touch the master
 > notebook.** **Replicates most of the master metric spread** (§1 geometry, §2 recoverability, §3
 > fiber-collapse, §4 latent editing) for the new architectures vs the single-step baseline.
 
@@ -56,7 +56,7 @@ waterfalls for §4 (GT(sim) column, green target / red ghost). Build every figur
 settings side by side. Definitions table up front. Both plots AND tables.
 
 ## Deliverables
-- Executed `notebooks/experiments/multistep/multistep_objective_structure.ipynb` — run **synchronously
+- Executed `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb` — run **synchronously
   in-turn**, 0 error cells. PNGs → `/tmp/multistep_objective/`. New checkpoints in gitignored `runs/`.
 - Dated note `research/scratch/2026-07-16-multistep-objective-structure.md`: does the multi-step
   objective move §1–§4 (esp. editability) vs single-step? Blur trade-off? RSSM done or cut (say which

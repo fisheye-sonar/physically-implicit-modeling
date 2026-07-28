@@ -28,7 +28,7 @@ The enactivist / Merleau-Ponty prediction is that the **3→2** gap carries the 
 - **Eval:** all metrics on the **passive/no-op** models. Edits split (first 64), teacher-forced test split
   (10k) for §1–§3. In-sample probes → the **cross-model deltas are the load-bearing quantities**, not the
   absolute R²/residual.
-- **Notebook (executed, 0 error cells, 22 cells):** `notebooks/experiments/actions/action_conditioned_structure.ipynb`.
+- **Notebook (executed, 0 error cells, 22 cells):** `notebooks/experiments/editability/actions/action_conditioned_structure.ipynb`.
 - **Figures:** `/tmp/action_conditioned/` — fig1_geometry, fig2_recoverability, fig3_fiber, fig4_editor_metrics,
   fig5{a,b,c}_waterfalls_{baseline,perturbed,action}, fig6_summary.
 
@@ -133,5 +133,5 @@ coherent-rollout effect worth its own note.
 ## Pointers
 - Substrate (new): `pim/simulator/actions.py`, `pim/world_models/action_gru.py`; dataset `datasets/5_action_augmented`.
 - Checkpoints (gitignored): `runs/gru/8_action_cond_gru_400ep`, `runs/gru/9_perturbed_passive_gru_400ep`.
-- Notebook: `notebooks/experiments/actions/action_conditioned_structure.ipynb` (executed, 0 error cells).
+- Notebook: `notebooks/experiments/editability/actions/action_conditioned_structure.ipynb` (executed, 0 error cells).
 - Figures: `/tmp/action_conditioned/*.png` (8 PNGs).

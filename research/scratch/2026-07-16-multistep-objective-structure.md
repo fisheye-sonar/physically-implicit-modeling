@@ -31,7 +31,7 @@ identifiability where they were.
   w=5 ≈ 10 min on the RTX 5090.
 - **Data:** `datasets/4_fixed_refl_inview` (T=40, R=128, edit_frame=20, 2 objects); teacher-forced **test** split
   (10k) for §1–§3, **edits** split (first 64) for §4. All probes in-sample (comparisons load-bearing).
-- **Notebook (executed, 0 error cells):** `notebooks/experiments/multistep/multistep_objective_structure.ipynb`.
+- **Notebook (executed, 0 error cells):** `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb`.
 - **Figures:** `/tmp/multistep_objective/` — fig0_sharpness, fig1_geometry, fig2_recoverability, fig3_fiber,
   fig4_editor_metrics, fig5{a,b,c}_waterfalls_w{1,2,5}, fig6{a,b,c}_scans_w{1,2,5}.
 
@@ -103,5 +103,5 @@ under iterated dynamics ⇒ editable state" hypothesis.
 ## Pointers
 - Training helper: `scripts/train_gru_multistep.py` (new; nothing existing modified).
 - Checkpoints (gitignored): `runs/gru_multistep/w2_dset4_gru_400epochs/`, `runs/gru_multistep/w5_dset4_gru_400epochs/`.
-- Notebook: `notebooks/experiments/multistep/multistep_objective_structure.ipynb` (executed, 0 error cells).
+- Notebook: `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb` (executed, 0 error cells).
 - Figures: `/tmp/multistep_objective/*.png` (11 PNGs; see §0/§1–§4 above).

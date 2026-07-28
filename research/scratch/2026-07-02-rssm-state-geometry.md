@@ -1,7 +1,7 @@
 # RSSM State Geometry & Editability — GRU replication on the refined RSSM (2026-07-02)
 
 **Direction:** RSSM structure replication of the GRU state-geometry / editability analysis.
-**Notebook:** `notebooks/experiments/rssm_structure/rssm_state_geometry.ipynb` (executed clean top-to-bottom on GPU, RTX 5090; 0 error cells).
+**Notebook:** `notebooks/experiments/editability/rssm_structure/rssm_state_geometry.ipynb` (executed clean top-to-bottom on GPU, RTX 5090; 0 error cells).
 **PNGs:** `/tmp/rssm_state_geometry/fig1..fig8` (fig7 = 3 waterfall panels: `fig7_waterfall_0/1/2`).
 **Model/data:** `runs/rssm/4_dset4_refined_best/best_model.pt` (RSSMModel, epoch 500, val_loss 3.0237), dataset `datasets/4_fixed_refl_inview` (2 obj, fixed refl, constant velocity, dt=1). Flat state = `cat([h_det(256), s_stoch(64)])` → **H=320**. `model.sample=False` (deterministic prior-mean rollouts). `states_tf=(10000,39,320)` posterior-mean teacher-forced. Velocities read from HDF5 `velocities`, temporal std 0.0 (verified constant-vel).
 

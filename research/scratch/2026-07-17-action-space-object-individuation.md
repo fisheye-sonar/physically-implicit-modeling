@@ -1,7 +1,7 @@
 # Does the action space individuate a grabbable OBJECT HANDLE in the passive latent? — clean NEGATIVE (with a real, weaker positive on structure)
 
-**Date:** 2026-07-17 · **Direction:** `research/directions/action-space-object-individuation.md` · **Status:** → **FLAG FOR PROMOTION**
-**Notebook:** `notebooks/experiments/actions/action_space_object_individuation.ipynb` (executed, 0 error cells) · **PNGs:** `/tmp/action_space_object/`
+**Date:** 2026-07-17 · **Direction:** `research/directions/action-space-object-individuation.md` · **Status:** ✅ **PROMOTED 2026-07-27** → `findings/object-individuation.md` (Sevan-approved; scoped to *exogenous* actions; Exp-2 folded in)
+**Notebook:** `notebooks/experiments/editability/actions/action_space_object_individuation.ipynb` (executed, 0 error cells) · **PNGs:** `/tmp/action_space_object/`
 **Reframe:** not "bigger actions", not editing via the action channel. Question = does training on an interaction *affordance*
 reorganize the **passive** (no-op) latent into a **separable, ghost-clearing, generalizable object handle** that a
 **master §4 editor** (a *different* write-mechanism than the trained action channel) can grab — a real object vs a memorised button.
