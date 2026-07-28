@@ -4,7 +4,7 @@
 until Sevan gives the go-ahead) · **Complexity:** medium-high (RSSM retraining ×≤3; compute-capped)
 
 > Companion to `multistep-prediction-objective.md` (the GRU version, DONE: clean negative). **New
-> standalone notebook** `notebooks/experiments/multistep/multistep_objective_rssm.ipynb`. **Do NOT touch
+> standalone notebook** `notebooks/experiments/editability/multistep/multistep_objective_rssm.ipynb`. **Do NOT touch
 > the master notebook** or the GRU multistep notebook.
 
 ## Why this exists (why the RSSM specifically matters here)
@@ -51,7 +51,7 @@ Three training regimes, compared: single-step (`w=1`) baseline vs multi-step `w=
   the bank size/K used and do not compare its absolute degrees to other notebooks.
 
 ## Deliverables
-- Executed `notebooks/experiments/multistep/multistep_objective_rssm.ipynb` (0 error cells). PNGs →
+- Executed `notebooks/experiments/editability/multistep/multistep_objective_rssm.ipynb` (0 error cells). PNGs →
   `/tmp/multistep_objective_rssm/`. New checkpoints in gitignored `runs/`.
 - Dated note `research/scratch/2026-07-XX-multistep-objective-rssm.md`: does the multi-step objective move
   §S/§1–§4 for the RSSM (esp. editability)? Does the GRU negative replicate on the architecture built for
@@ -62,5 +62,5 @@ Three training regimes, compared: single-step (`w=1`) baseline vs multi-step `w=
 RSSM `runs/rssm/4_dset4_refined_best` + `scripts/train_rssm.py` (add the overshoot horizon as a new flag or
 a new uniquely-named script — do NOT overwrite the existing single-step script). Data
 `datasets/4_fixed_refl_inview` (T=40, R=128, ef=20, 2 obj; noisy obs_noise_std=0.2). Mirror the GRU
-notebook `notebooks/experiments/multistep/multistep_objective_structure.ipynb` for the metric pipeline and
+notebook `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb` for the metric pipeline and
 the master §4 editors. Paths 3-deep.

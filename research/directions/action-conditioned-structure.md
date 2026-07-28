@@ -5,7 +5,7 @@
 GRU primary, RSSM if cheap)
 
 > A **standalone experiment in its own new notebook** —
-> `notebooks/experiments/actions/action_conditioned_structure.ipynb`. **Do NOT touch the master
+> `notebooks/experiments/editability/actions/action_conditioned_structure.ipynb`. **Do NOT touch the master
 > notebook.** This one **replicates most of the master metric spread** (§1 geometry, §2 recoverability,
 > §3 fiber-collapse, §4 latent editing) — for the new action-trained model vs a matched baseline.
 
@@ -82,7 +82,7 @@ dark-theme observation-space waterfalls for §4 editing (GT(sim) column, green t
 every figure to hold the 2–3 models side by side. Definitions table up front. Both plots AND tables.
 
 ## Deliverables
-- Executed `notebooks/experiments/actions/action_conditioned_structure.ipynb` — run **synchronously
+- Executed `notebooks/experiments/editability/actions/action_conditioned_structure.ipynb` — run **synchronously
   in-turn**, 0 error cells. PNGs → `/tmp/action_conditioned/`. New checkpoints in gitignored `runs/`.
 - Dated note `research/scratch/2026-07-16-action-conditioned-structure.md`: does action-training move
   §1–§4 (esp. editability) vs baseline? Does the optional control localize the effect to

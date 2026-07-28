@@ -65,7 +65,7 @@ no editor reaches the true-state swap) AND the objective is *additionally harmfu
 (rollout TV/GT 1.23→0.43, objects fade), worsens single-step + open-loop prediction, collapses the linear hull
 (36→10 dims), and reduces linear readability + canonicality. So for the architecture built for multi-step, the
 objective buys no editability and costs predictive quality. See `scratch/2026-07-16-multistep-objective-rssm.md`.
-Notebook `notebooks/experiments/multistep/multistep_objective_structure.ipynb`; training helper
+Notebook `notebooks/experiments/editability/multistep/multistep_objective_structure.ipynb`; training helper
 `scripts/train_gru_multistep.py`; note `scratch/2026-07-16-multistep-objective-structure.md`. *(Two metric
 caveats noted in that thread — not affecting this result: the curvature/tangent-rotation number is not
 distance-normalised, and any static-target-render metric inflates as the object moves; §4 here uses the

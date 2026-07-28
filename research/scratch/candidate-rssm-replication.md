@@ -6,7 +6,7 @@
 **Consolidates:** `archive/2026-07-02-rssm-state-geometry.md`.
 **Model/data:** refined RSSM `runs/rssm/4_dset4_refined_best/best_model.pt` (epoch 500,
 det256+stoch64 ⇒ flat H=320, `model.sample=False`), `4_fixed_refl_inview`.
-Notebook: `notebooks/experiments/rssm_structure/rssm_state_geometry.ipynb`.
+Notebook: `notebooks/experiments/editability/rssm_structure/rssm_state_geometry.ipynb`.
 **Sub-question:** 1+2+3 (cross-cutting). **Status:** candidate for a **new** finding (kept separate
 from the GRU editability/geometry findings — this is the *generalization* claim, per Sevan's
 "don't squish adjacent things into one master finding").

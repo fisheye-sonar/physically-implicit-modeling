@@ -20,6 +20,10 @@ append-only** entries inside each. This is the "what's true" record.
   curvature of the GRU visited-state set (sub-question 1).
 - [`editability.md`](editability.md) — causal manipulability of hidden states:
   which edits succeed, which the dynamics reject, and why (sub-question 3).
+- [`object-individuation.md`](object-individuation.md) — do (exogenous) object-moving
+  actions individuate objects into a grabbable *state* handle? Clean negative — the
+  affordance lives in the input→dynamics pathway, not the state; readable≠grabbable
+  (sub-question 3; endogenous action untested).
 - [`architecture-independence.md`](architecture-independence.md) — the
   non-canonical / readable≠controllable failure replicates on a refined RSSM; the
   KL-structured latent buys no canonicity (cross-cutting; preliminary, 2 checkpoints).

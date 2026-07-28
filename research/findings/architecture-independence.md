@@ -4,7 +4,7 @@
 Models: GRU `3_dset3_gru_persistentids_inview_400epochs` (256) and refined RSSM
 `4_dset4_refined_best` (det 256 + stoch 64 = 320, `sample=False`), dataset `4_fixed_refl_inview`.
 Notebooks: `notebooks/experiments/editability/00_master_editability.ipynb`,
-`notebooks/experiments/rssm_structure/rssm_state_geometry.ipynb`,
+`notebooks/experiments/editability/rssm_structure/rssm_state_geometry.ipynb`,
 `notebooks/experiments/editability/diagnostic_corrections.ipynb`.
 
 > **Scope (preliminary, 2026-07-09).** A comparison of **two specific trained checkpoints** — a GRU and
