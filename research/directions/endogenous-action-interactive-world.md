@@ -122,6 +122,42 @@ ideas need a policy-learning mechanism (see the gradient reality above), so neit
 - **I. Sanity diagnostic that the loop is closed:** probe `a_t` from `h_t` (the action should be recoverable from the
   latent — efference copy present). Cheap, confirms the setup before reading the expensive structure metrics.
 
+### Decisions locked + clarifications (2026-07-28, discussion round 2 with Sevan)
+- **God's-hand agent first** (embodied-as-ball = flagged follow-up, item E). **GRU-only first**; RSSM only after initial
+  GRU results, to test replication (defer on-policy nonstationarity handling, item H, until then). **Discrete keyboard
+  action space** to start (item G). **Action head decodes from `h_t`** (item I plumbing).
+- **No separate action-INPUT channel on the actor — with one caveat (Sevan's point 1).** Sevan is right that in
+  principle the actor needs no action input: the next obs carries the action's consequence and `h_t` already carries the
+  action. **This holds for a *deterministic* action `a_t = π(h_t)`.** But RL needs a *stochastic* policy (to explore),
+  and then the specific *sampled* `a_t` is NOT determined by `h_t`, and `obs_{t+1}` is a delayed + lossy view of it
+  (worse for forces, whose effect accumulates). So we feed the model its own *sampled* action (efference copy) into the
+  prediction/transition — standard action-conditioned-WM. It is the model knowing its own dice-roll, NOT an external
+  input, and it keeps the actor/observer contrast clean (observer = fed the actor's action; actor = fed its own). If we
+  run a deterministic policy we can drop even that.
+- **Why prediction loss alone can't train the action head — the "missing thing" (Sevan's point 2).** Deeper than the
+  non-diff sim: even with a differentiable world, a pure predictor learns to act to make the world *more predictable* →
+  freeze/no-op. Prediction rewards boredom. This is the **"dark room problem"** in active inference (a pure
+  surprise-minimizer sits in a dark room). So L3 needs a pressure that rewards *influence/achievement*, not
+  predictability — by construction, not by accident.
+- **Death-as-unpredictability is a real, interesting idea WITH precedent — but it defines the reward, it doesn't skip
+  RL.** It is the active-inference self-preservation argument and specifically **SMiRL** (Surprise-Minimizing RL,
+  Berseth et al. 2021): agents in *entropic* environments learn to *survive* by minimizing surprise, no explicit reward.
+  Making death a maximally-surprising random reset gives our world that property. Catch: even SMiRL needs RL to turn
+  "surprise" into "action" (the environment defines the reward; RL is the mechanism). Order stands: **explicit
+  collision reward via REINFORCE first, then the emergent survival-from-death variant** (SMiRL-flavored, more novel).
+- **REINFORCE** (Williams 1992) = the basic policy gradient: stochastic policy `π(a|h_t)`, sample `a_t`, scalar reward
+  `R` (e.g. −1/collision), update `∇θ ∝ R · ∇θ log π(a_t|h_t)` (raise prob of rewarded actions). Needs no differentiable
+  world — just a scalar reward + the policy's log-prob. Add a learned baseline/value → actor-critic (Dreamer-style,
+  lower variance). Start plain; add the baseline if variance bites.
+- **Empowerment = a SEPARATE objective, and we steer AWAY from it as the primary driver (Sevan's point 4).** It
+  maximizes MI(action; future obs) — it does NOT emerge from prediction (it is the opposite: prediction wants a certain
+  future, empowerment an action-controllable one). It directly optimizes *controllability*, which is exactly what we
+  measure → circular / teaching-to-the-test. Keep control **instrumental** (collision-avoidance) so a controllable/
+  factored latent is a genuine emergent finding, not something we optimized for.
+- **Joint-trunk mechanism (the actual factorization hypothesis).** What could make agency factor the latent: the SAME
+  `h_t` must now serve BOTH accurate prediction AND good control; controlling individual objects well may force the
+  state to represent them as separable controllable entities. The actor-vs-observer delta is a direct test of this.
+
 ## What we measure (keep continuous with prior work so results are comparable)
 On the **actor's** latent vs the **observer's** latent (and vs the existing passive baseline + the exogenous
 action-conditioned model from object-individuation), reuse the master §4 + object-individuation machinery:
@@ -174,8 +210,10 @@ Three clean layers (mirrors the repo's separation-of-concerns), so the human and
 
 ## Incremental plan (Sevan wants step-by-step; nothing built until agreed)
 1. **Discuss** (this doc + the response) — settle A–I, embodiment (E), discrete/continuous (G), L3 mechanism (D).
-2. **Build `InteractiveWorld` (shift + force modes) + the `play.py` emulator with keyboard + overlay + dual panel.**
-   Human-playable first; validate the sim/interactions feel right (Sevan plays). Possibly build shift + force together.
+2. **✅ DONE (2026-07-28) — `InteractiveWorld` (shift + force modes) + the `play.py` emulator** (keyboard + key overlay
+   + 2D ∥ waterfall dual panel + rebirth/death). `pim/simulator/interactive.py`, `scripts/play.py`,
+   `tests/test_interactive.py` (12 tests; full suite 43 passed; ruff/black clean). Headless render validated; **awaiting
+   Sevan to play it live** (`python scripts/play.py`) and tune the feel before models.
 3. Add the **actor** (action-output head) + **observer** (action-input) models; wire the `ModelDriver` so a trained
    model plays in the SAME emulator (actions visualized as key-presses).
 4. **L1/L2 training** (prediction-only, self-generated actions) → run the object-individuation §4 + new interface

@@ -173,6 +173,17 @@ label means. Beyond cell/figure numbering:
   is not in the `.pim` venv**, so don't reach for a DataFrame), **not** an aligned-monospace `print()`
   block. Targeted use — do NOT duplicate every plot as a table; tabulate where there are many terms/values
   to scan.
+- **Every run/model/variant name MUST be defined where it is used — no bare short codes.** This is a
+  **recurring, high-friction failure**: notebooks ship labels like `L3` vs `L3b`, `L3s0`, "weak" vs "strong" with no
+  expansion, and the reader cannot tell what was compared. Rules: (1) each experiment thread keeps a **canonical run
+  registry** — one markdown table listing *every* checkpoint/run name with its full config (level/objective, dataset or
+  world settings, architecture, training length, seed, what it is a control *for*); e.g.
+  `notebooks/experiments/editability/actions/ENDOGENOUS_RUNS.md`. (2) Every notebook that mentions a run **copies the
+  rows it uses** into its own definitions table — the notebook still stands alone. (3) **Figures and tables use
+  self-describing labels**, not raw codes: "L3 force+goal · 512h · seed 0", never `L3s0`. (4) A suffix that encodes a
+  variable (`b`, `s0`, `s1`, "strong") must state the variable it encodes (`b` = second seed, `s` = strong config).
+  Adding a new run means adding its registry row **in the same commit**. If you catch yourself writing a name whose
+  meaning is not on the page, stop and define it.
 - **Plain language, not shorthand.** Figure/panel/section titles, print headers, and prose are for a human
   reader — spell things out. No internal shorthand (`~=`, `=>`, `<<`, `!=`, ALL-CAPS jargon like
   "nonlinear-INSTANTANEOUS"): write "≈", "→", "much less than", "≠", or plain words. A **title states what
