@@ -33,10 +33,439 @@ is where agency actually enters. First concrete build (after discussion): a **st
 one genuinely new primitive — everything today is offline `simulate()`) + a **keyboard `play.py` emulator** (2D ∥
 waterfall, key overlay) that a human plays now and the trained model drives later through the SAME view. Design doc
 addresses Sevan's A–D + additions E–I (embodied-vs-god-hand agent, degeneracy/anti-freeze, discrete-vs-continuous,
-on-policy nonstationarity, efference-copy sanity probe). **Awaiting: 0–few rounds of discussion, then build the
-interactive sim + UI first (human-playable), before any model training.**
+on-policy nonstationarity, efference-copy sanity probe).
+
+**Discussion round 2 done + decisions locked** (in the direction doc's "Decisions locked" block): god's-hand first
+(embodied later), GRU-only first, discrete keys, action head decodes from `h_t`, no action-input on the actor except
+the efference copy of its own *sampled* action (needed once RL makes the policy stochastic), start REINFORCE then the
+SMiRL-style survival-from-unpredictable-death variant, empowerment steered away from (circular / teaching-to-the-test).
+Clarified the "dark room problem" (prediction alone rewards boredom → freeze/no-op, so L1/L2 are efference-copy
+ablations and L3 needs a policy objective).
+
+**BUILD 1 DONE + VALIDATED (2026-07-28, branch `endogenous_actions`): the interactive sim + keyboard emulator
+(human-playable; no models yet).** New files, all reuse `pim/simulator` and touch no existing path:
+- `pim/simulator/interactive.py` — `InteractiveWorld` (the one genuinely new primitive: stateful `reset`/`step`; there
+  was no online world before) + `InteractiveConfig`. Two dynamics modes: **`shift`** (L1 position-delta, drift base,
+  frustum/collision-guarded) and **`force`** (L2 F/m momentum, intrinsic anti-freeze drift, friction, speed clamp,
+  bounce/clamp/death walls). God's-hand per-object actions `(n,2)` (also accepts the `(n,3)` `[active,a1,a2]` model
+  schema). **Death → rebirth** built in (reset to fresh IC, optional pure-noise frames = the SMiRL substrate). Key
+  design property (tested): deaths are a **force-mode** phenomenon — the `shift` guard makes collisions/frustum-exit
+  impossible by action (matches the prior collision-free datasets), so the L3 avoidance game lives in force mode.
+- `scripts/play.py` — the emulator: `Driver` protocol (`HumanKeyboardDriver` via WASD=obj0 / arrows(or IJKL)=obj1;
+  `RandomDriver`; `HeuristicAvoidDriver`), a 2D-world ∥ grayscale-waterfall dual panel + **keyboard overlay** (pressed
+  keys highlighted; a model/driver's continuous action is discretised back onto the same keys — the "see what it's
+  doing as key-presses" feature) + status (frame/deaths/survived). Live `plt.show()` loop; headless `--save` GIF path.
+  Reuses viz.py's frustum/waterfall style. Toggle dynamics live with `M`, reset `R`, pause `SPACE`.
+- `tests/test_interactive.py` — 12 tests (both modes, determinism, bounce-containment, shift-moves/force-accelerates,
+  `(n,3)` coercion, shift-guard-prevents-collision, force death+rebirth). **Full suite 43 passed; ruff clean; black
+  formatted.** Validated the render pipeline headlessly (Agg) → demo GIFs for force+avoid and shift+random look correct
+  (frustum, discs+reflectivity labels, action arrows, gray waterfall bands, key overlay). Live keyboard path is
+  untested here (no display) — Sevan runs `python scripts/play.py` locally to play.
+**BUILD 1 fixes (2026-07-28, after Sevan playtested):** (1) matplotlib keymaps cleared so `s`/etc. no longer trigger
+toolbar actions (the save dialog was eating key-releases → stuck keys); (2) `--death-on-collision` now defaults ON so
+deaths register; (3) collision threshold fixed from the offline generator's `collision_margin·2r=1.6` to true disc
+contact `2·radius=1.0` (added `collision_slack`/`spawn_clearance`, split `_contact` vs `_spawn_sep`); (4) `M` now
+toggles dynamics IN PLACE (keeps positions) instead of calling reset; (5) wall-death decoupled from bounce — walls
+always bounce, `death_on_wall` is an independent toggle (`--death-on-wall` / live `B`; `C` toggles collision-death).
+2 new tests (contact-distance, wall-death); **45 passed, ruff/black clean;** re-validated headlessly (deaths increment,
+M in-place, `s` freed, C/B toggle). Sevan's verdict: "simulator looks good and ready to go."
+
+**BUILD 2 DONE + RUN COMPLETE (2026-07-28 overnight, branch `endogenous_actions`): actor-vs-observer L1→L3 trained +
+evaluated.** Sevan dispatched with two difficulty tweaks (wall-death on, `init_speed=0.28` momentum). New:
+`pim/world_models/actor_gru.py` (`EndogenousActorGRU` = obs-only-encoder GRU + categorical policy head {−1,0,+1}/axis +
+value head + action-conditioned decoder; HiddenStateModel-conformant passive no-op decode — the OBSERVER is the same
+class fed the actor's actions); `scripts/train_endogenous.py` (batched on-policy rollout in `InteractiveWorld`;
+predictor loss for actor+observer; **REINFORCE+value baseline into the actor's SHARED trunk** at L3 — the mechanism
+under test); `scripts/eval_endogenous.py`. Runs `runs/endogenous/{L1,L2,L3,L3b}` (L3b=seed 1), ~55 min GPU, launched
+detached + watcher (fired clean). Notebook `notebooks/experiments/editability/actions/endogenous_actor_observer.ipynb`
+(0 err, 4 figs); scratch `2026-07-28-endogenous-action-actor-observer.md` (**FLAG FOR PROMOTION**).
+
+**RESULT — clean positive on identifiability, localized to GOAL-DIRECTED agency:** L3 actor learned the survival goal
+(survival 12→~1536–3072, deaths ~250→0–2, reward −0.03→+0.10; both seeds). **Passive-latent recoverability: L3 actor ≫
+observer — pos R² lin 0.76 vs 0.59 (Δ+0.17), vel R² lin 0.56 vs 0.39 (Δ+0.17), replicated (L3b Δ+0.14/+0.17).** L1
+(shift, no goal) actor≡observer (Δ≈0.00); L2 (force, no goal) actor marginally worse (Δ≈−0.01) → it is **not**
+self-generating actions nor momentum, but **acting toward a goal** (policy grad into the shared trunk) that reshapes the
+latent. Velocity (historically hard-to-read) gains most — collision-avoidance forces motion-tracking. Gain is
+**legibility, not prediction/canonicality**: L3 actor is a slightly worse predictor (next-step RMSE 0.131 vs 0.109) and
+LESS canonical (fiber MLP 0.40 vs 0.34 — carries extra control state). The **observer is a strong control** (same
+obs+actions, no agency → no gain) = the enactivist prediction; extends object-individuation's "readable ≠ grabbable"
+with a big *readability* gain from agency.
+
+**§4 GRABBABILITY FOLLOW-UP (same night, Sevan asked): is the more-readable L3 latent an editable object HANDLE? Mostly
+NO** (`scripts/eval_editability_endogenous.py`; passive latent, foreign latent-surgery editors → object-0 teleport
+target; N=64; `editability_metrics.json` + waterfalls `runs/endogenous/edit_figs/`). The genuine structural editor
+(MLP-probe gradient) reaches **2× further on the actor than the observer (75–83% vs 35–45%)** — readability *does* buy
+obs-space reach — **BUT the object-handle hallmarks fail for both:** ghost **0.91–1.16** (vs oracle 0.01, true-swap ≈0 —
+the object never *leaves* its old spot) and non-selective (collateral ~100%, selectivity ~0.45 — drags the other
+object). Waterfalls confirm the reach is *painting a copy at the target while keeping the ghost*, not moving the object;
+readout injection is inert; only true-swap + the off-manifold decoder-gradient oracle move it cleanly. **Verdict:
+agency buys legibility + steerability, NOT a clean grabbable handle — "readable ≠ grabbable" holds under endogenous
+goal-directed action, sharpened.** Keeps pointing at explicit object scaffolding (RESEARCH.md endgame). Note updated
+(nuanced FLAG FOR PROMOTION). **Still owed:** action-interface controllability (edit *through* the trained action
+channel); non-action auxiliary-task control; embodied; RSSM. **Uncommitted** (branch `endogenous_actions`, held per
+commit-only-when-asked). **Awaiting Sevan:** artifact-or-signal + promotion call; next-move pick.
+
+## 2026-07-28 (late) — IN FLIGHT: stronger-predictor rerun of the §4 grabbability test
+Sevan reviewed the §4 negative and pushed back on two things — **(i) a waterfall bug** and **(ii) "the predictions are
+so messy it's hard to tell whether it's really failing or just a bad predictor."** Both were legitimate:
+- **Waterfall bug (FIXED).** v1 injected the TRUE target-obs row into *every* column and dropped each editor's own
+  step-0 decode (`ROLL[...][1:]`), so every column looked teacher-forced on the edit frame **and the exact frame the
+  scorecard scores was hidden**. Only True-swap legitimately sees that frame. v2: each column shows **its own free-run
+  from step 0**, GT is its own column.
+- **Predictor quality was genuinely poor (CONFIRMED).** Measured: weak-model free-run RMSE **0.24**, sharpness
+  **TV ratio 0.59** (only ~60% of GT sharpness). A new **quality gate** (free-run RMSE + TV ratio + next-step) now runs
+  for every model, so editability is only interpreted for models that pass.
+- **Off-distribution rollout (checked, NOT the driver).** v1 rolled out with no-op actions though the actor always
+  acts; v2 adds a `self` mode (model's own policy acts on its imagined world). Results are near-identical to `noop`.
+- **Editor line-up widened:** + Global-PCA projection, + PCA geodesic (reusing `pim/editors/manifold_steering`).
+- **NEW action-channel control (informative already):** a PD controller in the REAL sim closes **94%** of the distance
+  to the target (the channel genuinely has authority), but the weak model's *imagination* of those same actions barely
+  moves the object (imagined reach **2.1%**, ghost **0.987**; model-vs-real RMSE 0.29) → the weak model cannot even
+  simulate its own action channel off-policy, i.e. its editability failure IS partly a predictor failure. This is the
+  cleanest evidence that Sevan's objection was right and the v1 verdict must be re-tested at higher model quality.
+- **Stronger models TRAINING (detached + watcher):** `runs/endogenous/{L3s0,L3s1}` (L3, seeds 0/1) and `L2s0` —
+  hidden **512**, **2-layer MLP encoder + residual MLP decoder** (added to `EndogenousActorConfig` as `enc_layers` /
+  `dec_layers`, defaults preserve the old architecture so **old checkpoints still load strictly**), a **5-step free-run
+  (multistep) objective** to fight rollout blur, 25k iters. Early signal: at it 1000 the strong model already matches
+  the weak model's *final* prediction RMSE and reaches survival 768.
+- Built + validated: `scripts/eval_editability_endogenous.py` (v2, all of the above) and the comparison notebook
+  `notebooks/experiments/editability/actions/endogenous_grabbability.ipynb` (9 cells, valid, 0 syntax errors).
+**COMPLETE (2026-07-29 00:05).** All 3 strong runs trained (`L3s0`,`L3s1` 25k it; `L2s0` 12k it), both evals re-run
+across all 7 checkpoints, notebook `endogenous_grabbability.ipynb` executed (0 err, 7 figs), scratch note revised.
+
+**RESULT 1 — §4 grabbability CONFIRMED, and now NOT a predictor artifact (the control the first pass lacked).**
+Structural editors are inert on the strong models: ghost **0.998–1.010** (1.0 = the object never leaves), reach 0.3–6%.
+But on the **same model / decoder / rollout**, the **decoder-gradient oracle** (ghost 0.004–0.012, reach 89–93%) and
+the **true-state swap** (ghost ≈ 0, reach 100%) succeed completely. **If blur caused the failure the oracle would fail
+too** → a state rendering the target exists and rolls out fine; probe-directed writes cannot reach it. Failure = the
+**edit map's reachability**, not the predictor. Replicated 2 seeds × 2 rollout modes. Counter-intuitively the editors
+got *more* inert as the predictor improved (PCA geodesic reach 28% → 4%).
+
+**RESULT 2 — the 2026-07-28 identifiability headline is DOWNGRADED (do not cite the old magnitudes).** Δ(actor−observer)
+position R² **+0.155 → +0.017** at strength — **identical to the no-goal control (+0.018)**, so the position advantage is
+no longer goal-specific at all (the observer catches up, 0.589 → 0.863). Velocity survives but ~3× smaller (**+0.052**
+vs control −0.015); canonicality **flips sign** to a cleaner positive (fiber MLP **−0.074**, actor now *more* canonical;
+control −0.026). Revised reading: goal-directed agency mainly **accelerates** the emergence of readable structure; what
+durably survives is a modest velocity-readability + canonicality gain.
+
+**Honest limitations found:** (a) the stronger models did **not** fix the blur (sharpness 0.607 → 0.633; free-run RMSE
+slightly worse) — capacity + multistep were insufficient; (b) the **action-channel control is not a clean "button"
+result** — the real sim closes 93–95% of the distance but the model's imagination of those (OFF-POLICY) actions barely
+moves the object (reach 2–6%), conflating "doesn't transfer to the state" with "poor off-policy generalization". The
+earlier "button, not a handle" phrasing **overclaimed and is retracted** pending an on-policy action-intervention test.
+Corrected framing: the model is an **on-policy predictor, not an intervention-supporting simulator** — no tested
+intervention route works in imagination except decoder optimization and fresh observational evidence.
+
+**Awaiting Sevan:** artifact-or-signal + promotion call on the revised note; next-move pick (on-policy action-
+intervention test / non-action auxiliary-task control / embodied / RSSM / go constructive with explicit scaffolding).
+
+## 2026-07-29 — Sevan's notebook review (12 items): legibility fixes, metric corrections, animations
+Sevan reviewed both endogenous notebooks. Two **methodological corrections**, one **harness fix for a recurring
+failure**, and a new qualitative notebook.
+
+**HARNESS (recurring failure — Sevan: "you are still reintroducing terms and inconsistent idiosyncratic naming
+conventions that I can't follow").** Added a hard `CLAUDE.md` rule: every experiment thread keeps a **canonical run
+registry**; every notebook copies the rows it uses into its own definitions table; **figures use descriptive labels,
+never bare codes** (`L3 force+goal · strong · seed 0`, not `L3s0`); a suffix encoding a variable must state what it
+encodes; adding a run means adding its registry row in the same commit. Created the first registry:
+`notebooks/experiments/editability/actions/ENDOGENOUS_RUNS.md` (every run + role + level + architecture + seed +
+purpose, plus the metric caveats below). Both notebooks now carry full definitions tables.
+
+**METRIC CORRECTIONS (both were real):**
+- **`survival` is capped + quantized at 3072** = `batch·rollout / max(deaths,1)`, i.e. bounded by the **measurement
+  window** (64×48 frames/iteration), NOT by the world (episodes are unbounded; only death ends one). 0 or 1 deaths both
+  read 3072. This is why the curve looked spiky/saturated. Fig 1 now leads with **deaths per 1000 frames** (unbounded,
+  linear) and marks the 3072 cap explicitly on the survival panel.
+- **`mean reward` is per STEP, not per episode** (+0.1 survive / −1.0 death) so **+0.1 is the ceiling**, not "survives a
+  few frames". Documented, with the return-scale note (γ=0.99 ⇒ survival stream ≈ 10, so death ≈ −11 in return terms).
+- **Dropped the sharpness/TV metric** from the grabbability notebook per Sevan's preference; Fig 1a is now next-step
+  RMSE with the repo's standard **dashed baselines** (`pim/eval/baselines.py`): copy-previous-frame 0.160 and
+  observation noise floor 0.066 — models sit at 0.10–0.13, so below the trivial baseline but well above the floor.
+- **Added the per-step "does the edit land and hold" curve** (RMSE vs the post-edit target render vs rollout step),
+  replacing the old panel; **observer waterfalls** now rendered alongside the actor's for every run.
+
+**Answered in-notebook (Sevan's Q5/Q7/Q9):** (a) the actor's loss is a fixed weighted sum
+`pred + 1.0·policy + 0.5·value + 0.01·entropy` and **those weights were NEVER swept** — the prediction-vs-control
+balance is an arbitrary unvalidated hyperparameter and the contrast is by construction sensitive to it (flagged as the
+most obvious missing control); prediction is not strictly needed for survival — it is there because it is the research
+subject and to keep actor/observer objectives comparable (the Dreamer/RSSM pattern). (b) **The "death = unpredictable"
+idea does not remove the need for RL**, but the clean version is to keep REINFORCE and make **reward = −(prediction
+error)** (the SMiRL / free-energy formulation) — one self-consistent objective instead of an arbitrary λ; recommended
+as the next experiment. (c) The **static GT column** is deliberate: each editor changes the latent → changes the policy
+→ would induce a *different* true future, so there is no single common reference; the frozen target is editor-
+independent but only correct at step 0 (step-0 metrics unaffected; the per-step curve reads as "how long does the edit
+keep resembling the intended scene", not prediction error).
+
+**NEW notebook `endogenous_agent_animations.ipynb`** (Sevan's item 4): play.py-style animations of every trained agent —
+2D world + **keyboard overlay showing the model's actions as key presses** + white force vectors + real observation
+waterfall + **the model's predicted-observation waterfall**. Built by **importing the same `Emulator` class
+`scripts/play.py` uses** (extended with a `ModelDriver` and support for N predictor panels), with world settings read
+from each checkpoint so the visualisation matches training (death-on-collision/wall, death noise frames, momentum).
+Covers L1/L2/L3 weak + both strong seeds + the strong no-goal control, an **actor-vs-observer** 4-panel comparison, and
+**three training stages** (barely trained → partway → trained) from a checkpointed rerun (`L3s0_ckpt`, `--ckpt-every
+2500`, running). GIFs → `runs/endogenous/animations/`.
+
+## 2026-07-29 (later) — Sevan's second review: two real bugs + a hygiene failure
+- **BUG (mine): the "deaths per 1000 frames" panel was INVERTED.** I plotted `1000/deaths` instead of
+  `1000·deaths/frames`, so 0–1 deaths rendered as **1000** and 252 deaths as **4** — the curve rose as the agent
+  *improved*. Sevan caught it ("all of the plots are going UP over time, even reaching 1000"). Fixed to use the raw
+  per-iteration death counts (`deaths_curve`, now exported by `eval_endogenous.py`). Corrected values: L3 strong ends at
+  **0.33 deaths/1000 frames**, the strong no-goal control at **79.1**.
+- **Why 3072 is a cap, explained properly:** training is on-policy with a **fixed budget of 64 worlds × 48 steps = 3072
+  frames per iteration**; `survival` is estimated inside that budget as frames ÷ deaths, so zero deaths is
+  indistinguishable from immortality and reads 3072 — **right-censoring**, plus quantization (3072/1536/1024…). The world
+  has no frame limit. The rate statistic is unbiased; the notebook now leads with it and marks the censoring limit.
+- **Plot bloat (my regression):** adding all 7 runs to every figure made them unreadable. Reverted to a **3-run main
+  comparison** (L3 goal weak · L3 goal strong · L2 no-goal strong control) with short two-line labels; L1/L2-weak and the
+  second seeds are footnotes appearing only in the full table. Fig 1 now shows **one seed each** (weak vs strong).
+- **HYGIENE FAILURE (Sevan was right):** every endogenous run used **`obs_noise_std=0.05`** while the repo standard —
+  every dataset 0–8, including dataset 4 behind the exogenous-action work — is **0.2**. It leaked from a `play.py`
+  *display* default into the science. Internal comparisons remain valid (all runs share it) but **absolute RMSE / noise
+  floor / probe R² are not cross-citable with earlier notebooks**. `train_endogenous.py` now exposes `--obs-noise` and
+  **defaults to 0.2**; the deviation is documented at the top of `ENDOGENOUS_RUNS.md` and both notebooks. **A matched
+  re-run at 0.2 is OWED** before any cross-thread numeric comparison.
+- **Q6 answered with evidence:** the action-channel test finds a PD-controller action sequence in the **real** sim
+  (closes 93–95%), then replays those exact actions in the model's imagination with the policy head **bypassed** (the
+  action enters via the decoder conditioning, the same pathway used in training). Its poor showing is now explained by a
+  new per-step panel: model-vs-real RMSE is **0.12 at step 1** (matching the teacher-forced animations) rising to
+  **0.35 by step 15** — i.e. the animations show *one-step* prediction, the test is a *15-step closed-loop* rollout, and
+  the controller's actions are additionally off-policy (the two are confounded — why "button, not a handle" stays retracted).
+- **New + a genuinely informative RESULT:** autoregressive ("dreaming") animations (`AutoregressiveModelDriver`) for L3
+  weak + strong — after a 15-frame warm-up the model consumes only its own predictions while still acting on the real
+  world. **Quantified: the goal-trained actor dies 2.8 times per 1000 frames teacher-forced, but 87.8 (weak) / 85.0
+  (strong) closed-loop — ≈31× worse, and essentially the same as the NO-GOAL control's 79.1.** So *acting inside its own
+  imagination is about as bad as having no policy at all*, and the strong configuration does not help. This is the
+  cleanest statement yet of the thread's through-line: **the model is an on-policy predictor, not a simulator you can
+  act inside** — and it is the same regime the editability + action-channel tests operate in, which is why their numbers
+  look so much worse than the one-step-ahead panels suggest. Animation notebook's training-stage cell also made robust
+  to a missing final checkpoint.
+- **Animation notebook size:** embedding 12 GIFs made it 284 MB; regenerated at dpi 55 / 100 frames → **70 MB** with
+  legibility preserved (GIFs also on disk in `runs/endogenous/animations/`, ~4 MB each, for easy saving). Note
+  `nbstripout` strips outputs on commit, so the on-disk GIFs are the durable artifact.
+
+## 2026-07-29 (evening) — action-in-transition ablation: a real bug, but NOT the dominant cause
+**What was wrong.** The endogenous actor fed its action **only to the decoder**, never to the recurrence:
+`h_t = GRU(enc(o_t), h_{t-1})`, `ô_{t+1} = dec([h_t, proj(a_t)])`. Measured consequence: feeding *opposite* actions
+produced a **bit-identical** next state (‖Δh‖ = 0.0000) — the action could not influence the imagined state at all,
+only the decoded observation, so its effect had to re-enter via decoder→predicted-obs→encoder (a lossy bottleneck).
+Every standard action-conditioned world model (including this repo's own `action_gru_continuous`) puts the action in
+the transition. This was my design error, not a property of endogenous action.
+
+**Fix (`action_in_transition`, default False so old checkpoints load strictly).** The **previous** action is
+concatenated to the GRU input — `h_t = GRU([enc(o_t), proj_trans(a_{t-1})], h_{t-1})` — using a *separate* projection
+from the decoder's, so decoder behaviour is untouched. Previous (not current) because `a_t = π(h_t)` is produced *from*
+`h_t`; `a_{t-1}` is what caused the transition into `t`. Threaded through `collect()` (tracks `prev_a`),
+`predict_sequence` (right-shifts the action sequence), and the multistep free-run loss. Verified: ‖Δh‖ = 1.008 with the
+flag on, 0.0000 off.
+
+**A second bug caught while writing this up (would have invalidated the whole comparison).** Every *eval* path
+(`ModelDriver`, `AutoregressiveModelDriver`, `AutoregressivePredictor`, the Emulator's predictors, `collect_eval`,
+`warm`/`rollout`/`quality_gate`/`action_interface_test`) called `gru_step` **without** `prev_action`, so the new model
+would be evaluated with a **no-op in its transition** (‖Δh‖ = 0.345 vs correct). The completion watcher ran the
+comparison 28 s **before** the fix landed and reported a spurious teacher-forced rate of 23.3 for `L3s0_ait`. All paths
+are now patched (harmless for flag-off models — verified `L3s0` numbers unchanged) and the comparison was re-run.
+
+**RESULT (`L3s0_ait` = `L3s0` + action-in-transition, single variable, 25000 it):**
+| | teacher-forced | closed-loop | imagined-vs-real RMSE @ step 1 / 10 / 20 |
+|---|---|---|---|
+| `L3s0` (action NOT in transition) | 2.8 | **85.0** | 0.159 / 0.397 / 0.457 |
+| `L3s0_ait` (action IN transition) | 2.8 | **72.2** | 0.186 / 0.319 / 0.391 |
+*(deaths per 1000 frames; no-goal control = 79.1; copy-previous-frame baseline RMSE 0.160, random-frame 0.393)*
+
+**Verdict: the missing action pathway was a genuine bug but is NOT the dominant cause of the closed-loop collapse.**
+Fixing it buys ~15% fewer closed-loop deaths (85.0 → 72.2) and slightly slower drift, but 72.2 is still barely better
+than having **no policy at all** (79.1), and the imagination still reaches **random-frame-level error (≈0.39) by ~10–20
+steps** — i.e. the dream decouples from reality rather than merely degrading. Teacher-forced metrics are identical
+(2.8 both), confirming teacher forcing is blind to this change. Remaining suspects, in order: **no latent-space
+consistency objective** (nothing ties the imagined latent to observation-informed latents — this is exactly RSSM's
+KL(posterior‖prior)), the **hidden-state reset every 48 frames** (still present here, so this null is partially
+confounded — flagged before the run), and a **5-step imagination horizon trained vs 100+ evaluated**.
+→ Strengthens the case that the fix needed is a *training signal*, not more plumbing. **Next: RSSM**, aligned with
+standard practice (free bits / KL balancing, actor trained in imagination, state carried across boundaries), keeping
+the actor/observer contrast *inside* RSSM so agency and architecture stay separable (Sevan's constraint).
+
+**Throughput profile (measured, batch 64):** simulator stepping ~39% (over half of it rendering), model forward during
+collection ~45%, gradient update only ~16%. So my earlier "the Python loop is the bottleneck" claim was **wrong** —
+collection is 84% of wall-clock but the *model's* 48 sequential latency-bound GPU calls are the largest slice. Batch
+scaling: model forward is ~flat (16× batch for 1.6× time) while the per-world Python simulator is strictly linear —
+so **vectorizing the sim is what would unlock large batches** (~10× env-frames/s), not the ~1.6× direct saving.
+Recommended *after* the RSSM build (Dreamer-style imagination training reduces real-env demand).
+
+## 2026-07-29 (evening 2) — VECTORISED (GPU) SIMULATOR + parity suite
+Sevan asked to make training faster before the RSSM build, and to validate the change by
+re-running an existing training run and checking the results are unchanged.
+
+**Why the simulator was the right target (measured, not assumed).** Per iteration at batch 64:
+simulator ~39 %, model forward during collection ~45 %, gradient update ~16 %. So the simulator is *not* the biggest
+slice — but it is the only **linear** one. Batch scaling: the model forward is latency-bound and nearly flat (16× batch
+for ~1.6× time) while the per-world Python simulator is strictly linear. The simulator is therefore what *prevents*
+using the large batches the GPU is idle-waiting for.
+
+**New: `pim/simulator/interactive_batched.py` — `BatchedInteractiveWorld`.** World state as `(B, n_obj, 2)` tensors,
+device-agnostic (CPU or **CUDA**, observations stay on-device). Vectorises physics, wall handling, the collision test,
+the death→noise→rebirth state machine, and the ray-casting renderer. Two scalar-world subtleties preserved
+*deliberately*: shift-mode's accept-guard is **sequential over objects** (object 1 sees object 0's already-shifted
+position — kept as an inner loop over `n_obj`), and wall handling **resolves y before x** (the x half-width uses the
+updated y). The scalar `InteractiveWorld` is untouched and remains the parity reference.
+
+**Speed (48 steps, obs_res 128, 2 objects):**
+| batch | scalar Python loop | batched CPU | batched GPU | GPU speedup | GPU env-frames/s |
+|---|---|---|---|---|---|
+| 64 | 165 ms | 30 ms | 51 ms | 3.2× | 60k |
+| 256 | 655 ms | 56 ms | 58 ms | 11.2× | 211k |
+| 1024 | 2641 ms | 84 ms | 65 ms | **40×** | 752k |
+| 4096 | 10592 ms | 227 ms | 72 ms | **148×** | **2.7M** |
+GPU time is nearly **flat** in batch size (51 → 72 ms for 64× the worlds), i.e. the simulator is now latency-bound like
+the model instead of linear — which is exactly what unlocks large batches.
+
+**Parity suite: `tests/test_interactive_batched.py` (11 tests; whole suite now 56 passed).**
+- **Bit-exact in float64 with noise off** (`drift_force_std=0`, `obs_noise_std=0`), given the same initial state and
+  actions: positions and velocities for **both** dynamics modes; observations exact after the scalar world's own
+  float32 cast (asserted as *equality*, stronger than a tolerance); shift-mode `blocked` flags and positions.
+- **Event parity** (collision / wall / died / alive) with `reset_on_death=False`.
+- **Death→rebirth TIMING parity** — compared only up to each world's first rebirth. Writing this test surfaced a real
+  property (not a bug): **after a rebirth the two implementations legitimately diverge**, because each resamples fresh
+  initial conditions from its own RNG stream. Trace confirmed identical behaviour through death and all noise frames,
+  divergence starting exactly at the rebirth frame. Consequence: **any training comparison can only be statistical**,
+  never bit-identical, once a death occurs.
+- **Statistical parity with noise on**: matched noise σ and matched death rate.
+- **CUDA path matches the CPU path** in float64.
+
+**Integration:** `scripts/train_endogenous.py --batched-sim` adds `collect_batched()`, which keeps the whole rollout
+on-device (no numpy round trip). Default off, so every existing result is reproducible by the original code path.
+
+**Validation run COMPLETE — the vectorised simulator reproduces the training outcome.**
+`runs/endogenous/L3s0_ait_batched` (identical to `L3s0_ait` except `--batched-sim`), 25000 iters in 1942 s.
+| metric | `L3s0_ait` (scalar) | `L3s0_ait_batched` | seed-noise reference (`L3s0` vs `L3s1`) |
+|---|---|---|---|
+| final train pred RMSE (actor/obs) | 0.0825 / 0.0747 | 0.0815 / 0.0737 | — |
+| position R² linear (actor) | 0.781 | 0.803 | 0.783 vs 0.869 (Δ 0.086) |
+| velocity R² linear (actor) | 0.526 | 0.551 | 0.537 vs 0.452 (Δ 0.085) |
+| fiber residual MLP (actor) | 0.492 | 0.463 | 0.453 vs 0.451 |
+| next-step RMSE (actor) | 0.1252 | 0.1203 | 0.1188 vs 0.1015 |
+| deaths/1000 frames, teacher-forced | 2.8 | 3.9 | — |
+| deaths/1000 frames, **closed-loop** | **72.2** | **72.8** | — |
+**Verdict: every difference is smaller than the seed-to-seed variation of the same config** (e.g. position R² differs
+by 0.022 between simulators vs 0.086 between seeds), and the headline closed-loop failure is unchanged (72.2 vs 72.8).
+Bit-identical agreement is impossible by construction — the two implementations diverge the moment a rebirth resamples
+initial conditions from different RNG streams — so this is the correct form of validation, and it passes.
+
+**Speed: 2.81x end-to-end at batch 64** — 25000 iterations in **1942 s vs 5455 s** for the identical scalar-sim run
+(same config, same iteration count; the cleanest available comparison). Implied simulator share of the scalar iteration:
+141/218 = **~64%**, consistent with the standalone sim benchmark (165 ms at batch 64).
+
+> **Two of my own measurements were wrong and are retracted.** (1) The profile claiming "sim 39% / model forward 45% /
+> update 16%" is invalid — its model-forward reading (196 ms at batch 64) was warmup/contention noise, and the true value
+> is ~20-25 ms; a 39% share is also arithmetically incompatible with an observed 2.8x speedup (Amdahl caps it at 1.6x).
+> (2) A "controlled interleaved" benchmark reporting only 1.24x was **not** controlled: the scalar path is CPU-bound and
+> the batched path is GPU-resident, so running it while another job held the GPU penalised the batched path far more.
+> Interleaving equalises *exposure* to contention, not *sensitivity* to it. **Rule going forward: quote full-run
+> comparisons, not micro-benchmarks taken while other jobs hold the GPU.**
+
+**Batch size — both framings, since only one was given earlier.** For a **fixed frame budget** a larger batch is much
+faster: 76.8M frames needs 25000 iterations at batch 64 (~32 min) but only 1562 at batch 1024 (~7 min, estimated) —
+roughly **5x** on top of the 2.8x already banked. For a **fixed number of gradient updates** a larger batch instead costs
+modestly more wall-clock and sees ~16x more data. The genuine caveat is update count (1562 policy updates vs 25000), but
+**the survival task was solved by iteration ~1000 in both runs**, so there is large headroom and large-batch training is
+very likely sufficient. Per-iteration costs at batch 256/1024 still need a clean measurement on an idle GPU.
+
+**Next run STARTED automatically (2026-07-29 16:00): `runs/endogenous/L3s0_ait_state`** — the **fair GRU baseline**,
+differing from `L3s0_ait_batched` by **exactly one flag** (`--carry-state`), so it is a clean single-variable test of the
+hidden-state-reset flaw. The recurrent state is now carried across iteration boundaries (detached => truncated BPTT)
+instead of being zeroed every 48 frames while the world continues; `predict_sequence` gained an `h0` argument so the
+update starts from the state collection started from, and the actor/observer carry separate states (the actor's from
+collection, the observer's from its own teacher-forced pass). The state is deliberately **not** reset on death — the
+worlds are one continuous stream and rebirth is already observable through the noise frames.
+
+## 2026-07-29 (night) — RSSM build: world model WORKS, imagination-based actor DOES NOT (yet)
+Brief written and approved: `research/directions/endogenous-action-rssm.md` (hypotheses stated up front; Sevan agrees
+he'd *like* emergent editability but doesn't expect it). Built:
+- **`pim/world_models/rssm_actor.py`** — subclasses `RSSMModel` (base untouched, verified: its `gru_cell` input size is
+  still stoch-only). Adds (a) **action in the transition**: `h_t = GRUCell([s_{t-1}, proj(a_{t-1})], h_{t-1})` — the base
+  RSSM had no action input at all; verified opposite actions now change the next state (‖Δh‖ = 1.70 vs the GRU's
+  historical 0.0000); (b) policy + value heads on `[h,s]` (same factored discrete space, so the `play.py` key overlay
+  still works); (c) **reward + continue heads** — required because training the actor inside imagination has no simulator
+  to query; (d) `imagine_for_actor` (differentiable imagination; verified gradients reach policy, reward head and the
+  **prior net**).
+- **`scripts/train_rssm_endogenous.py`** — online loop on `BatchedInteractiveWorld`, standard objective: recon +
+  KL-balanced (0.8/0.2, DreamerV2) with **free bits**, reward/continue heads on real data, actor via **λ-returns over
+  imagined rollouts** (REINFORCE + value baseline, discrete actions), critic regressed on the same returns. Observer twin
+  trained on the **world-model loss only**. State carried across chunks with dead worlds cleared (GRU-thread lesson).
+  **`obs_noise_std=0.2`** — the repo standard, clearing the 0.05 debt.
+
+**WORLD MODEL: healthy.** recon RMSE 0.37 → 0.22, KL rises 0.008 → 0.18 and sits **above** the free-bits floor (0.094),
+so the KL term is active and there is **no posterior collapse** — I checked this explicitly because an early KL of 0.029
+looked like collapse and turned out to be an untrained-model transient.
+
+**ACTOR-IN-IMAGINATION: fails, and not merely by entropy collapse.** Sweep at 1500 iters:
+| ent_coef | final entropy | final reward | imagined return |
+|---|---|---|---|
+| 0.003 | 0.04 (dead) | −0.058 | −0.72 (falling) |
+| 0.03 | 1.21 (alive) | −0.053 | −0.73 (falling) |
+Reward ends **worse than initialisation** (−0.024 → −0.058) and the **imagined return falls monotonically**, so this is
+not just under-regularised exploration — the policy is optimising a bad objective. Policy-gradient sign verified correct.
+**Diagnosis:** imagined latents drift off the visited-state distribution, the reward head extrapolates nonsense there,
+and the actor faithfully maximises that nonsense. (Note this is a *different* failure from the GRU's carry-state
+collapse, which was stale dead-world state.)
+
+**Overnight hedge launched** (`runs/endogenous_rssm/`): (1) **`R2s0`, level 2, 10000 it — no actor loss at all**, so it
+cannot hit the bug; guarantees a trained action-conditioned RSSM world model, which makes **closed-loop coherence and
+§4 editability testable in the morning regardless**. Then (2) `R3s0_warm` / (3) `R3s1_warm`, level 3 with
+`wm_warmup=4000` (imagination trustworthy before the policy optimises against it) and `ent_coef=0.05`.
+
+**OVERNIGHT RESULTS (all three runs completed).**
+
+**World model: trains well.** recon RMSE 0.166–0.168 at `obs_noise_std=0.2`, KL 0.15 (active, above the free-bits
+floor), no posterior collapse. The long warm-up + `ent_coef=0.05` **did fix the entropy collapse** — policy entropy
+ends at 3.93–4.02 instead of 0.04.
+
+**Actor: still does not learn the task.** `R3s0_warm` reward −0.016, `R3s1_warm` −0.022 versus the no-goal control's
+−0.033; deaths 72.5 / 76.0 per 1000 frames versus the no-goal 83. So the policy went from *actively worse than nothing*
+to *marginally better than nothing* — nowhere near the GRU actor, which solved survival outright (2.8 deaths/1000
+teacher-forced). Imagined return still drifts negative. **Hypothesis 3 (agency effect) cannot be tested until this works.**
+
+**Closed-loop coherence: hypothesis 1 is NOT supported.** Warm on real observations (posterior), then imagine forward
+with the prior under the model's own actions while the real world receives the same actions. Absolute RMSE is not
+comparable across threads (GRU ran at noise 0.05, RSSM at 0.2), so compare each to its OWN baselines:
+| model | step-1 error ÷ copy-previous-frame | late error ÷ random-frame |
+|---|---|---|
+| GRU `L3s0` | 0.99 | **1.16** (worse than a random frame) |
+| RSSM `R2s0` | 0.98 | **0.77** |
+| RSSM `R3s0_warm` | 0.91 | 0.82 |
+| RSSM `R3s1_warm` | 0.87 | 0.87 |
+**Reading:** the RSSM is *relatively* better — its imagination stays below the random-frame baseline out to 40 steps,
+whereas the GRU's exceeded it by step ~20 — but it is still only **≈ copy-previous-frame quality from step 1 onward**.
+That is not a usable simulator. Note the sharp **prior/posterior gap**: the same model reconstructs at 0.166 from
+observations but its prior-only imagination sits at 0.30–0.34. The KL term did not close that gap.
+
+**So: adding latent consistency (KL) + a proper imagination path did not rescue closed-loop rollout — in these runs.**
+
+> ### ⚠ RETRACTED OVERREACH (2026-07-30, Sevan pushed back and he is right)
+> I originally wrote here that suspicion should move "OFF the objective and ONTO the observation channel", speculating
+> that a 1D 128-ray scan may be too impoverished for long-horizon self-consistency. **That conclusion is not supported by
+> this evidence and is withdrawn.** It generalises from two *under-engineered* attempts to a claim about what is
+> *achievable* — precisely the "bug reframed as insight" failure mode `RESEARCH.md` names as the one to guard against.
+> Against it: (1) **teacher-forced next-step prediction is good** in both architectures, so the observation demonstrably
+> carries the needed information — the failure is that our models do not *propagate* it; (2) the RSSM actor **never
+> learned the task at all**, which indicates implementation/tuning problems, not an information limit; (3) the
+> prior/posterior gap (recon 0.166 vs imagination 0.30–0.34) is a **classic symptom of an undertrained/under-tuned
+> RSSM**; (4) Dreamer-class models routinely achieve long-horizon imagination on far harder, more ambiguous
+> observations, on training budgets far larger than our ~40-minute first attempt.
+> **Correct status: "not achieved by our implementation yet", NOT "not achievable".** Separating those two would need a
+> working reference implementation or an information-theoretic argument, and we have neither. Sevan's read — that the
+> task should be achievable and the open question is how much engineering it takes — is the better-supported one.
+
+**Owed / next:** consolidated notebook (predictive + animations + editability — Sevan's explicit request) still to
+build; §4 editability on the RSSM latent not yet run (the editor script is written against the GRU API — `gru_step`,
+`decode_action` — and needs an RSSM adapter, though `RSSMActor` does satisfy `HiddenStateModel`). Actor fixes if we
+continue that line: if the warm-start actor still fails, the candidate fixes are (a) train the reward head on *imagined*
+as well as real latents, or regularise imagination to stay near the visited-state manifold; (b) shorter imagination
+horizon early, annealed up; (c) fall back to REINFORCE on real rollouts for the policy while keeping RSSM's KL for the
+world model — a hybrid that abandons "actor in imagination" but keeps the latent-consistency term that motivated RSSM.
+Consolidated notebook (predictive + animations + editability, per Sevan's request) still to build.
 
 > **⏳ OWED / REMINDERS FOR SEVAN (deferred — surface these in catch-ups):**
+> 0. **Re-run the endogenous thread at the standard `obs_noise_std=0.2`** (deviation found 2026-07-29; see above).
 > 1. **Pure-latent-overshooting RSSM re-run** — our RSSM-multistep result used a HYBRID objective (latent-overshoot
 >    KL + an added observation-overshoot reconstruction term that pure PlaNet/Dreamer omits, and which drives the
 >    blur). The RSSM-multistep finding is **HELD** until we re-run with **pure** latent overshooting to confirm the
