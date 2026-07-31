@@ -68,9 +68,86 @@ class ObservationDataset(Dataset):
         idx = int(self.indices[i])
         f = self._open()
         return {
-            key: torch.from_numpy(f[key][idx].astype(np.float32))
-            for key in self.keys
+            key: torch.from_numpy(f[key][idx].astype(np.float32)) for key in self.keys
         }
+
+
+class InMemoryLoader:
+    """Device-resident batch iterator over one pre-loaded array.
+
+    Reading this repo's gzip-compressed HDF5 sample-by-sample makes GRU training
+    CPU-bound (measured: 68 s/epoch at hidden 256 on dataset 4, with the GPU
+    mostly idle).  The observation tensor is small enough to live on the GPU
+    outright (90k x 40 x 128 float32 = 1.8 GB), so a whole epoch becomes pure
+    device compute.
+
+    Semantics are deliberately identical to the `DataLoader` path it replaces:
+    the same train/val index split, the same batch size, reshuffled every epoch
+    for train and fixed order for val, no dropping of the last partial batch.
+    Yields the same `{key: tensor}` batch dicts, already on `device`.
+    """
+
+    def __init__(
+        self,
+        data: torch.Tensor,
+        *,
+        batch_size: int,
+        shuffle: bool,
+        seed: int = 0,
+        key: str = "obs_intensity",
+    ) -> None:
+        self.data = data
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.key = key
+        self._gen = torch.Generator(device="cpu").manual_seed(seed)
+
+    def __len__(self) -> int:
+        return (self.data.shape[0] + self.batch_size - 1) // self.batch_size
+
+    def __iter__(self):
+        n = self.data.shape[0]
+        order = (
+            torch.randperm(n, generator=self._gen) if self.shuffle else torch.arange(n)
+        )
+        order = order.to(self.data.device)
+        for i in range(0, n, self.batch_size):
+            yield {self.key: self.data[order[i : i + self.batch_size]]}
+
+
+def build_inmemory_dataloaders(
+    h5_path: str | Path,
+    val_fraction: float = 0.1,
+    batch_size: int = 256,
+    seed: int = 0,
+    device: str | torch.device = "cuda",
+    key: str = "obs_intensity",
+) -> tuple[InMemoryLoader, InMemoryLoader]:
+    """Same split/batching contract as `build_dataloaders`, fully device-resident.
+
+    Reads `key` from the HDF5 file once, moves it to `device`, and returns two
+    `InMemoryLoader`s.  The train/val split uses the identical RNG call as
+    `build_dataloaders`, so a run is comparable to one trained through the
+    lazy loader.
+    """
+    with h5py.File(h5_path, "r") as f:
+        arr = f[key][:].astype(np.float32)
+
+    n_samples = arr.shape[0]
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(n_samples)
+    n_val = max(1, int(n_samples * val_fraction))
+    val_idx, train_idx = perm[:n_val], perm[n_val:]
+
+    tensor = torch.from_numpy(arr).to(device)
+    return (
+        InMemoryLoader(
+            tensor[train_idx], batch_size=batch_size, shuffle=True, seed=seed, key=key
+        ),
+        InMemoryLoader(
+            tensor[val_idx], batch_size=batch_size, shuffle=False, seed=seed, key=key
+        ),
+    )
 
 
 def build_dataloaders(
