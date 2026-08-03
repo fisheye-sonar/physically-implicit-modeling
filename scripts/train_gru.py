@@ -21,7 +21,7 @@ import argparse
 import dataclasses
 import json
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 import h5py
@@ -29,9 +29,8 @@ import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
-from pim.world_models.dataloader import build_dataloaders
+from pim.world_models.dataloader import build_dataloaders, build_inmemory_dataloaders
 from pim.world_models.gru import GRUModel, ModelConfig
-
 
 # ── Configs ───────────────────────────────────────────────────────────────────
 
@@ -48,6 +47,7 @@ class TrainConfig:
     weight_decay: float = 1e-4
     # System
     num_workers: int = 4
+    in_memory: bool = False  # hold the whole obs tensor on-device (much faster)
     device: str = "auto"  # "auto" → cuda > mps > cpu
     seed: int = 0
     # Output
@@ -76,6 +76,13 @@ def _parse_args() -> TrainConfig:
     p.add_argument("--weight-decay", type=float, default=defaults.weight_decay)
     # System
     p.add_argument("--num-workers", type=int, default=defaults.num_workers)
+    p.add_argument(
+        "--in-memory",
+        action="store_true",
+        default=defaults.in_memory,
+        help="Load the whole observation tensor onto the device once instead of "
+        "streaming it from HDF5 (identical split/batching; ~15x faster).",
+    )
     p.add_argument("--device", default=defaults.device)
     p.add_argument("--seed", type=int, default=defaults.seed)
     # Output
@@ -95,6 +102,7 @@ def _parse_args() -> TrainConfig:
         lr=a.lr,
         weight_decay=a.weight_decay,
         num_workers=a.num_workers,
+        in_memory=a.in_memory,
         device=a.device,
         seed=a.seed,
         run_dir=a.run_dir,
@@ -179,13 +187,24 @@ def main() -> None:
 
     # ── Dataset ───────────────────────────────────────────────────────────
     obs_res = _read_obs_res(tcfg.dataset_path)
-    train_loader, val_loader = build_dataloaders(
-        tcfg.dataset_path,
-        val_fraction=tcfg.val_fraction,
-        batch_size=tcfg.batch_size,
-        seed=tcfg.seed,
-        num_workers=tcfg.num_workers,
-    )
+    if tcfg.in_memory:
+        train_loader, val_loader = build_inmemory_dataloaders(
+            tcfg.dataset_path,
+            val_fraction=tcfg.val_fraction,
+            batch_size=tcfg.batch_size,
+            seed=tcfg.seed,
+            device=device,
+        )
+        n_train, n_val = train_loader.data.shape[0], val_loader.data.shape[0]
+    else:
+        train_loader, val_loader = build_dataloaders(
+            tcfg.dataset_path,
+            val_fraction=tcfg.val_fraction,
+            batch_size=tcfg.batch_size,
+            seed=tcfg.seed,
+            num_workers=tcfg.num_workers,
+        )
+        n_train, n_val = len(train_loader.dataset), len(val_loader.dataset)
 
     # ── Model ─────────────────────────────────────────────────────────────
     mcfg = ModelConfig(
@@ -218,8 +237,8 @@ def main() -> None:
     print(f"Run dir  : {run_dir}")
     print(f"Device   : {device}")
     print(f"Model    : {n_params:,} parameters")
-    print(f"Train    : {len(train_loader.dataset):,} samples")
-    print(f"Val      : {len(val_loader.dataset):,} samples")
+    print(f"Train    : {n_train:,} samples")
+    print(f"Val      : {n_val:,} samples")
     print()
 
     # ── Training loop ─────────────────────────────────────────────────────

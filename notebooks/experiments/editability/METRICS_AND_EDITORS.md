@@ -37,28 +37,76 @@ GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
 |---|---|---|---|---|
 | fiber residual | `‖h − g(pos,vel)‖ / ‖h‖`, g linear or MLP | frac of ‖h‖ | ↓ (0 = fully canonical) | large linear→MLP drop ⇒ curved embedding. For RSSM report det-only / stoch-only / full. |
 
-### §4 — Editing / object-handle
-The `edited_s` = obs at rollout step `s` from the edited state; `unsteered_s` = from the un-edited state;
-`GT post-edit_s` = `edits.clean_obs[ef+s]` (the sim's *time-evolving* true post-edit obs). `obj-k rays` /
-`other-object rays` / `ghost rays` are per-sample ray masks (object k's target rays / the other object's rays /
-object k's vacated pre-edit rays).
+### §4 — Editing / object-handle  ⭐ **CANONICAL SET, revised 2026-07-30**
+
+> **Implemented once in `scripts/editability_metrics.py`.** Import it; do **not** re-derive these formulas in a
+> notebook. Prose definitions here, code there — they must agree.
+
+**Two ground-truth worlds.** At the edit frame `ef` both can be rendered, and every §4 metric is defined against them:
+- **`gt_edited`** = `edits.clean_obs[ef]` — the world where the teleport happened.
+- **`gt_unedited`** = the counterfactual where it did **not**: the edited object continued from its `ef-1` position
+  along its own velocity, the other object at its true `ef` position. (Rendered by `build_edit_zones`.)
+
+**Ray zones** (per sample, from the two renders — so partial occlusion needs no special-casing):
+`target rays` = rays the edited object occupies in `gt_edited`; `ghost rays` = rays it occupied pre-edit and now
+vacates; `collateral rays` = the **other** object's rays (it must not move); `differing rays` = where the two worlds
+differ at all (`|gt_edited − gt_unedited| > 1e-3`) — the support of the Edit Index.
+
+**Layer 1 — absolute error vs ground truth, decomposed by zone.** All at rollout **step 0** (which decodes frame `ef`),
+all RMSE against `gt_edited`, all in observation-intensity units, all lower-is-better, no normalisation:
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **Target RMSE** | `RMSE(edited₀, gt_edited)` over **target rays** | obs | ↓ | did the object appear where it should? |
+| **Ghost RMSE** | `RMSE(edited₀, gt_edited)` over **ghost rays** | obs | ↓ | did it leave where it was? (replaces "ghost ratio") |
+| **Collateral RMSE** | `RMSE(edited₀, gt_edited)` over **collateral rays** | obs | ↓ | was the other object left alone? |
+| **Edit-frame RMSE** | `RMSE(edited₀, gt_edited)` over **all rays** | obs | ↓ | the whole scan at the edit frame |
+| **GT-traj RMSE** | `mean_s RMSE(edited_s, clean_obs[ef+s])` over the K-step rollout | obs | ↓ | did the edit achieve *and hold* the true post-edit world? |
+| **fidelity ratio** | `GT-traj RMSE(editor) / GT-traj RMSE(unsteered)` | ratio | ↓ | **> 1 = the edited rollout ended FURTHER from the true post-edit world than doing nothing** — the edit degraded the model rather than steering it. Always report beside any success claim. |
+
+**Layer 2 — the Edit Index, the calibrated headline.** On the differing rays, is the output closer to the world where
+the edit happened, or the one where it didn't?
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **Edit Index** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(edited₀, gt_·)` over **differing rays**; per sample, then averaged | −1…+1 | ↑ | **+1** = it *is* the edited world · **0** = equidistant (ambiguous, or garbage) · **−1** = it *is* the unedited world. |
+| **Edit Index by step** | the same, at every rollout step, against the counterfactual world **rolled forward** (the edited object continuing along its own velocity, the other object on its true trajectory) | −1…+1 | ↑ | the bounded trajectory analogue of GT-traj RMSE. **Report it whenever you report the step-0 index** — landing an edit and *holding* it are different things (measured 2026-07-30: the decoder-gradient oracle scores **+0.94** at step 0 and decays to **−0.12** by step 14). |
+
+> **Read the index against that model's own unsteered row.** A *perfect* predictor scores exactly −1 when
+> unsteered; a real one falls short by its own blur, because `d_unedited` is its one-step prediction error rather
+> than 0. Verified 2026-07-30: across the 8 controls models, unsteered Edit Index tracks next-step RMSE with
+> **Pearson r = +0.987** (−0.85 for the best predictor, −0.52 for the worst). So the −1 end of the scale sits at a
+> slightly different place per model and the unsteered row must appear in every table. The **+1** end is not
+> shifted — scoring `gt_edited` itself returns exactly +1.0 (both boundary cases are asserted).
+
+**Why the index is hard to game** — this is the point of it. An output far from *both* worlds (scrambled, collapsed)
+has `d_edit ≈ d_uned` and scores **≈ 0**, not a spuriously good value. "Dim everything toward background" — which
+scores perfectly on any ghost-only metric — also cancels, because the differing rays include target rays (where
+dimming is wrong) as well as ghost rays (where it is right). And this repo's dominant observed failure, *paint a copy
+at the target while keeping the ghost*, correctly reads **≈ 0**.
+
+Supporting/state-space metrics (unchanged):
 | name | formula | units | better | notes |
 |---|---|---|---|---|
 | readout RMSE | position RMSE of the linear probe read off the edited state vs the teleport target | pos | ↓ | state-space, pre-rollout |
-| GT next-step RMSE | `RMSE(edited₁, GT post-edit₁)` | obs | ↓ | ⚠ ±1 decode convention: GRU `decode(h)` = predict-*next*, RSSM = reconstruct-*current* — align columns accordingly |
-| **GT-traj RMSE** | `mean_s RMSE(edited_s, GT post-edit_s)` over the K-step rollout | obs | ↓ | **the direct fidelity metric** — did the edit achieve *and hold* the true post-edit world? (prefer over "persistence") |
-| reach (% of swap) | `100·RMSE(edited₀, unsteered₀)[obj-k rays] / RMSE(swap₀, unsteered₀)[obj-k rays]` | % | → 100 | 100% = what a real teleport (the swap) does to obj-k's rays |
-| collateral (% of swap) | `100·RMSE(edited₀, unsteered₀)[other-object rays] / RMSE(swap₀, unsteered₀)[obj-k rays]` | % | ↓ | same units as reach; clean handle → 0 |
-| selectivity | `reach / (reach + collat)` | frac | ↑ | 1 = moved only obj-k |
-| ghost ratio | `mean(edited₀[ghost rays]) / mean(unsteered₀[ghost rays])` | ratio | ↓ | <1 = object left its old location; 1 = ghost remains |
-| anti-reversion | `mean_{s=10..14} RMSE(edited_s, unsteered_s) / RMSE(edited₀, unsteered₀)` | ratio | ↑ | *stickiness, NOT correctness* (formerly mislabeled "persistence"); an edit can stick while drifting off-distribution — use GT-traj RMSE for correctness |
-| obs-change (% of swap) | `100·RMSE(edited₀, unsteered₀) / RMSE(swap₀, unsteered₀)` (all rays) | % | context | how much the editor moved the obs at all |
+| anti-reversion | `mean_{s=10..14} RMSE(edited_s, unsteered_s) / RMSE(edited₀, unsteered₀)` | ratio | ↑ | *stickiness, NOT correctness*; an edit can stick while drifting off-distribution — use GT-traj RMSE for correctness. The one §4 metric still referenced to the unsteered rollout, because it is genuinely about *change*. |
 | leave-out local-PCA resid | `‖q − proj_local(q)‖ / ‖q − local mean‖`, local PCA on k NN excluding q's own NN; ref = real states | frac | ↓ | manifold residency of the edited state |
 | global-PCA hull resid | `‖h − proj_global(h)‖` onto the global var-threshold subspace; ref = real states | ‖h‖ | ↓ | off-manifold-ness |
-| content-gen ratio | `reach(y-edit)/reach(x-edit)` on the passive latent | ratio | → 1 | for axis-restricted models; ≈1 ⇒ generalises across content ⇒ real object |
+| content-gen ratio | `EditIndex(y-edit) − EditIndex(x-edit)` on the passive latent | index pts | → 0 | for axis-restricted models; ≈0 ⇒ generalises across content ⇒ real object |
+
+> ### ⚠ RETIRED 2026-07-30 — do not use, and do not cite their numbers as comparable
+> **`reach (% of swap)`, `collateral (% of swap)`, `selectivity`, `ghost ratio`, `obs-change (% of swap)`.**
+> All measured **change away from the unsteered rollout**, normalised by the true-state swap. Two fatal problems:
+> (1) they scored *change*, not *correctness*, so an editor that merely **scrambled** the observation posted a huge
+> "reach" — 400–440% was observed at `H=8`/`H=32`, and the decoder-gradient oracle posted 209–327%, where 100% was
+> supposed to be the ceiling; (2) the denominator was the true-state swap, a **soft, model-dependent** reference whose
+> own strength varied widely across models (its ghost ratio ranged 0.315–0.868 across the noise-ablation cells), so
+> the same physical edit scored differently on different models — fatal for cross-model sweeps.
+> The replacement above fixes both: one fixed ground-truth reference, and a bounded index that garbage cannot game.
+> **Historical numbers in older notebooks/notes are on the retired scale** and are not comparable to anything computed
+> after 2026-07-30; the notebooks re-run on the new set are `00_master_editability` and everything under `controls/`.
 
 **§S — sharpness / predictive quality (blur watch-item, multistep notebooks):** next-step RMSE vs **clean**;
 open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sharp as GT, <1 = blurry mean-hedging).
+
 
 ---
 
@@ -67,9 +115,13 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 **References (never editors):**
 - **GT (sim)** — the simulator's time-evolving clean post-edit obs. The target, never a model output.
 - **Unsteered** — rollout from the un-edited warm-up state `h0`.
-- **True-state swap** — teacher-force the model on the *true* post-edit obs through `ef` → `h_swap` → rollout.
-  A **soft** reference (belief-inertia-limited: one frame of teleport evidence only partly updates the state,
-  so even the swap doesn't fully clear the ghost) — **not** a hard ceiling; a direct latent write could exceed it.
+- **Oracle observation** *(renamed 2026-07-30; was "Oracle observation", a misnomer — nothing about the state is
+  swapped)* — teacher-force **one extra frame**, the **REAL (noisy) post-edit observation `edits.obs[ef]`**, then
+  roll out. The model simply gets to *see* the teleport happen. A **soft** reference (belief-inertia-limited: one
+  frame of evidence only partly updates the state) — **not** a hard ceiling; a direct latent write could exceed it.
+  It is fed the *noisy* observation, matching what the model sees at training time; the *clean* render is used only
+  as the GT reference the metrics score against. It **leads the other columns by one frame**; label it, never
+  re-align the others to it.
 
 **Inference-time (training-free) editors — the standard §4 suite:**
 | editor | mechanism | needs | notes |
@@ -84,8 +136,8 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 | editor | mechanism | where | outcome |
 |---|---|---|---|
 | Obs-gradient full-rollout (**oracle**) | Adam on `h` to match the **whole K-step GT rollout** (backprop through dynamics) | `learn_to_edit` | **persistent** (optimizes persistence directly) but off-manifold; NOT the single-frame decoder-gradient — different objective |
-| Learned amortized editor `E_θ(h,target)→Δh` | train a net on TRAIN edits, eval on **held-out** | `learn_to_edit` Variant A | negative (memorization signature); the "did you try a learned editor" answer — needs held-out + data-scaling |
-| Light fine-tune for editability | fine-tune the GRU so a fixed pseudo-inverse editor works | `learn_to_edit` Variant B | negative (light budget); heavier FT still owed |
+| Learned amortized editor `E_θ(h,target)→Δh` | train a net on TRAIN edits, eval on **held-out** | `learn_to_edit` Variant A; **re-run at scale in `trained_editability/`** | 2026-07-30: at 3000 steps it is the **best learned mechanism** (+0.54 Edit Index vs its own unsteered) and costs the frozen world model nothing — but reaches only "equidistant", and does not transfer to any other write mechanism |
+| Fine-tune for editability | fine-tune the GRU so a fixed pseudo-inverse editor works | `learn_to_edit` Variant B (light); **`trained_editability/finetune_for_editability.ipynb` (heavy — the OWED debt, PAID 2026-07-30)** | light 300 steps +0.04, heavy 3000 steps +0.13 index points, so the light negative was partly a budget artifact — but it is a **button**: no transfer to a freshly-fit probe (+0.02) or to a withheld object (−0.17), and it costs 13% of next-step prediction |
 | Interleaved latent steering | push readout a little → decode → feed the model's **own** obs back → repeat (S steps, η/step; `+manifold` = project each step) | `multistep_steering` 1a | fails (drags both objects); self-generated obs, not external |
 | Freeze-time teacher forcing | render the edit over N frames (edited obj interpolates to target, other held), teacher-force those **externally-rendered** frames, then unfreeze | `multistep_steering` 1b | **works** (lands + clears ghost, N≈3–8); replicates on RSSM. The success requires *externally-rendered* obs (the true renderer), not the model's own machinery. |
 

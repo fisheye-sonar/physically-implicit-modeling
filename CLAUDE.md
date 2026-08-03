@@ -93,6 +93,16 @@ Four invariants you cannot infer from any single file:
 - **Notebooks:** prefer to edit `.ipynb` with the `NotebookEdit` tool; inspect with
   `Read`/`Grep`. Less preferred to manipulate notebook JSON via Bash. Live under
   topical subdirs: `notebooks/experiments/<topic>/<name>.ipynb`.
+- **Every experiment goes inside the RESEARCH THREAD it serves — never beside it.** The topic dir is the
+  *findings thread* the work contributes to, not the kind of experiment it is. While the editability findings are
+  the active thread, **everything** — main experiments, controls, ablations, side quests — lives under
+  `notebooks/experiments/editability/`, in a subdirectory when it is a coherent group
+  (`editability/actions/`, `editability/multistep/`, `editability/controls/`,
+  `editability/rssm_structure/`). Creating a sibling like `notebooks/experiments/controls/` orphans the work from
+  the thread whose findings it supports and breaks every relative path back to the thread's registries.
+  *(Recurring failure: this happened on 2026-07-30 with the michael_controls thread and had to be migrated.)*
+  Run artifacts follow the same logic — a thread's checkpoints and eval outputs stay together under one
+  `runs/<thread>/` prefix.
 - **Number every cell, figure, AND animation.** Each experiment notebook is referenced later
   in discussion, so make every artifact addressable: prefix each code cell with a
   `# [N]` tag (sequential), and give every figure a number in its title/suptitle
@@ -114,17 +124,23 @@ Four invariants you cannot infer from any single file:
   canonical reference. **NEVER magma / viridis / the pink-purple scheme.** Every waterfall comparison
   also has: a **GT (sim clean-obs) reference column**; ~6 **pre-edit context frames** — the **actual
   (noisy) observations the model was teacher-forced on** (`edits.obs` / `test.obs`), NOT the clean render
-  (only the GT column is clean) — above a marked **edit-frame line**; then **one shared row for the edit
-  frame `ef` = the TRUE post-edit obs / edit target** (`edits.clean_obs[ef]`, the *same* row in every
-  column) marked off by a second (dotted) line, with **each column's model rollout below it being its
-  free-run from `ef+1` onward** (GT column: `clean_obs[ef+1:ef+K]`) — this is **mandatory**: it anchors the
-  honest sim-frame alignment and fixes the GRU `±1` decode offset. **Alignment rule (get this exactly
-  right):** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the predict-next GRU's rollout **step-0 is
-  `ef`** (`decode(h_edit) ≈ obs[ef]`, i.e. `ROLL[:,0] ↔ clean_obs[ef]`). To place the shared true-`ef` row
-  above the free-run you therefore **drop each model column's step-0** (`ROLL[...][1:]`) and slice the GT
-  column to `clean_obs[ef+1:ef+K]` — both are then length `K-1` and every column maps to the same sim
-  frames. (Don't leave the model roll ef-aligned while the GT column is ef+1-aligned — that silently
-  re-introduces the off-by-one this row exists to kill.) Vertical **green = target** / **red-dashed = ghost**
+  (only the GT column is clean) — above a marked **edit-frame line**; then, below that line, **every column
+  shows its OWN free-run starting at step 0**, and the GT column shows `clean_obs[ef:ef+K]`.
+
+  > ### ⛔ NEVER paint a shared teacher-forced `ef` row across all columns (corrected 2026-07-30)
+  > An earlier version of this spec mandated one shared row = `clean_obs[ef]` in *every* column. **That is
+  > wrong and is now banned.** It makes every column look as though it were teacher-forced on the post-edit
+  > frame when only the **Oracle observation** reference actually was, and it **hides the exact frame the §4
+  > scorecard scores** (step 0). It also displayed the *clean* render while the model that legitimately sees
+  > that frame is fed the **noisy** `edits.obs[ef]` — a second inconsistency. Seeing the post-edit frame is a
+  > **property of one editor**, never a display convention. (Same error was caught and fixed in
+  > `eval_editability_endogenous.py` v2; it then leaked back in via this file into the `controls/` notebooks.)
+
+  **Alignment rule (get this exactly right):** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the
+  predict-next GRU's rollout **step-0 is `ef`** (`decode(h_edit) ≈ obs[ef]`, i.e. `ROLL[:,0] ↔ clean_obs[ef]`).
+  So plot `ROLL[:, 0:K]` against `clean_obs[ef:ef+K]` — no slicing, no dropped step. The one exception is the
+  **Oracle observation** column, which was fed `obs[ef]` and therefore **leads by one frame**; label it as
+  such rather than re-aligning the other columns to it. Vertical **green = target** / **red-dashed = ghost**
   locators; a **figure-top
   legend** (not inside a panel); a **single what-is-shown title** (no results); and it is sized **wide
   enough that every column stays full-size** (add columns by widening, never by shrinking).
@@ -132,13 +148,12 @@ Four invariants you cannot infer from any single file:
   context frames" keep sneaking back in (e.g. `multistep_steering` shipped `cmap="magma"` with no context
   frames until 2026-07-27). **Do not re-implement the panel per notebook** — that is where the drift
   happens; define **one `waterfall_grid(...)` helper** in the notebook that bakes in the whole spec (gray
-  cmap, `N_CTX≈6` noisy context frames concatenated above a dashed edit-frame line, the teacher-forced
-  `ef` row + dotted free-run line, green/red locators, figure-top legend) and route **every** waterfall
-  through it. Reference implementations to copy: `00_master_editability.ipynb` Fig 5a, the `waterfall_grid`
-  in `notebooks/experiments/editability/multistep_steering.ipynb`, and the `editor_waterfall_fig` in
-  `notebooks/experiments/editability/actions/action_space_object_individuation.ipynb` (canonical
-  teacher-forced-`ef`-row version). Before committing any waterfall, eyeball it: gray? context frames above
-  the edit line? teacher-forced `ef` row + free-run line below it? top legend? GT column? If not, it is not done.
+  cmap, `N_CTX≈6` noisy context frames concatenated above a dashed edit-frame line, each column's own
+  free-run from step 0 below it, green/red locators, figure-top legend) and route **every** waterfall
+  through it. Reference implementations to copy: `scripts/eval_editability_endogenous.py` `waterfall()` and
+  the `waterfall_grid` in `notebooks/experiments/editability/controls/`. Before committing any waterfall,
+  eyeball it: gray? noisy context frames above the edit line? **each column its own free-run from step 0**
+  (no shared teacher-forced row)? top legend? GT column? If not, it is not done.
 
 ## Visualization for analysis
 
@@ -162,8 +177,16 @@ label means. Beyond cell/figure numbering:
   canonical registry `notebooks/experiments/editability/METRICS_AND_EDITORS.md`** (the single source of truth
   for metric + editor definitions) rather than re-inventing terms; a notebook uses the subset it needs and may
   introduce new metrics/editors when that is its point (fold recurring ones back into the registry). A metric's definition lives in this table, *not* buried in a print
-  sidenote or a code comment. If a figure shows `d_gt` or `ghost ratio`, the reader must find
+  sidenote or a code comment. If a figure shows `d_gt` or `Edit Index`, the reader must find
   its formula in that table. When a term first appears, it must already be defined.
+  **§4 editability metrics are also implemented once, in `scripts/editability_metrics.py`** — import
+  `build_edit_zones` / `edit_scorecard` / `fidelity_ratio` rather than re-deriving the formulas per notebook
+  (that drift is what produced five incompatible versions of "reach"). Prose in the registry, code in that
+  module; they must agree. The canonical set is **Edit Index** (−1…+1, which of the two ground-truth worlds the
+  output is closer to) plus **Target / Ghost / Collateral / Edit-frame / GT-traj RMSE** and the **fidelity ratio**.
+  The old `reach % of swap` / `collateral % of swap` / `selectivity` / `ghost ratio` were **retired 2026-07-30**
+  (they scored *change*, not *correctness*, and normalised by a model-dependent soft reference) — do not
+  reintroduce them, and treat pre-2026-07-30 numbers on that scale as not comparable.
 - **Consistent metrics + units across everything you compare.** If two things are compared
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate
