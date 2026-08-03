@@ -26,6 +26,44 @@ import torch
 from torch.utils.data import DataLoader, Dataset
 
 
+class InMemoryObservationDataset(Dataset):
+    """Loads named arrays fully into RAM as torch tensors.
+
+    The HDF5 datasets are gzip-compressed; random per-sample access pays the
+    decompression cost on every read (~30× slower than the model step for
+    training-sized batches).  For datasets that fit in RAM (~2 GB for 90k
+    samples) this loads each key once and serves views, removing the
+    bottleneck.  Use ``num_workers=0`` — there is nothing to parallelise.
+    """
+
+    def __init__(
+        self,
+        h5_path: str | Path,
+        indices: np.ndarray,
+        keys: Sequence[str] = ("obs_intensity",),
+    ) -> None:
+        self.h5_path = str(h5_path)
+        self.indices = indices
+        self.keys = list(keys)
+        with h5py.File(self.h5_path, "r") as f:
+            # Sort for h5py fancy indexing; keep the caller's order after.
+            order = np.argsort(indices)
+            inverse = np.empty_like(order)
+            inverse[order] = np.arange(len(order))
+            self._data = {
+                key: torch.from_numpy(
+                    f[key][np.asarray(indices)[order]].astype(np.float32)
+                )[inverse]
+                for key in self.keys
+            }
+
+    def __len__(self) -> int:
+        return len(self.indices)
+
+    def __getitem__(self, i: int) -> dict[str, torch.Tensor]:
+        return {key: self._data[key][i] for key in self.keys}
+
+
 class ObservationDataset(Dataset):
     """Lazily loads named arrays from an HDF5 file.
 
@@ -157,6 +195,7 @@ def build_dataloaders(
     seed: int = 0,
     num_workers: int = 4,
     keys: Sequence[str] = ("obs_intensity",),
+    in_memory: bool = False,
 ) -> tuple[DataLoader, DataLoader]:
     """Split samples into train/val and return a DataLoader for each.
 
@@ -172,8 +211,12 @@ def build_dataloaders(
         RNG seed for the train/val split (reproducible).
     num_workers:
         Number of DataLoader worker processes.  Use 0 for debugging.
+        Ignored (forced to 0) when ``in_memory=True``.
     keys:
         HDF5 keys to include in each batch.
+    in_memory:
+        Load the requested keys fully into RAM (see
+        InMemoryObservationDataset).  Much faster when the data fits.
 
     Returns
     -------
@@ -188,9 +231,12 @@ def build_dataloaders(
     val_idx = perm[:n_val]
     train_idx = perm[n_val:]
 
-    train_ds = ObservationDataset(h5_path, train_idx, keys=keys)
-    val_ds = ObservationDataset(h5_path, val_idx, keys=keys)
+    ds_cls = InMemoryObservationDataset if in_memory else ObservationDataset
+    train_ds = ds_cls(h5_path, train_idx, keys=keys)
+    val_ds = ds_cls(h5_path, val_idx, keys=keys)
 
+    if in_memory:
+        num_workers = 0
     loader_kwargs = dict(
         batch_size=batch_size,
         num_workers=num_workers,

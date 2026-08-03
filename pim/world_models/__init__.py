@@ -1,6 +1,7 @@
 """pim.world_models — predictive world models."""
 
 from pim.world_models.dataloader import ObservationDataset, build_dataloaders
+from pim.world_models.dit import DiTModel
 from pim.world_models.gru import GRUModel
 from pim.world_models.loader import (
     CheckpointInfo,
@@ -19,6 +20,7 @@ __all__ = [
     "HiddenStateModel",
     "GRUModel",
     "RSSMModel",
+    "DiTModel",
     "ObservationDataset",
     "build_dataloaders",
     "CheckpointInfo",
