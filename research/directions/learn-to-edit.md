@@ -1,7 +1,29 @@
 # Direction: Learn-to-Edit — can editability be *induced*? (frozen editor + light fine-tune)
 
-**Tag:** `[reframe]` · **Sub-question:** 3 (editability) · **Status:** proposed (awaiting Sevan → active) ·
+**Tag:** `[reframe]` · **Sub-question:** 3 (editability) · **Status:** v1 done; REVISION PASS v2 (2026-07-09) ·
 **Complexity:** medium-high (2 variants; Variant A first, clean; Variant B deeper)
+
+> ## REVISION PASS v2 (Sevan feedback, 2026-07-09) — revise `editability/learn_to_edit.ipynb`
+> The v1 result stands (editability not cleanly induced); this pass is **legibility + completeness**, not
+> new science. Apply CLAUDE.md's new **Notebook legibility** standard throughout, plus these specifics:
+> 1. **Definitions table up front** — every metric (`d_gt`, `d_tgt`, `ghost ratio`, `sel_err`, off-manifold
+>    `resid`) with its **explicit formula**, units, and ↑/↓. No buried print-sidenote definitions.
+> 2. **RMSE everywhere, not MSE** — the training-loss curves (Fig 1a, Fig 5a) plot raw MSE while the tables
+>    use RMS; make ALL obs-error quantities RMSE (match the rest of the repo). Same fix on axis labels.
+> 3. **Same metric suite + presentation for Variant A and Variant B** — currently A gets the head-to-head +
+>    data-scaling and B gets "quality + canonicity"; make them comparable (both get the same core RMSE
+>    metric table). **Add a Variant-B fine-tune data-size sweep** mirroring A's (N_TRAIN sweep; keep it
+>    tractable — ~4 points is fine given fine-tuning is heavier than editor-training; note the trade-off).
+> 4. **Primary waterfalls for A and B at the SAME train size**, and **the FT waterfalls MUST include a GT
+>    (post-edit) target column** — v1's FT waterfall has only ORIG-unsteered / ORIG+edit / FT+edit, which is
+>    uninterpretable without GT. Every editing comparison figure needs the GT/target reference column.
+> 5. **Document the Variant-B setup in markdown** (so the reader isn't guessing): what "ORIG + fixed editor"
+>    vs "FT + fixed editor" means; that the (pos,vel) linear probe is **re-fit (detached) on the current
+>    model's states**, not fixed-weights; that the fine-tune objective is a **K=15-step (multistep) rollout**
+>    match to the GT clean post-edit obs plus a next-step prediction-fidelity anchor; and that eval injects a
+>    **held-out** target via that pseudo-inverse and rolls out K steps.
+> 6. **Data-source provenance** on every borrowed constant (e.g. the GRU fiber/geometry refs from
+>    `diagnostic_corrections` / `candidate-*`). Re-run on GPU; keep outputs lean.
 
 > This is a **constructive** turn on the editability question. We have *diagnosed* why hand-crafted
 > edits fail (non-canonical state, curved `(pos,vel)→h` embedding, readable≠controllable). Now ask:
