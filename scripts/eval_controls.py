@@ -60,7 +60,7 @@ from pim.extractors import LinearExtractor, StateDefinition
 from pim.world_models import load_checkpoint, load_dataset
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-ROOT = Path("runs/controls")
+ROOT = Path("runs/controls")  # overridden by --root
 OUT = ROOT / "eval"
 
 N_OBJ = 2
@@ -422,7 +422,8 @@ def eval_editability(model, edits, sim, n_edit, seed=0):
 
 def eval_run(code: str, n_probe: int, n_edit: int) -> dict:
     ckpt = ROOT / code / "best_model.pt"
-    data_dir = Path("datasets") / RUN_DATASET[code]
+    # runs not in the table (e.g. the trained-editability arms) are all on dataset 4
+    data_dir = Path("datasets") / RUN_DATASET.get(code, "4_fixed_refl_inview")
     model, info = load_checkpoint(ckpt, device=DEVICE)
     bundle = load_dataset(data_dir, n_obj_keep=N_OBJ)
     test, edits = bundle.test, bundle.edits
@@ -436,7 +437,7 @@ def eval_run(code: str, n_probe: int, n_edit: int) -> dict:
 
     res: dict = {
         "run": code,
-        "dataset": RUN_DATASET[code],
+        "dataset": RUN_DATASET.get(code, "4_fixed_refl_inview"),
         "hidden_size": int(info.model_config["hidden_size"]),
         "n_params": sum(p.numel() for p in model.parameters()),
         "obs_noise_std": float(sim["obs_noise_std"]),
@@ -492,12 +493,20 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--runs", nargs="+", required=True)
     ap.add_argument(
+        "--root",
+        default="runs/controls",
+        help="directory holding the run folders; also where eval/ is written",
+    )
+    ap.add_argument(
         "--n-probe", type=int, default=2000, help="test sequences for probes"
     )
     ap.add_argument("--n-edits", type=int, default=64)
     args = ap.parse_args()
     torch.manual_seed(0)
     np.random.seed(0)
+    global ROOT, OUT
+    ROOT = Path(args.root)
+    OUT = ROOT / "eval"
 
     for code in args.runs:
         if not (ROOT / code / "best_model.pt").exists():

@@ -70,6 +70,9 @@ All at `hidden_size=256`. The 2×2 is completed by `H256` above.
 > which is why the notebook plots per-model baselines rather than one shared set. The same mistake cost the
 > endogenous thread a set of cross-citable numbers (see `actions/ENDOGENOUS_RUNS.md`).
 
+> **`H256` is also the base model for the `trained_editability/` thread** — every fine-tuning arm there
+> starts from this checkpoint (see `../trained_editability/TRAINED_EDITABILITY_RUNS.md`).
+
 ### Encoder-space editing (direction `encoder-space-editing`)
 No new training — uses `H256`. The independent variable is the **edit interface** (encoder output `x` vs hidden
 state `h`), not the model.

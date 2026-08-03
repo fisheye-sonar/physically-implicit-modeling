@@ -3,7 +3,55 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-30 (branch `michael_controls`: three controls done; **§4 metric set redesigned**; waterfall spec corrected; everything re-run)_
+_Last updated: 2026-07-30 (branch `more_trained_editability`: trained-editability thread built + run; §4 metric set redesigned earlier the same day)_
+
+## 2026-07-30 (night) — NEW branch `more_trained_editability`: can editability be INDUCED BY TRAINING?
+
+Sevan asked for a much more extensive test of **trained** editability, including fine-tuning the world model to
+induce it. New topical dir `notebooks/experiments/editability/trained_editability/` with `learn_to_edit.ipynb`
+**moved into it** (paths repointed) and a new notebook alongside. Registry `TRAINED_EDITABILITY_RUNS.md`; brief
+`directions/trained-editability.md`; note `scratch/2026-07-30-trained-editability.md` (**FLAG FOR PROMOTION**).
+**This pays the "heavier fine-tune still OWED" debt** that has sat in `METRICS_AND_EDITORS.md` since `learn_to_edit`.
+
+**New: `scripts/train_editable_gru.py`.** Two mechanisms, one evaluation, 5 arms, all from `runs/controls/H256`:
+- **fine-tune the world model** so a **fixed, frozen** readout-injection probe works — nothing about the editor is
+  learned, so all adaptation is in the model, which must learn to honour writes along `A⁺`. Loss
+  `edit + λ·retention`, where retention is ordinary next-step prediction; λ is what separates "became editable"
+  from "was destroyed and now renders whatever it is asked for".
+- **amortized editor** `E_θ(h,target)→Δh` against a **frozen** world model.
+Arms: `FT_light` (300 steps) · `FT_heavy` (3000) · `FT_heavy_noret` (λ=0) · `FT_heavy_obj0` (object-0 edits only,
+the content control) · `AMORT`. Trained on `edits[2000:]`; **everything reported on the held-out `edits[:64]`**, the
+same samples the `controls/` notebooks use. `eval_controls.py` gained `--root` so the identical §4 suite scores them.
+
+**RESULT — training moves the edit, and wires a BUTTON.** Δ Edit Index of the *trained interface* vs each arm's own
+unsteered: base **+0.01**, light **+0.04**, heavy **+0.13**, no-retention +0.10, object-0-only +0.10,
+**amortized +0.54**.
+- **The light-budget negative was partly a budget artifact** (+0.04 → +0.13 from 300 → 3000 steps) — worth knowing,
+  since that negative is currently cited in `findings/editability.md`.
+- **But even the best arm only reaches "equidistant".** Amortized absolute Edit Index **−0.14**, against its own
+  unsteered −0.68 and the decoder-gradient oracle's +0.94. It never arrives at the edited world.
+- **No mechanism generalisation.** The *same* mechanism with a freshly-fit probe moves only **+0.01…+0.04** on every
+  arm; the other standard editors are unmoved. The model obeys the interface it was trained for, not the class.
+- **No content generalisation.** `FT_heavy_obj0` has an obj1−obj0 gap of **−0.08** vs the both-objects control's
+  **+0.09** — withholding an object costs ≈0.17 index points. A per-object button.
+- **Cost.** Fine-tuning costs 13% of next-step prediction even with retention (0.1041 → 0.1173). Without retention
+  it degrades to **0.1486**, essentially the observation noise floor (0.1539) — the world model is destroyed —
+  **and editing gets no better**.
+- **The cleanest new fact is an asymmetry:** learning a bespoke editor for a *frozen* latent (+0.54, zero cost to
+  the model) works far better than making the latent obey a *fixed* editor (+0.13, 13% prediction cost). Consistent
+  with the standing reading that the obstacle is the **reachability of the edit map**, not the representation.
+
+**Also answered (Sevan's question about the Edit Index).** Why is unsteered ≈ −0.7 rather than −1 for `H256`?
+Computed: the references are **clean** renders (not noisy), and the index is evaluated **only on the differing
+rays**, so shared background is already excluded (`d_edited` = 0.547 there, near full object contrast). The gap is
+entirely the model's own blur — `d_unedited` = 0.090, which is its one-step prediction error rather than 0.
+Decisive detail: **the split is by observation noise, not model quality.** At obs noise 0.2 the index *saturates at
+−0.72* from H=128 on (H128/256/512 all have `d_unedited` ≈ 0.09 — the noise-limited floor), while the noise-free
+models reach −0.84. So `H256` is at its best achievable value; more capacity cannot lower it. Matching the *true*
+unedited world still gives exactly −1.0 (asserted).
+
+**Owed / next:** train-from-scratch with an edit objective in the loss is the one version of "train for editability"
+this does not cover; RSSM untested; one seed per arm.
 
 ## 2026-07-30 (latest) — Sevan's review: a real rendering bug, a rename, and the Edit Index over the rollout
 
