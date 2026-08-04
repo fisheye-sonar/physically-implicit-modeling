@@ -53,14 +53,22 @@ class RolloutResult:
 
 @dataclass
 class ControllabilityMetrics:
-    """Scalar + per-step observation RMSE summary."""
-    steered_mse: float
-    unsteered_mse: float
+    """Scalar + per-step observation MSE summary (figures sqrt these to plot RMSE).
+
+    Every field names its reference: `_vs_clean` is scored against the noiseless
+    render and is the reportable one; `_vs_noisy` is scored against the noisy
+    observation, so it carries the observation noise in quadrature and is not
+    comparable to any clean-referenced number.
+    """
+    steered_mse_vs_noisy: float
+    unsteered_mse_vs_noisy: float
+    steered_mse_vs_clean: float
+    unsteered_mse_vs_clean: float
     injection_error: float
-    steered_obs_step: np.ndarray         # (n_rollout,) RMSE per step vs noisy gt
-    unsteered_obs_step: np.ndarray
-    clean_steered_obs_step: np.ndarray   # vs clean gt
-    clean_unsteered_obs_step: np.ndarray
+    steered_obs_step_vs_noisy: np.ndarray     # (n_rollout,) MSE per step
+    unsteered_obs_step_vs_noisy: np.ndarray
+    steered_obs_step_vs_clean: np.ndarray
+    unsteered_obs_step_vs_clean: np.ndarray
 
 
 @torch.no_grad()
@@ -237,19 +245,20 @@ def eval_controllability(
     gt_obs: np.ndarray,              # (N, n_rollout, R) noisy ground truth from edit_frame on
     clean_gt_obs: np.ndarray,        # (N, n_rollout, R) clean ground truth
 ) -> ControllabilityMetrics:
-    """Per-step + scalar RMSE summaries comparing steered/unsteered to GT."""
-    steered_obs_step = ((steered.obs - gt_obs) ** 2).mean(axis=(0, 2))
-    unsteered_obs_step = ((unsteered.obs - gt_obs) ** 2).mean(axis=(0, 2))
-    clean_steered_obs_step = ((steered.obs - clean_gt_obs) ** 2).mean(axis=(0, 2))
-    clean_unsteered_obs_step = ((unsteered.obs - clean_gt_obs) ** 2).mean(axis=(0, 2))
+    """Per-step + scalar MSE summaries comparing steered/unsteered to GT.
+
+    Both references are computed; report the `_vs_clean` ones.
+    """
     return ControllabilityMetrics(
-        steered_mse=float(((steered.obs - gt_obs) ** 2).mean()),
-        unsteered_mse=float(((unsteered.obs - gt_obs) ** 2).mean()),
+        steered_mse_vs_noisy=float(((steered.obs - gt_obs) ** 2).mean()),
+        unsteered_mse_vs_noisy=float(((unsteered.obs - gt_obs) ** 2).mean()),
+        steered_mse_vs_clean=float(((steered.obs - clean_gt_obs) ** 2).mean()),
+        unsteered_mse_vs_clean=float(((unsteered.obs - clean_gt_obs) ** 2).mean()),
         injection_error=steered.injection_error,
-        steered_obs_step=steered_obs_step,
-        unsteered_obs_step=unsteered_obs_step,
-        clean_steered_obs_step=clean_steered_obs_step,
-        clean_unsteered_obs_step=clean_unsteered_obs_step,
+        steered_obs_step_vs_noisy=((steered.obs - gt_obs) ** 2).mean(axis=(0, 2)),
+        unsteered_obs_step_vs_noisy=((unsteered.obs - gt_obs) ** 2).mean(axis=(0, 2)),
+        steered_obs_step_vs_clean=((steered.obs - clean_gt_obs) ** 2).mean(axis=(0, 2)),
+        unsteered_obs_step_vs_clean=((unsteered.obs - clean_gt_obs) ** 2).mean(axis=(0, 2)),
     )
 
 

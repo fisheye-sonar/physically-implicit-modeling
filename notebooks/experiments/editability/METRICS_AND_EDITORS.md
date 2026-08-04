@@ -10,8 +10,26 @@ expected — for a notebook to **not** use every entry, and to **go outside this
 testing a *new* metric or editor (e.g. `multistep_steering` proposes new edit *mechanisms* and does not run the
 full suite). When a notebook adds something genuinely new and it recurs, fold it back into this file.
 **Consistency rules that always apply:** RMSE (never MSE); obs intensity ∈ [0,1]; positions in sim units;
+**every observation-space error is scored against the CLEAN render** (`clean_obs`), never the noisy `obs`;
 compare like-for-like (same metric set + units across anything compared); every comparison figure has a
 GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
+
+> ### ⛔ Observation-space error is scored against `clean_obs` — always (added 2026-08-04)
+> This applies to **every** obs-space error, including one-off panels that do not run the §4 scorecard — that is
+> exactly where it keeps breaking (`editability_structure` and `rssm_structure/rssm_state_geometry` each built a
+> `gt_obs = edits.obs[...]` panel titled "error vs post-edit GT"). It also governs the **GT column of every
+> waterfall**, which is the clean render.
+> **Why it is not cosmetic:** errors add in quadrature, `err_noisy ≈ √(err_clean² + noise²)`, and on the canonical
+> dataset the noise term is **0.1539**. A true 0.05 reads as 0.162 and a true 0.10 reads as 0.185 — methods
+> differing **2× in real error differ by 14%** on the noisy scale. It compresses every method toward the noise
+> level, and it cannot be undone from the reported number afterwards.
+> **The noise floor is not a floor here.** `noise_floor_rmse` (= RMSE(`obs`, `clean_obs`)) bounds error only
+> against *noisy* targets. Against clean, a perfect predictor scores **0** and sub-noise-floor values are the
+> normal result of a recurrent model denoising many frames — not a leak. Use the line as a *reference scale*
+> ("no better than echoing the input"), never as a bound.
+> If a noisy-referenced quantity is genuinely wanted, it must carry `vs noisy` in its **name, axis label and
+> legend**, and must never sit on a shared axis with a clean-referenced one without both being labelled
+> (`pim/eval/controllability.py` is the reference: every field is suffixed `_vs_clean` / `_vs_noisy`).
 
 > **Before adding a metric to this registry, check it is not derivable from ones already here.** A metric that is
 > an algebraic function of two existing ones adds no information, grows the zoo, and *reads as a contradiction*

@@ -1,8 +1,14 @@
 """Reference RMSE baselines for annotating prediction/recovery plots.
 
 These are properties of the dataset, not the model. They give the reader
-something to compare model RMSE against (e.g., a model RMSE below the noise
-floor is impossibly good and indicates a leak).
+something to compare model RMSE against.
+
+`noise_floor_rmse` is the size of the observation noise, i.e. the error of
+echoing the noisy input. It is a genuine lower bound only when predictions are
+scored against the *noisy* target. Against the *clean* target — which is what
+`next_step_rmse` and the whole editability scorecard use — a perfect predictor
+scores 0 and sub-noise-floor values are normal, not a leak: the model
+integrates many noisy frames over a low-dimensional scene and denoises.
 """
 
 from __future__ import annotations

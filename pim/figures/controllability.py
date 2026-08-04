@@ -32,16 +32,16 @@ def plot_controllability_obs(
     include: set[str] | None = None,
 ) -> Figure:
     """Per-step observation RMSE: steered vs unsteered, noisy + clean targets."""
-    steps = np.arange(len(metrics.steered_obs_step))
+    steps = np.arange(len(metrics.steered_obs_step_vs_noisy))
     fig, ax = plt.subplots(figsize=(7, 4), facecolor=_BG_HEX)
     style_ax(ax)
-    ax.plot(steps, np.sqrt(metrics.unsteered_obs_step), color=PALETTE[1], linewidth=1.8,
+    ax.plot(steps, np.sqrt(metrics.unsteered_obs_step_vs_noisy), color=PALETTE[1], linewidth=1.8,
             label="unsteered (vs noisy)")
-    ax.plot(steps, np.sqrt(metrics.steered_obs_step), color=PALETTE[0], linewidth=1.8,
+    ax.plot(steps, np.sqrt(metrics.steered_obs_step_vs_noisy), color=PALETTE[0], linewidth=1.8,
             label="steered (vs noisy)")
-    ax.plot(steps, np.sqrt(metrics.clean_unsteered_obs_step), color=PALETTE[1], linewidth=1.8,
+    ax.plot(steps, np.sqrt(metrics.unsteered_obs_step_vs_clean), color=PALETTE[1], linewidth=1.8,
             linestyle="--", label="unsteered (vs clean)")
-    ax.plot(steps, np.sqrt(metrics.clean_steered_obs_step), color=PALETTE[0], linewidth=1.8,
+    ax.plot(steps, np.sqrt(metrics.steered_obs_step_vs_clean), color=PALETTE[0], linewidth=1.8,
             linestyle="--", label="steered (vs clean)")
     if baselines is not None:
         _obs_lines = [

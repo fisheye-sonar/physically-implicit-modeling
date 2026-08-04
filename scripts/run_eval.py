@@ -306,8 +306,10 @@ def main() -> None:
     gt_positions = edits.positions[:N_CTRL, edits.edit_frame:edits.edit_frame + cfg.ctrl_n_rollout, :cfg.n_obj, :]
     ctrl_metrics = eval_controllability(steered, unsteered, gt_obs, clean_gt_obs)
     ctrl_pos_rmse = eval_position_controllability(steered, unsteered, gt_positions, probes, device=cfg.device)
-    print(f"  steered MSE   = {ctrl_metrics.steered_mse:.6f}")
-    print(f"  unsteered MSE = {ctrl_metrics.unsteered_mse:.6f}")
+    print(f"  steered MSE   = {ctrl_metrics.steered_mse_vs_clean:.6f} (vs clean)"
+          f"  {ctrl_metrics.steered_mse_vs_noisy:.6f} (vs noisy)")
+    print(f"  unsteered MSE = {ctrl_metrics.unsteered_mse_vs_clean:.6f} (vs clean)"
+          f"  {ctrl_metrics.unsteered_mse_vs_noisy:.6f} (vs noisy)")
     print(f"  injection err = {ctrl_metrics.injection_error:.6f}")
 
     figs["ctrl_obs"] = plot_controllability_obs(ctrl_metrics, baselines=obs_baselines)
@@ -352,8 +354,10 @@ def main() -> None:
             **{f"{name}_jump_ratio_mean": float(c.mean_jump_ratio) for name, c in coherence.items()},
         },
         "controllability": {
-            "steered_mse": ctrl_metrics.steered_mse,
-            "unsteered_mse": ctrl_metrics.unsteered_mse,
+            "steered_mse_vs_clean": ctrl_metrics.steered_mse_vs_clean,
+            "unsteered_mse_vs_clean": ctrl_metrics.unsteered_mse_vs_clean,
+            "steered_mse_vs_noisy": ctrl_metrics.steered_mse_vs_noisy,
+            "unsteered_mse_vs_noisy": ctrl_metrics.unsteered_mse_vs_noisy,
             "injection_error": ctrl_metrics.injection_error,
         },
     }
