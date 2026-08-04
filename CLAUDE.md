@@ -191,6 +191,20 @@ label means. Beyond cell/figure numbering:
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate
   RMSE elsewhere, and never compare method A on metric-set-X against method B on metric-set-Y.
+- **One quantity per axis — a shared axis is a claim that the bars mean the same thing.** If the "same"
+  metric is computed from **structurally different constructions**, it does not belong on one axis, however
+  similar the column header looks. *(2026-08-03: a compositionality figure put `sequential` and `superposition`
+  on one axis, where "composed" meant a **two-stage endpoint** in one and a **literal vector sum** in the other —
+  so a cosine in one bar was not the same object as a cosine in the next. Only the panel asking "does the
+  resulting state work" (Edit Index) was legitimately shared.)* Test before merging panels: *could a reader
+  subtract two bars and get something meaningful?* If not, split the figure. Where a downstream metric **is**
+  common to both (an outcome metric like Edit Index usually is), that panel may stay shared — say so explicitly.
+- **No derived duplicates: never report a number that is an algebraic function of two you already show.**
+  Before adding a panel or column, check whether it is recoverable from ones already present. If it is, show it
+  *instead of*, not *alongside* — a redundant metric adds no information, feeds the metric zoo, and reads as a
+  **contradiction** when the reader cannot see the identity linking them. *(2026-08-03: `relative residual`
+  was reported next to `cosine` and `magnitude ratio`, but `residual² = r² + 1 − 2·r·cos θ` — it was fully
+  determined by the other two, and looked like it disagreed with them.)*
 - **Tables for dense values — clearly demarcated.** When a step emits many named scalars, render a
   **clearly demarcated table** (a `display(Markdown(...))` table — visible row/column structure; **pandas
   is not in the `.pim` venv**, so don't reach for a DataFrame), **not** an aligned-monospace `print()`
@@ -219,11 +233,31 @@ label means. Beyond cell/figure numbering:
   (gradient descent on `h` through the decoder against a target observation), "MLP-probe gradient" (steer
   `h` until a frozen MLP probe reads the target). Never name a method after an incidental implementation
   detail, and never reuse a name that already means something else in this repo.
+- **When a comparison varies along more than one dimension, the label must carry BOTH — and must not let one
+  dimension hide inside the other's naming slot.** A line-up crossing *what is being tested* × *which mechanism
+  ran it* needs both visible and visually separable. *(2026-08-03: three arms were named `sequential (freeze-time)`,
+  `superposition (counterfactual)`, `superposition (freeze-time)`. Two of the three carry "(freeze-time)", so
+  arms testing **different things** looked like one family and Sevan read the wrong bar. The parenthetical held the
+  mechanism while the leading word held the test type, and at a glance the parenthetical dominated.)* Prefer labels
+  that make the tested dimension unmistakable — `same-object A→B→C · freeze-time` vs `two-object A+B · freeze-time` —
+  and if one dimension has only one level (e.g. only freeze-time can run a test), say **why** rather than letting
+  the asymmetry look like an omission.
 - **Every reported magnitude needs a reference scale and units.** A residual/distance alone is
   uninterpretable — always show the matched reference next to it (e.g. the same metric on real states) and
   state the normalization (raw ‖·‖ vs fraction). Name the estimator in the metric name: "global-PCA hull
   residual", "leave-out local-PCA residual" — never a bare "manifold residual" or a pet adjective
   ("honest").
+- **High-dimensional quantities need their intuition stated, because the everyday one is wrong.** Three that
+  have bitten this repo, all of which look like one thing and mean another:
+  (1) **Cosine is not correlation-like** — cos 0.9 is a **26° angle**, and two equal-length vectors 26° apart
+  differ by `2·sin(θ/2)` ≈ 0.45 of their length. Report the **angle** alongside any cosine, or an explicit
+  "what would count as aligned here".
+  (2) **The mean cosine between random vectors is 0**, not `1/√H` — `1/√H` is the *per-pair standard deviation*.
+  Never quote it as a floor the mean should sit at; for a mean, use an **empirical shuffled-pair control**.
+  (3) **A random vector already has `√(d/H)` of its norm in any d-dimensional subspace** — so a "small"
+  projection fraction can be at or *below* chance. Always report the chance level, and when `H` varies across
+  the comparison, plot the **enrichment** `value / chance`, never the raw fraction (the raw version manufactures
+  a trend that is entirely the moving chance level).
 - **Precise failure-mode language.** "Reverts" = returns toward the unsteered/pre-edit trajectory.
   "Collapses" = output degenerates off-distribution. "Drifts" = diverges without returning. Look at the
   actual rollout before choosing the word; they are different dynamics outcomes.

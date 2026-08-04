@@ -13,6 +13,13 @@ full suite). When a notebook adds something genuinely new and it recurs, fold it
 compare like-for-like (same metric set + units across anything compared); every comparison figure has a
 GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
 
+> **Before adding a metric to this registry, check it is not derivable from ones already here.** A metric that is
+> an algebraic function of two existing ones adds no information, grows the zoo, and *reads as a contradiction*
+> when the reader cannot see the identity. Example caught 2026-08-03: `relative residual`
+> `‖composed − direct‖/‖direct‖` was reported beside `cosine` and `magnitude ratio r`, but
+> `residual² = r² + 1 − 2·r·cos θ` — fully determined by the other two. Report it *instead of*, not *alongside*.
+> Same test applies to a figure panel, not just a table column.
+
 ---
 
 ## Metrics

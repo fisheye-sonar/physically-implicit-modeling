@@ -3,7 +3,121 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-07-30 (branch `more_trained_editability`: trained-editability thread built + run; §4 metric set redesigned earlier the same day)_
+_Last updated: 2026-08-03 (branch `delta_h_analysis`: characterised what a SUCCESSFUL edit is in latent space)_
+
+## 2026-08-03 — NEW branch `delta_h_analysis`: what does a *successful* edit look like in latent space?
+
+Sevan's request, discussed and scoped before building. Every §4 negative so far describes what *fails*; this
+characterises what **works**. Two mechanisms reliably edit, and both need oracle access — **counterfactual state
+overwrite** and **freeze-time teacher forcing** — so they hand us ground truth for `Δh = h_post − h_pre`.
+Notebook `notebooks/experiments/editability/delta_h_analysis.ipynb` (17 cells, 0 errors, 5 figs);
+brief `directions/delta-h-analysis.md`; note `scratch/2026-08-03-delta-h-analysis.md` (**FLAG FOR PROMOTION**).
+N=256 held-out edits (the prior version of this measurement was N=64, GRU only, one construction); GRU + RSSM.
+
+**Sevan's framing, now the thread's through-line:** *no successful edit is free of dynamics.* Every mechanism that
+works operates by making the model **consume observations over time**; none writes to `h` directly.
+
+**The framing that makes it a measurement.** Readout injection produces `Δh ∈ row(A)` **by construction**, so the
+row-space fraction of Δh_true is the **hard ceiling** on what that editor could ever achieve — and
+`‖P_row Δh‖/‖Δh‖` is exactly the best cosine it could reach with the truth.
+
+**RESULT — a successful edit is large, edit-specific, and invisible to the probe.**
+1. **Both oracles succeed, and Sevan's prediction held.** Counterfactual **+0.68** (holds to **+0.44** at step 14),
+   freeze-time **+0.54** (→ +0.26), vs unsteered −0.67 and readout injection −0.66 (inert). Counterfactual is
+   stronger *and* more persistent — as he reasoned, a full overwrite has no pre-edit remnant to revert to.
+   (Contrast the decoder-gradient oracle: +0.94 → −0.12, a single-frame success.)
+2. **Reachability ceiling — row-space fraction 0.096 (GRU) / 0.005 (RSSM) against a chance level of 0.125 / 0.112.
+   Both at or BELOW chance.** A successful edit is *less* aligned with the probe's row space than a random
+   direction. Readout injection could match at best ~10% (GRU) / ~0% (RSSM) of the true edit direction — not
+   because it is weak, but because it is confined to a 4-dim subspace the edit provably avoids.
+3. **Adding velocity to the probe does not help** (0.096 → 0.110 while chance rises 0.125 → 0.177, so relative
+   alignment *falls*). The content the edit moves is **not physical state** — consistent with the fiber residual
+   (~0.87 of ‖h‖ is not a function of (pos,vel)); the edit lives in that 87%.
+4. **The two oracles agree strongly: cos = +0.799 raw / +0.816 edit-only** (shuffled control +0.023, random +0.062).
+   Two unrelated constructions land on nearly the same displacement, so "the edit direction" is well-defined.
+   Meanwhile cos(oracle, readout injection) = **+0.078** — the failing editor is nearly orthogonal to what works.
+5. **Magnitude: ‖Δh‖/‖h0‖ = 0.97** — as large as the entire state; **14×** the injection it replaces (RSSM 275×),
+   **3.6×** one ordinary dynamics step.
+6. **No shared edit direction across edits:** mean pairwise cosine **+0.011** vs random +0.062 — indistinguishable
+   from zero. Every edit has its own direction; magnitude is far more stable than direction (CV 0.28).
+7. **Same displacement, different starting states (Sevan's follow-up).** Holding the object's positional change
+   fixed (5 canonical δ, n=64 each) and varying everything else raises the mean pairwise cosine from **+0.011 to
+   +0.071** (GRU) / +0.008 → +0.084 (RSSM) — a **6.6×/10.3× effect**, so displacement genuinely carries information
+   about Δh — **but the absolute level is still ≈0.08**, nowhere near determining it. *There is no displacement→Δh
+   lookup table*, which kills the most attractive remaining hypothesis (that readout injection was merely using the
+   wrong basis) and explains the memorisation result below. **Sub-finding:** purely *lateral* displacements are
+   ~2.5× more consistent than purely *depth* displacements (0.129/0.106 vs 0.050, GRU) — a perspective signature,
+   since a sideways move changes which rays are hit but a depth move changes apparent size by a start-dependent
+   amount. My sharper prediction (alignment decays with depth *mismatch*) was **not** supported — Fig 6b is flat,
+   r ≈ +0.02.
+8. **Learning from oracle Δh memorises, cleanly diagnosed:** MLP **train R² 0.951 → held-out R² 0.088**, applied
+   Edit Index **+0.01** vs the +0.68 oracle it imitates. Even ground-truth supervision on a working edit does not
+   transfer — and that is exactly what (6) predicts.
+9. **Probe accuracy does NOT buy reachability — hypothesis refuted.** Across the 8 controls GRUs (probe R²
+   0.19→0.87) the enrichment `f/chance` stays at 0.46–0.89× with no trend. *The raw fraction appears to fall
+   steeply (0.632 → 0.079) but that is almost entirely the changing chance level* (`√(d/H)` = 0.707 at H=8 vs 0.088
+   at H=512) — a bug I caught and fixed mid-build; correcting it removed the apparent effect.
+
+**Reading:** the successful-edit displacement is well-defined per edit, enormous, and lives almost entirely in the
+part of the latent no probe over physical state can address. That is the *mechanism* behind "readable ≠
+controllable", stated as a measurement rather than an inference, and it predicts both learned results we already
+have (amortized editor plateaus; fine-tuning wires a button).
+
+**§7 COMPOSITIONALITY — added at Sevan's request, and it is the thread's strongest POSITIVE.** Sevan asked whether
+`Δh_comp = Δh2 − Δh1` is testable; as literally stated it is a **tautology** (pure vector arithmetic on states
+defined by subtraction). The non-tautological version requires the second edit to be **constructed independently by
+re-running the oracle**. Two tests, with the composed state applied and rolled out:
+- **Sequential (path-independence), freeze-time only** — counterfactual overwrite is *vacuous* here since it
+  discards history by construction. GRU cos **+0.904**, composed recovers **94%** of the direct edit's Edit-Index
+  gain (RSSM +0.742 / 77%). The latent is substantially path-independent.
+- **Object superposition** `[move obj0] + [move obj1]` vs `[move both]` — *not* tautological for either mechanism.
+  GRU cos +0.873 (counterfactual) / +0.881 (freeze-time), composed recovers **83% / 87%** of the direct gain;
+  RSSM +0.815 / 79%. So the configuration→latent map is close to **additively separable across objects**.
+**Waterfalls (Fig 8a/8b, 3 random samples, both models)** confirm it in observation space: the composed column
+visibly reproduces the direct both-moved column — both objects at their target locators, both ghosts vacated —
+with a slight overshoot matching `‖composed‖/‖direct‖ = 1.13`.
+**I predicted both would fail; both largely succeed.** Reconciles with §2: residuals are large (0.39–0.69) while the
+Edit Index retains 77–94%, i.e. *the part of Δh that matters for the observation composes even though the whole
+vector does not*. The latent is structured and additively organised — just not addressable by a position probe.
+
+> **Flaw caught and fixed mid-build:** the first sequential test used the **midpoint** as waypoint, which under
+> linear interpolation with matched frame counts makes the two-step route traverse *exactly* the direct route
+> (verified: max difference 0.0) — vacuous, and it reported cos +0.979. A 2-unit **perpendicular detour** gives the
+> real +0.904. Conclusion survives but is materially weaker; the first version would have overstated it.
+
+**HARNESS updated after Sevan's review of Fig 7 (four new rules, all from real failures this session).**
+`CLAUDE.md` notebook-legibility now carries:
+1. **One quantity per axis** — a shared axis asserts the bars mean the same thing. Fig 7 put `sequential` and
+   `superposition` together, where "composed" meant a *two-stage endpoint* in one and a *literal vector sum* in the
+   other, so a cosine in one bar was not the same object as in the next. Test: *could a reader subtract two bars and
+   get something meaningful?* Outcome metrics common to both (Edit Index) may stay shared, stated explicitly.
+2. **No derived duplicates** — never report a number that is an algebraic function of two already shown.
+   `residual² = r² + 1 − 2·r·cos θ`, so the residual panel was fully determined by the cosine and magnitude columns
+   and *read as a contradiction* because the identity was invisible. Also added to `METRICS_AND_EDITORS.md` as a
+   gate on adding new metrics.
+3. **Multi-dimensional comparisons need multi-dimensional labels** — `sequential (freeze-time)` vs
+   `superposition (freeze-time)` let the *mechanism* (parenthetical) visually dominate the *test type* (leading
+   word), so arms testing different things looked like one family and Sevan read the wrong bar.
+4. **High-dimensional intuition must be stated** — cos 0.9 is a **26° angle** (differing by ~0.45 of the length);
+   the mean cosine of random vectors is **0**, not `1/√H` (that is the per-pair sd); and a random vector already
+   holds `√(d/H)` of its norm in any d-dim subspace, so plot **enrichment** not raw fraction when `H` varies.
+   All three bit this session.
+
+**A framing correction made mid-build:** `1/√H` is the **per-pair standard deviation** of the cosine between random
+vectors, *not* a baseline the **mean** should sit at (that is 0). I had been quoting it as if it were a floor for
+the mean; the empirical across-displacement / shuffled-pair control is the right reference for a mean, and the
+notebook and note now say so.
+
+**Caveats:** RSSM ±1 alignment is ambiguous at measurement precision (k=−1 0.1059 vs k=0 0.1067, 0.8%) because its
+prior decode is blurry — its Δh numbers carry that. Freeze-time is far weaker on RSSM (+0.09) than GRU (+0.54),
+uninvestigated. Row-space ceiling applies to *linear* probes only. One checkpoint per architecture.
+
+**Also this session:** confirmed for Sevan that the interleaved observe-and-settle steering in `multistep_steering`
+§1a was only ever run with the **vanilla pseudoinverse** (plus one `+manifold` variant) — PCA geodesic, MLP-probe
+gradient and decoder gradient were never put through that loop. The nearest existing coverage is
+`controls/encoder_editing.ipynb`, which runs the multi-step self-observation idea across four editors but at the
+**encoder port**, not in `h`-space. That gap (interleaving the other editors in `h`-space, on the canonical
+metrics) is still open.
 
 ## 2026-07-30 (night) — NEW branch `more_trained_editability`: can editability be INDUCED BY TRAINING?
 
