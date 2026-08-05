@@ -306,5 +306,4 @@ SCORECARD_COLUMNS = [
     ("ghost_rmse", "Ghost RMSE ↓", "{:.3f}"),
     ("collateral_rmse", "Collateral RMSE ↓", "{:.3f}"),
     ("edit_frame_rmse", "Edit-frame RMSE ↓", "{:.3f}"),
-    ("gt_traj_rmse", "GT-traj RMSE ↓", "{:.3f}"),
 ]
