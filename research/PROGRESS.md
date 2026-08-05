@@ -3,7 +3,95 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-03 (branch `delta_h_analysis`: characterised what a SUCCESSFUL edit is in latent space)_
+_Last updated: 2026-08-04 (branch `michael_controls`: transformer world model built end to end; the readable state is not the carried state)_
+
+## 2026-08-04 — Transformer world model, end to end (branch `michael_controls`)
+
+Sevan's request: implement the transformer as a full architecture arm — model, training script, sweep, and a
+notebook covering every section of `00_master_editability`, with a multi-layer investigation. Direction brief
+`directions/transformer-world-state.md` (`[reframe]`), registry
+`notebooks/experiments/editability/transformers/TRANSFORMER_RUNS.md`, notebook
+`transformers/transformer_world_state.ipynb` (17 cells, 0 errors, 6 figures), note
+`scratch/2026-08-04-transformer-world-state.md` (**FLAG FOR PROMOTION**).
+
+**New code (all tested + linted):** `pim/world_models/transformer/model.py`, `scripts/train_transformer.py`,
+`tests/test_transformer.py` (6 tests), transformer dispatch in `pim/world_models/loader.py`.
+
+**Why it is a `[reframe]`.** Every §4 result assumed the model has **one** state — a vector that is both
+carried and readable — which is what makes "edit the world state" well-posed. A causal transformer has **two**,
+and they come apart: the **carried** state is the observation buffer (persists, but each slot is one frame);
+the **readable** state is the residual stream (history-dependent, but recomputed every step). A write to the
+readable state is transient *by construction*, not by failure — reporting it as the GRU's reversion would be
+wrong.
+
+**Load-bearing structural fact, established first:** the carried state spans `n_layers×(window−1)+1` frames,
+**not** `window`. Pinned by `test_buffer_rollout_matches_full_sequence` — a one-pass banded forward and a
+step-by-step buffer rollout agree only at `state_span`, diverging from exactly `t = window` otherwise. Sizing
+the buffer by `window` would have understated the history an edit must overwrite by a factor of `n_layers`.
+
+**Training:** `W2`/`W4`/`W16` (spans 5/13/61), `d_model=256` matched to the GRU's hidden size, 3.23M params
+each, 300 epochs. **12.6 + 12.9 + 12.7 = 38.2 min total** on the local 5090 (~2.5 s/epoch). They **overfit** —
+val bottoms at ~epoch 40 then rises; best-checkpoint selection is doing real work, unlike the GRU. ~60 epochs
+would suffice next time.
+
+**RESULTS (N=192 held-out edits, canonical §4 metrics, quality gate passed):**
+1. **Quality gate passes.** Next-step RMSE 0.1039 (`W16`) vs GRU 0.1041, noise floor 0.1539. `W16` also beats
+   the GRU on val loss (0.02359 vs 0.02362). Like-for-like.
+2. **Readability peaks mid-stack**, not at the decoder: position R² 0.60 → 0.81 (middle) → 0.76 (last), GRU
+   0.83. Velocity R² at the middle point separates by window — 0.13/0.20/0.32 for W2/W4/W16 — the expected
+   mechanism (longer window = more velocity evidence).
+3. **"Readable ≠ grabbable" is not a recurrence artifact.** Readout injection is inert at *every* depth and
+   *every* window (Edit Index = each model's own unsteered value, fidelity ratio 1.00). It survives to attention.
+4. **Transient vs persistent, measured.** Activation edit (readable state): **+0.86 → +0.04** over 14 steps —
+   the strongest step-0 edit in the notebook, gone in ~2 steps. History overwrite (carried state):
+   +0.63…+0.67 → **+0.27…+0.28**. Unsteered −0.68 → −0.43.
+5. **A registered prediction resolved — and NEITHER of us was right.** Sevan predicted a fixed *fraction*
+   (≲50% of window); I predicted a fixed *count* (~2–4 frames). These are the endpoints of one scaling law
+   `n_sat ∝ span^β` (β=1 Sevan, β=0 me). **Measured β = 0.47** — saturation grows like the **square root** of
+   available history: 3/5 frames (60%) at window 2, 4/13 (31%) at window 4, 6/20 (30%) at window 16. *(3-point
+   fit — order-of-magnitude only.)* The **crossover** point (Edit Index > 0) is n=1 for every model and is a
+   useless discriminator; do not quote it.
+
+**Candidate finding:** *on an architecture whose readable state is not carried, editability is not a property
+of the latent at all — it is a property of the observation history.* The single-`h` framing is an
+architectural coincidence, not a general fact. This sharpens rather than complicates Sevan's through-line
+(*no successful edit is free of dynamics*): here the only channel that persists **is** the history.
+
+**Follow-up same day (Sevan's review):** (a) **readout injection does NOT work on the transformer** — Fig 4
+combined both editors and the injection line sat exactly on the unsteered line, hiding the null. Now split
+into Fig 4a/4b with landing diagnostics (Table 3): probe error 3.2 → 1e-6, ‖Δh‖/‖h‖ up to 0.15, but
+‖Δrender‖/‖render‖ 0.007–0.036 and Edit Index −0.684 → −0.681. A working editor, a null result.
+(b) **New result — retention keeps improving after the step-0 index saturates** (Fig 7/Table 4): window 16
+lands at n≈6 but retention (step-14 ÷ step-0) climbs 0.37 (n=2) → 0.62 (n=16). **~30% of span to land the
+edit, ~the whole span to hold it**; β = 0.47 applies to landing only. (c) The counterfactual history is
+**velocity-oracle** — a straight line arriving at the target at the true post-edit velocity (which equals
+the pre-edit velocity, since the teleport preserves it exactly). Documented; estimating velocity from
+observations instead is a follow-on. (d) **No leakage**: edits seeds 110000+ vs train 0–89999, nearest train
+scene L2 0.55 vs median 5.31; and the "drift" is ballistic — direction/speed noise are 0, so 84% of the
+post-edit motion is fixed by (position, velocity), which the overwrite explicitly supplies. Added Fig 8 (six
+unselected samples) and a predictability audit (Table 5). Notebook now 23 cells, 0 errors, 9 figures.
+
+(e) **§6 added — WHY the injection is inert, as geometry** (Fig 9, Table 6). The pseudoinverse direction lies
+in the probe's row space by construction; the decoder's own descent direction
+`−∇_h‖decode(h) − gt_obs‖²` is **orthogonal to it** — cosine +0.007…+0.050 (**87–90°**), every value inside
+the shuffled-pair control band, per-sample then averaged, N=192. The row-space fraction of the decoder's
+direction is **2.31× chance at the middle residual point but 0.57× chance (BELOW chance) at the last**, the
+one the decoder reads. That fraction is the **hard ceiling** on any injection-style editor. Matches the GRU
+reachability ceiling from `delta_h_analysis` (0.096 vs 0.125 chance) and explains the only non-zero signal in
+Table 3 (the middle point perturbs the render most, and is where row-space enrichment peaks).
+(f) Waterfalls corrected: both now carry an explicit **pseudoinverse injection** column (the old
+"activation edit" column was the decoder-gradient oracle, labelled by *site* not *editor* — that label is
+what let the oracle's success read as the injection's). Observation-space confirmation of the null: the
+injection columns are indistinguishable from unsteered in all nine samples. **Rule: an editor column must be
+named by its editor, never by its edit site.** Notebook now 25 cells, 0 errors, 10 figures.
+
+**Sharpest follow-on:** the **KV-cache view** — carried *and* history-dependent, the true transformer analogue
+of a GRU `h` write. `state_view="kv_cache"` already exposes it.
+
+**Harness fixes made in passing:** `SCORECARD_COLUMNS` listed `gt_traj_rmse` twice (duplicate column in every
+scorecard table repo-wide); `load_checkpoint` never moved the transformer to the GPU; the
+`METRICS_AND_EDITORS.md` "Oracle observation" rename had overwritten its own former name ("true-state swap").
+Registry gained the two transformer editors + the **saturation point** metric.
 
 ## 2026-08-03 — NEW branch `delta_h_analysis`: what does a *successful* edit look like in latent space?
 

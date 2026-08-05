@@ -2,7 +2,8 @@
 
 load_checkpoint dispatches on the keys in ckpt["model_config"]: it picks
 GRUModel if the config has 'num_layers', RSSMModel if it has 'det_size',
-DiTModel if it has 'n_sample_steps'.
+DiTModel if it has 'n_sample_steps', TransformerModel if it has 'window'
+(checked after DiT, whose config also carries 'window').
 
 load_dataset reads a directory containing dataset.json + test.h5 + edits.h5
 (and train.h5 + val.h5; these are not needed for eval but are part of the
@@ -25,6 +26,8 @@ from pim.simulator.dataset import reconstruct_clean_obs
 from pim.world_models.dataloader import ObservationDataset
 from pim.world_models.dit import DiTModel
 from pim.world_models.dit import ModelConfig as DiTConfig
+from pim.world_models.transformer import ModelConfig as TransformerConfig
+from pim.world_models.transformer import TransformerModel
 from pim.world_models.gru import GRUModel
 from pim.world_models.gru import ModelConfig as GRUConfig
 from pim.world_models.protocol import HiddenStateModel
@@ -35,6 +38,7 @@ from pim.world_models.rssm import RSSMModel
 @dataclass
 class CheckpointInfo:
     """Lightweight bundle of training-time metadata."""
+
     epoch: int
     val_loss: float
     model_config: dict
@@ -61,6 +65,7 @@ class Dataset:
     h5_path        : path to the source HDF5 (used by lazy plot helpers)
     T_frames, obs_res : convenience scalars
     """
+
     obs: np.ndarray
     clean_obs: np.ndarray
     positions: np.ndarray
@@ -82,14 +87,15 @@ class Dataset:
 @dataclass
 class EditsData:
     """Edits dataset — observations + GT positions + edit metadata."""
-    obs: np.ndarray              # (N, T, R)
-    clean_obs: np.ndarray        # (N, T, R)
-    positions: np.ndarray        # (N, T, max_obj, 2)
-    colors: np.ndarray           # (N, max_obj, 3)
-    edit_frame: int              # uniform across samples (taken from row 0)
-    edit_object: np.ndarray      # (N,)
-    edit_op: np.ndarray          # (N,) byte strings
-    edit_value: np.ndarray       # (N, 2)
+
+    obs: np.ndarray  # (N, T, R)
+    clean_obs: np.ndarray  # (N, T, R)
+    positions: np.ndarray  # (N, T, max_obj, 2)
+    colors: np.ndarray  # (N, max_obj, 3)
+    edit_frame: int  # uniform across samples (taken from row 0)
+    edit_object: np.ndarray  # (N,)
+    edit_op: np.ndarray  # (N,) byte strings
+    edit_value: np.ndarray  # (N, 2)
     h5_path: str
     T_frames: int
     obs_res: int
@@ -120,6 +126,8 @@ def load_checkpoint(
         model: HiddenStateModel = RSSMModel(RSSMConfig(**mcfg_dict)).to(device)
     elif "n_sample_steps" in mcfg_dict:
         model = DiTModel(DiTConfig(**mcfg_dict)).to(device)
+    elif "window" in mcfg_dict and "n_sample_steps" not in mcfg_dict:
+        model = TransformerModel(TransformerConfig(**mcfg_dict)).to(device)
     elif "num_layers" in mcfg_dict or "hidden_size" in mcfg_dict:
         model = GRUModel(GRUConfig(**mcfg_dict)).to(device)
     else:
@@ -134,8 +142,13 @@ def load_checkpoint(
 
     metrics_path = Path(checkpoint_path).parent / "metrics.jsonl"
     metrics_history = (
-        [json.loads(line) for line in metrics_path.read_text().splitlines() if line.strip()]
-        if metrics_path.exists() else []
+        [
+            json.loads(line)
+            for line in metrics_path.read_text().splitlines()
+            if line.strip()
+        ]
+        if metrics_path.exists()
+        else []
     )
 
     info = CheckpointInfo(
@@ -227,6 +240,7 @@ def _load_edits(
 @dataclass
 class DatasetBundle:
     """A dataset directory loaded for evaluation: test split + optional edits."""
+
     data_dir: Path
     test: Dataset
     edits: EditsData | None
@@ -280,6 +294,10 @@ def make_test_loader(
     """Build a DataLoader over the full test set (no shuffling)."""
     ds = ObservationDataset(dataset.h5_path, np.arange(dataset.n_samples), keys=keys)
     return DataLoader(
-        ds, batch_size=batch_size, shuffle=False, num_workers=num_workers,
-        pin_memory=(num_workers > 0), persistent_workers=(num_workers > 0),
+        ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=(num_workers > 0),
+        persistent_workers=(num_workers > 0),
     )

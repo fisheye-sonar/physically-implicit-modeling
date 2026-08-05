@@ -140,7 +140,7 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 **References (never editors):**
 - **GT (sim)** — the simulator's time-evolving clean post-edit obs. The target, never a model output.
 - **Unsteered** — rollout from the un-edited warm-up state `h0`.
-- **Oracle observation** *(renamed 2026-07-30; was "Oracle observation", a misnomer — nothing about the state is
+- **Oracle observation** *(renamed 2026-07-30; was "true-state swap", a misnomer — nothing about the state is
   swapped)* — teacher-force **one extra frame**, the **REAL (noisy) post-edit observation `edits.obs[ef]`**, then
   roll out. The model simply gets to *see* the teleport happen. A **soft** reference (belief-inertia-limited: one
   frame of evidence only partly updates the state) — **not** a hard ceiling; a direct latent write could exceed it.
@@ -165,6 +165,25 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 | Fine-tune for editability | fine-tune the GRU so a fixed pseudo-inverse editor works | `learn_to_edit` Variant B (light); **`trained_editability/finetune_for_editability.ipynb` (heavy — the OWED debt, PAID 2026-07-30)** | light 300 steps +0.04, heavy 3000 steps +0.13 index points, so the light negative was partly a budget artifact — but it is a **button**: no transfer to a freshly-fit probe (+0.02) or to a withheld object (−0.17), and it costs 13% of next-step prediction |
 | Interleaved latent steering | push readout a little → decode → feed the model's **own** obs back → repeat (S steps, η/step; `+manifold` = project each step) | `multistep_steering` 1a | fails (drags both objects); self-generated obs, not external |
 | Freeze-time teacher forcing | render the edit over N frames (edited obj interpolates to target, other held), teacher-force those **externally-rendered** frames, then unfreeze | `multistep_steering` 1b | **works** (lands + clears ghost, N≈3–8); replicates on RSSM. The success requires *externally-rendered* obs (the true renderer), not the model's own machinery. |
+
+**Architecture-specific editors — transformers only** (added 2026-08-04, `transformers/transformer_world_state.ipynb`).
+A causal transformer has **two** state objects, so "write to the state" splits in two. Do not report these as
+the same kind of intervention, and do not compare either directly to a GRU `h` write without saying which:
+
+| editor | acts on | mechanism | persists? |
+|---|---|---|---|
+| **Activation edit (residual point ℓ)** | the **readable** state — residual stream at layer ℓ, current position | any `h`-editor (readout injection, decoder gradient, …) applied to the activation vector at ℓ | **no, by construction** — the next step recomputes the stream from the observation buffer. Decay here is **architecture, not the GRU's reversion failure**; a one-step effect is the ceiling, so never call it "reverts" or "collapses". |
+| **History overwrite (n frames)** | the **carried** state — the newest `n` frames of the observation buffer | replace them with renders of the counterfactual world (the object travelling a line that arrives at the target) | **yes** — the only channel that persists. The transformer's form of the GRU's *counterfactual state overwrite*. |
+
+Build the overwritten state through `state_from_obs` so buffer padding and the `length` mask stay correct, and
+cap the sweep at the history that actually exists (at `ef = 20`, a model with `state_span = 61` has an
+*effective* carried state of 20).
+
+**Metric introduced with the sweep (fold into §4 if it recurs):**
+
+| metric | formula | units | better | reading |
+|---|---|---|---|---|
+| **saturation point** | smallest `n` whose Edit Index ≥ `0.9 × max_n(Edit Index)` for **that same model** | frames (also reported as % of `state_span`) | ↓ | the point past which more overwritten history buys nothing. Report **both currencies**: whichever is flat across window sizes is the real requirement. Prefer it to the **crossover point** (smallest `n` with Edit Index > 0), which a single frame can clear and which therefore does not discriminate. |
 
 ---
 
