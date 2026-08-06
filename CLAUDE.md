@@ -165,6 +165,22 @@ actually occurs: e.g. plot the **1D observation scans / waterfalls** under the p
 not only decoded-scalar positions. Observation-space plots can reveal effects (e.g. one
 object moving while another stays) that decoded-scalar tables hide entirely.
 
+**MANDATORY — any claim about an effect on the generations ships with a waterfall.** If a notebook
+compares editors, interventions, models, or scales *by what the model outputs*, it must include an
+observation-space waterfall of those same arms, built through the one `waterfall_grid(...)` helper and the
+fixed spec below. A scorecard compresses a rollout to one number and routinely hides the difference between
+"the edit landed" and "the output degraded" — the two look identical in an Edit Index that moved.
+*(Recurring failure: 2026-08-05, tangent-constrained injection was analysed through four scalar figures
+before a waterfall was added; only the waterfall showed the "successful" arms were generating vertical-stripe
+garbage.)* Include the arm's headline metric in each column title so the picture and the number are read
+together, and add the degenerate/extreme settings as their own columns — that is where collapse shows up.
+
+**Axis labels must be legible — check the rendered PNG, not the code.** Long series names in vertical bar
+charts overlap into an unreadable smear at 4+ categories. Use **horizontal bars** (one label per row) for
+anything with long names, and never shrink a label below ~7pt to make it fit. Every figure must be eyeballed
+after rendering; "it ran without error" is not the check. *(Flagged by Sevan 2026-08-05 across several
+figures at once.)*
+
 ## Notebook legibility (hard standard — every experiment notebook)
 
 A notebook is read later by Sevan (from plots) and re-derived by agents (from numbers); it

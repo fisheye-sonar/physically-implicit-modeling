@@ -141,6 +141,13 @@ def build_edit_zones(
         obs_noise_std=0.0,  # both references are CLEAN renders
         boundary="open",
         always_in_frustum=False,
+        # Inherit the dataset's rendering. Without this the reference worlds would be
+        # rendered with the HARD ray-caster while the model was trained on soft renders,
+        # and every §4 metric would be scored against the wrong ground truth.
+        soft_edge=sim.get("soft_edge", 0.0),
+        soft_shading=sim.get("soft_shading", "flat"),
+        soft_psf_sigma=sim.get("soft_psf_sigma", 0.0),
+        soft_occlusion_temp=sim.get("soft_occlusion_temp", 0.0),
     )
     refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
     rad = np.full(n_obj, sim["radius"], np.float32)

@@ -148,14 +148,53 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
   as the GT reference the metrics score against. It **leads the other columns by one frame**; label it, never
   re-align the others to it.
 
-**Inference-time (training-free) editors — the standard §4 suite:**
-| editor | mechanism | needs | notes |
+> ### ⭐ CANONICAL EDITOR NAMES (fixed 2026-08-05 — use these, and only these, in every figure and table)
+> Renamed by Sevan for the slide figures; these supersede all earlier names. **PI** = pseudoinverse.
+> **TF** = teacher forcing. Reference implementation of all 17: `editor_gallery/editor_gallery.ipynb`.
+> Old → new: `Readout injection` → **Pseudoinverse Injection** · `Global-PCA projection` →
+> **Global PCA Projection (PI)** · `PCA geodesic` → **Local PCA Geodesic @k (PI)** (it refits a *local*
+> tangent — the old name collided with the global one) · `MLP-probe gradient` → **MLP Grad Steering** ·
+> `Interleaved latent steering` → **Multistep Steering (PI) @k** · `Decoder gradient` → **Decoder Grad
+> Steering k=1** · `Obs-gradient full-rollout` → **Decoder Grad Steering k=15** · `Freeze-time teacher
+> forcing` → **Freeze-time Interp. TF @N** · `Counterfactual state overwrite` → **Counterfactual
+> Overwriting** · `Oracle observation` → **First Obs. TF** · `Amortized editor` → **Trained Editor**.
+
+**STANDARD EDITORS — training-free writes to `h`:**
+| editor | mechanism | needs | outcome on GRU H256 (N=64) |
 |---|---|---|---|
-| Readout injection | set the linear position-probe readout via pseudoinverse (null-space preserved) | linear pos probe | decoder-inert on these models |
-| MLP-probe gradient | Adam on `h` through a frozen MLP (pos,vel) probe toward the target | MLP (pos,vel) probe | |
-| Global-PCA projection | POCS: alternate inject ↔ project onto the global var-threshold PCA subspace | global subspace | keeps `h` on the linear hull |
-| PCA geodesic | constant-step walk toward the target, re-projecting onto a fresh local-PCA tangent each step (K≈120) | local bank | the "stay-on-manifold" editor; canonical structural editor for the scorecard |
-| Decoder gradient (**oracle**) | Adam on `h` to match the **GT edit-frame obs** through the decoder (single frame) | GT obs @ ef | nails step-0 obs but off-manifold → **collapses** |
+| **Pseudoinverse Injection** | `Δ = A⁺(target − (Ah+b))`, minimum-norm write setting the linear position readout to the target | linear pos probe | **−0.66** vs unsteered −0.68 — inert |
+| **Global PCA Projection (PI)** | alternating projections (POCS): inject ↔ project onto the global 90%-variance PCA subspace, 50 rounds | global subspace | −0.52, fidelity 0.98 |
+| **Local PCA Geodesic @120 (PI)** | constant-step walk toward the injection target, re-projecting onto a **freshly refit local**-PCA tangent (64-NN) each step | local bank | −0.53, fidelity 1.00 |
+| **MLP Grad Steering** | Adam on `h` through a frozen **MLP (pos,vel)** probe (d=8), 200 steps | MLP probe | −0.62 |
+| **Multistep Steering (PI) @16** | 16 rounds of: nudge the readout by η=0.2 toward the target, then **decode and feed back the model's OWN prediction**. The observation is **model-generated, never rendered** — that is what separates it from freeze-time. | linear probe | −0.22 but **fidelity 1.32**, collateral 0.429 vs 0.127 — it drags both objects; degradation, not editing |
+| **Multistep Steering w/ PCA (PI) @16** | as above plus a global-PCA projection each round | + global subspace | −0.44, **fidelity 1.15** |
+| **Iterative Nullspace Projection @29 (R² corrected)** | 29 mutually orthogonal probes (fit → delete row space → refit) spanning 116 dims; inject into all at once (block-orthogonal, exactly solvable). Targets shrunk per probe: `target_k = μ + R²_k(target − μ)`, because a probe with R² ≈ 0 reads the population **mean** on a genuine edited state, not the target. | probe cascade | **−0.37, fidelity 0.93** — best standard editor |
+
+> **Uniform (unshrunk) INLP at k=29 is degenerate** — fidelity 1.57, every zone worse than unsteered, visually
+> striped garbage. Always use the R²-corrected targets, or truncate to k≈12.
+
+**LEARNED EDITORS — the world model or the editor was trained** (`trained_editability/`; each row is a
+**different world model**, so each must be read against **its own** unsteered index):
+| editor | what was trained | outcome (own unsteered → edited) |
+|---|---|---|
+| **Finetuned Model · light · 300 steps** | world model, retention 1.0 | −0.58 → −0.54 |
+| **Finetuned Model · heavy · 3000 steps** | world model, retention 1.0 | −0.61 → −0.47 |
+| **Finetuned Model · heavy, no retention · 3000 steps** | world model, retention **0** | −0.39 → −0.30 (its unsteered rose purely from degraded prediction) |
+| **Finetuned Model · heavy, object-0 edits only · 3000 steps** | world model; content-generalisation control | −0.63 → −0.54 |
+| **Trained Editor · 3000 steps** | `E_θ(h,target)→Δh` (2×512 MLP), **world model frozen** | −0.68 → **−0.14**, fidelity 0.68 — best learned |
+
+All four fine-tuned arms write via **Pseudoinverse Injection through their own frozen probe**
+(`frozen_probe.npz`, saved per run); evaluating with a *refit* probe instead is the mechanism-generalisation
+test, not the "did it train" test.
+
+**ORACLE EDITORS — given ground-truth access:**
+| editor | mechanism | outcome (step 0 → step 14) |
+|---|---|---|
+| **Freeze-time Interp. TF @8** | freeze the world, teacher-force 8 **externally rendered** interpolation frames, unfreeze | **+0.52 → +0.26** |
+| **Counterfactual Overwriting** | teacher-force a fabricated history in which the object always travelled toward the target; overwrite the state | **+0.70 → +0.45** |
+| **First Obs. TF** | teacher-force **one** frame — the real (**noisy**) `edits.obs[ef]`. The model simply gets to *see* the teleport. **LEADS every other column by one frame**; label it, never re-align the others. | −0.08 → −0.10 |
+| **Decoder Grad Steering k=1** | Adam on `h` so the decoder renders the GT edit-frame observation exactly | **+0.97 → +0.08** — nails the frame, then disintegrates into stripes; fidelity 0.98 |
+| **Decoder Grad Steering k=15** | Adam on `h` so the **whole 15-step rollout** matches the GT sequence (backprop through the dynamics) | **+0.83 → +0.77**, fidelity **0.20** — the only editor that both lands *and* persists |
 
 **Learned / multi-step / observation-mediated editors (used in specific notebooks, cite don't recompute):**
 | editor | mechanism | where | outcome |
@@ -190,15 +229,23 @@ cap the sweep at the history that actually exists (at `ef = 20`, a model with `s
 ## Conventions & known caveats (apply everywhere)
 - **Waterfalls:** one `waterfall_grid(...)` helper per notebook, matching the fixed spec (`../../../CLAUDE.md`):
   `cmap="gray"` on dark bg, ~6 noisy context frames above a dashed edit-frame line, green target / red-dash ghost,
-  figure-top legend, GT column. **The edit frame `ef` is shown as one shared row = the TRUE post-edit obs / edit
-  target** (`edits.clean_obs[ef]`, identical in every column), marked off by a second dotted line, with **each
-  column's model rollout below it = its free-run from `ef+1` onward** (GT column: `clean_obs[ef+1:ef+K]`). This is
-  **mandatory** and fixes the GRU ±1 offset. **Alignment:** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the
-  rollout's **step-0 is `ef`** (`ROLL[:,0] ↔ clean_obs[ef]`, per the §4 scorecard's `gt_traj_obs = clean_obs[ef:]`);
-  to seat the shared true-`ef` row above the free-run, **drop each model column's step-0** (`ROLL[...][1:]`) and use
-  `clean_obs[ef+1:ef+K]` for GT (both length `K-1`). Canonical implementation:
-  `actions/action_space_object_individuation.ipynb` `editor_waterfall_fig`; also in `actions/action_conditioned_structure.ipynb`
-  and `learn_to_edit.ipynb` (Fig 3b/5d).
+  figure-top legend, GT column. Below the edit line, **every column shows its OWN free-run starting at step 0**;
+  the GT column shows `clean_obs[ef:ef+K]`. **Alignment:** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the
+  predict-next rollout's **step-0 is `ef`** (`ROLL[:,0] ↔ clean_obs[ef]`, per the §4 scorecard's
+  `gt_traj_obs = clean_obs[ef:]`) — plot `ROLL[:, 0:K]` against `clean_obs[ef:ef+K]`, no slicing, no dropped step.
+  The one exception is the **Oracle observation** column, which was fed `obs[ef]` and therefore **leads by one
+  frame**; label it as such rather than re-aligning the other columns to it. Canonical implementations:
+  `controls/encoder_editing.ipynb` `waterfall_grid` and `scripts/eval_editability_endogenous.py` `waterfall()`.
+
+  > ### ⛔ NEVER paint a shared teacher-forced `ef` row across all columns (corrected 2026-07-30)
+  > **This file previously mandated the opposite** — one shared row = `clean_obs[ef]` in *every* column, with each
+  > model column's step-0 dropped. That is **wrong and is now banned**, and this entry is where the error leaked
+  > back into the `controls/` notebooks after being fixed in `eval_editability_endogenous.py` v2. It makes every
+  > column look as though it were teacher-forced on the post-edit frame when only the **Oracle observation**
+  > reference actually was, and it **hides the exact frame the §4 scorecard scores** (step 0). It also displayed
+  > the *clean* render while the model that legitimately sees that frame is fed the **noisy** `edits.obs[ef]`.
+  > Seeing the post-edit frame is a **property of one editor**, never a display convention. Treat any pre-2026-07-30
+  > waterfall built to the old rule as misaligned. Governing spec: `../../../CLAUDE.md`.
 - **±1 decode convention:** GRU `decode(h_t) ≈ obs[t+1]` (predict-next); RSSM `decode` reconstructs the current
   frame. Align rollout columns to the GT accordingly and footnote it.
 - **Clean vs noisy targets:** models train on **noisy** obs (`obs_noise_std=0.2`); evaluate next-step against **clean**

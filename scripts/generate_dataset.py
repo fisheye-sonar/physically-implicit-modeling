@@ -69,6 +69,17 @@ def parse_args() -> argparse.Namespace:
                    help="Observation noise std (intensity units); 0 = no noise")
     g.add_argument("--fixed-reflectivities", action="store_true", default=False,
                    help="Uniformly spaced reflectivities (deterministic IDs)")
+    g.add_argument("--soft-edge", type=float, default=0.0, metavar="W",
+                   help="OPTIONAL soft rendering: silhouette softness in world units "
+                        "(0 = the original hard ray-caster); see pim/simulator/soft_render.py")
+    g.add_argument("--soft-shading", choices=["flat", "lambert"], default="flat",
+                   help="OPTIONAL soft rendering: 'lambert' curves the object's image "
+                        "instead of a constant-reflectivity plateau")
+    g.add_argument("--soft-psf-sigma", type=float, default=0.0, metavar="RAYS",
+                   help="OPTIONAL soft rendering: Gaussian sensor blur along the ray axis")
+    g.add_argument("--soft-occlusion-temp", type=float, default=0.0, metavar="T",
+                   help="OPTIONAL soft rendering: soft depth-ordering temperature "
+                        "(0 = hard nearest-hit; >0 makes the renderer differentiable)")
     g.add_argument("--always-in-frustum",    action="store_true", default=False,
                    help="Reject trajectories where any object touches a frustum edge")
 
@@ -114,6 +125,10 @@ def main() -> None:
         obs_noise_std=args.obs_noise_std,
         fixed_reflectivities=args.fixed_reflectivities,
         always_in_frustum=args.always_in_frustum,
+        soft_edge=args.soft_edge,
+        soft_shading=args.soft_shading,
+        soft_psf_sigma=args.soft_psf_sigma,
+        soft_occlusion_temp=args.soft_occlusion_temp,
     )
 
     # Seeds are assigned non-overlappingly so no sample appears in two splits.

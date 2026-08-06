@@ -57,6 +57,9 @@ class TrainConfig:
     hidden_size: int = 256
     num_layers: int = 1
     dropout: float = 0.0
+    enc_hidden_layers: int = 0  # extra Linear+act blocks after the encoder Linear+ReLU
+    dec_hidden_layers: int = 0  # extra Linear+act blocks before the decoder Linear
+    mlp_activation: str = "relu"
 
 
 # ── CLI parsing ───────────────────────────────────────────────────────────────
@@ -92,6 +95,24 @@ def _parse_args() -> TrainConfig:
     p.add_argument("--hidden-size", type=int, default=defaults.hidden_size)
     p.add_argument("--num-layers", type=int, default=defaults.num_layers)
     p.add_argument("--dropout", type=float, default=defaults.dropout)
+    p.add_argument(
+        "--enc-hidden-layers",
+        type=int,
+        default=defaults.enc_hidden_layers,
+        help="Extra Linear+activation blocks after the encoder Linear+ReLU (0 = original).",
+    )
+    p.add_argument(
+        "--dec-hidden-layers",
+        type=int,
+        default=defaults.dec_hidden_layers,
+        help="Extra Linear+activation blocks before the decoder Linear (0 = original, "
+        "which makes decode affine in h).",
+    )
+    p.add_argument(
+        "--mlp-activation",
+        default=defaults.mlp_activation,
+        choices=["relu", "elu", "silu", "gelu"],
+    )
 
     a = p.parse_args()
     return TrainConfig(
@@ -110,6 +131,9 @@ def _parse_args() -> TrainConfig:
         hidden_size=a.hidden_size,
         num_layers=a.num_layers,
         dropout=a.dropout,
+        enc_hidden_layers=a.enc_hidden_layers,
+        dec_hidden_layers=a.dec_hidden_layers,
+        mlp_activation=a.mlp_activation,
     )
 
 
@@ -212,6 +236,9 @@ def main() -> None:
         hidden_size=tcfg.hidden_size,
         num_layers=tcfg.num_layers,
         dropout=tcfg.dropout,
+        enc_hidden_layers=tcfg.enc_hidden_layers,
+        dec_hidden_layers=tcfg.dec_hidden_layers,
+        mlp_activation=tcfg.mlp_activation,
     )
     model = GRUModel(mcfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -237,6 +264,11 @@ def main() -> None:
     print(f"Run dir  : {run_dir}")
     print(f"Device   : {device}")
     print(f"Model    : {n_params:,} parameters")
+    print(
+        f"MLP depth: encoder +{mcfg.enc_hidden_layers} block(s), "
+        f"decoder +{mcfg.dec_hidden_layers} block(s) [{mcfg.mlp_activation}] — "
+        f"decode is {'AFFINE in h' if mcfg.dec_hidden_layers == 0 else 'NONLINEAR in h'}"
+    )
     print(f"Train    : {n_train:,} samples")
     print(f"Val      : {n_val:,} samples")
     print()

@@ -183,7 +183,7 @@ def _load_h5_dataset(
         reflectivities = f["reflectivities"][:].astype(np.float32)
         config = json.loads(f.attrs["config_json"])
 
-    clean_obs = reconstruct_clean_obs(obs_id, reflectivities)
+    clean_obs = _clean_obs(f, obs_id, reflectivities)
     return Dataset(
         obs=obs,
         clean_obs=clean_obs,
@@ -221,7 +221,7 @@ def _load_edits(
         edit_op = f["edit_op"][:]
         edit_value = f["edit_value"][:]
 
-    clean_obs = reconstruct_clean_obs(obs_id, reflectivities)
+    clean_obs = _clean_obs(f, obs_id, reflectivities)
     return EditsData(
         obs=obs,
         clean_obs=clean_obs,
@@ -244,6 +244,19 @@ class DatasetBundle:
     data_dir: Path
     test: Dataset
     edits: EditsData | None
+
+
+def _clean_obs(f, obs_id, reflectivities):
+    """Noiseless observations for a split.
+
+    `reconstruct_clean_obs` rebuilds them from `(obs_id, reflectivities)`, which is exact
+    only for the flat renderer where intensity *is* the reflectivity. Soft-rendered
+    datasets (antialiasing / shading / blur) store the clean render explicitly because it
+    cannot be recovered that way; prefer it whenever present.
+    """
+    if "obs_clean" in f:
+        return f["obs_clean"][:].astype(np.float32)
+    return reconstruct_clean_obs(obs_id, reflectivities)
 
 
 def load_dataset(

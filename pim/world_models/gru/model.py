@@ -8,6 +8,17 @@ Architecture
 ------------
     obs[t]  →  encoder (Linear + ReLU)  →  GRU  →  decoder (Linear)  →  pred[t+1]
 
+``enc_hidden_layers`` / ``dec_hidden_layers`` add extra ``Linear + activation``
+blocks on either side of the recurrence, both defaulting to 0 (the architecture
+above, unchanged).  With ``dec_hidden_layers = 0`` the decoder is a single
+``nn.Linear``, i.e. **affine** — so ``decode(h0 + d1 + d2)`` is identically
+``decode(h0+d1) + decode(h0+d2) − decode(h0)`` for any ``d1, d2``, and any
+"edits superpose" result read off the *decoded observation* is forced by algebra
+rather than by structure in the latent.  Set ``dec_hidden_layers >= 1`` to break
+that identity.  The extra blocks live in separate ``enc_trunk`` / ``dec_trunk``
+submodules that are absent at depth 0, so pre-existing checkpoints load
+unchanged and produce bit-identical outputs.
+
 Training forward (teacher forcing):
     pred, h_n = model(obs)      # obs: (B, T, R)
     loss = MSE(pred, obs[:, 1:, :])
@@ -29,13 +40,43 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+_ACTIVATIONS: dict[str, type[nn.Module]] = {
+    "relu": nn.ReLU,
+    "elu": nn.ELU,
+    "silu": nn.SiLU,
+    "gelu": nn.GELU,
+}
+
 
 @dataclass
 class ModelConfig:
-    input_dim: int = 128    # obs_res — overridden from dataset at train time
+    input_dim: int = 128  # obs_res — overridden from dataset at train time
     hidden_size: int = 256
     num_layers: int = 1
-    dropout: float = 0.0    # inter-layer dropout; ignored when num_layers == 1
+    dropout: float = 0.0  # inter-layer dropout; ignored when num_layers == 1
+    # Extra Linear+activation blocks around the recurrence.  0 = the original
+    # single-Linear encoder / single-Linear (affine) decoder.
+    enc_hidden_layers: int = 0
+    dec_hidden_layers: int = 0
+    mlp_activation: str = "relu"
+
+
+def _trunk(hidden_size: int, n_blocks: int, act: str) -> nn.Sequential | None:
+    """``n_blocks`` × (Linear(H, H) + activation), or None when ``n_blocks == 0``.
+
+    Returning None rather than an empty Sequential keeps the module absent from
+    ``state_dict`` at depth 0, so old checkpoints load without ``strict=False``.
+    """
+    if n_blocks <= 0:
+        return None
+    if act not in _ACTIVATIONS:
+        raise ValueError(
+            f"unknown mlp_activation {act!r}; choose from {sorted(_ACTIVATIONS)}"
+        )
+    layers: list[nn.Module] = []
+    for _ in range(n_blocks):
+        layers += [nn.Linear(hidden_size, hidden_size), _ACTIVATIONS[act]()]
+    return nn.Sequential(*layers)
 
 
 class GRUModel(nn.Module):
@@ -63,9 +104,36 @@ class GRUModel(nn.Module):
         )
         self.decoder = nn.Linear(cfg.hidden_size, cfg.input_dim)
 
+        # Optional depth.  enc_trunk runs after the encoder Linear+ReLU;
+        # dec_trunk runs before the decoder Linear.  Both None by default.
+        act = getattr(cfg, "mlp_activation", "relu")
+        self.enc_trunk = _trunk(
+            cfg.hidden_size, getattr(cfg, "enc_hidden_layers", 0), act
+        )
+        self.dec_trunk = _trunk(
+            cfg.hidden_size, getattr(cfg, "dec_hidden_layers", 0), act
+        )
+
     @property
     def hidden_size(self) -> int:
         return self.cfg.hidden_size
+
+    @property
+    def has_affine_decoder(self) -> bool:
+        """True when ``decode`` is a single Linear, hence exactly affine in ``h``."""
+        return self.dec_trunk is None
+
+    # ── Single choke-points: every encode / decode in this class goes through
+    #    these two, so depth can never be applied on some code paths and not others.
+
+    def _enc(self, obs: torch.Tensor) -> torch.Tensor:
+        """obs (..., R) → embedding (..., H).  Broadcasts over any leading dims."""
+        x = F.relu(self.encoder(obs))
+        return x if self.enc_trunk is None else self.enc_trunk(x)
+
+    def _dec(self, h: torch.Tensor) -> torch.Tensor:
+        """hidden (..., H) → observation (..., R).  Broadcasts over any leading dims."""
+        return self.decoder(h if self.dec_trunk is None else self.dec_trunk(h))
 
     def forward(
         self,
@@ -90,9 +158,9 @@ class GRUModel(nn.Module):
             Final hidden state, shape ``(num_layers, B, hidden_size)``.
         """
         # Encode obs[0..T-2]; the GRU at step t predicts obs[t+1]
-        x = F.relu(self.encoder(obs[:, :-1, :]))   # (B, T-1, H)
-        h, h_n = self.gru(x, h0)                   # (B, T-1, H)
-        pred = self.decoder(h)                      # (B, T-1, R)
+        x = self._enc(obs[:, :-1, :])  # (B, T-1, H)
+        h, h_n = self.gru(x, h0)  # (B, T-1, H)
+        pred = self._dec(h)  # (B, T-1, R)
         return pred, h_n
 
     def step(
@@ -117,9 +185,9 @@ class GRUModel(nn.Module):
         h_next:
             Updated hidden state, shape ``(num_layers, B, hidden_size)``.
         """
-        x = F.relu(self.encoder(obs_t)).unsqueeze(1)    # (B, 1, H)
-        h_out, h_next = self.gru(x, state)              # (B, 1, H)
-        pred_t = self.decoder(h_out.squeeze(1))         # (B, R)
+        x = self._enc(obs_t).unsqueeze(1)  # (B, 1, H)
+        h_out, h_next = self.gru(x, state)  # (B, 1, H)
+        pred_t = self._dec(h_out.squeeze(1))  # (B, R)
         return pred_t, h_next
 
     @torch.no_grad()
@@ -136,8 +204,8 @@ class GRUModel(nn.Module):
             h[:, t, :] is the hidden state produced after seeing obs[:, t, :].
             Aligns with positions[:, t, :] and is_visible[:, t, :].
         """
-        x = F.relu(self.encoder(obs[:, :-1, :]))  # (B, T-1, H)
-        h, _ = self.gru(x)                         # (B, T-1, H)
+        x = self._enc(obs[:, :-1, :])  # (B, T-1, H)
+        h, _ = self.gru(x)  # (B, T-1, H)
         return h
 
     # ── SSM protocol methods ──────────────────────────────────────────────────
@@ -161,12 +229,10 @@ class GRUModel(nn.Module):
         -------
         obs : (B, R)
         """
-        return self.decoder(state[-1])
+        return self._dec(state[-1])
 
     @torch.no_grad()
-    def observe_sequence(
-        self, obs: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def observe_sequence(self, obs: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Single-pass teacher-forcing: predictions + flat hidden states.
 
         Parameters
@@ -178,14 +244,12 @@ class GRUModel(nn.Module):
         pred   : (B, T-1, R)
         h_flat : (B, T-1, hidden_size)
         """
-        x = F.relu(self.encoder(obs[:, :-1, :]))  # (B, T-1, H)
-        h_seq, _ = self.gru(x)                     # (B, T-1, H)
-        pred = self.decoder(h_seq)                  # (B, T-1, R)
+        x = self._enc(obs[:, :-1, :])  # (B, T-1, H)
+        h_seq, _ = self.gru(x)  # (B, T-1, H)
+        pred = self._dec(h_seq)  # (B, T-1, R)
         return pred, h_seq
 
-    def predict_step(
-        self, state: torch.Tensor
-    ) -> tuple[torch.Tensor, torch.Tensor]:
+    def predict_step(self, state: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Free-running step: decode current h, feed decoded obs back through step.
 
         Returns the prediction for the NEXT frame and the updated state.
@@ -199,6 +263,6 @@ class GRUModel(nn.Module):
         pred_next  : (B, R) — prediction for frame t+1
         state_next : (num_layers, B, H)
         """
-        obs_hat = self.decoder(state[-1])           # (B, R) — decode current h
+        obs_hat = self._dec(state[-1])  # (B, R) — decode current h
         pred_next, state_next = self.step(obs_hat, state)
         return pred_next, state_next
