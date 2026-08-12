@@ -53,7 +53,29 @@ GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
 ### §2 — Recoverability (probe read-out of the physical statistic)
 | name | formula | units | better | notes |
 |---|---|---|---|---|
-| position / velocity R² | `1 − ‖Y − probe(h)‖²/‖Y − Ȳ‖²`, Y ∈ {pos, vel} | — | ↑ | report **linear (lstsq)** and **MLP** separately — the linear axis carries the interesting signal (MLP often saturates ~0.97) |
+| position / velocity R² | `1 − ‖Y − probe(h)‖²/‖Y − Ȳ‖²`, Y ∈ {pos, vel}, **scored on held-out sequences against the TRAIN mean** | — | ↑ | report **linear (lstsq)** and **MLP** separately — the linear axis carries the interesting signal. **Fit both with `pim.extractors.fit_readability_probes`** (below); do not hand-roll a probe. |
+
+> ### ⭐ STANDARD READABILITY PROBES (fixed 2026-08-06) — `pim.extractors.fit_readability_probes`
+> Two different MLP probes had been in use and their R² values are **not comparable**: `MLPExtractor` on its
+> defaults (**1×128**, scored **in-sample**) in `00_master_editability` and `controls/`, versus a hand-rolled
+> **2×256** probe scored **held-out** in `iterative_probing` and `nonlinear_gru`. Two axes were conflated —
+> probe *capacity*, and whether the score is in-sample. The second is simply an error; the first makes a shallow
+> probe under-report how much is nonlinearly decodable.
+>
+> **The standard, from now on:** linear = `lstsq`; MLP = **2 hidden layers × 256, ReLU**, 30 epochs, Adam
+> `lr=1e-3`; **both fit on the same 80% of SEQUENCES and scored on the same held-out 20%**, R² taken against the
+> **train** mean. Split by sequence, never by row — consecutive frames are near-duplicates and a row split leaks
+> them across the boundary. `fit_readability_probes` also returns `linear_r2_insample` purely as an overfit
+> check; it is never the headline.
+>
+> **Do not confuse this with the steering probe.** **MLP Grad Steering** writes through a *frozen*
+> `MLPExtractor` on the original **1×128** defaults, and that must not change — the editor's published results
+> are tied to it. `MLPExtractor`'s default is therefore unchanged and asserted bit-identical in
+> `tests/test_standard_probes.py`; depth is opt-in via `n_hidden_layers`. Report readability with
+> `fit_readability_probes`, steer with `MLPExtractor`, and never quote one as the other.
+>
+> **Pre-2026-08-06 MLP R² numbers are on a mixture of the two probes** and should be re-fit before being
+> compared across notebooks.
 | single- vs two-frame | probe on `h_t` vs `[h_{t-1}, h_t]` | — | ↑ | velocity is instantaneously *nonlinear*, not temporal (2f ≈ 1f under MLP) |
 | early-t / late-t split | early = frames t<15 (filter not converged); late = t≥15 | — | — | always split velocity readout by this |
 

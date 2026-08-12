@@ -26,7 +26,13 @@ class MLPExtractor(nn.Module):
     state_def : StateDefinition
         Defines the output shape and target quantity.
     mlp_hidden : int
-        Width of the hidden layer.
+        Width of each hidden layer.
+    n_hidden_layers : int
+        Number of hidden layers. **Default 1 reproduces the original architecture
+        exactly** (same `state_dict` keys), so existing frozen probes — notably the
+        one the MLP Grad Steering editor writes through — are unaffected.
+        For *reporting* readability R² use `pim.extractors.fit_readability_probes`,
+        which standardises this at 2 and scores on held-out sequences.
     n_epochs, lr : gradient-descent training hyperparameters.
     """
 
@@ -36,16 +42,19 @@ class MLPExtractor(nn.Module):
         state_def: StateDefinition,
         *,
         mlp_hidden: int = 128,
+        n_hidden_layers: int = 1,
         n_epochs: int = 30,
         lr: float = 5e-3,
     ) -> None:
         super().__init__()
         self.state_def = state_def
-        self.net = nn.Sequential(
-            nn.Linear(hidden_size, mlp_hidden),
-            nn.ReLU(),
-            nn.Linear(mlp_hidden, state_def.output_dim),
-        )
+        if n_hidden_layers < 1:
+            raise ValueError(f"n_hidden_layers must be >= 1, got {n_hidden_layers}")
+        layers: list[nn.Module] = [nn.Linear(hidden_size, mlp_hidden), nn.ReLU()]
+        for _ in range(n_hidden_layers - 1):
+            layers += [nn.Linear(mlp_hidden, mlp_hidden), nn.ReLU()]
+        layers.append(nn.Linear(mlp_hidden, state_def.output_dim))
+        self.net = nn.Sequential(*layers)
         self.n_epochs = n_epochs
         self.lr = lr
 
@@ -64,8 +73,13 @@ class MLPExtractor(nn.Module):
     ) -> float:
         """Train this probe in place via gradient descent. Returns final train loss."""
         losses = train_extractor(
-            self, internal_states, env_states_gt,
-            n_epochs=self.n_epochs, lr=self.lr,
-            loss_fn=loss_fn, mask=mask, device=device,
+            self,
+            internal_states,
+            env_states_gt,
+            n_epochs=self.n_epochs,
+            lr=self.lr,
+            loss_fn=loss_fn,
+            mask=mask,
+            device=device,
         )
         return losses[-1]

@@ -17,11 +17,11 @@ at every position in a single forward pass (per-position independent τ during
 training; past positions are fed τ=0, i.e. their next frame is the *observed*
 clean frame, which is what inference provides).
 
-Deterministic prediction — two modes (``model.predict_mode``)
--------------------------------------------------------------
-Both modes are exact functions of the input (fixed seeded noise buffers, no
-sampling), so the model is deterministic despite the diffusion
-parameterisation.
+Prediction modes (``model.predict_mode``)
+-----------------------------------------
+The first two are exact functions of the input (fixed seeded noise buffers, no
+sampling), so the model can be evaluated deterministically despite the diffusion
+parameterisation; the third is the honest stochastic generator.
 
   * "mean" (default) — one forward at τ=1 per noise vector in a fixed bank,
     averaged:  x̂₀ = mean_i[ ε_i − v̂(ε_i, τ=1, ctx) ].  At τ=1 the optimal
@@ -38,6 +38,12 @@ parameterisation.
     its MSE vs clean/noisy targets is intrinsically worse than mean mode —
     that is faithfulness, not error.  Use it for generative-quality
     questions, not prediction metrics.
+  * "sample_fresh" — the same ODE from INDEPENDENT per-row noise, redrawn on
+    every call (seed ``model.noise_gen`` for reproducibility).  The only
+    non-deterministic mode, and **the one to use for autoregressive
+    rollouts**: reusing the fixed vector at every step makes the model
+    re-generate one ε-specific texture and the rollout degenerates into
+    stripes (diagnosed 2026-08-11).
 
 What is the "state"?
 --------------------
@@ -117,6 +123,11 @@ class ModelConfig:
     n_sample_steps: int = 8  # Euler steps for the deterministic ODE sampler
     n_mean_eps: int = 8  # noise-bank size for the mean-mode readout
     noise_seed: int = 0  # seed for the fixed noise bank (deterministic modes)
+    # How raw data maps into the space the flow runs in:
+    #   "unit_interval" — observations in [0,1] → [-1,1]  (pixel-space DiT)
+    #   "identity"      — already ≈zero-mean unit-scale   (latent DiT; the VAE's
+    #                     `latent_scale` has done the normalisation)
+    data_transform: str = "unit_interval"
 
 
 # ── Model ─────────────────────────────────────────────────────────────────────
@@ -144,10 +155,15 @@ class DiTModel(nn.Module):
         # docstring.  Only "obs_window" supports state_from_flat.
         self.state_view: str = "obs_window"
 
-        # Deterministic prediction mode: "mean" (conditional-mean readout,
-        # default) or "sample" (K-step ODE).  Runtime toggle, see module
-        # docstring.
+        # Prediction mode: "mean" (conditional-mean readout, default),
+        # "sample" (K-step ODE from the FIXED bank vector — deterministic), or
+        # "sample_fresh" (K-step ODE from PER-SAMPLE fresh noise — the honest
+        # generative mode; the only non-deterministic one).  Runtime toggle,
+        # see module docstring.
         self.predict_mode: str = "mean"
+        # Optional torch.Generator for "sample_fresh"; None → global RNG.
+        # Seed it for reproducible stochastic rollouts.
+        self.noise_gen: torch.Generator | None = None
 
         # Token input: concat(current obs, noised next obs) → d_model
         self.token_proj = nn.Linear(2 * cfg.input_dim, cfg.d_model)
@@ -184,15 +200,19 @@ class DiTModel(nn.Module):
         raise ValueError(f"unknown state_view: {self.state_view!r}")
 
     # ── Diffusion space ───────────────────────────────────────────────────────
-    # Observations live in [0, 1]; the flow runs between N(0,1) noise and data
-    # rescaled to [-1, 1] so both endpoints are roughly zero-centred.
+    # The flow runs between N(0,1) noise and data at comparable scale.  For
+    # observations in [0, 1] that means rescaling to [-1, 1]; for VAE latents
+    # already normalised by `latent_scale` it is the identity.  See
+    # `cfg.data_transform`.
 
-    @staticmethod
-    def _to_diff(obs: torch.Tensor) -> torch.Tensor:
+    def _to_diff(self, obs: torch.Tensor) -> torch.Tensor:
+        if self.cfg.data_transform == "identity":
+            return obs
         return 2.0 * obs - 1.0
 
-    @staticmethod
-    def _from_diff(x: torch.Tensor) -> torch.Tensor:
+    def _from_diff(self, x: torch.Tensor) -> torch.Tensor:
+        if self.cfg.data_transform == "identity":
+            return x
         return (x + 1.0) / 2.0
 
     # ── Core network ──────────────────────────────────────────────────────────
@@ -204,6 +224,7 @@ class DiTModel(nn.Module):
         tau: torch.Tensor,
         attn_mask: torch.Tensor,
         kv_sink: list | None = None,
+        resid_sink: list | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Run the transformer over paired-frame tokens.
 
@@ -213,6 +234,10 @@ class DiTModel(nn.Module):
         nxt_diff : (B, T, R) next-frame channel (clean or noised), diff space
         tau      : (B, T) per-token diffusion times
         attn_mask: bool, broadcastable to (B, n_heads, T, T)
+        resid_sink : if given, the residual stream is appended at every residual
+            point — n_layers+1 entries: the token embedding (input to block 1),
+            the input to each later block, and the final-block output (which
+            equals the returned ``feats``).  For layer-resolved probing.
 
         Returns
         -------
@@ -223,7 +248,11 @@ class DiTModel(nn.Module):
         c = self.t_embed(tau)
         rope = self.rope(x.shape[1], x.device)
         for blk in self.blocks:
+            if resid_sink is not None:
+                resid_sink.append(x)
             x = blk(x, c, attn_mask, rope, kv_sink)
+        if resid_sink is not None:
+            resid_sink.append(x)
         return x, c
 
     def _denoise(
@@ -327,9 +356,23 @@ class DiTModel(nn.Module):
         """
         if self.predict_mode == "mean":
             return self._predict_mean(windows, lengths)
-        if self.predict_mode == "sample":
+        if self.predict_mode in ("sample", "sample_fresh"):
             return self._predict_sample(windows, lengths)
         raise ValueError(f"unknown predict_mode: {self.predict_mode!r}")
+
+    def _start_noise(self, n: int, device: torch.device) -> torch.Tensor:
+        """(n, R) ODE start noise for the sampling modes.
+
+        "sample"       — the fixed bank vector, shared by every row (deterministic).
+        "sample_fresh" — independent noise per row, redrawn on every call.  This is
+        what an autoregressive rollout needs: reusing one fixed vector at every
+        rollout step makes the model re-generate the same ε-specific texture and
+        the rollout degenerates (diagnosed 2026-08-11).
+        """
+        R = self.cfg.input_dim
+        if self.predict_mode == "sample_fresh":
+            return torch.randn(n, R, generator=self.noise_gen).to(device)
+        return self._eps_bank[0].expand(n, R)
 
     def _predict_mean(
         self, windows: torch.Tensor, lengths: torch.Tensor
@@ -358,14 +401,18 @@ class DiTModel(nn.Module):
     def _predict_sample(
         self, windows: torch.Tensor, lengths: torch.Tensor
     ) -> torch.Tensor:
-        """Distribution-typical prediction: Euler ODE from the fixed noise."""
+        """Distribution-typical prediction: Euler ODE from the start noise.
+
+        Start noise per ``predict_mode`` — fixed bank vector ("sample") or fresh
+        per-sample noise ("sample_fresh"); see ``_start_noise``.
+        """
         N, W, R = windows.shape
         device = windows.device
         cur, nxt = self._window_tokens(windows)
         attn_mask = self._window_attn_mask(lengths, device)
 
         tau = torch.zeros(N, W, device=device)
-        x = self._eps_bank[0].expand(N, R)
+        x = self._start_noise(N, device)
         taus = torch.linspace(1.0, 0.0, self.cfg.n_sample_steps + 1, device=device)
         for k in range(self.cfg.n_sample_steps):
             nxt_k = torch.cat([nxt[:, :-1], x.unsqueeze(1)], dim=1)

@@ -3,6 +3,190 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
+_Last updated: 2026-08-11 (branch `orthogonal_edit_analysis`: **omniscient-2D thread opened** — the editability negative SURVIVES full observability, but the omniscient latent is less readable/canonical/editable; occupancy-dilution hypothesis pre-registered)_
+
+## 2026-08-11 (latest) — Omniscient 2D: full observability does NOT rescue editability
+
+Sevan's request: *"train the GRU not on the 1D observations but on the whole omniscient 2D world
+which is fully observable."* The whole thread's negative had only ever been measured through a 1D
+perspective scan, which is lossy twice — it **projects** and it **occludes**. `orthogonal_edits`
+relocated the negative to the *world* via `∫gg′ = 0`; that argument is stated for a 1D scan, so this
+tests it. Thread dir `notebooks/experiments/editability/omniscient_2d/` (notebook, runs registry,
+`frame_grid.py`, `WATERFALL_SPEC_2D.md`); note `scratch/2026-08-11-omniscient-2d.md`.
+
+**New code, additive and default-off** (the `soft_render.py` pattern): `pim/simulator/render2d.py`
+— 48×64 orthographic raster over the world rectangle, no projection/occlusion/perspective, flattened
+row-major so the whole stack still sees `(N, T, R)` with R=3072 and needs **no changes**;
+`obs_dim(cfg)` in `config.py` as the single source of truth for R; `--omni2d` flags; per-split seed
+overrides on `generate_dataset.py`; `--n-train-limit` on `train_gru.py`. `tests/test_render2d.py`
+(18, incl. a bit-identical pin), suite **182 green**.
+
+**Design — a one-variable swap.** `datasets/12_omniscient2d` uses split base seeds matched to
+dataset 4, so positions, velocities, reflectivities, edit objects and edit values are **bit-identical**
+(verified, 200 rows/split). Runs `runs/omniscient_2d/{2D_H256_s0, 2D_H256_s1, 1D_H256_30k_s0}` — the
+`controls/H256` recipe verbatim; the 1D arm is **sample-matched** via `--n-train-limit 30000`, which
+selects precisely the 2D suite's scenes.
+
+**0. The 1D control validates the pipeline** — it reproduces published `controls/H256` numbers (90k)
+to within 0.03 index points on every editor at 30k. No 1D↔2D difference is a sample-size effect.
+
+**1. THE NEGATIVE SURVIVES.** Best standard editor gain over its own unsteered row: **+0.11/+0.14**
+(2D) vs **+0.13** (1D); Pseudoinverse Injection inert in both (+0.02 vs +0.03). Removing projection
+*and* occlusion does not make the latent grabbable.
+
+**2. THE SURPRISE — the omniscient latent is WORSE on every axis.** Position R² **0.634/0.686**
+linear (1D: 0.797), **0.752/0.762** MLP (0.877); fiber residual **0.881/0.836** vs **0.583** (much
+less canonical); every oracle weakens — Counterfactual **+0.38/+0.24** vs **+0.68**, Decoder Grad k=1
+**+0.62** vs **+0.96**, Freeze-time **+0.34/+0.27** vs **+0.52**. Geometry moves the other way: PCA
+hull @90% 74/70 vs 44, TwoNN 2.3/2.5 vs 3.2. Seeds agree to ≤0.14 index points.
+
+**Interpretation (not established): occupancy dilution through the objective.** An object covers
+**25.5%** of the 1D scan but **1.45%** of the omniscient frame, so under a plain per-pixel MSE ~98.5%
+of the gradient is about background and the pressure to encode position is ~**18× weaker per unit of
+loss**. The 2D model reaches a *lower absolute* next-step RMSE (0.0875 vs 0.1051) at a similar
+ratio-to-noise-floor (0.62× vs 0.68×) largely by predicting empty space; Fig 5 shows the consequence
+— soft blobs where the 1D model is crisp. Same blur explains the less-negative unsteered index
+(−0.54/−0.52 vs −0.66).
+
+**This makes result 1 provisional in a specific way:** it shows the negative is not caused by
+projection or occlusion, **not** that it is independent of observation *sharpness*.
+**PRE-REGISTERED follow-on** (guide fixed before running): an **occupancy-matched** omniscient arm
+(reweight the loss by occupancy, or enlarge objects). If readability + oracles recover while the
+standard editors stay inert → result 1 stands and "omniscient is worse" is an objective-weighting
+artifact. If the standard editors improve too → result 1 was confounded by blur and must be re-run.
+
+**⚠ Cross-channel comparability rule, now enforced in three places** (registry, notebook definitions
+table, `editability_metrics` docstring): an object is ~13% of a 1D scan but 0.73% of the omniscient
+grid, so whole-frame averages (next-step RMSE, Edit-frame RMSE, GT-traj RMSE) are **not**
+cross-channel comparable. Only the **Edit Index**, R²/fiber residual, and ratios to each arm's own
+reference are.
+
+**AWAITING SEVAN: `WATERFALL_SPEC_2D.md`** — a literal waterfall cannot be drawn when a frame is 2D.
+Proposed: `frame_grid` (arms × time, every content rule of the 1D spec preserved; time subsampled)
++ `frame_trails` (all 15 steps composited). Validated against known answers (unedited world scores
+exactly −1.00, synthetic collapse +0.16) and it earned its keep — it caught MLP Grad Steering's
+respectable-looking −0.47 as *ringing artifacts at fidelity 1.11*, which the scorecard alone did not
+separate from a real gain.
+
+**Bugs caught:** (a) `build_inmemory_dataloaders` moved the full tensor to GPU *then* split, peaking
+at ~2× the dataset (29.5 GB) — OOMs a 32 GB card that needs 14.8; now splits on the host. (b)
+`generate_dataset.py` derives split seeds sequentially, which would have put the 2D test/edits scenes
+inside dataset 4's *train* range — leaking against the 1D baseline; fixed with explicit overrides +
+an overlap check. (c) **A silent no-op notebook**: building an `.ipynb` with `source = s.split("\n")`
+drops trailing newlines, `.ipynb` joins `source` with `""`, so every cell collapsed onto one line and
+— since every cell starts with a `# [N]` comment — became a comment. nbconvert reported success,
+exec counts ran 1→20, **zero outputs, zero errors**. Use `splitlines(keepends=True)`; and treat *an
+executed notebook with no outputs as not having run*.
+
+## 2026-08-11 (later) — standard MLP probe was undertrained (Sevan-flagged; FIXED)
+
+Sevan flagged the impossible pattern "linear R² 0.70, MLP R² negative" on the DiT probe grid. Diagnosis:
+`train_extractor` batches over **sequences** (batch 512), so at N=500–1500 sequences the standard 30 "epochs"
+is only ~30–90 Adam steps — the 2×256 MLP never converges; linear lstsq (exact solve) is unaffected. Validated
+on GRU H256 h: MLP R² 0.17 @30ep → **0.89 @300ep, ABOVE linear 0.81** (as a strictly-more-expressive probe must
+be); z-scoring inputs unnecessary once training is adequate. **Fix: `STD_EPOCHS` 30 → 300 in
+`pim/extractors/standard.py`** (documented in-module). ⚠ Every MLP R² reported from `fit_readability_probes`
+between 2026-08-06 and 2026-08-11 under-reads (incl. transformer thread MLP 0.58–0.68 and all of today's DiT/
+input-grad notebooks); linear R² everywhere is unaffected. DiT notebooks re-executed with the fix same day.
+
+## 2026-08-11 — DiT thread + Input Grad Steering (both Sevan-directed)
+
+## 2026-08-11 (latest) — VAE + latent DiT BUILT, TRAINED, ANALYSED: the compression hypothesis is REFUTED
+
+`directions/latent-dit-vae.md` executed end-to-end (Sevan: "treat the latent DiT as a wholly separate
+architecture"). New code: `pim/world_models/vae.py` + `scripts/train_vae.py`; `pim/world_models/latent_dit/` +
+`scripts/train_latent_dit.py` (frozen VAE + concat DiT core via a new `data_transform="identity"` flag;
+implements `HiddenStateModel` in observation space so the whole eval suite runs unchanged); loader dispatch;
+`tests/test_latent_dit.py` (17) + DiT-core tests (40). **The owed API fix landed too**:
+`predict_mode="sample_fresh"` (per-sample fresh noise, seedable `model.noise_gen`) replaces the `_eps_bank`
+mutation hack. Runs: `runs/vae/{vae_z16,vae_z8}`, `runs/latent_dit/{0_z16_w4,1_z16_w2,2_z8_w4}`; registry
+`editability/latent_DiT/LATENT_DIT_RUNS.md`; scratch note `scratch/2026-08-11-latent-dit.md`.
+
+**Gate passed** (`latent_DiT/latent_dit_world_state.ipynb`): VAE recon 0.1294 vs noisy / **0.0986 vs clean**
+(noise floor 0.1541 — it denoises); 16-d code retains position as well as the raw 128-d obs (MLP R² 0.540 vs
+0.515); decoded next-step **0.02517 vs noisy** against a **VAE floor of 0.01672**, and **0.01174 vs clean vs the
+pixel DiT's 0.01186 on identical data** (equal-or-better structure); `sample_fresh` rollouts stable; probe grid
+linear R² **0.81** at late layers (pixel 0.70), again **flat across τ**.
+
+**RESULT** (`input_grad_steering/input_grad_steering_latent_dit.ipynb`): compressing the write surface 128-d →
+16-d does **not** make probe gradients semantic. cos(δ, Δ_true) in latent space **+0.118…+0.168** vs
+observation space +0.146…+0.212 vs pixel DiT +0.11…+0.22 (chance ≈ −0.03). Edit Index band unchanged
+arm-for-arm (obs-grad −0.30…−0.44, latent-window grad −0.38…−0.48, iterate grad −0.13…−0.23), and **both
+oracles reproduce their pixel values exactly** (Render write @1 **+0.12**, velocity-consistent Counterfactual
+window write **+0.71**). The most readable state in the thread (linear 0.810 / MLP 0.905) is not one bit more
+controllable. **So the failure is NOT representation geometry — it is belief dynamics** (the ghost is carried
+by the clean context; only window-consistent evidence removes it). Next: objectives that synthesise multi-frame
+velocity-consistent evidence (SDEdit-style window re-noise, render-space objective, repeated small edits).
+
+**1. DiT thread opened** (`notebooks/experiments/editability/DiT/`, registry `DIT_RUNS.md`). New code:
+`pim/world_models/dit/single_frame.py` (**SingleFrameDiTModel** — vanilla diffusion forcing, single-frame
+tokens; `--variant` in `train_dit.py`; loader dispatch; `tests/test_dit_single_frame.py`, 37/37 with existing
+DiT tests). Four d256 runs launched (concat W2/W4 = span-matched to transformer W2/W4; single-frame W3/W5):
+concat W2 **0.02480** / W4 **0.02445**; single-frame W3 **0.02504** / W5 **0.02424** — the tokenization
+package (clean-channel concat vs vanilla diffusion forcing) is a **wash** on single-step quality at matched
+frame span.
+**Sample-mode rollout collapse SOLVED:** the vertical-stripe collapse in autoregressive Euler sampling was the
+fixed ODE start-noise reused every step; fresh noise per step restores coherent stochastic rollouts
+(free-run RMSE 0.257 → **0.186**, vs mean mode 0.192). API follow-up owed: a supported fresh-noise mode
+(currently done by mutating `_eps_bank` in the eval script).
+
+**2. Input Grad Steering — clean negative, both architectures** (`editability/input_grad_steering/`, README +
+2 executed notebooks; scratch note `scratch/2026-08-11-input-grad-steering.md`). Backprop a frozen standard
+linear probe through the network to the input observation: the readout is always fully driven, but δ is
+adversarial fuzz — cos(δ, Δ_true) ≈ 0.25 (transformer) / 0.12 (GRU), Edit Index moves −0.69→−0.50 /
+−0.68→−0.44, fidelity ≈ 1.0 (ignored). Oracle on the same write surface (newest frame ← clean edited render):
+transformer **+0.27**, GRU **−0.01** (= belief inertia; matches First Obs TF). Readable≠controllable now also
+holds at the input. **DiT leg (`input_grad_steering_dit.ipynb`, run `9_…w4_d256`): the guidance hypothesis
+FAILS naive** — probe-guided Euler sampling at any effective strength degrades (index plateaus at −0.05 with
+collateral 0.13→0.55, saturated frames), and **early-τ-only guidance = full-schedule**, localizing the failure
+to the gradient direction, not kick timing. The rollout DOES re-cohere corrupted frames into valid-looking
+objects (the projector is real) but to the nearest coherent world, not the target. DiT oracle render write:
++0.12. **Same-day extension:** (ℓ × τ) probe grid (`DiT/dit_world_state.ipynb`, new tested `resid_sink` hook)
+— linear R² depth-monotone 0.26→0.76 and **flat across τ** (position belief is context-driven, not in the
+iterate); and **pause–optimize–resume Latent Grad Steering @(L3, τ)** — drive the iterate to an exact verified
+probe readout mid-ODE, resume: **−0.51 → −0.18** (best probe-only editor in the whole thread, collateral only
+0.28–0.35), but waterfall shows **duplication not relocation** (new persistent target band + surviving ghost;
+the ghost lives in the untouched clean context tokens). Whole-window history arm (n=4): −0.52, = n=1.
+**MLP-probe variants (post-fix probes, R² 0.85–0.90): Input Grad · MLP −0.31 vs linear −0.52** — best
+history-write on any architecture in the thread (cos +0.22; waterfall shows ghost dimming + new target band
+from a clean-frame edit) — while **latent steering is probe-capacity-invariant** (≈ −0.2 plateau either way):
+the plateau is belief dynamics (clean context tokens), not readout quality. All verdicts also invariant under
+full fresh-noise Euler rollouts.
+Escalations: SDEdit-style history re-noising, repeated latent edits over frames, render-space objective.
+**Whole-window arms:** Input Grad · MLP n=4 = n=1 (−0.31; width doesn't help probe gradients). But
+**Counterfactual window write (n=4, oracle): Edit Index +0.71 — the DiT edit essentially fully lands**
+(target/ghost RMSE ≈ 0.09, collateral at baseline, GT-traj RMSE 0.206 < unsteered 0.303): all 4 window frames
+← velocity-consistent counterfactual renders (own velocity, constant offset to hit target at ef). So the
+Render write @1 cap (+0.12) was **conflicting velocity evidence, not belief inertia** — the DiT is fully
+editable through consistent history; +0.71 is the ceiling probe-only editors (best −0.31) have to chase.
+
+**1. Readability probes are now standardised in code.** Two different MLP probes had been in use and their R²
+values are **not comparable**: `MLPExtractor` on defaults (**1×128, in-sample**) in `00_master_editability` and
+`controls/`, versus a hand-rolled **2×256 held-out** probe in `iterative_probing` / `nonlinear_gru`. Two axes
+conflated — capacity, and in-sample-vs-held-out. New `pim/extractors/standard.py::fit_readability_probes`:
+linear lstsq + **2×256 ReLU MLP**, both fit on the same 80% of **sequences**, both scored on the same held-out
+20% against the train mean. `MLPExtractor` gained `n_hidden_layers` (**default 1 = unchanged, asserted
+bit-identical**) because the **MLP Grad Steering** editor writes through a *frozen 1×128* probe whose published
+results are tied to it — reporting probe and steering probe are now explicitly different objects.
+`tests/test_standard_probes.py` (7 tests, suite 107 green). Documented in `METRICS_AND_EDITORS.md` §2 (⭐ block)
+and `CLAUDE.md`. **Pre-2026-08-06 MLP R² numbers are on a mixture of the two probes and need re-fitting before
+cross-notebook comparison.**
+
+**2. Transformer: uneditable against 5 activation editors, not 1.** Extended
+`transformers/transformer_world_state.ipynb` (§4d, 2 cells, 30s) with **Global PCA Projection (PI)**,
+**MLP Grad Steering**, **INLP @29 (R² corrected)** at the last residual point. All leave every transformer run
+on the unedited side at **fidelity 0.99–1.00** (genuine inertness, not degradation): best is INLP at
+**−0.39…−0.48** vs unsteered −0.66…−0.68 — same ordering and nearly the same values as the GRU. **Window size
+is irrelevant** (W2/W4/W16 agree within 0.09 on every editor).
+
+**The transformer-specific finding is upstream of editability:** the write itself lands less well. Global PCA
+Projection drives the linear readout error 3.23 → **0.062** on the GRU (succeeds, then is ignored) but only
+3.22 → **1.98–2.20** on the transformers at comparable ‖Δ‖. So the transformer negative is **weaker and more
+confounded** than the GRU's — part of the failure is that the last-residual-point activation resists being
+written to at all while staying on-manifold. Said plainly in the notebook rather than reporting the index alone.
+Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
+transformer activation edit, which cannot survive into the next step by construction.
+
 _Last updated: 2026-08-05 (branch `orthogonal_edit_analysis`: editor gallery — 17 editors in 3 slide figures; canonical editor names fixed; Decoder Grad k=15 is the only editor that both lands AND persists)_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names

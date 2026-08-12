@@ -64,8 +64,13 @@ class LinearExtractor(nn.Module):
         if self.use_lstsq:
             return fit_lstsq(self, internal_states, env_states_gt, mask=mask)
         losses = train_extractor(
-            self, internal_states, env_states_gt,
-            n_epochs=self.n_epochs, lr=self.lr,
-            loss_fn=loss_fn, mask=mask, device=device,
+            self,
+            internal_states,
+            env_states_gt,
+            n_epochs=self.n_epochs,
+            lr=self.lr,
+            loss_fn=loss_fn,
+            mask=mask,
+            device=device,
         )
         return losses[-1]

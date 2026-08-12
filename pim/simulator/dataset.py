@@ -36,7 +36,7 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from .config import SimConfig
+from .config import SimConfig, obs_dim
 from .renderer import render_scene
 from .sim import Scene, compute_visibility, simulate
 
@@ -164,7 +164,7 @@ from pim.simulator.soft_render import soft_enabled  # noqa: E402
 
 
 def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
-    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, dcfg.sim.obs_res
+    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, obs_dim(dcfg.sim)
     C = dcfg.hdf5_chunk
     kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
 
@@ -287,17 +287,29 @@ def generate_dataset(dcfg: DatasetConfig, h5_path: str | Path) -> dict:
     if h5_path.exists():
         raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
+    from pim.simulator.render2d import grid_shape, omni2d_enabled, validate
+
+    validate(dcfg.sim)  # fail before writing 15 GB, not after
+
     max_obj = (
         dcfg.sim.n_objects if dcfg.sim.n_objects is not None else dcfg.sim.n_objects_max
+    )
+    R = obs_dim(dcfg.sim)
+    obs_desc = (
+        f"omniscient 2D raster, {grid_shape(dcfg.sim)[0]}x{grid_shape(dcfg.sim)[1]} "
+        f"flattened row-major to {R} (row 0 = near plane; no occlusion, no perspective)"
+        if omni2d_enabled(dcfg.sim)
+        else f"1D perspective scan, obs_res={R}"
     )
 
     meta = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "dataset": dataclasses.asdict(dcfg),
         "schema": {
-            "obs_intensity": f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — noisy intensity in [0,1]; 0=background",
-            "obs_depth":      "float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
-            "obs_id":         "int8     (N, n_frames, obs_res)  — object index, -1=miss",
+            "_observation":  obs_desc,
+            "obs_intensity": f"float32  (N, n_frames={dcfg.sim.n_frames}, R={R})  — noisy intensity in [0,1]; 0=background",
+            "obs_depth":     f"float32  (N, n_frames, R={R})  — depth of first hit; 0=miss",
+            "obs_id":        f"int8     (N, n_frames, R={R})  — object index, -1=miss",
             "is_visible":     f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
             "positions":      f"float32  (N, n_frames, max_objects={max_obj}, 2)  — (x, y)",
             "velocities":     "float32  (N, n_frames, max_objects, 2)  — (vx, vy)",

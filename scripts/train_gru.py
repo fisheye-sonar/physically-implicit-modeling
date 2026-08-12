@@ -40,6 +40,9 @@ class TrainConfig:
     # Data
     dataset_path: str = "datasets/initial_train_100k/dataset.h5"
     val_fraction: float = 0.1
+    # Keep only the first N training sequences (a prefix of the seed range, so it
+    # selects the SAME scenes another suite of that size contains). None = all.
+    n_train_limit: int | None = None
     # Optimization
     n_epochs: int = 50
     batch_size: int = 256
@@ -72,6 +75,15 @@ def _parse_args() -> TrainConfig:
     # Data
     p.add_argument("--dataset-path", default=defaults.dataset_path)
     p.add_argument("--val-fraction", type=float, default=defaults.val_fraction)
+    p.add_argument(
+        "--n-train-limit",
+        type=int,
+        default=defaults.n_train_limit,
+        help="Use only the first N sequences of the train file. Samples are stored in "
+        "seed order, so this is a prefix of the seed range and selects the same scenes "
+        "as a smaller suite generated with the same base seed — use it for "
+        "sample-matched controls.",
+    )
     # Optimization
     p.add_argument("--n-epochs", type=int, default=defaults.n_epochs)
     p.add_argument("--batch-size", type=int, default=defaults.batch_size)
@@ -118,6 +130,7 @@ def _parse_args() -> TrainConfig:
     return TrainConfig(
         dataset_path=a.dataset_path,
         val_fraction=a.val_fraction,
+        n_train_limit=a.n_train_limit,
         n_epochs=a.n_epochs,
         batch_size=a.batch_size,
         lr=a.lr,
@@ -218,6 +231,7 @@ def main() -> None:
             batch_size=tcfg.batch_size,
             seed=tcfg.seed,
             device=device,
+            limit=tcfg.n_train_limit,
         )
         n_train, n_val = train_loader.data.shape[0], val_loader.data.shape[0]
     else:
@@ -227,6 +241,7 @@ def main() -> None:
             batch_size=tcfg.batch_size,
             seed=tcfg.seed,
             num_workers=tcfg.num_workers,
+            limit=tcfg.n_train_limit,
         )
         n_train, n_val = len(train_loader.dataset), len(val_loader.dataset)
 

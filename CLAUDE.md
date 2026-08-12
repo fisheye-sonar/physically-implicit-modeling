@@ -203,6 +203,12 @@ label means. Beyond cell/figure numbering:
   The old `reach % of swap` / `collateral % of swap` / `selectivity` / `ghost ratio` were **retired 2026-07-30**
   (they scored *change*, not *correctness*, and normalised by a model-dependent soft reference) — do not
   reintroduce them, and treat pre-2026-07-30 numbers on that scale as not comparable.
+- **Probes: use the standard, don't hand-roll one.** Every reported position/velocity R² comes from
+  `pim.extractors.fit_readability_probes` (linear lstsq + a 2×256 ReLU MLP, both fit on the same 80% of
+  **sequences** and scored on the same held-out 20%). An **in-sample R² is not a readability claim**, and a
+  by-row split leaks near-duplicate neighbouring frames. The **MLP Grad Steering** editor's frozen 1×128
+  `MLPExtractor` is a *different object* and must not be changed — never quote one as the other. Full rationale:
+  `notebooks/experiments/editability/METRICS_AND_EDITORS.md` §2.
 - **Consistent metrics + units across everything you compare.** If two things are compared
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate

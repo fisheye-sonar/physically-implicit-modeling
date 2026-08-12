@@ -82,6 +82,16 @@ def parse_args() -> argparse.Namespace:
                         "(0 = hard nearest-hit; >0 makes the renderer differentiable)")
     g.add_argument("--always-in-frustum",    action="store_true", default=False,
                    help="Reject trajectories where any object touches a frustum edge")
+    g.add_argument("--omni2d", action="store_true", default=False,
+                   help="OPTIONAL omniscient observation: replace the 1D perspective scan "
+                        "with a top-down ORTHOGRAPHIC raster of the world rectangle — no "
+                        "projection, no occlusion, no perspective. Frames are flattened "
+                        "row-major and --obs-res is derived from the grid (any value passed "
+                        "is overridden). See pim/simulator/render2d.py")
+    g.add_argument("--omni2d-h", type=int, default=48, metavar="ROWS",
+                   help="omni2d grid rows, spanning depth y in [y_near, y_far]; row 0 = near")
+    g.add_argument("--omni2d-w", type=int, default=64, metavar="COLS",
+                   help="omni2d grid columns, spanning x in [-x_far, x_far]")
 
     # ── Edit-split config ─────────────────────────────────────────────────
     g = p.add_argument_group("edits split config")
@@ -95,6 +105,17 @@ def parse_args() -> argparse.Namespace:
     # ── Parallelism / storage ─────────────────────────────────────────────
     g = p.add_argument_group("parallelism / storage")
     g.add_argument("--seed",             type=int, default=0,   help="Base RNG seed for train split")
+    g.add_argument("--seed-val",   type=int, default=None, metavar="S",
+                   help="Base seed for the val split (default: --seed + n_train)")
+    g.add_argument("--seed-test",  type=int, default=None, metavar="S",
+                   help="Base seed for the test split (default: after val)")
+    g.add_argument("--seed-edits", type=int, default=None, metavar="S",
+                   help="Base seed for the edits split (default: after test). "
+                        "Override all three to align a suite's splits with an EXISTING "
+                        "dataset's seed ranges — scenes are a deterministic function of "
+                        "the seed, so matching them makes two suites differ only in the "
+                        "observation channel, and keeps a smaller suite's test/edits "
+                        "scenes out of the larger one's TRAIN range.")
     g.add_argument("--n-workers",        type=int, default=4,   help="Worker processes (0 = single-process)")
     g.add_argument("--write-batch",      type=int, default=512, help="Samples buffered in RAM before each HDF5 flush")
     g.add_argument("--compression-level",type=int, default=4,   help="gzip compression level 0-9")
@@ -114,10 +135,15 @@ def main() -> None:
         return
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # With --omni2d the flat observation dimension IS the grid size, and the whole
+    # downstream stack sizes itself from `obs_res` — so derive it here rather than
+    # asking the caller to keep two numbers in step (`render2d.validate` enforces it).
+    obs_res = args.omni2d_h * args.omni2d_w if args.omni2d else args.obs_res
+
     sim = SimConfig(
         n_objects=args.n_objects,
         n_frames=args.frames,
-        obs_res=args.obs_res,
+        obs_res=obs_res,
         boundary=args.boundary,
         direction_noise_std=args.direction_noise,
         speed_noise_std=args.speed_noise,
@@ -129,13 +155,45 @@ def main() -> None:
         soft_shading=args.soft_shading,
         soft_psf_sigma=args.soft_psf_sigma,
         soft_occlusion_temp=args.soft_occlusion_temp,
+        omni2d=args.omni2d,
+        omni2d_h=args.omni2d_h,
+        omni2d_w=args.omni2d_w,
     )
 
+    if args.omni2d:
+        dy = (sim.y_far - sim.y_near) / args.omni2d_h
+        dx = (2.0 * sim.x_far) / args.omni2d_w
+        print(
+            f"omniscient 2D: {args.omni2d_h}x{args.omni2d_w} grid -> obs dim {obs_res}  |  "
+            f"pixel {dy:.4f} x {dx:.4f} world units  |  "
+            f"object diameter {2 * sim.radius / dy:.1f} x {2 * sim.radius / dx:.1f} px"
+        )
+
     # Seeds are assigned non-overlappingly so no sample appears in two splits.
+    # Each may be overridden to align with an existing suite (see --seed-edits).
     seed_train = args.seed
-    seed_val   = args.seed + args.n_train
-    seed_test  = args.seed + args.n_train + args.n_val
-    seed_edits = args.seed + args.n_train + args.n_val + args.n_test
+    seed_val   = args.seed + args.n_train        if args.seed_val   is None else args.seed_val
+    seed_test  = seed_val + args.n_val           if args.seed_test  is None else args.seed_test
+    seed_edits = seed_test + args.n_test         if args.seed_edits is None else args.seed_edits
+
+    ranges = {
+        "train": (seed_train, args.n_train),
+        "val":   (seed_val,   args.n_val),
+        "test":  (seed_test,  args.n_test),
+        "edits": (seed_edits, args.n_edits),
+    }
+    for a in ranges:
+        for b in ranges:
+            if a >= b:
+                continue
+            (sa, na), (sb, nb) = ranges[a], ranges[b]
+            if sa < sb + nb and sb < sa + na:
+                print(
+                    f"Error: seed ranges for '{a}' [{sa}, {sa + na}) and '{b}' "
+                    f"[{sb}, {sb + nb}) overlap — the same scene would appear in both."
+                )
+                return
+    print("seed ranges: " + "  ".join(f"{k}=[{s}, {s + n})" for k, (s, n) in ranges.items()))
 
     shared_storage = dict(
         n_workers=args.n_workers,

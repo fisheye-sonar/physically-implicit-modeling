@@ -1,21 +1,30 @@
-"""Tests for pim.world_models.dit — protocol, determinism, causality, window."""
+"""Tests for pim.world_models.dit.single_frame — the vanilla diffusion-forcing
+variant.  Mirrors tests/test_dit.py; the structural difference under test is
+that the carried context is ``window − 1`` frames (the prediction slot spends
+the last band position), not ``window``.
+"""
 
 import pytest
 import torch
 
-from pim.world_models.dit import DiTModel, DiTState, ModelConfig
+from pim.world_models.dit import (
+    SingleFrameConfig,
+    SingleFrameDiTModel,
+    SingleFrameDiTState,
+)
 from pim.world_models.protocol import HiddenStateModel, WorldModel
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 R = 16  # obs_res
-W = 4  # window
+W = 4  # window (band width in tokens); context = W - 1 = 3 frames
+CTX = W - 1
 B, T = 3, 12
 
 
-def make_model(seed: int = 0, **overrides) -> DiTModel:
+def make_model(seed: int = 0, **overrides) -> SingleFrameDiTModel:
     torch.manual_seed(seed)
-    cfg = ModelConfig(
+    cfg = SingleFrameConfig(
         input_dim=R,
         d_model=32,
         n_layers=2,
@@ -24,7 +33,7 @@ def make_model(seed: int = 0, **overrides) -> DiTModel:
         n_sample_steps=3,
         **overrides,
     )
-    model = DiTModel(cfg)
+    model = SingleFrameDiTModel(cfg)
     # Perturb away from the zero-initialised (identity) start so the tests
     # exercise a non-trivial function of the inputs.
     with torch.no_grad():
@@ -48,13 +57,18 @@ def test_implements_protocols():
     assert isinstance(model, HiddenStateModel)
 
 
+def test_window_must_hold_context_and_slot():
+    with pytest.raises(ValueError, match="window"):
+        SingleFrameDiTModel(SingleFrameConfig(input_dim=R, window=1))
+
+
 def test_forward_shapes():
     model = make_model()
     pred, state = model(make_obs())
     assert pred.shape == (B, T - 1, R)
-    assert isinstance(state, DiTState)
-    assert state.obs_buffer.shape == (B, W, R)
-    assert (state.length == W).all()
+    assert isinstance(state, SingleFrameDiTState)
+    assert state.obs_buffer.shape == (B, CTX, R)
+    assert (state.length == CTX).all()
 
 
 def test_step_and_predict_step_shapes():
@@ -64,10 +78,10 @@ def test_step_and_predict_step_shapes():
     for t in range(3):
         pred, state = model.step(obs[:, t], state)
         assert pred.shape == (B, R)
-        assert int(state.length[0]) == min(t + 1, W)
+        assert int(state.length[0]) == min(t + 1, CTX)
     pred_next, state_next = model.predict_step(state)
     assert pred_next.shape == (B, R)
-    assert int(state_next.length[0]) == min(4, W)
+    assert int(state_next.length[0]) == min(4, CTX)
 
 
 def test_observe_sequence_and_hidden_state_shapes():
@@ -89,7 +103,7 @@ def test_flat_state_roundtrip():
     state2 = model.state_from_flat(flat)
     assert torch.allclose(state.obs_buffer, state2.obs_buffer)
     # Injected states are assumed fully warmed
-    assert (state2.length == W).all()
+    assert (state2.length == CTX).all()
 
 
 def test_decode_matches_step_prediction():
@@ -146,13 +160,13 @@ def test_predictions_are_causal():
     assert not torch.allclose(pred[:, t_cut + 1 :], pred_mod[:, t_cut + 1 :], atol=1e-5)
 
 
-def test_state_is_bounded_by_window():
-    """pred[:, t] must not change when frames older than the window change."""
+def test_state_is_bounded_by_context():
+    """pred[:, t] must not change when frames older than ctx = W-1 change."""
     model = make_model()
     obs = make_obs()
-    t = 9  # window covers frames t-W+1..t = 6..9
+    t = 9  # context covers frames t-CTX+1..t = 7..9
     obs_mod = obs.clone()
-    obs_mod[:, : t - W + 1] = torch.rand_like(obs_mod[:, : t - W + 1])
+    obs_mod[:, : t - CTX + 1] = torch.rand_like(obs_mod[:, : t - CTX + 1])
     pred, _ = model.observe_sequence(obs)
     pred_mod, _ = model.observe_sequence(obs_mod)
     assert torch.allclose(pred[:, t], pred_mod[:, t], atol=1e-5)
@@ -198,9 +212,9 @@ def test_state_views_shapes():
     obs = make_obs()
     cfg = model.cfg
     expected = {
-        "obs_window": W * R,
+        "obs_window": CTX * R,
         "activations": cfg.d_model,
-        "kv_cache": cfg.n_layers * 2 * (W - 1) * cfg.d_model,
+        "kv_cache": cfg.n_layers * 2 * CTX * cfg.d_model,
     }
     for view, size in expected.items():
         model.state_view = view
@@ -217,19 +231,19 @@ def test_readonly_views_reject_state_from_flat():
 
 
 def test_obs_window_view_is_raw_observations():
-    """The default flat state is literally the last W observations."""
+    """The default flat state is literally the last W-1 observations."""
     model = make_model()
     obs = make_obs()
     h = model.get_hidden_states(obs)
     t = 7  # fully-warmed position
-    window = obs[:, t - W + 1 : t + 1].reshape(B, -1)
+    window = obs[:, t - CTX + 1 : t + 1].reshape(B, -1)
     assert torch.allclose(h[:, t], window)
 
 
 # ── Checkpoint loader dispatch ────────────────────────────────────────────────
 
 
-def test_load_checkpoint_dispatches_dit(tmp_path):
+def test_load_checkpoint_dispatches_single_frame(tmp_path):
     import dataclasses
 
     from pim.world_models.loader import load_checkpoint
@@ -244,53 +258,7 @@ def test_load_checkpoint_dispatches_dit(tmp_path):
     path = tmp_path / "best_model.pt"
     torch.save(ckpt, path)
     loaded, info = load_checkpoint(path)
-    assert isinstance(loaded, DiTModel)
+    assert isinstance(loaded, SingleFrameDiTModel)
     pred1, _ = model.observe_sequence(make_obs())
     pred2, _ = loaded.observe_sequence(make_obs())
     assert torch.allclose(pred1, pred2, atol=1e-6)
-
-
-def test_trunk_resid_sink_collects_all_points():
-    """resid_sink returns n_layers+1 residual points; the last equals feats."""
-    model = make_model()
-    obs = make_obs()
-    cur = model._to_diff(obs[:, :-1])
-    nxt = model._to_diff(obs[:, 1:])
-    tau = torch.zeros(B, T - 1)
-    from pim.world_models.dit.blocks import band_causal_mask
-
-    mask = band_causal_mask(T - 1, model.cfg.window, obs.device)
-    sink: list = []
-    with torch.no_grad():
-        feats, _ = model._trunk(cur, nxt, tau, mask, resid_sink=sink)
-    assert len(sink) == model.cfg.n_layers + 1
-    for x in sink:
-        assert x.shape == (B, T - 1, model.cfg.d_model)
-    assert torch.equal(sink[-1], feats)
-
-
-def test_sample_fresh_is_stochastic_and_seedable():
-    """sample_fresh draws per-row noise; a seeded generator makes it reproducible."""
-    model = make_model()
-    model.predict_mode = "sample_fresh"
-    obs = make_obs()
-    p1, _ = model.step(obs[:, 0])
-    p2, _ = model.step(obs[:, 0])
-    assert not torch.allclose(p1, p2, atol=1e-6), "fresh noise should vary between calls"
-    # rows differ from each other (per-sample noise, not one shared vector)
-    model.noise_gen = torch.Generator().manual_seed(0)
-    a, _ = model.step(obs[:, 0])
-    model.noise_gen = torch.Generator().manual_seed(0)
-    b, _ = model.step(obs[:, 0])
-    assert torch.equal(a, b), "same seed must reproduce the sample"
-
-
-def test_identity_data_transform_is_a_no_op():
-    """data_transform='identity' leaves latents unscaled in both directions."""
-    model = make_model(data_transform="identity")
-    x = torch.randn(4, R)
-    assert torch.equal(model._to_diff(x), x)
-    assert torch.equal(model._from_diff(x), x)
-    # and the default is still the [0,1] → [-1,1] map
-    d = make_model()
-    assert torch.allclose(d._to_diff(torch.zeros(2, R)), -torch.ones(2, R))
