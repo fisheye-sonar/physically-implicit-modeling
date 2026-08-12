@@ -36,7 +36,7 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from .config import SimConfig
+from .config import SimConfig, obs_dim
 from .renderer import render_scene
 from .sim import Scene, compute_visibility, simulate
 
@@ -116,6 +116,14 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
                 raise
 
     obs_depth, obs_id, obs_intensity = render_scene(scene)
+    # `reconstruct_clean_obs` recovers the noiseless render from (obs_id, reflectivities),
+    # which is exact ONLY for the flat renderer where intensity == reflectivity. Under soft
+    # rendering (antialiasing / shading / blur) it is not recoverable, so store it.
+    obs_clean = None
+    if soft_enabled(cfg):
+        obs_clean = render_scene(
+            dataclasses.replace(scene, config=dataclasses.replace(cfg, obs_noise_std=0.0))
+        )[2].astype(np.float32)
     vis = compute_visibility(scene)  # (n_frames, n)
     n = scene.positions.shape[1]
 
@@ -135,6 +143,7 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
 
     return {
         "obs_intensity": obs_intensity.astype(np.float32),
+        **({"obs_clean": obs_clean} if obs_clean is not None else {}),
         "obs_depth": obs_depth.astype(np.float32),
         "obs_id": obs_id.astype(np.int8),
         "is_visible": vis_out,
@@ -151,14 +160,21 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
 # ── HDF5 helpers ──────────────────────────────────────────────────────────────
 
 
+from pim.simulator.soft_render import soft_enabled  # noqa: E402
+
+
 def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
-    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, dcfg.sim.obs_res
+    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, obs_dim(dcfg.sim)
     C = dcfg.hdf5_chunk
     kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
 
     hf.create_dataset(
         "obs_intensity", (N, F, R), dtype="float32", chunks=(C, F, R), **kw
     )
+    if soft_enabled(dcfg.sim):
+        hf.create_dataset(
+            "obs_clean", (N, F, R), dtype="float32", chunks=(C, F, R), **kw
+        )
     hf.create_dataset("obs_depth", (N, F, R), dtype="float32", chunks=(C, F, R), **kw)
     hf.create_dataset("obs_id", (N, F, R), dtype="int8", chunks=(C, F, R), **kw)
     hf.create_dataset(
@@ -194,6 +210,8 @@ def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
 def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
     end = start + len(batch)
     hf["obs_intensity"][start:end] = np.stack([s["obs_intensity"] for s in batch])
+    if "obs_clean" in batch[0]:
+        hf["obs_clean"][start:end] = np.stack([s["obs_clean"] for s in batch])
     hf["obs_depth"][start:end] = np.stack([s["obs_depth"] for s in batch])
     hf["obs_id"][start:end] = np.stack([s["obs_id"] for s in batch])
     hf["is_visible"][start:end] = np.stack([s["is_visible"] for s in batch])
@@ -269,17 +287,29 @@ def generate_dataset(dcfg: DatasetConfig, h5_path: str | Path) -> dict:
     if h5_path.exists():
         raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
+    from pim.simulator.render2d import grid_shape, omni2d_enabled, validate
+
+    validate(dcfg.sim)  # fail before writing 15 GB, not after
+
     max_obj = (
         dcfg.sim.n_objects if dcfg.sim.n_objects is not None else dcfg.sim.n_objects_max
+    )
+    R = obs_dim(dcfg.sim)
+    obs_desc = (
+        f"omniscient 2D raster, {grid_shape(dcfg.sim)[0]}x{grid_shape(dcfg.sim)[1]} "
+        f"flattened row-major to {R} (row 0 = near plane; no occlusion, no perspective)"
+        if omni2d_enabled(dcfg.sim)
+        else f"1D perspective scan, obs_res={R}"
     )
 
     meta = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "dataset": dataclasses.asdict(dcfg),
         "schema": {
-            "obs_intensity": f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — noisy intensity in [0,1]; 0=background",
-            "obs_depth":      "float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
-            "obs_id":         "int8     (N, n_frames, obs_res)  — object index, -1=miss",
+            "_observation":  obs_desc,
+            "obs_intensity": f"float32  (N, n_frames={dcfg.sim.n_frames}, R={R})  — noisy intensity in [0,1]; 0=background",
+            "obs_depth":     f"float32  (N, n_frames, R={R})  — depth of first hit; 0=miss",
+            "obs_id":        f"int8     (N, n_frames, R={R})  — object index, -1=miss",
             "is_visible":     f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
             "positions":      f"float32  (N, n_frames, max_objects={max_obj}, 2)  — (x, y)",
             "velocities":     "float32  (N, n_frames, max_objects, 2)  — (vx, vy)",

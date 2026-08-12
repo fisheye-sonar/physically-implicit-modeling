@@ -2,8 +2,9 @@
 
 load_checkpoint dispatches on the keys in ckpt["model_config"]: it picks
 GRUModel if the config has 'num_layers', RSSMModel if it has 'det_size',
-DiTModel if it has 'n_sample_steps', TransformerModel if it has 'window'
-(checked after DiT, whose config also carries 'window').
+SingleFrameDiTModel if it has variant == 'single_frame', DiTModel if it has
+'n_sample_steps', TransformerModel if it has 'window' (checked after DiT,
+whose config also carries 'window').
 
 load_dataset reads a directory containing dataset.json + test.h5 + edits.h5
 (and train.h5 + val.h5; these are not needed for eval but are part of the
@@ -26,6 +27,7 @@ from pim.simulator.dataset import reconstruct_clean_obs
 from pim.world_models.dataloader import ObservationDataset
 from pim.world_models.dit import DiTModel
 from pim.world_models.dit import ModelConfig as DiTConfig
+from pim.world_models.dit import SingleFrameConfig, SingleFrameDiTModel
 from pim.world_models.transformer import ModelConfig as TransformerConfig
 from pim.world_models.transformer import TransformerModel
 from pim.world_models.gru import GRUModel
@@ -124,6 +126,12 @@ def load_checkpoint(
 
     if "det_size" in mcfg_dict:
         model: HiddenStateModel = RSSMModel(RSSMConfig(**mcfg_dict)).to(device)
+    elif mcfg_dict.get("variant") == "latent_dit":
+        from pim.world_models.latent_dit import LatentDiTConfig, LatentDiTModel
+
+        model = LatentDiTModel(LatentDiTConfig(**mcfg_dict)).to(device)
+    elif mcfg_dict.get("variant") == "single_frame":
+        model = SingleFrameDiTModel(SingleFrameConfig(**mcfg_dict)).to(device)
     elif "n_sample_steps" in mcfg_dict:
         model = DiTModel(DiTConfig(**mcfg_dict)).to(device)
     elif "window" in mcfg_dict and "n_sample_steps" not in mcfg_dict:
@@ -183,7 +191,7 @@ def _load_h5_dataset(
         reflectivities = f["reflectivities"][:].astype(np.float32)
         config = json.loads(f.attrs["config_json"])
 
-    clean_obs = reconstruct_clean_obs(obs_id, reflectivities)
+    clean_obs = _clean_obs(f, obs_id, reflectivities)
     return Dataset(
         obs=obs,
         clean_obs=clean_obs,
@@ -221,7 +229,7 @@ def _load_edits(
         edit_op = f["edit_op"][:]
         edit_value = f["edit_value"][:]
 
-    clean_obs = reconstruct_clean_obs(obs_id, reflectivities)
+    clean_obs = _clean_obs(f, obs_id, reflectivities)
     return EditsData(
         obs=obs,
         clean_obs=clean_obs,
@@ -244,6 +252,19 @@ class DatasetBundle:
     data_dir: Path
     test: Dataset
     edits: EditsData | None
+
+
+def _clean_obs(f, obs_id, reflectivities):
+    """Noiseless observations for a split.
+
+    `reconstruct_clean_obs` rebuilds them from `(obs_id, reflectivities)`, which is exact
+    only for the flat renderer where intensity *is* the reflectivity. Soft-rendered
+    datasets (antialiasing / shading / blur) store the clean render explicitly because it
+    cannot be recovered that way; prefer it whenever present.
+    """
+    if "obs_clean" in f:
+        return f["obs_clean"][:].astype(np.float32)
+    return reconstruct_clean_obs(obs_id, reflectivities)
 
 
 def load_dataset(

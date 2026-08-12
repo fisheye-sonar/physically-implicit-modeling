@@ -33,7 +33,7 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-from .config import SimConfig
+from .config import SimConfig, obs_dim
 from .renderer import render_scene
 from .sim import Scene, compute_visibility, frustum_half_width, simulate
 
@@ -230,7 +230,7 @@ def _generate_one_edit(
 
 
 def _create_datasets(hf: h5py.File, dcfg: EditDatasetConfig, max_obj: int) -> None:
-    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, dcfg.sim.obs_res
+    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, obs_dim(dcfg.sim)
     C = min(dcfg.hdf5_chunk, N)
     kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
 
@@ -296,9 +296,14 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, h5_path: str | Path) -> dict
     if h5_path.exists():
         raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
+    from pim.simulator.render2d import validate
+
+    validate(dcfg.sim)
+
     max_obj = (
         dcfg.sim.n_objects if dcfg.sim.n_objects is not None else dcfg.sim.n_objects_max
     )
+    R = obs_dim(dcfg.sim)
     eff_edit_frame = (
         dcfg.edit_frame if dcfg.edit_frame >= 0 else dcfg.sim.n_frames // 2
     )
@@ -307,9 +312,9 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, h5_path: str | Path) -> dict
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "dataset": dataclasses.asdict(dcfg),
         "schema": {
-            "obs_intensity":  f"float32  (N, n_frames={dcfg.sim.n_frames}, obs_res={dcfg.sim.obs_res})  — post-edit noisy intensity; 0=background",
-            "obs_depth":      "float32  (N, n_frames, obs_res)  — depth of first hit; 0=miss",
-            "obs_id":         "int8     (N, n_frames, obs_res)  — object index, -1=miss",
+            "obs_intensity":  f"float32  (N, n_frames={dcfg.sim.n_frames}, R={R})  — post-edit noisy intensity; 0=background",
+            "obs_depth":      f"float32  (N, n_frames, R={R})  — depth of first hit; 0=miss",
+            "obs_id":         f"int8     (N, n_frames, R={R})  — object index, -1=miss",
             "is_visible":     f"bool     (N, n_frames, max_objects={max_obj})  — partial frustum overlap per object",
             "positions":      f"float32  (N, n_frames, max_objects={max_obj}, 2)  — post-edit (x, y)",
             "velocities":     "float32  (N, n_frames, max_objects, 2)  — original (vx, vy); unchanged by edit",

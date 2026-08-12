@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .config import SimConfig
+from .config import SimConfig, obs_dim
 from .sim import Scene
 
 
@@ -44,6 +44,18 @@ def render_frame(
         Reflectivity of the first-hit object in [0, 1], plus optional additive
         Gaussian noise clipped to [0, 1].  0 where no circle is hit.
     """
+    # Optional alternative observation channels. Both default to off, in which
+    # case neither branch is taken and the hard ray-caster below runs unchanged.
+    # They are mutually exclusive (enforced by `render2d.validate`).
+    from pim.simulator.render2d import omni2d_enabled, render_frame_omni2d
+    from pim.simulator.soft_render import render_frame_soft, soft_enabled
+
+    if omni2d_enabled(cfg):
+        return render_frame_omni2d(positions, radii, reflectivities, cfg, rng=rng)
+
+    if soft_enabled(cfg):
+        return render_frame_soft(positions, radii, reflectivities, cfg, rng=rng)
+
     R = cfg.obs_res
     n = len(radii)
 
@@ -88,7 +100,9 @@ def render_frame(
     # Clamp case: disk straddles y_near — report hit at the near-plane entry point
     # A disk fully in front of y_near (hit_y_back < y_near) stays invisible/non-occluding
     t_at_near = cfg.y_near / dy[:, None]  # (R, N)  t where ray crosses y_near
-    clamp_to_near = (disc >= 0) & (hit_y_front < cfg.y_near) & (hit_y_back >= cfg.y_near)
+    clamp_to_near = (
+        (disc >= 0) & (hit_y_front < cfg.y_near) & (hit_y_back >= cfg.y_near)
+    )
 
     t_eff = np.where(valid_front, t_front, np.where(clamp_to_near, t_at_near, np.inf))
     t_masked = t_eff  # (R, N)
@@ -120,9 +134,12 @@ def render_scene(scene: Scene) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     cfg = scene.config
     rng = np.random.default_rng(cfg.seed + 1)  # offset to avoid correlation with sim
 
-    obs_depth = np.zeros((cfg.n_frames, cfg.obs_res))
-    obs_id = np.full((cfg.n_frames, cfg.obs_res), -1, dtype=int)
-    obs_intensity = np.zeros((cfg.n_frames, cfg.obs_res))
+    # `obs_dim` == obs_res for the 1D ray-caster, and the flattened grid size for
+    # the omniscient 2D raster.  Never size these from `obs_res` directly.
+    R = obs_dim(cfg)
+    obs_depth = np.zeros((cfg.n_frames, R))
+    obs_id = np.full((cfg.n_frames, R), -1, dtype=int)
+    obs_intensity = np.zeros((cfg.n_frames, R))
 
     for f in range(cfg.n_frames):
         obs_depth[f], obs_id[f], obs_intensity[f] = render_frame(

@@ -165,6 +165,22 @@ actually occurs: e.g. plot the **1D observation scans / waterfalls** under the p
 not only decoded-scalar positions. Observation-space plots can reveal effects (e.g. one
 object moving while another stays) that decoded-scalar tables hide entirely.
 
+**MANDATORY — any claim about an effect on the generations ships with a waterfall.** If a notebook
+compares editors, interventions, models, or scales *by what the model outputs*, it must include an
+observation-space waterfall of those same arms, built through the one `waterfall_grid(...)` helper and the
+fixed spec below. A scorecard compresses a rollout to one number and routinely hides the difference between
+"the edit landed" and "the output degraded" — the two look identical in an Edit Index that moved.
+*(Recurring failure: 2026-08-05, tangent-constrained injection was analysed through four scalar figures
+before a waterfall was added; only the waterfall showed the "successful" arms were generating vertical-stripe
+garbage.)* Include the arm's headline metric in each column title so the picture and the number are read
+together, and add the degenerate/extreme settings as their own columns — that is where collapse shows up.
+
+**Axis labels must be legible — check the rendered PNG, not the code.** Long series names in vertical bar
+charts overlap into an unreadable smear at 4+ categories. Use **horizontal bars** (one label per row) for
+anything with long names, and never shrink a label below ~7pt to make it fit. Every figure must be eyeballed
+after rendering; "it ran without error" is not the check. *(Flagged by Sevan 2026-08-05 across several
+figures at once.)*
+
 ## Notebook legibility (hard standard — every experiment notebook)
 
 A notebook is read later by Sevan (from plots) and re-derived by agents (from numbers); it
@@ -187,6 +203,12 @@ label means. Beyond cell/figure numbering:
   The old `reach % of swap` / `collateral % of swap` / `selectivity` / `ghost ratio` were **retired 2026-07-30**
   (they scored *change*, not *correctness*, and normalised by a model-dependent soft reference) — do not
   reintroduce them, and treat pre-2026-07-30 numbers on that scale as not comparable.
+- **Probes: use the standard, don't hand-roll one.** Every reported position/velocity R² comes from
+  `pim.extractors.fit_readability_probes` (linear lstsq + a 2×256 ReLU MLP, both fit on the same 80% of
+  **sequences** and scored on the same held-out 20%). An **in-sample R² is not a readability claim**, and a
+  by-row split leaks near-duplicate neighbouring frames. The **MLP Grad Steering** editor's frozen 1×128
+  `MLPExtractor` is a *different object* and must not be changed — never quote one as the other. Full rationale:
+  `notebooks/experiments/editability/METRICS_AND_EDITORS.md` §2.
 - **Consistent metrics + units across everything you compare.** If two things are compared
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate

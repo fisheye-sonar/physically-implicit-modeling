@@ -248,3 +248,49 @@ def test_load_checkpoint_dispatches_dit(tmp_path):
     pred1, _ = model.observe_sequence(make_obs())
     pred2, _ = loaded.observe_sequence(make_obs())
     assert torch.allclose(pred1, pred2, atol=1e-6)
+
+
+def test_trunk_resid_sink_collects_all_points():
+    """resid_sink returns n_layers+1 residual points; the last equals feats."""
+    model = make_model()
+    obs = make_obs()
+    cur = model._to_diff(obs[:, :-1])
+    nxt = model._to_diff(obs[:, 1:])
+    tau = torch.zeros(B, T - 1)
+    from pim.world_models.dit.blocks import band_causal_mask
+
+    mask = band_causal_mask(T - 1, model.cfg.window, obs.device)
+    sink: list = []
+    with torch.no_grad():
+        feats, _ = model._trunk(cur, nxt, tau, mask, resid_sink=sink)
+    assert len(sink) == model.cfg.n_layers + 1
+    for x in sink:
+        assert x.shape == (B, T - 1, model.cfg.d_model)
+    assert torch.equal(sink[-1], feats)
+
+
+def test_sample_fresh_is_stochastic_and_seedable():
+    """sample_fresh draws per-row noise; a seeded generator makes it reproducible."""
+    model = make_model()
+    model.predict_mode = "sample_fresh"
+    obs = make_obs()
+    p1, _ = model.step(obs[:, 0])
+    p2, _ = model.step(obs[:, 0])
+    assert not torch.allclose(p1, p2, atol=1e-6), "fresh noise should vary between calls"
+    # rows differ from each other (per-sample noise, not one shared vector)
+    model.noise_gen = torch.Generator().manual_seed(0)
+    a, _ = model.step(obs[:, 0])
+    model.noise_gen = torch.Generator().manual_seed(0)
+    b, _ = model.step(obs[:, 0])
+    assert torch.equal(a, b), "same seed must reproduce the sample"
+
+
+def test_identity_data_transform_is_a_no_op():
+    """data_transform='identity' leaves latents unscaled in both directions."""
+    model = make_model(data_transform="identity")
+    x = torch.randn(4, R)
+    assert torch.equal(model._to_diff(x), x)
+    assert torch.equal(model._from_diff(x), x)
+    # and the default is still the [0,1] → [-1,1] map
+    d = make_model()
+    assert torch.allclose(d._to_diff(torch.zeros(2, R)), -torch.ones(2, R))

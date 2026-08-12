@@ -40,6 +40,9 @@ class TrainConfig:
     # Data
     dataset_path: str = "datasets/initial_train_100k/dataset.h5"
     val_fraction: float = 0.1
+    # Keep only the first N training sequences (a prefix of the seed range, so it
+    # selects the SAME scenes another suite of that size contains). None = all.
+    n_train_limit: int | None = None
     # Optimization
     n_epochs: int = 50
     batch_size: int = 256
@@ -57,6 +60,9 @@ class TrainConfig:
     hidden_size: int = 256
     num_layers: int = 1
     dropout: float = 0.0
+    enc_hidden_layers: int = 0  # extra Linear+act blocks after the encoder Linear+ReLU
+    dec_hidden_layers: int = 0  # extra Linear+act blocks before the decoder Linear
+    mlp_activation: str = "relu"
 
 
 # ── CLI parsing ───────────────────────────────────────────────────────────────
@@ -69,6 +75,15 @@ def _parse_args() -> TrainConfig:
     # Data
     p.add_argument("--dataset-path", default=defaults.dataset_path)
     p.add_argument("--val-fraction", type=float, default=defaults.val_fraction)
+    p.add_argument(
+        "--n-train-limit",
+        type=int,
+        default=defaults.n_train_limit,
+        help="Use only the first N sequences of the train file. Samples are stored in "
+        "seed order, so this is a prefix of the seed range and selects the same scenes "
+        "as a smaller suite generated with the same base seed — use it for "
+        "sample-matched controls.",
+    )
     # Optimization
     p.add_argument("--n-epochs", type=int, default=defaults.n_epochs)
     p.add_argument("--batch-size", type=int, default=defaults.batch_size)
@@ -92,11 +107,30 @@ def _parse_args() -> TrainConfig:
     p.add_argument("--hidden-size", type=int, default=defaults.hidden_size)
     p.add_argument("--num-layers", type=int, default=defaults.num_layers)
     p.add_argument("--dropout", type=float, default=defaults.dropout)
+    p.add_argument(
+        "--enc-hidden-layers",
+        type=int,
+        default=defaults.enc_hidden_layers,
+        help="Extra Linear+activation blocks after the encoder Linear+ReLU (0 = original).",
+    )
+    p.add_argument(
+        "--dec-hidden-layers",
+        type=int,
+        default=defaults.dec_hidden_layers,
+        help="Extra Linear+activation blocks before the decoder Linear (0 = original, "
+        "which makes decode affine in h).",
+    )
+    p.add_argument(
+        "--mlp-activation",
+        default=defaults.mlp_activation,
+        choices=["relu", "elu", "silu", "gelu"],
+    )
 
     a = p.parse_args()
     return TrainConfig(
         dataset_path=a.dataset_path,
         val_fraction=a.val_fraction,
+        n_train_limit=a.n_train_limit,
         n_epochs=a.n_epochs,
         batch_size=a.batch_size,
         lr=a.lr,
@@ -110,6 +144,9 @@ def _parse_args() -> TrainConfig:
         hidden_size=a.hidden_size,
         num_layers=a.num_layers,
         dropout=a.dropout,
+        enc_hidden_layers=a.enc_hidden_layers,
+        dec_hidden_layers=a.dec_hidden_layers,
+        mlp_activation=a.mlp_activation,
     )
 
 
@@ -194,6 +231,7 @@ def main() -> None:
             batch_size=tcfg.batch_size,
             seed=tcfg.seed,
             device=device,
+            limit=tcfg.n_train_limit,
         )
         n_train, n_val = train_loader.data.shape[0], val_loader.data.shape[0]
     else:
@@ -203,6 +241,7 @@ def main() -> None:
             batch_size=tcfg.batch_size,
             seed=tcfg.seed,
             num_workers=tcfg.num_workers,
+            limit=tcfg.n_train_limit,
         )
         n_train, n_val = len(train_loader.dataset), len(val_loader.dataset)
 
@@ -212,6 +251,9 @@ def main() -> None:
         hidden_size=tcfg.hidden_size,
         num_layers=tcfg.num_layers,
         dropout=tcfg.dropout,
+        enc_hidden_layers=tcfg.enc_hidden_layers,
+        dec_hidden_layers=tcfg.dec_hidden_layers,
+        mlp_activation=tcfg.mlp_activation,
     )
     model = GRUModel(mcfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
@@ -237,6 +279,11 @@ def main() -> None:
     print(f"Run dir  : {run_dir}")
     print(f"Device   : {device}")
     print(f"Model    : {n_params:,} parameters")
+    print(
+        f"MLP depth: encoder +{mcfg.enc_hidden_layers} block(s), "
+        f"decoder +{mcfg.dec_hidden_layers} block(s) [{mcfg.mlp_activation}] — "
+        f"decode is {'AFFINE in h' if mcfg.dec_hidden_layers == 0 else 'NONLINEAR in h'}"
+    )
     print(f"Train    : {n_train:,} samples")
     print(f"Val      : {n_val:,} samples")
     print()

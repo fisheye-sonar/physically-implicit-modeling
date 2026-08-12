@@ -50,6 +50,22 @@ metric reported.
 The differing-ray support is computed from the two renders directly
 (`|gt_edited - gt_unedited| > eps`) rather than as target ∪ ghost, so partial occlusion is
 handled without any assumption about which object is in front.
+
+Observation channels
+--------------------
+Everything above is written in terms of "rays" because the default observation is a 1D
+perspective scan, but nothing here depends on that. `build_edit_zones` inherits the
+dataset's rendering config, so on an **omniscient 2D** dataset
+(`pim/simulator/render2d.py`) the two reference worlds are rasterised instead, and every
+zone is a set of **pixels** rather than rays — the masks stay flat `(N, R)` and the
+formulas are untouched.
+
+⚠ **Cross-channel comparability.** Zone-restricted RMSE and the Edit Index are computed
+on the pixels/rays that the zone or the two worlds actually pick out, so they are
+comparable across observation channels. `edit_frame_rmse` (all rays) and any whole-frame
+prediction error are **not**: an object covers ~13% of a 1D scan but only ~0.7% of the
+omniscient grid, so a whole-frame average is dominated by background to a wildly
+different degree in each. Compare those only within one channel.
 """
 
 from __future__ import annotations
@@ -141,6 +157,19 @@ def build_edit_zones(
         obs_noise_std=0.0,  # both references are CLEAN renders
         boundary="open",
         always_in_frustum=False,
+        # Inherit the dataset's rendering. Without this the reference worlds would be
+        # rendered with the HARD ray-caster while the model was trained on soft renders,
+        # and every §4 metric would be scored against the wrong ground truth.
+        soft_edge=sim.get("soft_edge", 0.0),
+        soft_shading=sim.get("soft_shading", "flat"),
+        soft_psf_sigma=sim.get("soft_psf_sigma", 0.0),
+        soft_occlusion_temp=sim.get("soft_occlusion_temp", 0.0),
+        # Same argument for the observation CHANNEL: on an omniscient-2D dataset the
+        # two reference worlds must be rasterised, not ray-cast. `obs_res` already
+        # carries the flat grid size, so every zone mask below stays 1D and unchanged.
+        omni2d=sim.get("omni2d", False),
+        omni2d_h=sim.get("omni2d_h", 48),
+        omni2d_w=sim.get("omni2d_w", 64),
     )
     refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
     rad = np.full(n_obj, sim["radius"], np.float32)

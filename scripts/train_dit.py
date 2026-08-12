@@ -43,7 +43,12 @@ import torch
 from tqdm import tqdm
 
 from pim.world_models.dataloader import build_dataloaders
-from pim.world_models.dit import DiTModel, ModelConfig
+from pim.world_models.dit import (
+    DiTModel,
+    ModelConfig,
+    SingleFrameConfig,
+    SingleFrameDiTModel,
+)
 
 # ── Configs ───────────────────────────────────────────────────────────────────
 
@@ -74,6 +79,9 @@ class TrainConfig:
     # Output
     run_dir: str = "runs/dit"
     run_name: str = ""  # auto-generated from timestamp if empty
+    # Model variant: "concat" = paired-frame tokens (DiTModel),
+    # "single_frame" = vanilla diffusion forcing (SingleFrameDiTModel)
+    variant: str = "concat"
     # Model hyperparameters (forwarded to ModelConfig)
     d_model: int = 128
     n_layers: int = 4
@@ -228,7 +236,11 @@ def main() -> None:
     )
 
     # ── Model ─────────────────────────────────────────────────────────────
-    mcfg = ModelConfig(
+    if tcfg.variant not in ("concat", "single_frame"):
+        raise ValueError(f"unknown variant: {tcfg.variant!r}")
+    cfg_cls = ModelConfig if tcfg.variant == "concat" else SingleFrameConfig
+    model_cls = DiTModel if tcfg.variant == "concat" else SingleFrameDiTModel
+    mcfg = cfg_cls(
         input_dim=obs_res,
         d_model=tcfg.d_model,
         n_layers=tcfg.n_layers,
@@ -238,7 +250,7 @@ def main() -> None:
         n_sample_steps=tcfg.n_sample_steps,
         noise_seed=tcfg.noise_seed,
     )
-    model = DiTModel(mcfg).to(device)
+    model = model_cls(mcfg).to(device)
     n_params = sum(p.numel() for p in model.parameters())
 
     optimizer = torch.optim.AdamW(

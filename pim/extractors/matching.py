@@ -59,9 +59,9 @@ def hungarian_mse(pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
 
     if n_obj == 2:
         # Enumerate both permutations and take the one with lower MSE per sample
-        loss_01 = ((pred - target) ** 2).mean(dim=(-2, -1))          # original order
+        loss_01 = ((pred - target) ** 2).mean(dim=(-2, -1))  # original order
         pred_swap = torch.stack([pred[..., 1, :], pred[..., 0, :]], dim=-2)
-        loss_10 = ((pred_swap - target) ** 2).mean(dim=(-2, -1))     # swapped order
+        loss_10 = ((pred_swap - target) ** 2).mean(dim=(-2, -1))  # swapped order
         # Per-sample minimum
         loss = torch.minimum(loss_01, loss_10).mean()
         return loss

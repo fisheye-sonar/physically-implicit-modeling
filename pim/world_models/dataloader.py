@@ -160,6 +160,7 @@ def build_inmemory_dataloaders(
     seed: int = 0,
     device: str | torch.device = "cuda",
     key: str = "obs_intensity",
+    limit: int | None = None,
 ) -> tuple[InMemoryLoader, InMemoryLoader]:
     """Same split/batching contract as `build_dataloaders`, fully device-resident.
 
@@ -167,9 +168,16 @@ def build_inmemory_dataloaders(
     `InMemoryLoader`s.  The train/val split uses the identical RNG call as
     `build_dataloaders`, so a run is comparable to one trained through the
     lazy loader.
+
+    `limit` keeps only the first `limit` samples before splitting.  Because samples
+    are written in seed order, this selects a prefix of the seed range — so limiting
+    one suite to another's size trains on the *same scenes*, and (the split RNG
+    depending only on the sample count and the seed) produces the *same* train/val
+    partition.  That is what makes a sample-matched control across two observation
+    channels exact rather than approximate.
     """
     with h5py.File(h5_path, "r") as f:
-        arr = f[key][:].astype(np.float32)
+        arr = f[key][: limit if limit is not None else None].astype(np.float32)
 
     n_samples = arr.shape[0]
     rng = np.random.default_rng(seed)
@@ -177,14 +185,20 @@ def build_inmemory_dataloaders(
     n_val = max(1, int(n_samples * val_fraction))
     val_idx, train_idx = perm[:n_val], perm[n_val:]
 
-    tensor = torch.from_numpy(arr).to(device)
+    # Split on the HOST, then move each part — never move the whole array and index
+    # on-device. The device gather would allocate the split copies while the full
+    # tensor is still live, peaking at ~2x the dataset (29.5 GB for the omniscient-2D
+    # suite, which OOMs a 32 GB card that comfortably holds the 14.8 GB it needs).
+    # Same `perm`, so the split is identical to the pre-existing behaviour.
+    train_t = torch.from_numpy(arr[train_idx]).to(device)
+    val_t = torch.from_numpy(arr[val_idx]).to(device)
+    del arr
+
     return (
         InMemoryLoader(
-            tensor[train_idx], batch_size=batch_size, shuffle=True, seed=seed, key=key
+            train_t, batch_size=batch_size, shuffle=True, seed=seed, key=key
         ),
-        InMemoryLoader(
-            tensor[val_idx], batch_size=batch_size, shuffle=False, seed=seed, key=key
-        ),
+        InMemoryLoader(val_t, batch_size=batch_size, shuffle=False, seed=seed, key=key),
     )
 
 
@@ -196,6 +210,7 @@ def build_dataloaders(
     num_workers: int = 4,
     keys: Sequence[str] = ("obs_intensity",),
     in_memory: bool = False,
+    limit: int | None = None,
 ) -> tuple[DataLoader, DataLoader]:
     """Split samples into train/val and return a DataLoader for each.
 
@@ -224,6 +239,10 @@ def build_dataloaders(
     """
     with h5py.File(h5_path, "r") as f:
         n_samples = f["obs_intensity"].shape[0]
+    if limit is not None:
+        n_samples = min(
+            n_samples, limit
+        )  # prefix of the seed range; see build_inmemory_dataloaders
 
     rng = np.random.default_rng(seed)
     perm = rng.permutation(n_samples)

@@ -3,7 +3,471 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-04 (branch `michael_controls`: transformer world model built end to end; the readable state is not the carried state)_
+_Last updated: 2026-08-11 (branch `orthogonal_edit_analysis`: **omniscient-2D thread opened** — the editability negative SURVIVES full observability, but the omniscient latent is less readable/canonical/editable; occupancy-dilution hypothesis pre-registered)_
+
+## 2026-08-11 (latest) — Omniscient 2D: full observability does NOT rescue editability
+
+Sevan's request: *"train the GRU not on the 1D observations but on the whole omniscient 2D world
+which is fully observable."* The whole thread's negative had only ever been measured through a 1D
+perspective scan, which is lossy twice — it **projects** and it **occludes**. `orthogonal_edits`
+relocated the negative to the *world* via `∫gg′ = 0`; that argument is stated for a 1D scan, so this
+tests it. Thread dir `notebooks/experiments/editability/omniscient_2d/` (notebook, runs registry,
+`frame_grid.py`, `WATERFALL_SPEC_2D.md`); note `scratch/2026-08-11-omniscient-2d.md`.
+
+**New code, additive and default-off** (the `soft_render.py` pattern): `pim/simulator/render2d.py`
+— 48×64 orthographic raster over the world rectangle, no projection/occlusion/perspective, flattened
+row-major so the whole stack still sees `(N, T, R)` with R=3072 and needs **no changes**;
+`obs_dim(cfg)` in `config.py` as the single source of truth for R; `--omni2d` flags; per-split seed
+overrides on `generate_dataset.py`; `--n-train-limit` on `train_gru.py`. `tests/test_render2d.py`
+(18, incl. a bit-identical pin), suite **182 green**.
+
+**Design — a one-variable swap.** `datasets/12_omniscient2d` uses split base seeds matched to
+dataset 4, so positions, velocities, reflectivities, edit objects and edit values are **bit-identical**
+(verified, 200 rows/split). Runs `runs/omniscient_2d/{2D_H256_s0, 2D_H256_s1, 1D_H256_30k_s0}` — the
+`controls/H256` recipe verbatim; the 1D arm is **sample-matched** via `--n-train-limit 30000`, which
+selects precisely the 2D suite's scenes.
+
+**0. The 1D control validates the pipeline** — it reproduces published `controls/H256` numbers (90k)
+to within 0.03 index points on every editor at 30k. No 1D↔2D difference is a sample-size effect.
+
+**1. THE NEGATIVE SURVIVES.** Best standard editor gain over its own unsteered row: **+0.11/+0.14**
+(2D) vs **+0.13** (1D); Pseudoinverse Injection inert in both (+0.02 vs +0.03). Removing projection
+*and* occlusion does not make the latent grabbable.
+
+**2. THE SURPRISE — the omniscient latent is WORSE on every axis.** Position R² **0.634/0.686**
+linear (1D: 0.797), **0.752/0.762** MLP (0.877); fiber residual **0.881/0.836** vs **0.583** (much
+less canonical); every oracle weakens — Counterfactual **+0.38/+0.24** vs **+0.68**, Decoder Grad k=1
+**+0.62** vs **+0.96**, Freeze-time **+0.34/+0.27** vs **+0.52**. Geometry moves the other way: PCA
+hull @90% 74/70 vs 44, TwoNN 2.3/2.5 vs 3.2. Seeds agree to ≤0.14 index points.
+
+**Interpretation (not established): occupancy dilution through the objective.** An object covers
+**25.5%** of the 1D scan but **1.45%** of the omniscient frame, so under a plain per-pixel MSE ~98.5%
+of the gradient is about background and the pressure to encode position is ~**18× weaker per unit of
+loss**. The 2D model reaches a *lower absolute* next-step RMSE (0.0875 vs 0.1051) at a similar
+ratio-to-noise-floor (0.62× vs 0.68×) largely by predicting empty space; Fig 5 shows the consequence
+— soft blobs where the 1D model is crisp. Same blur explains the less-negative unsteered index
+(−0.54/−0.52 vs −0.66).
+
+**This makes result 1 provisional in a specific way:** it shows the negative is not caused by
+projection or occlusion, **not** that it is independent of observation *sharpness*.
+**PRE-REGISTERED follow-on** (guide fixed before running): an **occupancy-matched** omniscient arm
+(reweight the loss by occupancy, or enlarge objects). If readability + oracles recover while the
+standard editors stay inert → result 1 stands and "omniscient is worse" is an objective-weighting
+artifact. If the standard editors improve too → result 1 was confounded by blur and must be re-run.
+
+**⚠ Cross-channel comparability rule, now enforced in three places** (registry, notebook definitions
+table, `editability_metrics` docstring): an object is ~13% of a 1D scan but 0.73% of the omniscient
+grid, so whole-frame averages (next-step RMSE, Edit-frame RMSE, GT-traj RMSE) are **not**
+cross-channel comparable. Only the **Edit Index**, R²/fiber residual, and ratios to each arm's own
+reference are.
+
+**AWAITING SEVAN: `WATERFALL_SPEC_2D.md`** — a literal waterfall cannot be drawn when a frame is 2D.
+Proposed: `frame_grid` (arms × time, every content rule of the 1D spec preserved; time subsampled)
++ `frame_trails` (all 15 steps composited). Validated against known answers (unedited world scores
+exactly −1.00, synthetic collapse +0.16) and it earned its keep — it caught MLP Grad Steering's
+respectable-looking −0.47 as *ringing artifacts at fidelity 1.11*, which the scorecard alone did not
+separate from a real gain.
+
+**Bugs caught:** (a) `build_inmemory_dataloaders` moved the full tensor to GPU *then* split, peaking
+at ~2× the dataset (29.5 GB) — OOMs a 32 GB card that needs 14.8; now splits on the host. (b)
+`generate_dataset.py` derives split seeds sequentially, which would have put the 2D test/edits scenes
+inside dataset 4's *train* range — leaking against the 1D baseline; fixed with explicit overrides +
+an overlap check. (c) **A silent no-op notebook**: building an `.ipynb` with `source = s.split("\n")`
+drops trailing newlines, `.ipynb` joins `source` with `""`, so every cell collapsed onto one line and
+— since every cell starts with a `# [N]` comment — became a comment. nbconvert reported success,
+exec counts ran 1→20, **zero outputs, zero errors**. Use `splitlines(keepends=True)`; and treat *an
+executed notebook with no outputs as not having run*.
+
+## 2026-08-11 (later) — standard MLP probe was undertrained (Sevan-flagged; FIXED)
+
+Sevan flagged the impossible pattern "linear R² 0.70, MLP R² negative" on the DiT probe grid. Diagnosis:
+`train_extractor` batches over **sequences** (batch 512), so at N=500–1500 sequences the standard 30 "epochs"
+is only ~30–90 Adam steps — the 2×256 MLP never converges; linear lstsq (exact solve) is unaffected. Validated
+on GRU H256 h: MLP R² 0.17 @30ep → **0.89 @300ep, ABOVE linear 0.81** (as a strictly-more-expressive probe must
+be); z-scoring inputs unnecessary once training is adequate. **Fix: `STD_EPOCHS` 30 → 300 in
+`pim/extractors/standard.py`** (documented in-module). ⚠ Every MLP R² reported from `fit_readability_probes`
+between 2026-08-06 and 2026-08-11 under-reads (incl. transformer thread MLP 0.58–0.68 and all of today's DiT/
+input-grad notebooks); linear R² everywhere is unaffected. DiT notebooks re-executed with the fix same day.
+
+## 2026-08-11 — DiT thread + Input Grad Steering (both Sevan-directed)
+
+## 2026-08-11 (latest) — VAE + latent DiT BUILT, TRAINED, ANALYSED: the compression hypothesis is REFUTED
+
+`directions/latent-dit-vae.md` executed end-to-end (Sevan: "treat the latent DiT as a wholly separate
+architecture"). New code: `pim/world_models/vae.py` + `scripts/train_vae.py`; `pim/world_models/latent_dit/` +
+`scripts/train_latent_dit.py` (frozen VAE + concat DiT core via a new `data_transform="identity"` flag;
+implements `HiddenStateModel` in observation space so the whole eval suite runs unchanged); loader dispatch;
+`tests/test_latent_dit.py` (17) + DiT-core tests (40). **The owed API fix landed too**:
+`predict_mode="sample_fresh"` (per-sample fresh noise, seedable `model.noise_gen`) replaces the `_eps_bank`
+mutation hack. Runs: `runs/vae/{vae_z16,vae_z8}`, `runs/latent_dit/{0_z16_w4,1_z16_w2,2_z8_w4}`; registry
+`editability/latent_DiT/LATENT_DIT_RUNS.md`; scratch note `scratch/2026-08-11-latent-dit.md`.
+
+**Gate passed** (`latent_DiT/latent_dit_world_state.ipynb`): VAE recon 0.1294 vs noisy / **0.0986 vs clean**
+(noise floor 0.1541 — it denoises); 16-d code retains position as well as the raw 128-d obs (MLP R² 0.540 vs
+0.515); decoded next-step **0.02517 vs noisy** against a **VAE floor of 0.01672**, and **0.01174 vs clean vs the
+pixel DiT's 0.01186 on identical data** (equal-or-better structure); `sample_fresh` rollouts stable; probe grid
+linear R² **0.81** at late layers (pixel 0.70), again **flat across τ**.
+
+**RESULT** (`input_grad_steering/input_grad_steering_latent_dit.ipynb`): compressing the write surface 128-d →
+16-d does **not** make probe gradients semantic. cos(δ, Δ_true) in latent space **+0.118…+0.168** vs
+observation space +0.146…+0.212 vs pixel DiT +0.11…+0.22 (chance ≈ −0.03). Edit Index band unchanged
+arm-for-arm (obs-grad −0.30…−0.44, latent-window grad −0.38…−0.48, iterate grad −0.13…−0.23), and **both
+oracles reproduce their pixel values exactly** (Render write @1 **+0.12**, velocity-consistent Counterfactual
+window write **+0.71**). The most readable state in the thread (linear 0.810 / MLP 0.905) is not one bit more
+controllable. **So the failure is NOT representation geometry — it is belief dynamics** (the ghost is carried
+by the clean context; only window-consistent evidence removes it). Next: objectives that synthesise multi-frame
+velocity-consistent evidence (SDEdit-style window re-noise, render-space objective, repeated small edits).
+
+**1. DiT thread opened** (`notebooks/experiments/editability/DiT/`, registry `DIT_RUNS.md`). New code:
+`pim/world_models/dit/single_frame.py` (**SingleFrameDiTModel** — vanilla diffusion forcing, single-frame
+tokens; `--variant` in `train_dit.py`; loader dispatch; `tests/test_dit_single_frame.py`, 37/37 with existing
+DiT tests). Four d256 runs launched (concat W2/W4 = span-matched to transformer W2/W4; single-frame W3/W5):
+concat W2 **0.02480** / W4 **0.02445**; single-frame W3 **0.02504** / W5 **0.02424** — the tokenization
+package (clean-channel concat vs vanilla diffusion forcing) is a **wash** on single-step quality at matched
+frame span.
+**Sample-mode rollout collapse SOLVED:** the vertical-stripe collapse in autoregressive Euler sampling was the
+fixed ODE start-noise reused every step; fresh noise per step restores coherent stochastic rollouts
+(free-run RMSE 0.257 → **0.186**, vs mean mode 0.192). API follow-up owed: a supported fresh-noise mode
+(currently done by mutating `_eps_bank` in the eval script).
+
+**2. Input Grad Steering — clean negative, both architectures** (`editability/input_grad_steering/`, README +
+2 executed notebooks; scratch note `scratch/2026-08-11-input-grad-steering.md`). Backprop a frozen standard
+linear probe through the network to the input observation: the readout is always fully driven, but δ is
+adversarial fuzz — cos(δ, Δ_true) ≈ 0.25 (transformer) / 0.12 (GRU), Edit Index moves −0.69→−0.50 /
+−0.68→−0.44, fidelity ≈ 1.0 (ignored). Oracle on the same write surface (newest frame ← clean edited render):
+transformer **+0.27**, GRU **−0.01** (= belief inertia; matches First Obs TF). Readable≠controllable now also
+holds at the input. **DiT leg (`input_grad_steering_dit.ipynb`, run `9_…w4_d256`): the guidance hypothesis
+FAILS naive** — probe-guided Euler sampling at any effective strength degrades (index plateaus at −0.05 with
+collateral 0.13→0.55, saturated frames), and **early-τ-only guidance = full-schedule**, localizing the failure
+to the gradient direction, not kick timing. The rollout DOES re-cohere corrupted frames into valid-looking
+objects (the projector is real) but to the nearest coherent world, not the target. DiT oracle render write:
++0.12. **Same-day extension:** (ℓ × τ) probe grid (`DiT/dit_world_state.ipynb`, new tested `resid_sink` hook)
+— linear R² depth-monotone 0.26→0.76 and **flat across τ** (position belief is context-driven, not in the
+iterate); and **pause–optimize–resume Latent Grad Steering @(L3, τ)** — drive the iterate to an exact verified
+probe readout mid-ODE, resume: **−0.51 → −0.18** (best probe-only editor in the whole thread, collateral only
+0.28–0.35), but waterfall shows **duplication not relocation** (new persistent target band + surviving ghost;
+the ghost lives in the untouched clean context tokens). Whole-window history arm (n=4): −0.52, = n=1.
+**MLP-probe variants (post-fix probes, R² 0.85–0.90): Input Grad · MLP −0.31 vs linear −0.52** — best
+history-write on any architecture in the thread (cos +0.22; waterfall shows ghost dimming + new target band
+from a clean-frame edit) — while **latent steering is probe-capacity-invariant** (≈ −0.2 plateau either way):
+the plateau is belief dynamics (clean context tokens), not readout quality. All verdicts also invariant under
+full fresh-noise Euler rollouts.
+Escalations: SDEdit-style history re-noising, repeated latent edits over frames, render-space objective.
+**Whole-window arms:** Input Grad · MLP n=4 = n=1 (−0.31; width doesn't help probe gradients). But
+**Counterfactual window write (n=4, oracle): Edit Index +0.71 — the DiT edit essentially fully lands**
+(target/ghost RMSE ≈ 0.09, collateral at baseline, GT-traj RMSE 0.206 < unsteered 0.303): all 4 window frames
+← velocity-consistent counterfactual renders (own velocity, constant offset to hit target at ef). So the
+Render write @1 cap (+0.12) was **conflicting velocity evidence, not belief inertia** — the DiT is fully
+editable through consistent history; +0.71 is the ceiling probe-only editors (best −0.31) have to chase.
+
+**1. Readability probes are now standardised in code.** Two different MLP probes had been in use and their R²
+values are **not comparable**: `MLPExtractor` on defaults (**1×128, in-sample**) in `00_master_editability` and
+`controls/`, versus a hand-rolled **2×256 held-out** probe in `iterative_probing` / `nonlinear_gru`. Two axes
+conflated — capacity, and in-sample-vs-held-out. New `pim/extractors/standard.py::fit_readability_probes`:
+linear lstsq + **2×256 ReLU MLP**, both fit on the same 80% of **sequences**, both scored on the same held-out
+20% against the train mean. `MLPExtractor` gained `n_hidden_layers` (**default 1 = unchanged, asserted
+bit-identical**) because the **MLP Grad Steering** editor writes through a *frozen 1×128* probe whose published
+results are tied to it — reporting probe and steering probe are now explicitly different objects.
+`tests/test_standard_probes.py` (7 tests, suite 107 green). Documented in `METRICS_AND_EDITORS.md` §2 (⭐ block)
+and `CLAUDE.md`. **Pre-2026-08-06 MLP R² numbers are on a mixture of the two probes and need re-fitting before
+cross-notebook comparison.**
+
+**2. Transformer: uneditable against 5 activation editors, not 1.** Extended
+`transformers/transformer_world_state.ipynb` (§4d, 2 cells, 30s) with **Global PCA Projection (PI)**,
+**MLP Grad Steering**, **INLP @29 (R² corrected)** at the last residual point. All leave every transformer run
+on the unedited side at **fidelity 0.99–1.00** (genuine inertness, not degradation): best is INLP at
+**−0.39…−0.48** vs unsteered −0.66…−0.68 — same ordering and nearly the same values as the GRU. **Window size
+is irrelevant** (W2/W4/W16 agree within 0.09 on every editor).
+
+**The transformer-specific finding is upstream of editability:** the write itself lands less well. Global PCA
+Projection drives the linear readout error 3.23 → **0.062** on the GRU (succeeds, then is ignored) but only
+3.22 → **1.98–2.20** on the transformers at comparable ‖Δ‖. So the transformer negative is **weaker and more
+confounded** than the GRU's — part of the failure is that the last-residual-point activation resists being
+written to at all while staying on-manifold. Said plainly in the notebook rather than reporting the index alone.
+Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
+transformer activation edit, which cannot survive into the next step by construction.
+
+_Last updated: 2026-08-05 (branch `orthogonal_edit_analysis`: editor gallery — 17 editors in 3 slide figures; canonical editor names fixed; Decoder Grad k=15 is the only editor that both lands AND persists)_
+
+## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
+
+Sevan asked for three slide-quality waterfalls (standard / learned / oracle families) replacing the master's
+single all-editors waterfall, plus a fixed naming scheme. New notebook
+`editability/editor_gallery/editor_gallery.ipynb` (12 cells, 0 errors), **17 editors on `runs/controls/H256`**,
+N=64. Names are now canonical in `METRICS_AND_EDITORS.md` (⭐ block with the full old→new mapping).
+
+**Corrections made to Sevan's proposed list before building** (he confirmed all): Multistep Steering feeds the
+model's **own decoded** obs, never a render — that is precisely what separates it from freeze-time; `PCA
+geodesic` refits a **local** tangent, so it is now **Local PCA Geodesic** (the old name collided with the global
+one); Global PCA Projection is **alternating (POCS)**, not one-shot. He dropped the metric-corrected and
+tangent-constrained editors from the gallery, added **Decoder Grad Steering k=15**, and chose **INLP @29 with R²
+correction** (the uniform k=29 variant is degenerate — fidelity 1.57).
+
+**RESULTS.** *Standard (all 7 fail):* best is **INLP @29 R²-corrected −0.37** (fidelity 0.93) vs unsteered
+−0.68; Pseudoinverse Injection is visually identical to unsteered at −0.66. **Multistep Steering (PI) @16 is a
+trap** — best-looking index (−0.22) at **fidelity 1.32** and collateral 0.429 vs 0.127; it drags both objects.
+*Learned:* **Trained Editor (frozen world model) −0.68 → −0.14**, fidelity 0.68 — largest gain of any mechanism,
+still short of 0. `no retention`'s unsteered index *rises* to −0.39 from degraded prediction alone, so its −0.30
+is mostly scale movement. *Oracle — the headline:* **Decoder Grad k=1 = +0.97 at the edit frame → +0.08 by step
+14** (visible striping: off-manifold, dynamics reject it), while **Decoder Grad k=15 = +0.83 → +0.77 at fidelity
+0.20** — **the only editor that both lands and persists**. Counterfactual Overwriting +0.70 → +0.45; Freeze-time
++0.52 → +0.26; First Obs. TF only −0.08.
+
+**THROUGH-LINE the figures make visible:** nothing that writes to `h` from a *readout* works. The mechanisms that
+work either feed **externally rendered observations** (freeze-time, counterfactual) or optimise `h` against the
+**full future** (k=15). Every one-shot readout-derived write leaves the object put or degrades the rollout.
+
+**Master notebook updated:** Fig 5a now *displays* the three gallery figures with provenance rather than
+recomputing (CLAUDE.md requires the master stay lightweight); Fig 5b (RSSM) retired as a no-op — the learned arms
+are GRU fine-tunes with no RSSM counterpart. **Model provenance flagged:** the gallery uses `controls/H256`, not
+the master's `3_dset3_...` (trained on dataset 3, evaluated on dataset 4), because H256 matches the eval dataset
+**and** is the `base:` of every fine-tuned arm. Master §4 numbers therefore differ from the gallery's.
+
+
+## 2026-08-05 (later 5) — metric-corrected edits: the whitening hypothesis is real, and insufficient
+
+Sevan's derivation: a least-squares probe is `W = Σ_ph Σ_hh⁻¹`, so if `h ≈ h₀ + Jp` then `Wᵀ = Σ_hh⁻¹ J Σ_pp` —
+**the probe's row space is `J` whitened by the inverse state covariance, not `J`.** With anisotropic `Σ_hh` the
+two can be near-orthogonal even for a perfect probe, which would explain every probe-derived editor failure in
+this thread as a metric artifact. Notebook `editability/metric_corrected_edits/metric_corrected_edits.ipynb`
+(12 cells, 0 errors, 5 figs), note `scratch/2026-08-05-metric-corrected-edits.md`. GRU `controls/H256`, 78k-state
+bank, N=256 edits, four pre-registered tests with the interpretation guide fixed *before* the run.
+
+**GATE PASSED decisively:** `Σ_hh` condition number **1.79e4**. It also **independently corroborates the
+derivation** — `iterative_probing` found the position code sits in *below-average-variance* directions, exactly
+what `Σ⁻¹` does to a least-squares probe. Two routes, same structural claim.
+
+**TEST 1 — the direction really improves.** cos to `Δh_true` **+0.079 → +0.236** (85° → 76°); reachable-subspace
+mass **0.098 (0.78× chance) → 0.380 (3.04× chance)**. **The first probe-derived subspace in this thread that is
+meaningfully enriched rather than at chance.** Monotone in α; the constraint-satisfying family and Sevan's
+literal `Σ^α W⁺δ` agree to ±0.003.
+
+**TEST 2 — best training-free structural editor the thread has produced, and still not an edit.** Only the metric
+differs from the failing editor: unsteered −0.67 → Euclidean −0.65 → **Mahalanobis −0.51**, fidelity **0.98**,
+Target 0.488→0.432, Ghost 0.589→0.534. **+0.14 index points at zero fidelity cost** — for scale, heavy
+fine-tuning bought +0.13 *and* cost 13% of next-step prediction.
+
+**TEST 3 — magnitude is not the answer either.** α=1 has a genuine optimum where ‖Δ‖ matches the oracle's (Target
+and Ghost RMSE both minimise at ×3 = 3.39× a dynamics step vs the oracle's 3.75×), but fidelity crosses 1 there,
+so the best legitimate arm is **×2 → −0.33 = 25% of the oracle's gain**. Past that the index rises only by
+degrading (×8: +0.01 at fidelity **1.57**, striped garbage in Fig 5). Scaling the *Euclidean* direction is much
+weaker (×8 → −0.45, Target barely moves). **Neither wrong-direction nor wrong-magnitude alone.**
+
+**TEST 4 — the local metric is WORSE.** 1024-NN local `Σ_hh`: cos +0.143 vs global +0.236. Its Edit Index (−0.38)
+looks better than global (−0.51) but that is **entirely magnitude** — local makes ‖Δ‖ = 2.27× a step vs global
+1.13×, and at matched displacement global wins (×2 → −0.33). The anisotropy that matters is **global**, not local
+curvature. Exactly the confusion the scale sweep exists to prevent.
+
+**THE PATTERN NOW ACROSS THREE UNRELATED CONSTRUCTIONS:** tangent projection 57% captured → ~33% of the gain;
+116-dim position-code projection 57% → 33%; metric correction ~24–38% → 25%. **Partial capture buys
+sub-proportional effect** — the all-or-nothing reading, in graded form.
+
+**WHAT IT CHANGES:** the whitening account is mechanistically real and *solves the specific puzzle* of why
+probe-derived directions looked orthogonal to successful edits — it was a metric artifact, not a fact about the
+representation. **Every past row-space/orthogonality number in the thread was measured in the wrong (Euclidean)
+metric** and should be re-expressed. But it does not rescue editing, and the obstacle is now excluded from: the
+probe's 4-dim slice, the linear position code, manifold-tangency, the metric, and magnitude.
+
+**OWED:** characterise `Δh_true`'s complement directly (four misses now share a signature); resolve the ×2–×3
+optimum (coarse grid, fidelity crosses 1 inside the bracket); re-express old orthogonality numbers in the
+Mahalanobis metric; neighbourhood-size sweep for the local metric (only k=1024 tried); one model, one seed,
+position probe only.
+
+
+## 2026-08-05 (later 4) — iterative probing: the linear position code is 116 dims, and editing in it still fails
+
+Sevan's experiment: fit a linear position probe, **project its 4-dim row space out of `h` entirely**, refit on
+what remains, repeat to chance — how many probes, and is the total `4 × #probes`? This is INLP (Ravfogel et al.
+2020) used to *measure* a code rather than erase an attribute. Notebook
+`editability/iterative_probing/iterative_probing.ipynb` (11 cells, 0 errors, 2 figs), note
+`scratch/2026-08-05-iterative-probing-position-dimensionality.md`. GRU `controls/H256`, 78k aligned states from
+2k test sequences, split **by sequence**, float64 throughout.
+
+**ANSWER: 29 probes, every one exactly rank 4 → 112 dims.** The arithmetic holds, and for a stateable reason:
+`lstsq` returns the **minimum-norm** solution, so each new probe's rows land inside the already-deflated row
+space, hence orthogonal to everything removed. Rank and orthogonality (max |inner| < 1e-6) are **asserted every
+step**. Decay is gradual — R² 0.822 → 0.479 (24 dims) → 0.236 (44) → 0.091 (68) → 0.020 (112) — so "the"
+dimensionality is threshold-dependent; half the readability is gone by 24 dims.
+
+**The controls are where it gets sharp.** (a) **Random-ablation:** removing **112 random** dims leaves position
+at **R² 0.767** vs **0.020** for the chosen 112 — the collapse is about *which* directions, not how many.
+Shuffled-label floor −0.003. (b) **The position directions carry BELOW-average energy**: after 112 removals the
+real track keeps **63.4%** of state energy, random keeps **56.9%** (≈ isotropic 56.3%) — position is not written
+along the dominant variance axes. (c) **112 dims is the LINEAR code, not the information**: an MLP refit on the
+fully deflated states still reads position at **R² 0.544** (from 0.909). (d) Scale: the states occupy 40/75/**172**
+PCA dims at 90/95/99%, so the code spans **65% of the subspace the states actually occupy**.
+
+**WHY THIS MATTERS TO THE THREAD.** Every §4 row-space number is measured against **one probe's 4 dims**, which
+is also the entire reachable set of readout injection. The linear position code is **28× larger**. It does not
+overturn the negative, but it reframes what "the edit direction is at chance in the row space" means.
+
+**THE FOLLOW-ON THIS SETS UP (not run, and it is the interesting one):** measure the counterfactual Δh's overlap
+with the **112-dim** accumulated subspace against matched chance `√(112/256)` = 0.661. If still at chance, a
+successful edit is orthogonal to the *entire linear position code* — much stronger than the current claim. If
+enriched, the failure is that one probe exposes the wrong 4-dim slice, and a **multi-probe injection editor
+writing in all 112 dims** becomes the obvious thing to try.
+
+**OWED:** greedy removal order (112 is an upper bound on a minimal spanning set); arbitrary R²<0.02 stop; one
+model, one seed, **position only** — velocity untested.
+
+## 2026-08-05 (later 3) — nonlinear GRU: superposition confirmed for real, editability negative survives a fifth axis
+
+Sevan spotted that `delta_h_analysis` §7's object-**superposition** result might be nothing but a linear-decoder
+identity — `decode(h0+d1+d2) = decode(h0+d1)+decode(h0+d2)−decode(h0)` holds for *any* vectors when `decode` is a
+single `nn.Linear`. He was right. Then: *train a GRU with a nonlinear encoder and decoder and see which findings
+survive.* Notebook `editability/nonlinear_gru/nonlinear_gru_findings.ipynb` (21 cells, 0 errors, 10 figs),
+registry `.../NONLINEAR_GRU_RUNS.md`, note `scratch/2026-08-05-nonlinear-gru-decoder.md`.
+
+**New code, additive and default-off.** `pim/world_models/gru/model.py` gained `enc_hidden_layers` /
+`dec_hidden_layers` / `mlp_activation`; the extra blocks live in `enc_trunk` / `dec_trunk` submodules **absent
+from `state_dict` at depth 0**, so every existing checkpoint loads unchanged and produces bit-identical output
+(max-diff exactly `0.0` on `forward` / `step` / `decode`). Encode/decode routed through single `_enc` / `_dec`
+choke-points. `tests/test_gru_mlp_depth.py` (10 tests; suite now 100 green). Runs `runs/nonlinear_gru/
+{NL_enc2dec2_s0, NL_dec2_s0, NL_enc2dec2_s1}`, identical recipe to `controls/H256`, ~6 min each.
+
+**THE ARTIFACT IS CONFIRMED — but it was the *evidence*, not the *result*.** Affine-decoder models: composed
+decode equals the affine prediction to **6.6e-08**, so their composed Edit Index **+0.46** was algebraically
+determined and never evidence about the latent. **On the nonlinear decoders (affine gap 8.5e-02–8.8e-02) the
+result holds and is object-specific**: composed **+0.43…+0.44** against nulls of **−0.18…−0.20** (same
+composition with object 1's delta from a *different* sample) and **−0.45…−0.46** (random Δ of matched norm),
+with unedited −0.74 and direct +0.72. So compositionality is **confirmed, on decoders where it can actually be
+tested** — a stronger position than before. It is *partial*: composed recovers ~82% of the gain to `direct` and
+Fig 7 sample 47 shows it banding where direct stays clean. **Correction to my first framing:** I led with
+"composed doesn't beat the affine prediction, so the nonlinearity is a tax" — but the affine prediction is not a
+null model (it already assumes each single edit works). The real nulls are the two above. State-space cosine is
+real everywhere but *weaker* with a nonlinear read-out (+0.873/29° → +0.784…+0.801/37–38°), floors +0.31…+0.37
+and ~+0.05 — opposite to a "shallow decoder was hiding the structure" story.
+
+**EVERYTHING ELSE SURVIVES.** Nonlinear variants are *slightly better* predictors (next-step 0.1029–0.1033 vs
+0.1041), position is still linearly readable (held-out R² 0.803–0.805 vs 0.815), readout injection is still
+**inert** (−0.65 vs its own unsteered −0.67), counterfactual overwrite still hits **+0.68 on every model**, and
+the row-space fraction is still chance (1.05–1.24×). Fifth independent axis, after capacity, noise, actions and
+architecture. Fig 4 shows injection pixel-indistinguishable from unsteered while all three oracles land the object.
+
+**One new result worth carrying:** the **decoder-gradient oracle weakens on a nonlinear decoder**, +0.97/+1.00 →
++0.68…+0.72. Against an affine decoder it solves a *convex* least-squares problem in `h`; through an MLP it does
+not. Its near-perfect score on the linear models was partly the decoder's convexity — relevant wherever it is
+quoted as an upper bracket.
+
+**Two method errors caught in-flight**, both mine: linear probe R² was **in-sample** while the MLP's was held-out
+(which had produced velocity MLP R² *below* linear); and the §5 waterfall's GT column went black where displaced
+objects leave the frustum. Both fixed, both stated in the notebook. **Harness bug fixed:**
+`METRICS_AND_EDITORS.md` still mandated the shared teacher-forced `ef` waterfall row that `CLAUDE.md` banned on
+2026-07-30 — and `CLAUDE.md` names that file as the leak path into the `controls/` notebooks. Registry corrected.
+
+**OWED:** no depth/activation sweep (fixed at 2 blocks, ReLU); §5 uses one displacement pair and N=67; baselines
+are single-seed. `delta_h_analysis` §7's Edit Index columns are not evidence on that affine-decoder model and
+must not be cited without its §7b control — but the claim itself is now independently confirmed here.
+
+## 2026-08-05 (later 2) — tangent-constrained injection: a new direction, still no edit
+
+Sevan's construction: `WᵀΔ = δ` has a 252-d solution set; plain injection takes the minimum-norm member,
+so take instead the member lying in the **local tangent space** — `Δ_tan = B(WᵀB)⁺δ` with `B` a local-PCA
+basis. Notebook `editability/orthogonal_edits/tangent_constrained_injection.ipynb` (14 cells, 0 errors,
+4 figs), note `scratch/2026-08-05-tangent-constrained-injection.md`. GRU `controls/H256`, N=256, bank 58.5k.
+
+**RESULTS.** (a) Local manifold is **~22-d** at 90% variance (33 at 99%), not 5–10. (b) `Δh_true` **is**
+enriched in `span(B)`: 0.568 at d=8 vs 0.177 chance = **3.2× chance** — the first subspace in this thread
+that is meaningfully enriched (the probe row space is at/below chance). (c) The editor is genuinely new
+(cos **+0.069** with plain injection) and moves the Edit Index −0.644 → **−0.290** — **but that is
+degradation, not editing**: Target RMSE unchanged at 0.488, Ghost RMSE worse, fidelity ratio **1.14**.
+Scale sweep reaches +0.007 at α=32 with Target RMSE **3.997** and fidelity **16.7**.
+
+**Decisive control:** project the *working oracle* onto `span(B)` — the ceiling for any tangent-constrained
+editor. Keeps 57% of `Δh_true`, cos **+0.568 (55°)**, no degradation (fidelity 0.91), and still scores only
+**−0.197**. **Keeping 57% of the true edit yields essentially none of the effect.**
+
+**Two takeaways:** the binding constraint is *not* manifold membership; and the edit looks close to
+**all-or-nothing**. The latter is new and directly testable — sweep `h₀ + β·Δh_true` for β ∈ [0,1] and look
+for a threshold. That is follow-on #1.
+
+**Waterfalls added (Fig 5) and they settle the failure mode.** unsteered / plain injection /
+inject-then-project are visually identical, object parked on the ghost locator. The tangent editor
+**streaks**, and at ×4 / ×32 it is vertical-stripe garbage. Only the counterfactual oracle puts the object
+cleanly on the green target. Correct word per `CLAUDE.md`: the tangent editor **collapses** (degenerates
+off-distribution), it does not *revert*; plain injection is the *inert* one. Four scalar figures had not
+separated these.
+
+**Harness updated** on the back of this: `CLAUDE.md` now makes a waterfall **mandatory** for any claim about
+an effect on generations (with the arm's headline metric in each column title, and degenerate settings shown
+as their own columns), and adds a legibility rule — horizontal bars for long series names, and eyeball the
+rendered PNG rather than trusting that the cell ran.
+
+**Process note:** my first summary logic called this a success off the Edit Index alone. The fidelity ratio
+is exactly what `METRICS_AND_EDITORS.md` requires to gate a success claim, and it caught it. Also fixed: an
+alignment check that varied warm-up length instead of the compared frame (k=0 and k=+1 differed by 0.5%,
+testing nothing).
+
+## 2026-08-05 (later) — soft/differentiable renderer: the result survives
+
+Sevan asked for the full differentiable-renderer implementation plus a smoothed-but-not-differentiable
+control ("closer to a standard simulation a world model would be trained on"), a fresh dataset, and a
+retrained GRU with the rendering as the only variable. All done. Notebook
+`editability/orthogonal_edits/soft_render_geometry.ipynb` (13 cells, 0 errors, 4 figs).
+
+**New code, all optional and additive** — `renderer.py` is untouched and every knob defaults to off, pinned
+by `test_soft_render.py::test_defaults_are_bit_identical`: `pim/simulator/soft_render.py` (numpy + torch
+backends), 10 tests, 4 new `SimConfig` fields (`soft_edge`, `soft_shading`, `soft_psf_sigma`,
+`soft_occlusion_temp`), CLI flags on `generate_dataset.py`, dataset `datasets/5_soft_render`, model
+`runs/soft_render/H256_soft` (400 epochs, identical protocol to `controls/H256`).
+
+**RESULT — survives.** `N_eff` of the change under a nudge went 1.00 → **15.43** (a 15× spread of the
+derivative off the silhouette), and the geometry did not move: cos(required, pseudoinverse) 85.8° → **87.0°**,
+row-space fraction 0.77× → **0.74× chance**, injection closes −0.1% → **−2.0%** of the gap. With the **exact
+Jacobian** from the differentiable backend it is **0.37× chance** — further below. Hard- and soft-occlusion
+backends agree to 3 decimals, so the realistic antialiased-simulator control behaves identically. In the
+retrained GRU (quality gate 0.73× its own noise floor; position R² 0.824): cos **86.9°**, row-space
+**1.11× chance**, injection **−0.585 → −0.567**, inert.
+
+**Prediction I got wrong, recorded:** I said shading would be the structural knob and antialiasing/blur inert.
+Reverse is true — soft edge does nearly all the spreading (1.0 → 10.4), lambert adds nothing (→ 9.2), because
+a dome is steepest at its rim and flat at its apex. Sevan's instinct was right.
+
+**Bugs found and fixed** (would have invalidated the soft numbers): (a) `clean_obs` is *reconstructed* as
+`reflectivities[obs_id]`, exact only for a flat renderer — soft datasets now store `obs_clean` and the loader
+prefers it; (b) `build_edit_zones` built its own `SimConfig` and would have rendered the reference worlds
+**hard** while the model was trained **soft**; (c) the soft renderer's relaxed visibility gate reported a hit
+on nearly every ray, corrupting `obs_id`/`obs_depth`.
+
+## 2026-08-05 — NEW branch `orthogonal_edit_analysis`: the negative is a property of the WORLD, not the models
+
+Sevan's question, from a conversation about whether the renderer is a function and whether it is linear.
+Every `readable ≠ grabbable` result so far was measured **inside a trained model**. Transformer §6 sharpened
+it to geometry (87–90°, row-space fraction at/below chance) but still in-network, leaving open whether the
+network **chose** an awkward layout or **inherited** one. Brief `directions/orthogonal-edits.md`, notebook
+`editability/orthogonal_edits/observation_space_geometry.ipynb` (11 cells, 0 errors, 3 figs), note
+`scratch/2026-08-05-observation-space-geometry.md` (**FLAG FOR PROMOTION**). **No model is loaded anywhere
+in this notebook** — that is the design.
+
+**The mechanism, statable in one line:** an object covers `n` rays at constant intensity; nudging it one ray
+changes only the **two edge rays** and leaves the interior untouched. So `cos ≈ −√(k/2n)` — **a linear probe
+reads the plateau, moving the object changes the edges, and a plateau is nearly perpendicular to the spikes
+at its own edges.** Underneath: for `f(p) = g(·−p)`, `∫ g g' = ½∫(g²)' = 0` exactly. Predicted −0.125,
+measured −0.151 over 1996 samples.
+
+**RESULT — inherited** (N=2000, per-sample then averaged, structural analogue of §6 with `h∈R^256` → raw
+`o∈R^128`, chance `√(4/128)=0.177`):
+- `cos(required change, pseudoinverse direction)` = **+0.073 (86°)** teleport, **+0.011 (89°)** nudge;
+  shuffled controls +0.001 / −0.000. Inside the null.
+- Row-space fraction **0.135 (0.77× chance)** teleport, **0.097 (0.55× chance)** nudge — *below* chance.
+- These land on top of the in-network numbers (86–89° here vs 87–90° there).
+- **The direct demonstration §6 could not make:** apply the injection to the observation itself. The probe
+  reads the target to **1.25e-06 sim units** — a perfect write by its own objective — and it closes
+  **−0.1%** of the RMSE gap to the target world, rendering as a diffuse ripple while the plateaus stay put.
+
+**Why it matters:** this relocates the thread's central negative from the models to the world. It retires
+better-probes / longer-training / different-architecture as fixes *for this world*, and it explains why
+every editor that DOES work (counterfactual overwrite, freeze-time, history overwrite) acts through the
+**observation sequence** — the only channel that can produce an edge-shaped change.
+
+**Caveat that must be closed before promotion:** this renderer has **hard silhouettes** (`obs_intensity` is
+the first-hit reflectivity, flat, no antialiasing — the clean render is *piecewise constant* in position:
+only {0, 0.4, 0.8} appear, and 14 of 25 small steps changed nothing). The `∫gg'=0` argument predicts
+orthogonality survives smoothing, but **that is untested and is the first thing a referee will ask.**
+Follow-on #1 is a soft-renderer replication.
+
+**Gotcha recorded:** the repo's `_fit_mlp` does not converge on position targets without standardising them
+(returns R² ≈ −0.5, worse than the mean — a failed fit, not a result). Standardise `y` before fitting.
 
 ## 2026-08-04 — Transformer world model, end to end (branch `michael_controls`)
 
