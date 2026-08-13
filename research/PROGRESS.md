@@ -61,7 +61,19 @@ grid, so whole-frame averages (next-step RMSE, Edit-frame RMSE, GT-traj RMSE) ar
 cross-channel comparable. Only the **Edit Index**, R²/fiber residual, and ratios to each arm's own
 reference are.
 
-**AWAITING SEVAN: `WATERFALL_SPEC_2D.md`** — a literal waterfall cannot be drawn when a frame is 2D.
+**2D WATERFALL SPEC — APPROVED 2026-08-12 and promoted to `CLAUDE.md`.** It is now the sanctioned form
+for **any** 2D-raster observation, not just this thread: `CLAUDE.md` § Waterfalls carries the rule and
+points at `omniscient_2d/WATERFALL_SPEC_2D.md`; `METRICS_AND_EDITORS.md` carries the same pointer (it is
+named in `CLAUDE.md` as a past leak path for exactly this drift). Defaults accepted as-is (5 steps,
+3 context frames). Added on approval: **`frame_animation`** — the optional third view, obeying the
+existing animation rules (numbered persistent title, 3.03 fps, **990 ms holds** on the last pre-edit
+frame and the edit frame; verified on `anim1_editors_2d.gif`, notebook cell [19]). It is an addition,
+never a substitute — a claim still ships with grid + trails, since a GIF cannot be read in a notebook
+diff or a paper. Two guards worth knowing: the `anim_num` ↔ filename rule is **enforced** (raises), and
+the GIF encoder collapses identical hold frames into one carrying the summed duration, so **check the
+duration list, not the frame count** (22 slots store as 18 frames).
+
+**Superseded note — the spec was previously:** — a literal waterfall cannot be drawn when a frame is 2D.
 Proposed: `frame_grid` (arms × time, every content rule of the 1D spec preserved; time subsampled)
 + `frame_trails` (all 15 steps composited). Validated against known answers (unedited world scores
 exactly −1.00, synthetic collapse +0.16) and it earned its keep — it caught MLP Grad Steering's

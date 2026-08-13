@@ -258,6 +258,13 @@ cap the sweep at the history that actually exists (at `ef = 20`, a model with `s
   The one exception is the **Oracle observation** column, which was fed `obs[ef]` and therefore **leads by one
   frame**; label it as such rather than re-aligning the other columns to it. Canonical implementations:
   `controls/encoder_editing.ipynb` `waterfall_grid` and `scripts/eval_editability_endogenous.py` `waterfall()`.
+- **2D observations:** a literal waterfall cannot be drawn when a frame is a 2D raster. Use the sanctioned
+  pair `frame_grid` + `frame_trails` (`omniscient_2d/frame_grid.py`, spec in
+  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `../../../CLAUDE.md`). Every
+  content rule above still binds — including the shared-`ef`-row ban; only the axes (arms become rows),
+  the locators (circles, so `aspect="equal"` is mandatory) and the time subsample change. The two panels
+  ship **together**. Do not improvise a per-notebook substitute — that is exactly the drift this registry
+  exists to stop.
 
   > ### ⛔ NEVER paint a shared teacher-forced `ef` row across all columns (corrected 2026-07-30)
   > **This file previously mandated the opposite** — one shared row = `clean_obs[ef]` in *every* column, with each

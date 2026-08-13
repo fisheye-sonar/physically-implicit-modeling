@@ -67,6 +67,18 @@ collapsed arm shows as noise or saturation in cells that should hold a clean dis
 `frame_trails` compresses each arm's whole rollout into one image and is the one that
 shows *where the object went*. Report them together; an Edit Index that moved looks
 identical in a scorecard whether the edit landed or the output degraded.
+
+`frame_animation` is a third, **optional** view (added 2026-08-12 with the spec's
+approval). It obeys `CLAUDE.md`'s animation rules — numbered persistent title, ~3 fps,
+holds on the key frames — and is the most natural medium for a 2D raster. It is an
+**addition, never a replacement**: a claim still ships with the grid + trails pair,
+because a GIF cannot be read in a committed notebook diff or a paper.
+
+Status
+------
+**Approved by Sevan 2026-08-12** and promoted: this is the sanctioned form for any
+2D-raster observation, governed by `CLAUDE.md` § Waterfalls. Full spec and the record
+of what was decided: `WATERFALL_SPEC_2D.md` beside this file.
 """
 
 from __future__ import annotations
@@ -79,7 +91,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Circle
 
 from pim.simulator.config import SimConfig
-from pim.simulator.render2d import unflatten, world_extent
+from pim.simulator.render2d import grid_shape, unflatten, world_extent
 
 # ── Fixed aesthetic (the dark simulator theme; see CLAUDE.md) ─────────────────
 BG = "#0a0a14"
@@ -404,3 +416,155 @@ def frame_trails(
         top=0.78, bottom=0.10, left=0.02, right=0.98, wspace=0.06, hspace=0.62
     )
     return fig
+
+
+def frame_animation(
+    arms: list[Arm],
+    *,
+    cfg: SimConfig,
+    sample: int,
+    ctx_obs: np.ndarray,  # (N, T, R) — the NOISY observations, edits.obs
+    clean_obs: np.ndarray,  # (N, T, R) — clean render, for the GT arm only
+    edit_frame: int,
+    path: str,  # e.g. "anim3_editors.gif" — the number MUST match `anim_num`
+    anim_num: str,  # e.g. "Anim 3"
+    title: str = "",
+    target_xy: np.ndarray | None = None,
+    ghost_xy: np.ndarray | None = None,
+    n_steps: int = 15,
+    n_ctx: int = DEFAULT_CTX,
+    fps: float = 3.0,
+    hold_edit: int = 3,
+    cell: float = 2.0,
+    dpi: int = 110,
+):
+    """Animated GIF of the same comparison — arms side by side, time as the animation.
+
+    The optional third view of the approved 2D spec (`WATERFALL_SPEC_2D.md`). It is an
+    **addition to** `frame_grid` + `frame_trails`, never a substitute: a GIF cannot be
+    read in a committed notebook diff or a paper, so a claim still ships with the pair.
+
+    Where it earns its place is the thing a subsampled grid cannot show — the *motion*.
+    Whether an edited object travels smoothly or teleports and snaps back is obvious in
+    3 seconds of animation and genuinely hard to read off five stills.
+
+    Obeys `CLAUDE.md`'s animation rules, which exist because the defaults get them wrong:
+
+    * a **persistent figure-level title carrying the number** (`anim_num`), separate from
+      the per-frame caption. `path`'s basename must carry the same number — asserted.
+    * **~3 fps**, not matplotlib's default, so it is slow enough to read.
+    * **holds on the key frames**: the last pre-edit frame and the edit frame (step 0) are
+      each repeated `hold_edit` times, so the viewer can register the edit rather than
+      having it flash past in one frame. **Do not "fix" the frame count** — the GIF
+      encoder collapses each run of identical frames into one frame carrying the summed
+      duration, so a 22-slot timeline is stored as 18 frames with two 990 ms holds. The
+      pause is preserved exactly; only the encoding is compact (verified 2026-08-12).
+
+    Content rules are identical to `frame_grid`: GT arm first showing `clean_obs`, the
+    other arms their OWN free-run from step 0, **noisy** context frames before the edit,
+    green target / red-dashed ghost circles, figure-top legend, fixed `vmin=0, vmax=1`,
+    and `aspect="equal"` so the circles stay round.
+
+    Returns the saved path.
+    """
+    import re
+
+    from matplotlib.animation import FuncAnimation, PillowWriter
+
+    num = re.search(r"\d+", anim_num)
+    if num and num.group() not in str(path):
+        raise ValueError(
+            f"animation number and filename must match: {anim_num!r} vs {path!r} "
+            "(CLAUDE.md — the saved file is named to match the figure number)"
+        )
+    if hold_edit < 1:
+        raise ValueError(
+            "hold_edit must be >= 1; the whole point is to pause on the edit"
+        )
+
+    ef = edit_frame
+    # Build the timeline explicitly so the holds are auditable: context frames (with the
+    # LAST one held), then the edit frame (held), then the remaining free-run steps.
+    # `kind` is "ctx" or "run"; `k` indexes obs frames or rollout steps accordingly.
+    timeline: list[tuple[str, int]] = []
+    for j, t in enumerate(range(ef - n_ctx, ef)):
+        reps = hold_edit if j == n_ctx - 1 else 1  # hold the last frame before the edit
+        timeline += [("ctx", t)] * reps
+    timeline += [("run", 0)] * hold_edit  # hold the edit frame itself
+    timeline += [("run", s) for s in range(1, n_steps)]
+
+    n = len(arms)
+    fig, axes = plt.subplots(
+        1, n, figsize=(cell * n + 0.4, cell * CELL_ASPECT + 1.35), squeeze=False
+    )
+    axes = axes[0]
+    fig.patch.set_facecolor(BG)
+
+    ims = []
+    for ax, arm in zip(axes, arms):
+        ax.set_facecolor(BG)
+        im = ax.imshow(
+            np.zeros(grid_shape(cfg)),
+            cmap=CMAP,
+            vmin=VMIN,
+            vmax=VMAX,
+            origin="lower",
+            extent=world_extent(cfg),
+            aspect="equal",
+            interpolation="nearest",
+        )
+        ims.append(im)
+        _locators(ax, target_xy, ghost_xy, cfg.radius)
+        ax.set_xticks([])
+        ax.set_yticks([])
+        for sp in ax.spines.values():
+            sp.set_color("#2a2f45")
+        lbl = arm.name + (f"\n{arm.metric}" if arm.metric else "")
+        ax.set_title(
+            lbl,
+            color="w" if arm.is_gt else FG,
+            fontsize=8,
+            pad=4,
+            fontweight="bold" if arm.is_gt else "normal",
+        )
+
+    # Title ABOVE the legend, matching `frame_grid` / `frame_trails` — the reading order
+    # is what-is-shown, then how-to-read-it.
+    # PERSISTENT figure-level title carrying the number — never per-frame, so the number
+    # is legible in every frame of the GIF.
+    fig.suptitle(f"{anim_num} — {title}", color="w", fontsize=10.5, y=0.975)
+    _legend(fig, y=0.90)
+    caption = fig.text(0.5, 0.035, "", color=FG, fontsize=8.5, ha="center")
+    fig.subplots_adjust(top=0.66, bottom=0.11, left=0.02, right=0.98, wspace=0.06)
+
+    def update(i):
+        kind, k = timeline[i]
+        for im, arm in zip(ims, arms):
+            if kind == "ctx":
+                # Every arm was teacher-forced on the same NOISY frames. Only the GT arm
+                # is ever shown clean, and only after the edit.
+                im.set_data(unflatten(ctx_obs[sample, k], cfg))
+            elif arm.is_gt:
+                im.set_data(unflatten(clean_obs[sample, ef + k], cfg))
+            else:
+                im.set_data(unflatten(arm.roll[sample, k], cfg))
+        caption.set_text(
+            f"t = {k if kind == 'ctx' else ef + k}"
+            + (
+                "   ·   pre-edit context (teacher-forced, noisy)"
+                if kind == "ctx"
+                else f"   ·   free-run step {k}"
+            )
+            + ("   ·   EDIT FRAME" if kind == "run" and k == 0 else "")
+        )
+        return [*ims, caption]
+
+    anim = FuncAnimation(fig, update, frames=len(timeline), blit=False)
+    anim.save(
+        str(path),
+        writer=PillowWriter(fps=fps),
+        dpi=dpi,
+        savefig_kwargs={"facecolor": BG},
+    )
+    plt.close(fig)
+    return path

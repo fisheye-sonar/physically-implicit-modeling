@@ -155,6 +155,32 @@ Four invariants you cannot infer from any single file:
   eyeball it: gray? noisy context frames above the edit line? **each column its own free-run from step 0**
   (no shared teacher-forced row)? top legend? GT column? If not, it is not done.
 
+- **2D observations — the sanctioned form (approved 2026-08-12).** Everything above assumes a **1D**
+  observation, where a frame is one row of pixels and the whole rollout fits in one image with time on the
+  vertical axis. When the observation is a **2D raster** (`pim/simulator/render2d.py`), a frame already uses
+  both image axes and a literal waterfall **cannot be drawn**. Do not improvise a substitute and do not fall
+  back to scalar figures — use the approved pair, implemented once in
+  `notebooks/experiments/editability/omniscient_2d/frame_grid.py` and specified in full in
+  `notebooks/experiments/editability/omniscient_2d/WATERFALL_SPEC_2D.md`:
+  **`frame_grid`** (arms as rows × time as columns, raw model output — catches degradation) **+
+  `frame_trails`** (every rollout step composited per arm — shows where the object went). They ship
+  **together**; `frame_trails` is what guarantees `frame_grid`'s time subsample hides nothing.
+  Every *content* rule above is unchanged and still binding — gray on dark, GT arm first, **noisy** context
+  frames, marked edit boundary, **each arm its own free-run from step 0** (the shared-`ef`-row ban is fully
+  intact), `ROLL[:, 0:K] ↔ clean_obs[ef:ef+K]` alignment, `leads_by_one` labelling, figure-top legend,
+  what-is-shown title, metric in each arm's label. Only three things change, because the extra spatial
+  dimension forces them: **arms become rows** (both grid axes are free once a cell is a whole frame);
+  **locators become circles** at true world coordinates, which makes `aspect="equal"` mandatory (with
+  `aspect="auto"` they render as ellipses and apparent object shape is a lie); and **time is subsampled**
+  (3 context + 5 steps by default) because a cell per frame cannot show 21 of them without either shrinking
+  cells below legibility or making the figure metres wide. Plus one addition: **fixed `vmin=0, vmax=1`** on
+  every cell — per-cell autoscaling makes a collapsed arm look normal, which is the failure these panels
+  exist to catch. Same eyeball check before committing, plus: circles round, not elliptical?
+  A third, **optional** view, `frame_animation`, applies the animation rules above (numbered persistent
+  title, ~3 fps, holds on the edit frame) to the same arms — use it to show *motion*, which stills cannot,
+  but it is an **addition, never a substitute**: a GIF cannot be read in a committed notebook diff or a
+  paper, so the claim still ships with the grid + trails pair.
+
 ## Visualization for analysis
 
 Experiment notebooks serve two readers with different strengths: **Sevan** does the
@@ -168,7 +194,8 @@ object moving while another stays) that decoded-scalar tables hide entirely.
 **MANDATORY — any claim about an effect on the generations ships with a waterfall.** If a notebook
 compares editors, interventions, models, or scales *by what the model outputs*, it must include an
 observation-space waterfall of those same arms, built through the one `waterfall_grid(...)` helper and the
-fixed spec below. A scorecard compresses a rollout to one number and routinely hides the difference between
+fixed spec below — or, for a **2D** observation, through the sanctioned `frame_grid` + `frame_trails` pair
+(same section). A scorecard compresses a rollout to one number and routinely hides the difference between
 "the edit landed" and "the output degraded" — the two look identical in an Edit Index that moved.
 *(Recurring failure: 2026-08-05, tangent-constrained injection was analysed through four scalar figures
 before a waterfall was added; only the waterfall showed the "successful" arms were generating vertical-stripe
