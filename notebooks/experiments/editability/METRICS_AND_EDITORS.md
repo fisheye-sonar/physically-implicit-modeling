@@ -117,6 +117,22 @@ the edit happened, or the one where it didn't?
 | **Edit Index** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(edited₀, gt_·)` over **differing rays**; per sample, then averaged | −1…+1 | ↑ | **+1** = it *is* the edited world · **0** = equidistant (ambiguous, or garbage) · **−1** = it *is* the unedited world. |
 | **Edit Index by step** | the same, at every rollout step, against the counterfactual world **rolled forward** (the edited object continuing along its own velocity, the other object on its true trajectory) | −1…+1 | ↑ | the bounded trajectory analogue of GT-traj RMSE. **Report it whenever you report the step-0 index** — landing an edit and *holding* it are different things (measured 2026-07-30: the decoder-gradient oracle scores **+0.94** at step 0 and decays to **−0.12** by step 14). |
 
+> ### ⚖ Calibration — what an Edit Index value actually looks like (added 2026-08-14)
+> The index is a *ratio of distances*, so it compresses hard near zero and small positive values are
+> much weaker edits than they sound. Writing `r = d_edit / d_uned`, the index is `(1 − r)/(1 + r)`:
+>
+> | Edit Index | `d_edit / d_uned` | what it looks like in a waterfall |
+> |---|---|---|
+> | **+0.2** | 0.67 | the object **barely** moves toward the target; the ghost is still clearly there, the new blob is faint, and the rollout often picks up noise. **Not a landed edit.** |
+> | **+0.5** | 0.33 | the object is recognisably at the target, ghost mostly gone, some smearing |
+> | **+0.7** | 0.18 | clean relocation; this is roughly where the counterfactual-overwrite oracle sits |
+> | **+0.9** | 0.05 | essentially the edited world |
+>
+> **So do not describe +0.2 as "the edit works".** Sevan's read of the trained MLP editor at ≈ +0.2
+> (2026-08-14): *"the edits barely land, frequently fall apart, and introduce noise"* — and the
+> arithmetic agrees. Report the value **and** say what it looks like; the waterfall is the arbiter,
+> which is another reason every claim ships with one.
+>
 > **Read the index against that model's own unsteered row.** A *perfect* predictor scores exactly −1 when
 > unsteered; a real one falls short by its own blur, because `d_unedited` is its one-step prediction error rather
 > than 0. Verified 2026-07-30: across the 8 controls models, unsteered Edit Index tracks next-step RMSE with
@@ -246,6 +262,31 @@ cap the sweep at the history that actually exists (at `ef = 20`, a model with `s
 |---|---|---|---|---|
 | **saturation point** | smallest `n` whose Edit Index ≥ `0.9 × max_n(Edit Index)` for **that same model** | frames (also reported as % of `state_span`) | ↓ | the point past which more overwritten history buys nothing. Report **both currencies**: whichever is flat across window sizes is the real requirement. Prefer it to the **crossover point** (smallest `n` with Edit Index > 0), which a single frame can clear and which therefore does not discriminate. |
 
+**HISTORY editors — the same content through two channels** (added 2026-08-13, `history_editing/`).
+These exist as a **matched pair**: identical content, identical displacement `δ`, identical number of frames
+`n`, differing **only** in the channel. Reporting one without the other loses the entire point — the pair is
+what separates "the edit is incomplete" from "the latent is the wrong port".
+
+| editor | acts on | mechanism | outcome |
+|---|---|---|---|
+| **Latent history translation · n** (GRU) | `h` | min-norm write so a **stacked** lag probe `A_n : h → [pos(t) … pos(t−n)]` reads `pos(t−k) + δ` at every lag — the believed history, rigidly translated (which preserves velocity) | −0.670 → **−0.585** at n=8, **equal to a matched-norm random write**; only continues past that by degrading |
+| **Activation history write · all positions × all residual points** (transformer) | residual stream | pseudoinverse injection at every (residual point ℓ, window position j), re-applied at each layer because the stream is recomputed | readout error 3.289 → **0.000** and Edit Index −0.667 → **−0.631** at fidelity 1.00 — the write lands *exactly* and is ignored |
+| **Observation history overwrite · n** | the observation the model consumes | teacher-force / substitute the same `n+1` frames, **rendered** from the translated world | **+0.635** (GRU, n=8) / **+0.681** (transformer, n=8), fidelity 0.60–0.64 |
+
+⚠ **Two controls are mandatory for any history-write claim**, because without them an inert result and a
+size-driven result are indistinguishable: a **matched-norm random direction**, and the **landing diagnostic**
+below. Both caught real ambiguity here.
+
+⚠ **A stacked lag probe does not have rank `4(n+1)`.** Where velocity is constant,
+`pos(t−k) = pos(t) − k·dt·v`, so the least-squares block rows satisfy `A_k ≈ A_pos − k·dt·A_vel` and the row
+space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measured effective ranks
+4/7/8/8/8/9 for n = 0/1/2/4/8/16, against numeric ranks 4/8/12/20/36/68). Compute any chance level from the
+**effective** rank, never from the output count — and plot **enrichment**, since the chance level moves.
+
+| metric | formula | units | better | reading |
+|---|---|---|---|---|
+| **probe readout error (landing diagnostic)** | `‖probe(state) − target‖` before vs after the write, averaged over written sites | sim units (position) | ↓ | **required beside any inert result.** It separates "the write failed" from "the write landed and the model ignored it" — a distinction the Edit Index cannot make, and the two have opposite implications. Generalises §4's `readout RMSE` to a multi-site write. |
+
 ---
 
 ## Conventions & known caveats (apply everywhere)
@@ -258,6 +299,13 @@ cap the sweep at the history that actually exists (at `ef = 20`, a model with `s
   The one exception is the **Oracle observation** column, which was fed `obs[ef]` and therefore **leads by one
   frame**; label it as such rather than re-aligning the other columns to it. Canonical implementations:
   `controls/encoder_editing.ipynb` `waterfall_grid` and `scripts/eval_editability_endogenous.py` `waterfall()`.
+- **2D observations:** a literal waterfall cannot be drawn when a frame is a 2D raster. Use the sanctioned
+  pair `frame_grid` + `frame_trails` (`omniscient_2d/frame_grid.py`, spec in
+  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `../../../CLAUDE.md`). Every
+  content rule above still binds — including the shared-`ef`-row ban; only the axes (arms become rows),
+  the locators (circles, so `aspect="equal"` is mandatory) and the time subsample change. The two panels
+  ship **together**. Do not improvise a per-notebook substitute — that is exactly the drift this registry
+  exists to stop.
 
   > ### ⛔ NEVER paint a shared teacher-forced `ef` row across all columns (corrected 2026-07-30)
   > **This file previously mandated the opposite** — one shared row = `clean_obs[ef]` in *every* column, with each

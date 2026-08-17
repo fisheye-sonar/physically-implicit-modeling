@@ -3,7 +3,234 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-11 (branch `orthogonal_edit_analysis`: **omniscient-2D thread opened** — the editability negative SURVIVES full observability, but the omniscient latent is less readable/canonical/editable; occupancy-dilution hypothesis pre-registered)_
+_Last updated: 2026-08-14 (branch `rogerio_controls`: four threads — history editing · full row space at H=8 · hidden-size ablation on action models · **trained editors: an MLP editor given `(h, start, target)` CROSSES ZERO with the world model frozen**)_
+
+## 2026-08-14 (latest) — Trained editors on exogenous-action models: the first probe-free latent editor to cross zero
+
+Sevan's spec: two world models trained where **objects teleport during training** — one told the
+teleport (actions in), one observer — plus a **control** with no actions/teleports; a thorough
+ablation over **all** edit types; a fine-tuning variant and an **MLP editor taking
+`(h, start_pos, target_pos)`**; each under a **next-step** and a **k=8 rollout** loss; plus (added
+mid-run) a fine-tuning variant using the **un-whitened pseudoinverse** from `metric_corrected_edits`.
+Thread `notebooks/experiments/editability/trained_editors_actions/` (notebook + `TRAINED_EDITOR_RUNS.md`);
+`scripts/train_action_editors.py`, `scripts/eval_action_editors.py`; note
+`scratch/2026-08-14-trained-editors-actions.md` (**FLAG FOR PROMOTION**). **18 trained arms**; no new
+world models needed (`XG_A_H256`/`XG_C_H256` from the hidden-size sweep, `CTRL_H256` = `controls/H256`).
+
+**HEADLINE — `E_θ(h, start, target) → Δh` with the world model FROZEN reaches Edit Index +0.204
+(control) / +0.111 (actions given) / +0.117 (observer)** against unsteered −0.671/−0.669/−0.578 —
+gains **+0.875/+0.780/+0.695** at fidelity 0.84/0.89/0.82, Target RMSE ≈0.48 → 0.25–0.28, and **zero
+prediction cost** (the model is untouched). For scale, the published best *learned* mechanism was
+**−0.14** and the best training-free structural editor here is metric-corrected injection at
+−0.42…−0.52. The waterfall confirms a real relocation (object on the green locator, ghost dimming),
+with streaking the oracle lacks. **The only change from the published amortized editor is the extra
+input**: giving it the *starting* positions hands it the displacement instead of making it infer the
+world from `h` — and that moves the mechanism from −0.14 to +0.20.
+
+**Sevan's addition — the un-whitened (Σ¹) write is a BETTER fine-tuning target, 6/6 cells.** Gains
+over own unsteered, pseudoinverse → un-whitened: k=1 control +0.233→**+0.341**, actions
++0.187→**+0.292**, observer +0.182→**+0.302**; k=8 +0.141→**+0.263**, +0.126→**+0.178**,
++0.109→**+0.241** — and marginally cheaper in prediction. It also reproduces as the best training-free
+structural editor (−0.516/−0.516/−0.423 vs pseudoinverse −0.656/−0.649/−0.552; published −0.51).
+Σ_hh condition number 8.85e3, so the un-whitening gate passes.
+
+**Adapting the EDITOR beats adapting the MODEL.** Every fine-tune arm degrades next-step RMSE
+(control 0.1041 → 0.1218–0.1253; actions 0.1071 → 0.1205–0.1356) and still ends **negative**; the MLP
+arms cost nothing and end positive. All fine-tunes carried retention (weight 1.0, confirmed with
+Sevan), so this is not the known no-retention degeneracy.
+
+**The two losses do NOT simply trade index for fidelity — the k=8 arms OVERTAKE** (added with the
+by-step curves Sevan asked for, and it corrects the step-0-only reading). Control MLP editor:
+`k=1` +0.204 → +0.215 (step 4) → +0.127 (step 14); `k=8` **−0.035 → +0.267 → +0.230**. The `k=8`
+arms cross above their `k=1` counterparts by ~step 4 in every mechanism and every model, ending
+higher on the index *and* lower on GT-traj RMSE — the rollout loss produces an edit that takes a
+few steps to materialise and then holds. ⚠ The **unsteered** curve also climbs on its own
+(−0.671 → −0.438) as the free-run drifts from both reference worlds, so the gap to each arm's OWN
+unsteered curve is what is reported. Decoder Grad k=8 is the strongest oracle across the whole
+rollout (+0.80 → +0.38), matching the gallery's "lands AND persists".
+
+**Actions/teleports in world-model training buy nothing for latent editing** — the control is the
+*best* cell for both new mechanisms. The action model's advantage shows up only in its **action
+interface** (+0.618), which bypasses the latent entirely.
+
+**READING (not established):** this does not overturn the negative, it **locates** it. Every failing
+editor is a *probe-derived* write — a correlational direction, inverted. What was missing was never
+reachability (`full_rowspace_edit`) or capacity (`action_hidden_size`) but a **map from the intended
+change to the state change**, which a pseudoinverse estimates badly and a small network can learn.
+That also explains the un-whitened result: a better approximation of that map. Honest limit: +0.20 is
+just past equidistant, not the oracle's +0.63 — **it edits, not yet cleanly.** ⚠ The editor is given
+**ground-truth** start/target, and generalisation to a withheld object or out-of-range displacement
+is **untested** — exactly where the published fine-tuning arms failed ("a button, not a handle").
+
+**Harness:** fixed `eval_action_sweep.xg_data`'s separation filter (hardcoded 15-step window even
+when fewer steps were rendered — 3462 vs 6000 usable episodes); documented in code that **cuDNN
+cannot backprop through an RNN in `eval()` mode**, so editors optimising `h` through the dynamics
+must flip to `train()` (identical here — no dropout) and restore.
+
+## 2026-08-13 — Hidden-size ablation on ACTION models: the negative DEEPENS with capacity
+
+## 2026-08-13 (latest) — Hidden-size ablation on ACTION models: the negative DEEPENS with capacity
+
+Sevan: *"run an additional ablation of hidden state sizes but all on the action models and make sure
+that our findings replicate or are proven to change."* Thread dir
+`notebooks/experiments/editability/action_hidden_size/` (notebook + `ACTION_SWEEP_RUNS.md`); driver
+`scripts/train_action_hidden_sweep.sh`; harness `scripts/eval_action_sweep.py`; note
+`scratch/2026-08-13-action-hidden-size.md` (**FLAG FOR PROMOTION**). **15 new runs, ~90 min GPU.**
+
+**Design — two families chosen to differ on whether the action space contains the intervention.**
+`XG_A_H*` exogenous **teleport-to-absolute-coordinate** actions (its action space *contains the edit*,
+so "issue the action" is a **built-in ground-truth handle** — the strongest positive control the thread
+has had) · `XG_C_H*` identical recipe with **actions withheld** · `EN_H*` endogenous L3 (forces, death,
+**REINFORCE survival into the same GRU trunk that predicts**; forces cannot teleport, so it has no
+action-interface arm by construction). `H ∈ {8,32,128,256,512}`, hidden size the only variable. The
+passive `runs/controls/H*` curve is **recomputed** with the identical estimator.
+
+**F1 (prediction saturates by H≈128) REPLICATES everywhere** — passive 0.1499→0.1040, XG_A
+0.1681→0.1071, XG_C 0.2016→0.1772, EN 0.2080→0.1553. **F3 (canonicality moves the other way)
+REPLICATES everywhere** — MLP fiber residual rises in all four (passive 0.288→0.637, XG_A 0.410→0.695,
+EN 0.270→0.500). **F2 (readability rises) replicates for both exogenous families** (XG_A 0.195→0.786)
+but **PARTLY CHANGES for endogenous**: 0.274→0.636 @256 then **falls to 0.546 @512** (velocity
+0.496→0.196) — most likely under-training (every EN run got the same 6000 iterations), flagged not
+explained.
+
+**F4 — REPLICATES AND IS STRONGER THAN "FLAT".** The legitimate readout-injection gain over its own
+unsteered row **shrinks toward zero as capacity grows**: passive +0.479⚠/+0.181⚠/+0.016/+0.008/+0.004 ·
+XG_C +0.382⚠/+0.234⚠/+0.025/+0.026/+0.016 · XG_A +0.419⚠/+0.278/+0.026/+0.020/**+0.007** · EN
++0.194/+0.057/+0.001/+0.001/**−0.001** (⚠ = fidelity > 1.05). **Every large gain at H=8–32 is
+degradation** (fidelity 2.3–3.1; the waterfall shows saturated bands, not a relocated object); by
+H≥128 the editors are **inert** (fidelity 1.00, sitting exactly on the unsteered line). The two failure
+modes trade places as capacity grows and neither is an edit. **Meanwhile the action interface RISES
+over the same range: +0.216 → +0.455 → +0.582 → +0.618 → +0.608 at fidelity 0.71–0.83**, and the
+decoder-gradient oracle rises too (+0.521 → +0.984).
+
+**→ Capacity improves prediction, readability AND action-channel controllability while making the
+latent readout channel *less* effective.** A dissociation, not a plateau — and internally consistent:
+the capacity that makes position more linearly decodable (F2) makes `h` less a function of the physical
+state (F3). A model **trained to perform this exact edit on command** gets better at it with capacity,
+and none of that transfers to writing the target into `h`.
+
+**F4 IN TIME (added 2026-08-14, Sevan asked why the by-step figure was missing).** The by-step Edit
+Index was absent because `eval_action_sweep.py` **stripped every list when writing its JSON**, and the
+notebook stripped them again when copying the passive family's published editability — **the same
+list-stripping bug in three places** (it was also in `eval_action_editors.py`). All fixed; eval re-run
+for all 15 runs; new notebook §4 / Fig 4. Result: **readout injection never separates from its own
+unsteered curve at any step** — gap at step 14 is −0.002/+0.007/+0.052/+0.002 at H=256 across the four
+families (≤ +0.007 at H=512) — indistinguishable from the curve it should be steering away from. The apparent rise of the injection curve is entirely the
+*unsteered baseline climbing* as the free-run drifts from both reference worlds. **CORRECTION (2026-08-14): capacity does NOT buy edit
+persistence** — an earlier entry said it did, reading the *gap to unsteered*; the **raw** step-14
+decoder-gradient index is flat at ≈0.02–0.23 at every `H` in every family (it starts at +0.45…+0.99 and
+reverts to ≈0 within 15 steps, reproducing the published +0.94 → +0.08), and the waterfall shows it
+drifting back and streaking. The gap grew only because the *unsteered* index falls as the predictor
+improves. Sevan caught it from the figure. New `CLAUDE.md` rule: gap-to-unsteered answers
+"distinguishable from doing nothing"; only the raw curve answers "does the edit hold".
+
+**⛔ TWO MEASUREMENT BUGS, all values recomputed (2026-08-14, both caught by Sevan).** (a) **The ground
+truth carried more than one intervention** — dataset 7 fires random teleports on ~30% of transitions and
+the *other* object's teleports landed inside the scored window, so every trajectory metric scored the
+model on events it was never told about and nothing was comparable to a single-teleport edits split.
+Both reference worlds are now **constructed** by rolling the frame-`ef` state forward under the passive
+dynamics. (b) **Velocity R² was all-t, and the split convention differs from older notebooks**: same
+probe and window, **by sequence 0.565 vs by row 0.905** on `controls/H256` (+0.34), vs 0.924 → 0.971 for
+position — velocity is nearly constant within a sequence so a row split leaks the answer. Every
+pre-2026-08-06 velocity number in the repo is on the leaky convention.
+
+**Harness work:** new `eval_action_sweep.py` (canonical §4 metrics for both families + a passive
+reference recomputed with the same probes; validated by reproducing the published passive sweep).
+**BUG FIXED — `scripts/gen_continuous_dataset.py` was broken outright**: it rebuilt `SimConfig` from
+*every* dataclass field of dataset 4's stored `sim` dict, which predates the soft-render/omni2d fields
+→ `KeyError: 'soft_edge'`, so **no continuous-action dataset could be regenerated at all**.
+**⛔ `scripts/eval_editability_endogenous.py` is STALE** — it still computes the metric set retired
+2026-07-30 (`reach`/`collat`/`ghost`/`select`) that `CLAUDE.md` forbids; deliberately not used here,
+and it should be migrated or marked superseded. Also caught: `eval_controls.py`'s readability block
+splits **by row** and uses a **1×128** MLP, so its published F2/F3 numbers are not comparable to
+`fit_readability_probes` — hence the recomputation.
+
+## 2026-08-13 — History editing: the complement is the past, and that is why the edit fails
+
+## 2026-08-13 (latest) — History editing: the complement is the past, and that is why the edit fails
+
+Sevan's hypothesis: *the reason our edits fail is that the extra information in the latent — the part
+outside the probe's row space, which we never edit — is information about the previous frames.* First
+hypothesis in the thread to name a **content** for the complement rather than describing it geometrically.
+Thread dir `notebooks/experiments/editability/history_editing/` (README, `history_tools.py`, two notebooks,
+both executed clean); brief `directions/history-editing.md`; note `scratch/2026-08-13-history-editing.md`
+(**FLAG FOR PROMOTION**).
+
+**Design — the one thing that makes it decisive.** Every editor that works supplies a velocity-consistent
+**translated history through observations**; every editor that fails writes one frame's position into the
+**latent**. Both notebooks hold the content, `δ` and the frame count `n` fixed and vary **only the channel**.
+Interpretation pre-registered in the brief before running.
+
+**GRU (`controls/H256`).** (1) The past is readable **only nonlinearly**: linear probes match the
+no-stored-history null to **+0.0008 at every lag**, while the MLP probe beats it by **+0.146 at lag 20**
+(direct 0.883 vs learned null 0.737; imposed and learned nulls agree to ≤0.006, so it is not extrapolation
+inefficiency). (2) **The complement is observation content, not past positions** — regressed on predictors
+residualised against the present `(pos,v)`, held-out R²: past **positions** ≈ **0.00** at any depth; past
+**observations** **0.609** (one frame) … **0.636** (ten), obs(t) alone 0.659, decaying with age
+(obs(t−2) 0.550, obs(t−5) 0.364), shuffled controls ≈ 0. (3) The editor: latent −0.665 (n=0) → −0.585 (n=8)
+→ −0.477 (n=16, fid 1.06) vs observation +0.028 → **+0.635** → **+0.671** (fid 0.61), unsteered −0.670 —
+and **a matched-norm RANDOM write scores −0.585, exactly the latent n=8 value**, so the entire latent
+"gain" is write size. (4) Structurally, the stacked lag probe's **effective rank saturates at 8** (the
+`(pos,vel)` core) however many lags are stacked, and `Δh_true` sits in its row space at **0.49–0.60×
+chance** — at/below chance and *falling*.
+
+**Transformer (`transformers/W4`, span 13) — the sharpest version.** Position is readable at **every**
+window position and every residual point (mean linear R² 0.591/0.769/**0.797**/0.773/0.765 for ℓ=0…4, peak
+mid-stack as published). Writing the translated history at **all 5 × 13 sites** drives the probe readout
+error **3.289 → 0.000 sim units** with ‖Δr‖/‖r‖ = 0.102 — and the Edit Index moves **−0.667 → −0.631 at
+fidelity 1.00**. Every escape route closed: depth n=0→12 saturates by n=4; single residual points
+−0.666…−0.647; layers ≥1/≥2/≥3 all ≈ all-layers; **re-applied at every rollout step: −0.631, identical**;
+scaled ×2/×4 still fidelity 1.00; matched-norm random −0.661 (so a *small* real content effect, 0.036 index
+points ≈ 3% of the observation result). Same content through observations: **+0.681**.
+
+**READING (not established).** The premise is **right** and its implication is **wrong**: the complement is
+history, but **observation-shaped** history, so the pre-registered fork resolves onto its second branch —
+**the channel is the barrier, not the content.** The transformer makes it airtight: it *has* per-frame
+slots, the probe reads each at R² ≈ 0.8, the write succeeds **exactly**, and the world does not move. A
+frame's representation is not a *handle* on that frame. This gives the through-line (*no successful edit is
+free of dynamics*) a mechanism — the working editors are the only ones writing **in the format the
+complement is stored in** — and explains why `orthogonal_edits`' `∫gg′=0` bites.
+
+**New code (additive, default-off, tested).** `pim/world_models/transformer/model.py`: `_run`'s `edit` now
+also accepts a **callable** `fn(layer_idx, x) -> x` at every residual point (the tuple form wrote the **last
+position only**, which cannot express a history edit); plus `residual_stack(state)` exposing the
+`(n_layers+1, B, S, d_model)` write surface. +6 tests (suite **170 green**), default path asserted
+bit-identical, ruff clean. **Registry updated** — `METRICS_AND_EDITORS.md` gained the history-editor pair,
+the mandatory matched-norm + landing-diagnostic controls, and the effective-rank warning.
+
+**Trap now pinned by a test:** *a constant offset is invisible to a pre-norm transformer* (LayerNorm's null
+space), so a naive "shift the residual stream" write reads as a null result from the **editor** rather than
+the **model**. Cost one debugging cycle.
+
+**SAME-DAY FOLLOW-ON — full row space at H=8** (`editability/full_rowspace_edit/h8_full_rowspace_edit.ipynb`,
+Sevan-directed). *Two orthogonal INLP probes on the 8-dim GRU, both reading current position — their row
+space is the whole hidden state, so "the edit direction lies outside the row space" is removed by
+construction.* **The construction works exactly:** two rank-4 probes, orthogonal to 7.9e-13, spanning 8 of 8;
+reachable fraction of `Δh_true` **0.5897** with probe 1 (chance 0.7071 → 0.83×, *below* chance) → **1.0000**
+with both. **And nothing improves:** cos(write, `Δh_true`) = **+0.040 (88°)** vs −0.011 (91°). At *identical*
+displacement (‖Δh‖/‖h‖ = 0.791 = ‖Δh_true‖): full-rank **−0.277**, probe-1 −0.210, **random −0.172**,
+unsteered −0.489, oracle **+0.529 at fidelity 0.81** — the full-row-space write is **not better than noise of
+the same size**, and all three degrade. The literal ask is additionally degenerate: the stacked map is square
+with **cond 14,373**, so it needs ‖Δh‖/‖h‖ = **2137** → fidelity 261, saturated garbage. *(Mechanism: the two
+probes disagree by 0.923 sim units on real states, so exact agreement is off-manifold. Structural note: INLP
+orthogonality means the min-norm probe-1 write **already** holds probe 2 fixed, so the second probe adds
+nothing unless asked for a different value — which is the ill-posed request.)*
+**→ Reachability was never the binding constraint.** The row-space fraction is a valid ceiling but not the
+active one; a probe tells you which state would *read* as the target, not which state *is* it. Caveat: H=8 is
+a much weaker model, all comparisons internal; **the H=256 analogue (64 probes) is not run** and is the
+follow-on that would generalise it.
+
+**Harness note:** figure-heavy notebooks exceed the `Read` tool's token cap once executed, so this thread
+used a jupytext-style source file + an `nbformat` builder with **round-trip assertions** (cell count, exact
+source, newline count) — the safe version of the programmatic build that silently no-op'd on 2026-08-11.
+
+**Owed:** one seed / one model each / position only; §2's residual decomposition is **linear** (the MLP
+fiber residual 0.467 is the tighter target); the transformer write uses **linear** probes only, so an
+MLP-gradient version of the all-position write is the obvious next arm; observation arms are fed **clean**
+renders (optimistic for the channel that already wins). The `n`-saturation is predicted by this world's
+constant velocity — a world with acceleration/bounces is where the literal hypothesis could still win.
+
+_Previously updated: 2026-08-11 (branch `orthogonal_edit_analysis`: **omniscient-2D thread opened** — the editability negative SURVIVES full observability, but the omniscient latent is less readable/canonical/editable; occupancy-dilution hypothesis pre-registered)_
 
 ## 2026-08-11 (latest) — Omniscient 2D: full observability does NOT rescue editability
 
@@ -61,7 +288,19 @@ grid, so whole-frame averages (next-step RMSE, Edit-frame RMSE, GT-traj RMSE) ar
 cross-channel comparable. Only the **Edit Index**, R²/fiber residual, and ratios to each arm's own
 reference are.
 
-**AWAITING SEVAN: `WATERFALL_SPEC_2D.md`** — a literal waterfall cannot be drawn when a frame is 2D.
+**2D WATERFALL SPEC — APPROVED 2026-08-12 and promoted to `CLAUDE.md`.** It is now the sanctioned form
+for **any** 2D-raster observation, not just this thread: `CLAUDE.md` § Waterfalls carries the rule and
+points at `omniscient_2d/WATERFALL_SPEC_2D.md`; `METRICS_AND_EDITORS.md` carries the same pointer (it is
+named in `CLAUDE.md` as a past leak path for exactly this drift). Defaults accepted as-is (5 steps,
+3 context frames). Added on approval: **`frame_animation`** — the optional third view, obeying the
+existing animation rules (numbered persistent title, 3.03 fps, **990 ms holds** on the last pre-edit
+frame and the edit frame; verified on `anim1_editors_2d.gif`, notebook cell [19]). It is an addition,
+never a substitute — a claim still ships with grid + trails, since a GIF cannot be read in a notebook
+diff or a paper. Two guards worth knowing: the `anim_num` ↔ filename rule is **enforced** (raises), and
+the GIF encoder collapses identical hold frames into one carrying the summed duration, so **check the
+duration list, not the frame count** (22 slots store as 18 frames).
+
+**Superseded note — the spec was previously:** — a literal waterfall cannot be drawn when a frame is 2D.
 Proposed: `frame_grid` (arms × time, every content rule of the 1D spec preserved; time subsampled)
 + `frame_trails` (all 15 steps composited). Validated against known answers (unedited world scores
 exactly −1.00, synthetic collapse +0.16) and it earned its keep — it caught MLP Grad Steering's

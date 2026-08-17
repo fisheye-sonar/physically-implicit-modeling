@@ -1,11 +1,15 @@
-# Omniscient-2D waterfall spec — FOR REVIEW (drafted 2026-08-11)
+# 2D observation waterfall spec — BINDING (drafted 2026-08-11, **approved by Sevan 2026-08-12**)
 
-**Status: awaiting Sevan's sign-off.** `CLAUDE.md` fixes the waterfall spec as a hard,
-recurring-violation rule and makes a waterfall **mandatory** for any claim about an effect on the
-generations. That spec assumes a **1D** observation. This thread's observation is a **48×64 2D
-raster**, where a single frame already uses both image axes and a literal waterfall cannot be
-drawn. This file is the proposed adaptation. It is **not** a licence to drift — the intent is that
-it becomes the thread's binding spec once approved, and that `CLAUDE.md` gains a pointer to it.
+**Status: approved and in force.** This is the sanctioned form for **any 2D-raster observation**, not
+just this thread — `CLAUDE.md` (§ Waterfalls, "2D observations") and
+`../METRICS_AND_EDITORS.md` both point here, and `CLAUDE.md` governs. Treat it exactly as the 1D
+waterfall spec is treated: a hard, recurring-violation rule, not a suggestion. Improvising a
+per-notebook substitute is the drift this file exists to prevent.
+
+`CLAUDE.md` makes a waterfall **mandatory** for any claim about an effect on the generations, and
+fixes its spec precisely — but that spec assumes a **1D** observation. When a frame is a 2D raster it
+already uses both image axes and a literal waterfall cannot be drawn. This is the adaptation: it
+keeps every *content* requirement and changes only what the extra spatial dimension forces.
 
 Implementation: `frame_grid.py` in this directory — **one definition, imported by every notebook in
 the thread**. (`CLAUDE.md` says "define one `waterfall_grid(...)` helper in the notebook"; a shared
@@ -100,14 +104,48 @@ scorecard alone would not have separated that from **Global PCA Projection**'s +
 1.04. That is exactly the failure `CLAUDE.md` requires a waterfall to catch, and the 2D form catches
 it.
 
-## Open questions for you
+## Resolution of the open questions (2026-08-12)
 
-1. **Is the 5-step subsample acceptable**, given `frame_trails` shows all 15? If you want more
-   steps, the cost is figure width — 8 steps is still readable at ~16 in.
-2. **3 context frames vs the 1D spec's ~6.** Six is affordable if you'd rather stay literal; it
-   costs ~4 in of width and the frames are near-identical at 0.2 noise.
-3. **Should this pairing be added to `CLAUDE.md`** as the sanctioned 2D form once approved, or stay
-   thread-local until the thread proves out?
-4. **GIF option.** `CLAUDE.md` already specifies numbered animations (~3 fps, hold on edit frames),
-   and 2D frames are the case where an animation genuinely beats a static grid. Worth adding an
-   `Anim` builder to this module, or is the grid + trails pair enough?
+Approved by Sevan on the strength of the review figures. Recorded so the defaults are not silently
+re-litigated later.
+
+1. **5-step subsample: accepted** as the default (`DEFAULT_STEPS = (0, 3, 7, 11, 14)`). `steps=` stays
+   an explicit per-figure override; widen the figure rather than shrink cells if a figure needs more.
+2. **3 context frames: accepted** as the default (`DEFAULT_CTX = 3`), against the 1D spec's ~6. At
+   `obs_noise_std = 0.2` the context frames are near-identical and 6 buys ~4 in of width for nothing.
+   `n_ctx=` overrides.
+3. **Promoted to `CLAUDE.md`** — this is now the sanctioned form for *any* 2D-raster observation, not
+   just this thread. `CLAUDE.md` § Waterfalls carries the rule and points here;
+   `../METRICS_AND_EDITORS.md` carries the same pointer (it is named in `CLAUDE.md` as a past leak
+   path for exactly this kind of drift).
+4. **`frame_animation` built** — see below. My call rather than an explicit instruction: `CLAUDE.md`
+   already mandates numbered animations with holds on key frames, and a 2D raster is precisely the
+   case where an animation beats a static grid. It is an **addition**, never a replacement: the
+   `frame_grid` + `frame_trails` pair remains what a claim ships with, because a GIF cannot be read in
+   a committed notebook diff or a paper.
+
+## `frame_animation` — the GIF form
+
+Same content rules, same helper module, obeying `CLAUDE.md`'s animation spec:
+
+* a **persistent figure-level title carrying the number** (`Anim 3 — …`), separate from the per-frame
+  caption, and the saved file named to match (`anim3_….gif`);
+* **~3 fps**, not the matplotlib default — slow enough to read;
+* **holds on the key frames** — the last pre-edit frame and the edit frame are repeated
+  (`hold_edit=3` by default) so the viewer can register the effect;
+* arms side by side in one row, each with its own free-run, GT first, locators and legend as above,
+  fixed `vmin=0, vmax=1`;
+* a per-frame caption stating the true frame index and whether it is context or free-run.
+
+**Verified on `anim1_editors_2d.gif`** (2026-08-12, real model output, 3 arms): 3.03 fps, 7.26 s total,
+holds of **990 ms** on the last pre-edit frame and on the edit frame.
+
+> **Do not "fix" the frame count.** The timeline builds 22 slots but the GIF stores **18 frames** — the
+> encoder collapses each run of identical frames into one frame carrying the summed duration
+> (330 ms × 3 = 990 ms). The pause is preserved exactly; only the encoding is compact. A future reader
+> counting frames and concluding the holds were dropped would be wrong, so the check is the **duration
+> list**, not the frame count.
+
+The `anim_num` ↔ filename consistency rule is **enforced, not just documented**: passing
+`anim_num="Anim 7"` with `path=".../wrong_name.gif"` raises. `CLAUDE.md` requires the saved file to be
+named to match the figure number, and that is exactly the kind of rule that rots silently.

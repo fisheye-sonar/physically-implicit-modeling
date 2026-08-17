@@ -175,23 +175,42 @@ class TransformerModel(nn.Module):
     def _run(self, tokens, attn_mask, edit=None, want_resid=False, kv_sink=None):
         """Run the block stack over pre-embedded tokens.
 
-        edit : optional (layer, vector) forcing the residual stream at residual
-               point `layer` to `vector` at the LAST position only.
+        edit : optional, one of
+            * ``(layer, vector)`` — force the residual stream at residual point ``layer`` to
+              ``vector`` at the **last position only**. The original single-site write.
+            * a callable ``fn(layer_idx, x) -> x`` — invoked at **every** residual point
+              (``0 … n_layers``) with the whole ``(B, T, d_model)`` stream, so a caller can write
+              **arbitrary positions at arbitrary layers** and return the stream to use. Return
+              ``x`` unchanged to leave a residual point alone. This is what a *history* edit needs:
+              the residual stream at position ``t`` is the model's representation of frame ``t``,
+              so rewriting the history means writing every position, and — because the stream is
+              recomputed by each block — re-applying the write at each subsequent layer.
+
+        ``None`` (the default) takes neither branch, leaving the forward pass bit-identical.
         """
         B, T, _ = tokens.shape
         cos, sin = self.rope(T, tokens.device)
         x = tokens
+        hook = edit if callable(edit) else None
         resids = [x] if want_resid else None
         for i, blk in enumerate(self.blocks):
-            if edit is not None and edit[0] == i:
+            if hook is not None:
+                x = hook(i, x)
+                if want_resid:
+                    resids[i] = x  # keep the recorded stream consistent with the edit
+            elif edit is not None and edit[0] == i:
                 x = x.clone()
                 x[:, -1] = edit[1]
                 if want_resid:
-                    resids[i] = x  # keep the recorded stream consistent with the edit
+                    resids[i] = x
             x = blk(x, attn_mask, (cos, sin), kv_sink)
             if want_resid:
                 resids.append(x)
-        if edit is not None and edit[0] == len(self.blocks):
+        if hook is not None:
+            x = hook(len(self.blocks), x)
+            if want_resid:
+                resids[-1] = x
+        elif edit is not None and edit[0] == len(self.blocks):
             x = x.clone()
             x[:, -1] = edit[1]
             if want_resid:
@@ -318,6 +337,25 @@ class TransformerModel(nn.Module):
             want_resid=True,
         )
         return resids[self.probe_layer][:, -1]
+
+    @torch.no_grad()
+    def residual_stack(self, state: TransformerState, edit=None) -> torch.Tensor:
+        """`(n_layers+1, B, state_span, d_model)` — the residual stream at **every** residual
+        point and **every** window position.
+
+        `_activations` returns one probe layer at the last position, which is the right surface
+        for a single-site activation edit. A *history* edit needs the whole grid: the stream at
+        window position `j` is the model's representation of the frame in slot `j`, so probing
+        (or writing) the history means indexing both axes.
+        """
+        tokens = self.embed(state.obs_buffer)
+        _, resids = self._run(
+            tokens,
+            self._win_mask(state.length, tokens.device),
+            edit=edit,
+            want_resid=True,
+        )
+        return torch.stack(resids, 0)
 
     def _kv_cache(self, state) -> torch.Tensor:
         tokens = self.embed(state.obs_buffer)

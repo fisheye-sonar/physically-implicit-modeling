@@ -144,6 +144,15 @@ Four invariants you cannot infer from any single file:
   locators; a **figure-top
   legend** (not inside a panel); a **single what-is-shown title** (no results); and it is sized **wide
   enough that every column stays full-size** (add columns by widening, never by shrinking).
+  **Sample rows: ≥ 3, always** (2026-08-14). A waterfall is the first thing read and is judged
+  qualitatively, so it needs **3–4 examples per method/config** to distinguish a real effect from a
+  lucky sample. Two rows is not a comparison.
+
+  **Every method under discussion gets a column** (2026-08-14). If an editor/variant is compared
+  anywhere in the notebook — including trained or fine-tuned ones, and including the plain baseline
+  model — it must appear in a waterfall. A waterfall showing only the training-free editors, when the
+  notebook's subject is the trained ones, reads as "the trained ones were never run".
+
   **This is a hard, recurring-violation spec** — `magma`/`viridis` and "just the K-step rollout with no
   context frames" keep sneaking back in (e.g. `multistep_steering` shipped `cmap="magma"` with no context
   frames until 2026-07-27). **Do not re-implement the panel per notebook** — that is where the drift
@@ -154,6 +163,101 @@ Four invariants you cannot infer from any single file:
   the `waterfall_grid` in `notebooks/experiments/editability/controls/`. Before committing any waterfall,
   eyeball it: gray? noisy context frames above the edit line? **each column its own free-run from step 0**
   (no shared teacher-forced row)? top legend? GT column? If not, it is not done.
+
+- **2D observations — the sanctioned form (approved 2026-08-12).** Everything above assumes a **1D**
+  observation, where a frame is one row of pixels and the whole rollout fits in one image with time on the
+  vertical axis. When the observation is a **2D raster** (`pim/simulator/render2d.py`), a frame already uses
+  both image axes and a literal waterfall **cannot be drawn**. Do not improvise a substitute and do not fall
+  back to scalar figures — use the approved pair, implemented once in
+  `notebooks/experiments/editability/omniscient_2d/frame_grid.py` and specified in full in
+  `notebooks/experiments/editability/omniscient_2d/WATERFALL_SPEC_2D.md`:
+  **`frame_grid`** (arms as rows × time as columns, raw model output — catches degradation) **+
+  `frame_trails`** (every rollout step composited per arm — shows where the object went). They ship
+  **together**; `frame_trails` is what guarantees `frame_grid`'s time subsample hides nothing.
+  Every *content* rule above is unchanged and still binding — gray on dark, GT arm first, **noisy** context
+  frames, marked edit boundary, **each arm its own free-run from step 0** (the shared-`ef`-row ban is fully
+  intact), `ROLL[:, 0:K] ↔ clean_obs[ef:ef+K]` alignment, `leads_by_one` labelling, figure-top legend,
+  what-is-shown title, metric in each arm's label. Only three things change, because the extra spatial
+  dimension forces them: **arms become rows** (both grid axes are free once a cell is a whole frame);
+  **locators become circles** at true world coordinates, which makes `aspect="equal"` mandatory (with
+  `aspect="auto"` they render as ellipses and apparent object shape is a lie); and **time is subsampled**
+  (3 context + 5 steps by default) because a cell per frame cannot show 21 of them without either shrinking
+  cells below legibility or making the figure metres wide. Plus one addition: **fixed `vmin=0, vmax=1`** on
+  every cell — per-cell autoscaling makes a collapsed arm look normal, which is the failure these panels
+  exist to catch. Same eyeball check before committing, plus: circles round, not elliptical?
+  A third, **optional** view, `frame_animation`, applies the animation rules above (numbered persistent
+  title, ~3 fps, holds on the edit frame) to the same arms — use it to show *motion*, which stills cannot,
+  but it is an **addition, never a substitute**: a GIF cannot be read in a committed notebook diff or a
+  paper, so the claim still ships with the grid + trails pair.
+
+## How Sevan actually reads a notebook — design for this order (stated 2026-08-14)
+
+Not a style preference; it is the observed reading path, and notebooks that ignore it get
+misread. **Build the notebook so the top 20% of the reading path carries 100% of the findings.**
+
+1. **Waterfalls first — always.** They are the first thing opened, because an edit's success or
+   failure is visible instantly. A waterfall must therefore be **self-sufficient**: every method under
+   discussion present as its own column, each column titled with its headline metric, and
+   **≥ 3 sample rows** (3–4 qualitative examples per method/config is the minimum for a judgement;
+   2 rows is not enough to tell a real effect from a lucky sample).
+2. **Then the figures**, skimmed for the main points. Every figure must stand alone: axis labels,
+   units, and **a legend entry for every line drawn, including dotted/reference/baseline lines**.
+   An unexplained dotted line is a bug — Sevan will ask what it is, which means the figure failed.
+3. **Then, only when something is unclear**, the **definitions/run tables at the top** and the
+   section outline. This is why those tables must be complete and near the top.
+4. **The opening text** gets read when the notebook matters or is revisited after time away.
+5. **Per-section prose** only when confused about what was done.
+6. **Printed numbers are rarely read**, and **the Summary is essentially never read by Sevan** (it is
+   still worth writing — it is the agent's own consistency check and the handoff to `scratch/`).
+
+**Consequences for how you build them:** put the finding in the *figure*, not the prose; never let a
+result exist only in a printed table or only in the summary; if a method is worth discussing it is
+worth a waterfall column; and if a figure needs a paragraph to be interpretable, fix the figure.
+
+### Figure mechanics that keep being got wrong (all flagged 2026-08-14)
+
+- **Never use ALL-CAPS for emphasis** — in figures, titles, legends, prose or these docs. It reads as
+  shouting. Use **bold** or *italics*. (The existing ban on ALL-CAPS *jargon* was too narrow; this
+  covers emphasis too.)
+- **Legends are labels, not explanations.** A legend entry is a few words. If it needs a sentence, the
+  sentence belongs in the subtitle or caption — and then the legend entry must be short, not a copy of
+  it. A legend wide enough to run off the figure is a bug.
+- **Name the exact quantity on every axis and in every metric label.** "Edit Index" is ambiguous
+  wherever it is not obviously a rollout curve — write **"Edit Index — edit frame (step 0)"**. Same for
+  any metric with a step, a window, or a subset baked into it.
+- **Plot the absolute quantity, not a gain, unless the gain is itself the subject.** A "gain over
+  unsteered" axis hides that an editor may only have moved the output toward *garbage* — an Edit Index
+  rising to 0 can mean "equidistant from both worlds because it destroyed the frame". Plot the absolute
+  value and, where each arm has a different reference, mark that arm's own reference **on the same
+  axis** (a tick or marker per bar), so both are read in the same units.
+- **One quantity per graphic element.** Never print a *different* metric as text on the bars of a chart
+  whose axis is something else. If a second quantity matters, give it its own panel or its own column
+  in the table.
+- **Panels compared side by side must share identical category order and position.** The point of a
+  multi-panel comparison is horizontal scanning; a category present in one panel and absent in another
+  shifts every row below it and destroys that. Keep one canonical category list across panels and show
+  absent ones explicitly (an empty slot labelled *n/a*, with the reason in the caption).
+- **The fidelity guard stays, but as a mark, not a number.** `CLAUDE.md` requires fidelity beside any
+  success claim, and it is what distinguishes a real edit from one that scored by wrecking the frame —
+  so it cannot be dropped. Put the *number* in the table, and in the figure mark **only the arms that
+  fail** (fidelity > 1.05) with one visual cue explained in a single legend entry.
+- **Legend handles must actually show the line style.** Default handle length can make solid and dashed
+  entries indistinguishable; set `handlelength` so the reader can tell them apart.
+
+**No invented thresholds.** Do not introduce a cutoff ("within 2% of best", "saturates at") unless it
+is already canonical in this repo or you can say why *that* number is meaningful. An arbitrary
+threshold dressed as an analysis tells the reader nothing they could not see from the raw curve, and
+it manufactures false precision. *(Flagged 2026-08-14: a "within 2% of that family's best" saturation
+column was pure noise.)*
+
+**Keep one question in one notebook.** Editors, variants and ablations that a reader would naturally
+compare **belong in the same notebook**, even if they were produced by different scripts or on
+different days. Splitting them across directories makes the reader conclude the missing arm was never
+run. If a split is genuinely necessary (different world models, different datasets), then **every**
+notebook on both sides must carry a prominent pointer, at the top and at the figure that would
+otherwise look incomplete, naming the sibling notebook and what it holds. *(Flagged 2026-08-14: the
+trained/fine-tuned editors were put in a separate directory from the hidden-size sweep; Sevan read the
+sweep's figures as "the trained editors are missing".)*
 
 ## Visualization for analysis
 
@@ -168,7 +272,8 @@ object moving while another stays) that decoded-scalar tables hide entirely.
 **MANDATORY — any claim about an effect on the generations ships with a waterfall.** If a notebook
 compares editors, interventions, models, or scales *by what the model outputs*, it must include an
 observation-space waterfall of those same arms, built through the one `waterfall_grid(...)` helper and the
-fixed spec below. A scorecard compresses a rollout to one number and routinely hides the difference between
+fixed spec below — or, for a **2D** observation, through the sanctioned `frame_grid` + `frame_trails` pair
+(same section). A scorecard compresses a rollout to one number and routinely hides the difference between
 "the edit landed" and "the output degraded" — the two look identical in an Edit Index that moved.
 *(Recurring failure: 2026-08-05, tangent-constrained injection was analysed through four scalar figures
 before a waterfall was added; only the waterfall showed the "successful" arms were generating vertical-stripe
@@ -209,6 +314,77 @@ label means. Beyond cell/figure numbering:
   by-row split leaks near-duplicate neighbouring frames. The **MLP Grad Steering** editor's frozen 1×128
   `MLPExtractor` is a *different object* and must not be changed — never quote one as the other. Full rationale:
   `notebooks/experiments/editability/METRICS_AND_EDITORS.md` §2.
+- **⛔ An edit episode must contain exactly one intervention — the one under test — anywhere in the
+  window the model or the reader can see** (added 2026-08-14, tightened after review the same day).
+  Two separate failures, both caught by Sevan:
+  1. **In the scored horizon.** If the world performs its own random interventions
+     (`datasets/7_cont_teleport` fires a teleport on ~30% of transitions), extra events land after the
+     edit frame and every trajectory metric — GT-traj RMSE, fidelity ratio, Edit Index by step — scores
+     the model on events it was never told about. Filtering the *edited* object's later actions is not
+     enough; the other object's contaminate the same window.
+  2. **In the visible context.** Even with a clean horizon, teleports *before* the edit frame make the
+     episodes structurally different from a canonical edits split, so a dataset-4 control and a
+     dataset-7 model are no longer evaluated on the same kind of episode — which is exactly what the
+     control exists to make possible. They also show up in the waterfall and read as unexplained jumps.
+
+  **The fix: generate the edit set with the world's own interventions switched off** (here
+  `--p-action 0.0`) and **synthesise the single edit** — plus construct both reference futures by
+  rolling the frame-`ef` state forward under the passive dynamics rather than reading later frames from
+  the dataset. `scripts/eval_action_sweep.py` now **asserts** the edit set is intervention-free rather
+  than trusting it. *(One caveat worth stating rather than assuming: contamination in the context does
+  **not** make the unsteered-vs-edited comparison unfair — those arms share the same episodes, so it is
+  paired. What it breaks is comparability **across model families**.)*
+- **Always report the Edit Index ACROSS THE ROLLOUT, not only at step 0** (added 2026-08-14; the
+  registry already required it, and it was still being skipped). Landing an edit and holding it are
+  different results, and several mechanisms invert between them — arms trained on a k-step rollout loss
+  start *lower* at step 0 and overtake the next-step-trained arms a few steps later. A step-0-only
+  report can therefore state the opposite of the truth. Two rules that go with it: read every curve
+  against **that model's own unsteered curve** (the unsteered index climbs on its own as a free-run
+  drifts away from *both* reference worlds, so raw persistence is overstated), and do **not** report a
+  step-N ÷ step-0 "retention" ratio when the step-0 value is near zero — it explodes or flips sign.
+- **Do not strip per-step curves when serialising results.** `edit_scorecard` returns
+  `edit_index_by_step`; a `{k: v for ... if not isinstance(v, list)}` filter on the way to JSON throws
+  it away and makes the required plot impossible without a full re-run. *(This exact filter was written
+  three separate times — `eval_action_sweep.py` ×2, `eval_action_editors.py`, plus a fourth strip in a
+  notebook cell copying published results — costing two full re-evaluations.)*
+- **⛔ Hold out whole trajectories, never individual frames — and velocity is where it bites.**
+  A probe is fit on (hidden state → position/velocity) examples, one per **frame**, so a run of 800
+  trajectories × 24 frames gives ~19,000 examples. There are two ways to make a held-out test set:
+  - **hold out frames** (the old convention, still in `eval_controls.py`): pool all 19,000 examples,
+    shuffle, keep 30% for testing. A test frame's immediate neighbours from the *same* trajectory are
+    then in the training set — and consecutive frames are nearly the same picture.
+  - **hold out trajectories** (the standard, what `fit_readability_probes` does): put 20% of the
+    *trajectories* aside entirely, so no frame of a test trajectory is ever trained on.
+
+  Measured 2026-08-14 on `controls/H256`, same 2×256 probe, same late-t window, only this changed:
+
+  | target | hold out trajectories | hold out frames | inflation |
+  |---|---|---|---|
+  | velocity | **0.565** | 0.905 | **+0.34** |
+  | position | 0.924 | 0.971 | +0.05 |
+
+  **Why velocity specifically:** in this world an object's velocity is *constant for the whole
+  trajectory*. Holding out frames therefore leaves, for every test frame, other frames of the same
+  trajectory in the training set carrying the **identical velocity label** — the probe can recognise
+  the trajectory instead of decoding the velocity. Position changes from frame to frame, so it leaks
+  much less. Consequence: **every pre-2026-08-06 velocity number in this repo** — `runs/controls/eval`'s
+  0.877, `findings/editability.md`'s 0.94 — is on the frame-holdout convention and is not comparable to
+  a trajectory-holdout number. If a velocity R² looks anomalously *low* against an older notebook, this
+  is the first thing to check, and the newer number is probably the correct one.
+- **"Gain over unsteered" and "does the edit hold" are different questions — do not answer the second
+  with the first.** The gap to a model's own unsteered row is the right statistic for *is this
+  distinguishable from doing nothing* when comparing models whose unsteered values differ. It is the
+  **wrong** statistic for persistence: the unsteered index climbs on its own over a rollout, and it
+  also falls (more negative at step 0) as a model predicts better — so the gap can grow while the raw
+  index is flat. *(2026-08-14: reporting the gap made the decoder-gradient oracle look like it gained
+  persistence with capacity; the raw step-14 index was flat at ≈0.0–0.2 everywhere, and the waterfall
+  showed it reverting. Report the raw curve for persistence, the gap for distinguishability, both when
+  in doubt.)*
+- **Velocity readability is reported LATE-t.** The registry's early/late split (`late = t ≥ 15`) exists
+  because the belief has not converged before then, and reporting all-t velocity R² under-reads it
+  badly (H256: all-t MLP **0.784** vs late-t MLP **0.877**). Position is much less sensitive but should
+  be split the same way for consistency. *(Flagged 2026-08-14: an all-t velocity R² looked anomalously
+  low against every other notebook in the repo.)*
 - **Consistent metrics + units across everything you compare.** If two things are compared
   (editors, models, variants, sections), report the **same metric set in the same units**.
   Use **RMSE, not MSE** (matches the rest of the repo); never plot MSE in one panel and tabulate

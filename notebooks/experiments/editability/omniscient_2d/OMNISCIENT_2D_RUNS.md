@@ -88,9 +88,10 @@ alongside `1D_H256_30k_s0` so the sample-size effect is visible rather than assu
 
 | file | what |
 |---|---|
-| `frame_grid.py` | the thread's single waterfall-analogue implementation (`frame_grid`, `frame_trails`) |
-| `WATERFALL_SPEC_2D.md` | the proposed 2D adaptation of `CLAUDE.md`'s waterfall spec — **awaiting sign-off** |
+| `frame_grid.py` | the single implementation of the 2D waterfall form (`frame_grid`, `frame_trails`, `frame_animation`) |
+| `WATERFALL_SPEC_2D.md` | the 2D adaptation of `CLAUDE.md`'s waterfall spec — **approved 2026-08-12, now binding for any 2D-raster observation** and pointed at from `CLAUDE.md` and `../METRICS_AND_EDITORS.md` |
 | `SPEC_fig{S1,S2}_*.png` | spec review figures, rendered from simulator data only (no model) |
+| `anim1_editors_2d.gif` | `Anim 1`, produced by notebook cell [19] — the optional animated view (3 fps, ~1 s holds on the edit frame) |
 
 ---
 
