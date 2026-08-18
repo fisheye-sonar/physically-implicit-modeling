@@ -3,9 +3,70 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-14 (branch `rogerio_controls`: four threads — history editing · full row space at H=8 · hidden-size ablation on action models · **trained editors: an MLP editor given `(h, start, target)` CROSSES ZERO with the world model frozen**)_
+_Last updated: 2026-08-17 (branch `harness_restructuring`: harness extracted, CLAUDE.md cut 492 → 133 lines, findings model redesigned and a month of findings backfilled, canonical waterfall consolidated)_
 
-## 2026-08-14 (latest) — Trained editors on exogenous-action models: the first probe-free latent editor to cross zero
+## 2026-08-17 (latest) — Harness restructuring: portable working standards, and the findings gate replaced
+
+**Not a research session.** Substrate work, at Sevan's direction, in preparation for reusing
+these working standards on a second project (a CV project on vesicle detection in
+neuroscientific data).
+
+**What changed, and where to look now:**
+
+1. **`harness/` — portable working standards** (README · STYLE · ANALYSIS · WORKFLOW ·
+   ORCHESTRATION · WORKER · COLLABORATION · UPSTREAM · templates · theme.py). Universal prose
+   only; each file ends with a `## Local instantiations` section holding one-line pointers to
+   this project's concrete specs. **`harness/check.sh` enforces the quarantine** (project nouns
+   in portable prose = failure) and fires from a `PostToolUse` hook on every write into
+   `harness/`. Known limit, recorded in `harness/README.md`: it catches project *nouns*, not
+   rules phrased generically that are only true here — an actual port is the only test, which
+   is what `harness/UPSTREAM.md` §2 exists to record.
+2. **`CLAUDE.md` cut 492 → 133 lines.** Now a router: the **role fork first** (orchestrator by
+   default, every spawned subagent is a worker), action-triggered pointers into `harness/`,
+   then project mechanics and the four architecture invariants. Conventions moved to
+   `harness/`; the 1D waterfall spec moved to
+   `notebooks/experiments/editability/WATERFALL_SPEC.md`; traps moved to `research/GOTCHAS.md`.
+3. **The findings promotion gate is gone.** Findings are now **agent-written and continuously
+   updated**, with an explicit `status` per entry (`observed` / `replicated` / `established`)
+   and evidence links; **Sevan marks `★` for significance**, which is orthogonal to status.
+   Corrections are new dated entries that `supersede` or `retract`. Rationale, with the
+   measurement that motivated it, is in `harness/WORKFLOW.md` and `research/README.md`.
+   *The trigger: the newest entry in any findings file was 2026-07-17 while 25 scratch notes
+   queued behind the gate.*
+4. **A month of findings backfilled** (2026-07-18 → 2026-08-14) across `editability.md`,
+   `state-geometry.md`, `architecture-independence.md`, `object-individuation.md`,
+   `predictive-quality.md`, plus a **new `trained-editors.md`** carrying the 2026-08-14 headline.
+   Every `Current understanding` header was resynced with its log. Entries marked
+   **★-candidate** are the ones flagged for Sevan's significance pass — see below.
+5. **Standardization pass.** Audit found **18 separate waterfall implementations** and 8 scripts
+   hand-rolling probe fits while only one used the standard. Wrote
+   **`pim.figures.waterfall_grid`** — the single implementation, with the two recurring
+   violations made *structurally impossible* (a shared teacher-forced row is unrepresentable;
+   fixed `vmin`/`vmax` on every cell) and a warning below three sample rows. 8 tests;
+   170 + 8 tests pass. **Migration debt recorded, not yet paid** — the 18 copies are unmigrated.
+6. **Auto-memory retired.** Content moved to `harness/COLLABORATION.md` (working with Sevan) and
+   `research/PROJECT_INTENT.md` (the long-horizon destination). `MEMORY.md` now says only "not
+   used; read these repo files instead". Backup of the originals in this session's scratchpad.
+
+**Awaiting Sevan:**
+- **The `★` significance pass** over the backfilled findings. Six entries are marked
+  `★-candidate`: renderer-inherited `readable ≠ grabbable` (2026-08-05), the Δh reachability
+  ceiling (2026-08-03), the transformer two-state result (2026-08-04), observation noise as a
+  regulariser (2026-07-30), and the trained editor crossing zero (2026-08-14).
+- **Whether `established` is set correctly** on the backfilled entries — that is the one status
+  I was deliberately reluctant with.
+- Directions statuses were normalized against artifacts on disk; several "executed" briefs could
+  now move to `directions/done/`, which is a tidy-up pass worth doing after the `★` read.
+
+**Not done / open:**
+- The 18 waterfall copies are not migrated to `waterfall_grid`.
+- The probe-fitting drift is recorded in `GOTCHAS.md` but not fixed in the 8 scripts.
+- `scripts/eval_editability_endogenous.py` still computes the metric set retired 2026-07-30.
+- The export to the CV project has not happened; when it does, fill in `harness/UPSTREAM.md` §2.
+
+---
+
+## 2026-08-14 — Trained editors on exogenous-action models: the first probe-free latent editor to cross zero
 
 Sevan's spec: two world models trained where **objects teleport during training** — one told the
 teleport (actions in), one observer — plus a **control** with no actions/teleports; a thorough

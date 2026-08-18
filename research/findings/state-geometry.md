@@ -9,7 +9,19 @@ dataset `4_fixed_refl_inview`, 2 objects, fixed reflectivities.
 > claim about GRU/world-model geometry; a different objective, dataset, or scale could shift the
 > numbers. Read "the GRU" as "this pure-next-step-prediction GRU."
 
-## Current understanding (mutable summary)
+## Current understanding
+
+> **Updated 2026-08-17.** Three additions. (1) The **linear position code spans ~116 of 256
+> dimensions**, not 4 — smeared, with a gradual decay that makes any single dimensionality
+> number threshold-dependent (2026-08-05). (2) **Canonicality gets worse with capacity** — the
+> MLP fiber residual rises monotonically in all four model families, so readability and
+> canonicality move in opposite directions (2026-08-13). (3) The `Δh` of a *working* edit is
+> large, mutually distinct across edits, and probe-orthogonal — the geometric form of the
+> reachability ceiling (2026-08-03). Also recorded: the object-superposition evidence was a
+> **decoder artifact** on affine decoders, and the result survives re-measurement on nonlinear
+> ones (2026-08-05).
+
+### Previous synthesis (mutable summary)
 
 The GRU's visited hidden states (256-dim) occupy a **low-dimensional, strongly
 curved manifold**. The **honest intrinsic dimension is ~5–7** (TwoNN 5.2, MLE 6.9),
@@ -24,6 +36,92 @@ own neighborhood — which for real states **floors at ~0.75–0.84 and never co
 to 0** (an earlier "local resid ≈0" was a projection tautology; see log).
 
 ## Log
+
+### 2026-08-13 — Canonicality gets *worse* with capacity · `replicated`
+
+**Evidence:** `scratch/2026-08-13-action-hidden-size.md` ·
+`notebooks/experiments/editability/action_hidden_size/` · four model families ×
+`H ∈ {8,32,128,256,512}`.
+
+MLP fiber residual **rises** with capacity in all four families — passive 0.288 → 0.637 ·
+exogenous-actions-given 0.410 → 0.695 · exogenous-observer 0.317 → 0.710 · endogenous
+0.270 → 0.500.
+
+**Why it matters:** capacity moves readability and canonicality in **opposite** directions. A
+bigger latent is more linearly readable and *less* a function of the world's minimal sufficient
+statistic. Any hope that scale alone produces a canonical state is measurably wrong here.
+
+---
+
+### 2026-08-05 — Compositionality is real on a nonlinear decoder; the earlier evidence was a decoder artifact · `replicated`
+
+**Evidence:** `scratch/2026-08-05-nonlinear-gru-decoder.md` ·
+`notebooks/experiments/editability/nonlinear_gru/nonlinear_gru_findings.ipynb`
+(+ `NONLINEAR_GRU_RUNS.md`) · dataset 4, N=256 edits (§3–§4), 67 in-frustum samples (§5).
+
+Prompted by Sevan's question about `delta_h_analysis` §7: *isn't the object-superposition
+finding just an artifact of a linear decoder?* It is —
+`decode(h0+d1+d2) = decode(h0+d1) + decode(h0+d2) − decode(h0)` holds **identically** for any
+affine decoder.
+
+**The artifact is confirmed as a statement about the *evidence*, not the *result*.** On both
+affine-decoder models the composed decode equals the affine prediction to **6.6e-08 / 9.0e-08** —
+machine precision. Their composed Edit Index (+0.46) is algebraically determined and could not
+have falsified anything whatever it read. It also sits at 90% of the **+0.51** ceiling that the
+*model-free* render identity (`GT_A + GT_B − GT_BASE` vs `GT_AB`) scores by itself — an identity
+that is leaky rather than exact (RMSE 0.177 against an RMS signal of 0.306, because the two
+objects share rays in **42%** of samples), which is why the ceiling is +0.51 and not +1.0.
+
+**On the nonlinear models compositionality is real, object-specific, and holds.** Their decoders
+depart from affine by 8.5e-02…8.8e-02 — about half their own total error — so the composed index
+is a genuine measurement, and it survives against the proper null models (unedited; random Δ at
+matched norm; composed with the **wrong** object).
+
+**Why it matters:** a textbook case of a result that was true while its evidence was vacuous.
+The correct response was to re-measure on a decoder where the identity does not hold for free,
+not to withdraw the claim.
+
+---
+
+### 2026-08-05 — The linear position code spans 116 dimensions · `established`
+
+**Evidence:** `scratch/2026-08-05-iterative-probing-position-dimensionality.md` ·
+`notebooks/experiments/editability/iterative_probing/` · GRU `runs/controls/H256` · 78,000
+aligned states from 2,000 sequences, split **by sequence**.
+
+Iteratively fitting a linear position probe and projecting its rank-4 row space out of `h`:
+**29 probes → 116 dimensions**, with rank and orthogonality asserted at every step. Half the
+readability is gone by 24 dimensions, with a long thin tail out to 112. The `4 × #probes`
+arithmetic holds because `lstsq` returns the minimum-norm solution, so each new probe's rows land
+inside the row space of the already-deflated design matrix.
+
+**Why it matters for geometry:** the position information is not a compact 4-dimensional
+subspace. It is smeared across nearly half the latent, with a gradual decay that makes any single
+"dimensionality of position" number threshold-dependent — report the curve, not a scalar. The
+editing consequence is in `editability.md`.
+
+---
+
+### 2026-08-03 — Δh geometry: successful edits are large, mutually distinct, and probe-invisible · `established`
+
+**Evidence:** `scratch/2026-08-03-delta-h-analysis.md` ·
+`notebooks/experiments/editability/delta_h_analysis.ipynb` · GRU `runs/controls/H256` + RSSM
+`runs/rssm/4_dset4_refined_best`, **N=256** held-out edits, cosines and fractions computed
+**per instance, then averaged**.
+
+The displacement `Δh` that a *working* (oracle) edit applies is roughly as large as the state
+itself, essentially orthogonal to everything the position probe can see or move, and different
+for every edit — including for edits that make the *same* positional change. Two independent
+oracles nevertheless agree strongly on which direction it is.
+
+**Why it matters for geometry:** the set of state changes corresponding to one semantic change is
+not a low-dimensional, position-indexed manifold direction. It is state-dependent in a way no
+global linear rule captures — which is the geometric statement of the reachability ceiling.
+
+**Caveat:** RSSM alignment is ambiguous at this precision (k=−1 0.1059 vs k=0 0.1067) because its
+prior decode is blurry; the GRU numbers are the clean ones.
+
+---
 
 ### 2026-06-24 — Local off-manifold residual ≈0 was a projection tautology. `established`
 The geodesic's "local resid 0.0002" measured a point's distance to the subspace it had just been projected onto; the honest local residual of real states never collapses (~0.75–0.84 across all k). Real states do not lie on any single linear local patch. Intrinsic dimension (TwoNN 5.2, MLE 6.9) brackets the physical 8 DOF; the 38–73-dim PCA hull reflects a strongly curved embedding (tangents rotate ~56° at NN spacing), not true DOF.

@@ -9,7 +9,17 @@ Deterministic (prior-mean) eval. Engineering record: `research/scratch/2026-06-2
 > RSSM was tuned in a bounded sweep; the GRU is only lightly tuned, so cross-architecture gaps are
 > indicative, not final. Not a general ranking of GRU vs RSSM.
 
-## Current understanding (mutable summary)
+## Current understanding
+
+> **Updated 2026-08-17.** Two capacity/data results now bound this concept. Predictive quality
+> **saturates by `H=128`** and `H=512` buys nothing (2026-07-30, replicated across four model
+> families 2026-08-13). And the repo's standard dataset is **not a neutral choice**: its
+> observation noise acts as a regulariser that adds +0.22 to linear position readability, while
+> removing world noise buys no velocity readability at all (2026-07-30) — both the opposite of
+> what was pre-registered. Absolute RMSE is not comparable across noise cells; read each against
+> its own baselines.
+
+### Previous synthesis (mutable summary)
 
 Trained on the observation objective alone (no position supervision), the refined RSSM is a
 **competitive next-step predictor and beats the GRU at long horizon**, but a **generative-quality gap**
@@ -30,6 +40,67 @@ comparison (so architecture differences there aren't undertraining artifacts), a
 (mean-hedging / sampled forking) is a real observation-fidelity phenomenon worth its own thread.
 
 ## Log
+
+### 2026-07-30 — Observation noise is a regulariser that makes position *linearly* readable · `replicated` ★-candidate
+
+**Evidence:** `scratch/2026-07-30-noise-ablation.md` ·
+`notebooks/experiments/editability/controls/noise_ablation.ipynb` (+ `CONTROL_RUNS.md`) · three
+new datasets matched to `4_fixed_refl_inview` in every respect except the two noise flags
+(`datasets/9_obsnoise0_posnoise0`, `10_obsnoise0_posnoise004`, `11_obsnoise02_posnoise0`;
+90k/10k/10k/10k, `ef=20`, seed 0) · four GRUs at `H=256`, identical recipe.
+
+Every dataset in this repo carries **two independent noise sources** and no result had ever
+separated them: **observation noise** (`obs_noise_std = 0.2`) corrupts the 1D scan — *sensing*
+is imperfect while the world is exact; **position noise** (`position_noise_std = 0.04`) makes
+**the world itself** stochastic. Conceptually opposite, and every prior finding was read off the
+both-on cell of a 2×2 that had never been filled in.
+
+**§1 Predictive quality**, each cell against its own baselines:
+
+| cell | obs / pos noise | next-step RMSE | copy-previous | own noise floor |
+|---|---|---|---|---|
+| no noise | 0.0 / 0.00 | 0.0482 | 0.0940 | 0.0000 |
+| world noise only | 0.0 / 0.04 | 0.0731 | 0.1028 | 0.0000 |
+| sensing noise only | 0.2 / 0.00 | 0.0893 | 0.2109 | 0.1539 |
+| both (repo standard) | 0.2 / 0.04 | 0.1041 | 0.2139 | 0.1539 |
+
+**§2 Recoverability — both pre-registered predictions refuted:**
+
+| | no noise | world only | sensing only | both |
+|---|---|---|---|---|
+| position R² (linear) | 0.596 | 0.693 | **0.819** | **0.828** |
+| velocity R² (linear) | 0.451 | 0.451 | 0.469 | 0.471 |
+
+1. Removing world noise does **not** buy velocity readability (Δ = −0.002).
+2. **Observation noise makes position linearly readable** (+0.22 linear R²) and makes the state
+   markedly more canonical under an MLP fiber map — the opposite of the pre-registered guess.
+
+**Why it matters:** the repo's standard dataset is not a neutral choice — its sensing noise is
+actively producing the linear readability that several findings are stated in terms of.
+
+**Caveat that governs any re-reading:** absolute RMSE is **not comparable across cells** (the
+noise-free cells have a ≈0 noise floor), so every predictive number is read against that cell's
+own baselines. Each model is evaluated on **its own** dataset's edits split, so the cells contain
+different scenes and every row needs its own GT column.
+
+---
+
+### 2026-07-30 — Prediction saturates by `H=128`; capacity buys readability, not grabbability · `established`
+
+**Evidence:** `scratch/2026-07-30-hidden-size-sweep.md` ·
+`notebooks/experiments/editability/controls/hidden_size_sweep.ipynb` · five GRUs,
+`hidden_size ∈ {8,32,128,256,512}`, one variable.
+
+Predictive quality saturates by `H=128`; `H=512` buys nothing over `H=256`. Linear readability
+rises **monotonically** with capacity. Replicated across three action-conditioned families
+2026-08-13 (next-step RMSE: passive 0.1499 → 0.1040 · exogenous-actions-given 0.1681 → 0.1071 ·
+exogenous-observer 0.2016 → 0.1772 · endogenous 0.2080 → 0.1553). **Action knowledge is worth a
+large constant** (0.1071 vs 0.1772 at H=256 — teleports are unpredictable without the action)
+but does not move *where* the curve flattens.
+
+The editability half of both sweeps is in `editability.md`.
+
+---
 
 ### 2026-06-29 — Refined RSSM competitive; generative gap; engineering levers · `established`
 Best RSSM `runs/rssm/4_dset4_refined_best` (gitignored; reproducible from config+seed0). Fixed a real

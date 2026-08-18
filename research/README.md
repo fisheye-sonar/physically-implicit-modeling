@@ -1,85 +1,54 @@
 # research/ — Research Knowledge Base (index)
 
-**Read this file + `PROGRESS.md` at the start of every research session.**
-This is the durable, version-controlled memory for the *science* of the project
-(the engineering reference is `../CLAUDE.md`; the north star is `../RESEARCH.md`).
-The filesystem is the memory — plain dated markdown, no database. Load detail
-files lazily, only when the topic is relevant.
+The durable, version-controlled memory for the **science** of this project. The filesystem is
+the memory — plain dated markdown, no database. Load detail files lazily.
 
-> **If you are *driving* this project** (an interactive session, not a spawned worker),
-> you are the orchestrator — also read **`ORCHESTRATION.md`** for the operator's manual
-> (how to launch & verify workers, the role split, session handoff). Sessions are
-> disposable; the role lives in these files.
+- **How the record works** (roles, findings model, directions lifecycle) → `../harness/WORKFLOW.md`
+- **How to drive the project** → `../harness/ORCHESTRATION.md`
+- **If you are a spawned worker** → `../harness/WORKER.md` and your brief, and **not this file**
+- **Engineering mechanics** → `../CLAUDE.md`
+- **The north star** → `../RESEARCH.md`
 
-## The four roles (different owners, different edit cadences)
+## What is here
 
-| Artifact | Where | Agent may read | Agent may write | Becomes durable when |
-|---|---|---|---|---|
-| **Vision** (north star) | `../RESEARCH.md` | yes | **no** (human-only) | human edits it |
-| **Progress / handoff** ("where am I") | `PROGRESS.md` | yes | yes (free, rewritten each session) | — |
-| **Scratch / observations** | `scratch/` | yes | yes (free, ungated) | — |
-| **Findings ledger** ("what's true") | `findings/` | yes | **draft diffs only** (human approves) | human approves the diff + promotion |
-| **Directions backlog** ("what's next") | `directions/` | yes | **propose only** | human marks it active |
+| File / dir | Answers | Who writes |
+|---|---|---|
+| `../RESEARCH.md` | what are we trying to learn? | **Sevan only** — agents read, never write |
+| `PROGRESS.md` | where is the work right now? | agent, freely, continuously |
+| `findings/` | what do we believe, and how strongly? | **agent, continuously** — graded, not gated |
+| `directions/` | what should we do next? | agent proposes; **Sevan marks `active`** |
+| `scratch/` | what did this run show? | agent, freely, ungated |
+| `GOTCHAS.md` | what will silently waste a day? | agent |
 
-## The one invariant
+## The model, in one paragraph
 
-**Drafting, surfacing, and proposing are agent powers. Promotion and commitment
-are human powers.** An agent may write a candidate finding into `scratch/` and
-**may draft the corresponding `findings/` edit as a diff for human approval** — but
-it may **not** self-approve or commit it; the promotion decision and the approval
-stay human. An agent may propose a new entry in `directions/`; it may **not** mark a
-direction active. The vision file (`RESEARCH.md`) is human-authored only. Keep the
-bright line at *commitment*, not at *typing*.
+**Findings are written by the agent as evidence arrives** — there is no promotion queue.
+Every entry carries a **status** (`observed` / `replicated` / `established`) reflecting how
+strongly it is held, and its **evidence** (notebook, scratch note, run codes, dataset, n).
+**Sevan marks `★` for significance**, which is orthogonal to status. Corrections are new dated
+entries that `supersede` or `retract` earlier ones; nothing is ever rewritten or deleted.
 
-## Promotion gate (scratch → findings)
+*(Changed 2026-08-17. The previous design required human approval before anything entered
+`findings/`. Measured outcome: the newest entry in any findings file was 2026-07-17 while 25
+scratch notes queued behind the gate — a month in which the "what's true" record described a
+project that no longer existed, and the real synthesis migrated into `PROGRESS.md`, which is
+explicitly the volatile file. The gate's actual purpose — keeping "seen once" separate from
+"established" — is now served by grading each entry rather than by blocking the write. Full
+rationale in `../harness/WORKFLOW.md`.)*
 
-A result crosses from `scratch/` into `findings/` only after it passes
-**"artifact or signal?"** — an explicit human check that the effect is real and
-not a bug, a confound, or a metric artifact. Until then it is an *observation*,
-not a *finding*. This gate is what stops a reframed bug from compounding silently
-across sessions. The agent may now **prepare the `findings/` diff** (newest-at-top,
-dated entry) to save the human keystrokes — the gate is Sevan's review/approval of
-that diff, *not* who typed it. (Enforced by discipline + this rule; a PreToolUse hook
-is a planned upgrade — see `directions/` / TODOs, not yet wired.)
+## The two human powers
 
-## Conventions
+**The vision** (`../RESEARCH.md`) and **what to work on next** (marking a direction `active`).
+That is all. Everything else the agent writes and Sevan reviews as a document.
 
-- **Findings** are organized one file per *concept*; within a file, **dated,
-  append-only** entries (newest at top under a short mutable "current
-  understanding" summary). Corrections are *new dated entries*, not edits to old
-  ones — the record of how understanding changed is itself valuable.
-- **Directions** are one file per candidate experiment, each tagged
-  `[in-frame]` (a variation on the current approach) or `[reframe]` (changes the
-  question/premise). This keeps the backlog from filling with near-variants
-  wearing a novelty costume. A fresh session can be pointed at a single direction
-  file: "read `directions/<x>.md` and execute."
-- Dates are absolute (`YYYY-MM-DD`). Today's framing may be wrong tomorrow; the
-  timestamp is how a future reader calibrates.
-
-## Launching worker agents
-
-An agent spawned to execute ONE direction is a **worker**, not an orchestrator. A worker
-reads a **separate self-contained path** — `WORKER.md` + its assigned brief, and nothing
-else from this KB (not this README, not `PROGRESS.md`, not `ORCHESTRATION.md`) — so it never
-absorbs orchestrator state and misreads its role. Launch it with the template in
-`ORCHESTRATION.md`. Require the worker to:
-- execute only its assigned direction — **do not** spawn sub-agents, orchestrate, or
-  "wait on other jobs." *(2026-06-23: a geodesic worker read the orchestration meta-state
-  in `PROGRESS.md`, concluded it was the orchestrator, and came to rest without reporting
-  — even though it HAD finished the notebook + figures. Work fine; sign-off broken.)*
-- **end by writing its `scratch/` note AND returning a structured report** — hard
-  requirement. The note is the durable record; the report is for the orchestrator.
-
-Orchestrator side: **always verify artifacts on disk** (notebook, scratch note, exported
-PNGs) — never trust a worker's sign-off alone. If a worker fails to record/report,
-reconstruct from the artifacts (extract printed tables from the notebook, read exported
-figures) rather than rerunning.
+The standard that replaces the old gate is unchanged in substance and now lives inside each
+entry: **artifact or signal?** State scope, sample size, caveats, and what would falsify the
+claim, in the same breath as the claim. Never soften that question to make a result land.
 
 ## Map
 
-- `../RESEARCH.md` — vision / north star (human-owned)
-- `../CLAUDE.md` — engineering reference (how the code is organized, how to work)
-- `PROGRESS.md` — current session state + handoff
-- `findings/` — durable established results, by concept
-- `directions/` — backlog of candidate experiments (agent proposes, human disposes)
-- `scratch/` — free observation surface (ungated; nothing here is "true" yet)
+- `PROGRESS.md` — live state + handoff (read at the start of every orchestrator session)
+- `findings/` — what we believe, by concept, graded and dated
+- `directions/` — candidate experiments; `done/` for closed ones
+- `scratch/` — raw observation surface; the provenance findings entries cite
+- `GOTCHAS.md` — project traps and non-comparable historical numbers
