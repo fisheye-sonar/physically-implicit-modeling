@@ -1,26 +1,32 @@
 # scratch/ — Observation Surface (ungated)
 
-Free, agent-writable working surface. Half-formed observations, raw numbers,
-"huh, that's weird" notes, candidate findings awaiting review. **Nothing here is
-"true" yet.**
+Free, agent-writable working surface. Half-formed observations, raw numbers, "huh, that's
+weird" notes. **Nothing here is claimed to be true.**
 
-- Write freely. No promotion check applies *to* scratch.
-- A result leaves scratch only by being **promoted into `findings/`** — a human
-  action, after the **"artifact or signal?"** check (see `../README.md`). When you
-  draft a candidate finding here, end it with a line like
-  `→ FLAG FOR PROMOTION: <one-line claim>` so it's easy for Sevan to triage.
-- Suggested file naming: `YYYY-MM-DD-<topic>.md` (per session or per topic).
-- Scratch is disposable — old files can be cleared once their content is either
-  promoted or abandoned.
+- Write freely. No check applies *to* scratch.
+- Naming: `YYYY-MM-DD-<topic>.md`. Template: `../../harness/templates/scratch-note.md`.
+- Scratch is the **raw provenance** that `findings/` entries cite. Do not delete a note a
+  finding still points at.
 
-## Consolidated candidates (read these first)
+## Scratch is no longer a waiting room
 
-`candidate-*.md` are **self-contained, consolidated candidate findings** — one per
-prospective `findings/` entry — distilled from the raw dated notes. Read them for
-the promotion triage; the dated `YYYY-MM-DD-*.md` notes remain as raw provenance.
-Deliberately kept separate (not squished into one master finding):
+*(Changed 2026-08-17.)* Under the old model a result sat here flagged `→ FLAG FOR PROMOTION`
+until a human moved it. That queue reached 25 notes and a month of lag.
 
-- `candidate-editability.md` — GRU: predictively sufficient but non-canonical; readable≠controllable.
-- `candidate-state-geometry.md` — GRU: intrinsic dim ~5–7, strongly curved, local-resid tautology fixed.
-- `candidate-rssm-replication.md` — cross-architecture: the RSSM replicates the failure (KL buys no canonicity).
+Now: **write the scratch note and update the relevant `findings/` file in the same session.**
+The note keeps the raw detail and the dead ends; the findings entry carries the claim, its
+status (`observed` / `replicated` / `established`), and its evidence pointer back here.
+
+The `→ FLAG FOR PROMOTION` markers in existing notes are historical. They were resolved in the
+2026-08-17 backfill and should not be added to new notes.
+
+## Consolidated candidates
+
+`candidate-*.md` are self-contained consolidated candidate findings distilled from the raw
+dated notes, written under the old model as a shadow findings ledger. They remain as useful
+syntheses and as provenance; the claims in them now live in `findings/`.
+
+- `candidate-editability.md` — predictively sufficient but non-canonical; readable ≠ controllable.
+- `candidate-state-geometry.md` — intrinsic dim ~5–7, strongly curved, local-resid tautology fixed.
+- `candidate-rssm-replication.md` — the RSSM replicates the failure (KL buys no canonicity).
 - `candidate-predictive-quality.md` — refined RSSM competitive predictor + generative gap.

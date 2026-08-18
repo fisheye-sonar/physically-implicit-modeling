@@ -11,6 +11,7 @@ Layout:
   rollout.py          — observation drift, position drift, coherence,
                         rollout trajectory, 3-panel waterfall
   controllability.py  — per-step RMSE, position trajectory, waterfall triptych
+  waterfall.py        — waterfall_grid: THE canonical editor-comparison waterfall
 """
 
 from pim.figures.theme import (
@@ -40,8 +41,11 @@ from pim.figures.controllability import (
     plot_controllability_trajectory,
     plot_controllability_waterfalls,
 )
+from pim.figures.waterfall import waterfall_grid
 
 __all__ = [
+    # canonical waterfall
+    "waterfall_grid",
     # theme
     "PALETTE",
     "plot_color",

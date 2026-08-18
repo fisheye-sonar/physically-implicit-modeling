@@ -12,7 +12,17 @@ history-entangled state?
 > natural next question. Read "actions" below as "exogenous actions." Also: this GRU checkpoint family, dataset 4,
 > 2 objects, N=48 edits, in-sample probes.
 
-## Current understanding (mutable summary)
+## Current understanding
+
+> **Updated 2026-08-17.** The negative now holds under **endogenous** action too — an actor that
+> generates its own actions and acts on the world it must predict gains identifiability and
+> steerability localized to goal-directed agency, but still no grabbable object handle
+> (2026-07-28). That closes the explicit gap the 2026-07-17 entry left open. Separately, when a
+> model's action space *contains* the intervention, the **action interface** is a strong handle
+> (+0.62) over exactly the capacity range where latent editing decays to zero (2026-08-13) —
+> confirming the affordance lives in the input→dynamics pathway, not the state.
+
+### Previous synthesis (mutable summary)
 
 **Training on exogenous object-moving actions does NOT individuate objects into a grabbable state handle.** Even
 large, ghost-clearing affordances (relative `dxdy`, absolute `teleport`, axis-restricted) leave the *passive*
@@ -37,6 +47,52 @@ scaffolding** in the architecture (RESEARCH.md) — and it deliberately leaves o
 would differ.
 
 ## Log
+
+### 2026-08-13 — The action interface is the handle; the latent is not · `replicated`
+
+**Evidence:** `scratch/2026-08-13-action-hidden-size.md` ·
+`notebooks/experiments/editability/action_hidden_size/` (+ `ACTION_SWEEP_RUNS.md`) ·
+`scripts/eval_action_sweep.py` · `datasets/7_cont_teleport`, held-out `13_cont_teleport_eval`.
+
+The exogenous-teleport family is conditioned on continuous *teleport-to-absolute-coordinate*
+actions, so **its action space contains the intervention under test** — a built-in ground-truth
+handle no passive model can offer. Across `H ∈ {8,32,128,256,512}` the action interface rises
+**+0.216 → +0.455 → +0.582 → +0.618 → +0.608** over exactly the capacity range where latent
+editing decays to nothing (see `editability.md`, same date).
+
+**Why it matters:** it separates two claims that are easy to conflate — "no handle for this
+intervention exists" (false) and "no handle exists **in the state**" (true, and it gets *more*
+true with capacity). The affordance lives in the input→dynamics pathway, not in the state.
+
+The endogenous family cannot teleport at any capacity — its actions are forces — so it has no
+action-interface arm by construction. This is a structural asymmetry, not a missing measurement.
+
+---
+
+### 2026-07-28 — Endogenous action: identifiability and steerability yes, grabbable object handle no · `replicated`
+
+**Evidence:** `scratch/2026-07-28-endogenous-action-actor-observer.md` ·
+`directions/endogenous-action-interactive-world.md` · new substrate
+`pim/simulator/interactive.py` (`InteractiveWorld`), emulator `scripts/play.py` (human-playable;
+Sevan playtested and signed off), model `pim/world_models/actor_gru.py`,
+`scripts/train_endogenous.py`, `scripts/eval_endogenous.py` · runs
+`runs/endogenous/{L1,L2,L3,L3b}` (GRU 256h, 2 objects, obs_res 128, batch 64 × rollout 48).
+
+The `2026-07-17` negative was measured with **exogenous** actions supplied as an input channel,
+and explicitly left **endogenous** action open. This closes it: an **actor** (GRU predictor plus
+policy and value heads reading the same hidden state, acting on the world it must then predict,
+with the REINFORCE gradient flowing into the **shared trunk** at level 3) versus an **observer**
+— identical architecture, fed the actor's actions, prediction-only, never acts.
+
+**Result, nuanced:** identifiability and steerability improve and are **localized to
+goal-directed agency** — but a clean **grabbable object handle** does not appear.
+**`readable ≠ grabbable` holds under endogenous action.**
+
+**Why it matters:** the strong-enactivist version of the hypothesis — that *acting* rather than
+merely observing is what builds a manipulable world state — gets its clean test here, and the
+handle still does not materialise in the state.
+
+---
 
 ### 2026-07-17 — Clean negative: no exogenous action space individuates a grabbable object handle · `established`
 Independent variable = the action space (all applied one-object-at-a-time, sparse ~15%, genuine no-op, on dataset-4
