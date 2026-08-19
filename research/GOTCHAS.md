@@ -10,6 +10,70 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-08-18 — The Edit Index cannot see direction, and largest-teleport samples are a biased draw
+
+**Symptom:** a qualitative panel plainly shows the edit working — intensity appearing at the target,
+decaying at the ghost, the untouched object left alone — while the Edit Index reads like failure.
+
+**Cause (1): the index is a ratio of distances and is blind to direction.** It measures how *close*
+the output got, so "wrong direction" and "right direction, 5% of the way" both land near the
+unsteered value. Measured on `W16`/N=256, the single-frame Othello write reads Edit Index −0.538 (vs
+unsteered −0.684) while the change it actually made has **cos +0.443 (64°) to the required change
+against a shuffled chance level of +0.053**, and an **achieved fraction of 0.072**. Directionally
+real, ~7% complete. Both readings are correct; they answer different questions.
+
+**Fix:** `editability_metrics.direction_report(pred0, unsteered0, zones)` — report `direction_cos`
+(with angle and shuffled chance) and `achieved_fraction` beside any Edit Index backing a claim about
+a *direction*. Added to the canonical set 2026-08-18.
+
+**Cause (2): sample selection.** These editors' effect grows with teleport size while the unsteered
+baseline is flat, so picking the k largest teleports for a waterfall is a biased draw — the four
+largest sat at the **98th percentile** (+0.07 vs a −0.54 mean). By quartile: −0.617 / −0.611 /
+−0.532 / −0.395.
+
+**Fix:** `pipeline.representative_samples(teleport, k)` spreads samples across quantile bands. State
+the selection rule in the caption.
+
+**Blast radius:** any figure in this repo whose samples were chosen as "the largest teleports" —
+including the first versions of both `othello_gpt/` notebooks — reads more favourably than the mean.
+The metric values themselves are unaffected.
+
+---
+
+### 2026-08-18 — Edit Index silently drops unscoreable episodes, and scores only ~22% of the frame
+
+**Symptom (1):** a frame that looks nearly identical to the ground truth yet scores a strongly
+negative Edit Index — "the metric must be broken".
+
+**Cause:** it is not. The index is computed **only over the rays where the two ground-truth worlds
+differ** — median **28 of 128 rays, ~22% of the frame**. The other ~78% (the untouched object plus
+background) is *shared* by both worlds and carries no information about which one the output
+matches, so it is excluded by design. Measured on `W16`, N=256: the unsteered output is 0.276 RMSE
+from the edited world over the **full frame** but **0.564** over the differing rays, against
+**0.093** to the unedited world there — about **6× closer to the world without the teleport**.
+Both readings are correct and they answer different questions.
+
+**Fix / check:** when a frame "looks right" but the index disagrees, plot the two GT worlds and the
+output together with the differing mask shaded (see `othello_gpt/othello_gpt_probing.ipynb` Fig 9)
+before suspecting the metric. Report full-frame RMSE beside the index if the distinction matters.
+
+**Symptom (2):** the episode count behind an Edit Index is not what you think.
+
+**Cause:** `_index_from` returns `np.nanmean` over per-sample values and skips episodes whose
+`differing` mask is **empty** — i.e. the teleport is invisible in observation space (occluded, or
+the object lands where it already looked the same). On `W16`/N=256 this is **3 episodes at step 0**
+and varies by step (0–3), so the denominator quietly changes across a by-step curve. It also emits
+`RuntimeWarning: Mean of empty slice`.
+
+**Fix / check:** report the scored-episode count alongside the index when it matters; treat that
+warning as information, not noise. Not a correctness bug — an unscoreable episode *should* be
+dropped — but it is silent.
+
+**Blast radius:** every Edit Index in the repo. The values are correct; the interpretation
+("the frame is wrong") and the effective N are what get misread.
+
+---
+
 ### 2026-08-17 — Two standardization debts, measured
 
 **Symptom:** numbers or panels from different notebooks that should be comparable and are not.

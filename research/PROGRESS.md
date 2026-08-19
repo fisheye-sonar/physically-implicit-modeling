@@ -3,9 +3,129 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-17 (branch `harness_restructuring`: harness extracted, CLAUDE.md cut 492 → 133 lines, findings model redesigned and a month of findings backfilled, canonical waterfall consolidated)_
+_Last updated: 2026-08-18 (branch `othello_gpt`: Othello-GPT method ported — probing replicates, editing does not; **then the same edit applied to the whole observed HISTORY crosses zero and holds, with no ground truth**)_
 
-## 2026-08-17 (latest) — Harness restructuring: portable working standards, and the findings gate replaced
+## 2026-08-18 (latest, part 2) — The same edit, applied to the observed history instead of the latent, works
+
+Sevan's follow-up spec, after reading part 1: (a) the edit frame looks nearly right, so plot it on
+its own — unedited vs post-edit model output against both ground-truth worlds — and **double-check
+the Edit Index**; (b) in a new notebook, apply the edit **backward through the whole observation
+history**, using the model's own decoded positions and never ground truth, since constant velocity
+makes a constant displacement a valid rewrite.
+
+Notebook `othello_gpt/history_rewrite.ipynb` (+ `history_edit.py`); note
+`scratch/2026-08-18-history-rewrite.md`; `findings/editability.md` updated (`observed`,
+**★-candidate**). Edit-frame diagnostic added to `othello_gpt_probing.ipynb` as cells [16]–[17]
+(Fig 9).
+
+**The Edit Index audit came back clean — the metric is right and the intuition was also right.**
+Three independent computations agree to 4 decimals. The frame *does* look nearly correct: the
+unsteered output is 0.276 RMSE from the edited world over the **full frame**. But the index scores
+only the rays where the two ground-truth worlds differ — **median 28 of 128, ~22% of the frame** —
+and there the unsteered output is **0.564** from the edited world against **0.093** from the
+unedited one, about **6× closer to the world without the teleport**. The model is an excellent
+predictor of the *wrong world*. Both readings are correct; recorded in `GOTCHAS.md` along with a
+second, genuinely silent issue: episodes whose differing mask is empty (3/256 here) are dropped by
+`nanmean`, so the effective N moves by step.
+
+**HEADLINE — the history rewrite crosses zero and holds.** Edit Index **−0.684 (unsteered) →
++0.626 at step 0, +0.351 at step 14**, fidelity **0.674** (the rollout ends **33% closer** to the
+true post-edit world than doing nothing). Against its own `δ=0` reconstruction control (−0.569) the
+gain is **+1.195** at step 0 and **+0.727** at step 14 — where the latent write gains +0.146 → +0.010
+on the same episodes. **No ground truth is used**: positions come from the model's own probe
+read-out, and rendering needs only radius and reflectivities, which are world constants on a
+`fixed_reflectivities` dataset.
+
+**The most informative number: decode error barely matters.** Handing the method *ground-truth*
+positions instead of the probe's raises it from +0.626 to **+0.640** — a gap of **0.014** — despite
+a 0.49-sim-unit decoded position error. An *inconsistent* write is rejected however accurately it
+hits the probe target; a *consistent* one is honoured even when substantially inaccurate. That
+relocates the barrier from **precision of the write** to **coherence of the evidence**, and it is
+falsifiable (corrupt the rewrite's internal consistency at fixed accuracy).
+
+**Depth sweep.** Step-0 index +0.265 (rewrite depth 1) → +0.594 (depth 5), flat from depth 8;
+step-14 index keeps climbing +0.080 → +0.302 (8) → **+0.355 (16)**, flattening near the model's
+16-frame per-layer attention window. Placing the object and *holding* it need different amounts of
+history. **A single rewritten observation frame (+0.265) beats every latent write (−0.538).**
+
+⚠ **It uses the renderer**, so it is not a pure latent intervention and must never be quoted beside
+the latent editors as if it were one. Flagged in the notebook, the registry row, and the finding.
+
+**Harness work:** `sim_config_from` / `object_constants` extracted into `editability_metrics.py` as
+the one place the reference-render config and world constants are built (zones verified identical,
+178 tests pass). A hand-rolled frustum test halved `x_near` — which is already a half-width — and
+called **28% of ground-truth frames** out of view on an always-in-frustum dataset; replaced with the
+simulator's own `frustum_half_width`, now asserted to read 0.0% on GT.
+
+**Awaiting Sevan:** `★` on both 2026-08-18 entries; and whether the coherence-vs-precision reading
+deserves a direction brief (the falsification test above, plus the W2/W4 runs to turn the
+attention-window correspondence into a claim).
+
+---
+
+## 2026-08-18 (part 1) — Othello-GPT's method, ported exactly: probing replicates, editing does not
+
+Sevan's spec: implement Li et al.'s (ICLR 2023, arXiv:2210.13382) decoder and editor **exactly as they
+did**, on the transformer — the MLP probe, its accuracy across layers, then gradient steering from that
+probe to move one object's position while holding the other, repeated at **every layer at and after the
+applied layer**, reported across applied layers, with qualitative results plus Edit Index at step 0 and
+across the rollout; and then the same again with a probe predicting the **entire** world state
+(positions + velocities) under the identical edit objective.
+
+Thread `notebooks/experiments/editability/othello_gpt/` (notebook + `othello_probe.py` + `pipeline.py`
++ README); note `scratch/2026-08-18-othello-gpt-method-port.md`; `findings/editability.md` updated
+(`replicated`, **★-candidate**). No new world models — uses `runs/transformers/{W2,W4,W16}`.
+
+**HEADLINE — the probing half of the paper replicates, the intervention half does not.** Best position
+R² **linear 0.798 → MLP 0.934** (+0.136), MLP rising monotonically with depth: their §3 result holds
+here. But the intervention lands the read-out **completely** (3.35 → **0.007–0.018** sim units, a 99.5%
+reduction, at every applied layer) while the generation barely moves: Edit Index **−0.684 → −0.538**,
+gain **+0.146** on a ±1 scale. Fidelity **0.993–0.999** — the write is **ignored, not destructive** — and
+the arms collapse onto the unsteered curve **by step 1** (gap +0.146 → **+0.010** by step 14). The
+waterfall is unambiguous: the object stays on the ghost locator and never reaches the target.
+
+**Earlier applied layers propagate further** (−0.538 at points 0/1 → −0.622 at point 4), matching the
+structural prediction that an edit at residual point ℓ changes block inputs for layers > ℓ only.
+
+**The full-state probe changes nothing** (−0.539 vs −0.538) — but that is a *weak* completeness test,
+because velocity is barely readable here at all (per-dim R² −0.04 to 0.45). Stated as such rather than
+as "completeness does not help".
+
+**Two findings that came out of the port itself.** (1) The **oracle observation ceiling on this model is
+only +0.126**, so the probe write achieves ~18% of what a perfect single-frame intervention achieves —
+any claim about the size of the failure has to be read against that. (2) **The optimiser decides which
+probe-satisfying write you land on**: at a matched selection rule, Adam's write is 1.7–4.9× larger in norm
+and moves the generation, while plain gradient descent lands the read-out with a smaller write and
+moves it essentially not at all (point 0: read-out 0.192, Edit Index −0.680 = unsteered). The set of
+activations satisfying the probe is large and the probe constraint does not pin down a member the
+dynamics honour — the same shape as the 2026-08-05 tangent-constrained result, from a new direction.
+
+**Flat across attention windows**: gain +0.153 (W2) / +0.137 (W4) / +0.146 (W16).
+
+**Why it matters for the thread:** the probe-derived-write failure is **not an artefact of this repo's
+editor implementations**. The strongest published version of that method — its schedule, its loss, its
+multi-layer write, its own baseline — fails here too.
+
+**READING (not established):** does not contradict Li et al., it locates the difference, and this
+notebook does **not** separate the two candidates: (a) *the world* — their board state is discrete and
+exactly determined by the move sequence and the flipped tile is consumed directly by the legal-move
+computation, ours is continuous and reaches the output only through a renderer (consistent with
+2026-08-05 putting `readable ≠ grabbable` in the world, not the model); (b) *the read-out* — their probe
+predicts a quantity the next-token computation consumes, ours one merely correlated with it.
+
+**Deviations from the paper, both deliberate and both stated in the notebook's opening table:**
+regression + R² instead of 3-way classification (our state is continuous; probe *shape* unchanged), and
+held out **by sequence** rather than by frame (their split leaks a trajectory-constant velocity label —
+`GOTCHAS.md`, +0.34 inflation). Adam rather than plain GD for the activation update is an
+implementation choice the paper explicitly sanctions; plain GD is run alongside and reported.
+
+**Awaiting Sevan:** the `★` call on this entry, and whether the two candidate explanations above are
+worth a direction brief (the cleanest next test is a probe trained on a quantity the decoder provably
+consumes). Also still open from 2026-08-17: the `★` pass over the backfilled findings.
+
+---
+
+## 2026-08-17 — Harness restructuring: portable working standards, and the findings gate replaced
 
 **Not a research session.** Substrate work, at Sevan's direction, in preparation for reusing
 these working standards on a second project (a CV project on vesicle detection in
