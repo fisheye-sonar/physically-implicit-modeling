@@ -15,8 +15,10 @@ Notebooks: `notebooks/experiments/editability/` (`canonical_state_editing`,
 
 ## Current understanding
 
-_Updated 2026-08-17 (backfill of 2026-07-18 → 2026-08-14; the file had not been updated since
-2026-07-17 under the old promotion gate)._
+_Updated 2026-08-18._
+
+_(2026-08-17: backfill of 2026-07-18 → 2026-08-14, which the old promotion gate had blocked since
+2026-07-17.)_
 
 **The negative is real, located, and now has a positive counterexample.**
 
@@ -26,16 +28,24 @@ _Updated 2026-08-17 (backfill of 2026-07-18 → 2026-08-14; the file had not bee
    116-dimensional linear position code still does not edit), not capacity
    (the failure holds at `H` = 8…512 and *worsens* with capacity), not the observation's
    lossiness (it survives full 2D observability), not the space the write happens in
-   (`h`, encoder input `x`, and a VAE latent all fail), and not the metric used to take the
-   step (whitening helps and is not enough). What was missing is a **map from the intended
-   change to the required state change** — which a pseudoinverse estimates badly.
+   (`h`, encoder input `x`, and a VAE latent all fail), not the metric used to take the
+   step (whitening helps and is not enough), and **not this repo's editor implementations** —
+   the strongest published probe-derived write, Othello-GPT's multi-layer activation gradient,
+   was ported exactly and fails here too (2026-08-18). What was missing is a **map from the
+   intended change to the required state change** — which a pseudoinverse estimates badly.
 2. **Why the probe direction is wrong is inherited from the world, not learned.** The
    required displacement is near-orthogonal to what a probe-derived write can apply, and this
    holds **in observation space itself**, before any model is trained. `readable ≠ grabbable`
    is a property of the renderer.
-3. **What works needs dynamics.** The only reliable mechanisms — counterfactual state
-   overwrite, freeze-time teacher forcing, the decoder-gradient oracle — all make the model
-   **consume evidence over time**. No edit that works without dynamics has been found.
+3. **What works needs dynamics — and a source of VALID observations.** The reliable mechanisms
+   (counterfactual state overwrite, freeze-time teacher forcing, the decoder-gradient oracle, and
+   a history rewrite that re-renders each frame) all make the model **consume evidence over
+   time**, and all obtain that evidence from something that can *generate a real observation*.
+   Where the evidence is synthesised by a probe-derived write instead, it fails — including when
+   applied to **every frame of the history at once** and including when applied to the **raw
+   observations** (2026-08-18). So the barrier is **frame validity**, not the coherence of the
+   evidence across time and not the precision of the write, both of which were ruled out by that
+   experiment. No edit that works without an external observation model has been found.
 4. **A learned editor crosses zero.** `E_θ(h, start, target) → Δh` with the world model
    **frozen** reaches Edit Index **+0.20** against unsteered −0.67, at zero prediction cost —
    the first probe-free latent editor to go positive. See `trained-editors.md`.
@@ -73,6 +83,187 @@ moves the obs partly by *scrambling*, not clean relocation).
 </details>
 
 ## Log
+
+### 2026-08-18 — The Othello write applied to the WHOLE history, renderer-free: still fails. Frame validity, not consistency, is the barrier · `replicated` ★-candidate
+
+**Supersedes 2026-08-18** (the history-rewrite entry below): that entry's numbers stand, its
+*interpretation* does not. **Evidence:** `scratch/2026-08-18-history-rewrite-renderer-free.md` ·
+`notebooks/experiments/editability/othello_gpt/history_rewrite.ipynb` (+ `history_edit.py`) ·
+`runs/transformers/W16`, `datasets/4_fixed_refl_inview`, `ef=20`, `K=15`, **N=256**.
+
+The earlier entry reported a history rewrite reaching **+0.626** and read the barrier as *coherence
+of the evidence*. That arm rebuilt each frame with the **simulator's renderer**. Re-run without it —
+the paper's own MLP write applied at **every history frame**, and the same write applied to the
+**observations themselves** — the effect disappears:
+
+| arm | renderer-free | read-out after | EI step 0 | step 14 | fidelity |
+|---|---|---|---|---|---|
+| Unsteered | — | — | −0.684 | −0.439 | 1.000 |
+| Latent write · single frame | ✅ | 0.018 | −0.538 | −0.428 | 0.994 |
+| **Activation history edit @0** (every frame) | ✅ | **0.008** | **−0.544** | −0.428 | 0.995 |
+| **Observation history edit** (MLP write on the frames) | ✅ | 0.079 | **−0.459** | −0.302 | 1.001 |
+| *Rebuilt history* | ❌ **render** | — | *+0.626* | *+0.351* | *0.674* |
+
+1. **Widening the write from one frame to twenty buys 0.006 index points** (−0.538 → −0.544), with
+   *better* read-out convergence (3.64 → **0.008**). Consistency across frames is **not** the missing
+   ingredient.
+2. Applied-layer ordering unchanged: −0.544 (point 0) → −0.637 (point 4).
+3. Writing the observations directly helps but not qualitatively: **−0.459**, the only renderer-free
+   arm whose effect survives the rollout at all (−0.302 vs unsteered −0.439).
+4. **The whole difference is frame validity.** The observation edit and the render reference use the
+   same `δ`, the same per-frame targets, and the same channel, and differ by **1.085 index points**.
+5. **Off-manifold, not timid:** the MLP edit changes the frames *less* than the render does (relative
+   change 0.539 vs 0.881) while scoring far worse. Real observations here are strongly saturated —
+   **39.3%** of pixels at the intensity rails; after the MLP write, **2.6%**. Visibly broadband
+   striping with the plateau structure destroyed.
+
+**Why it matters:** it removes an over-reading that had entered this file the same day, and it
+sharpens the standing negative. Probe-derived writes now fail on **every** surface tried — `h`,
+encoder port, VAE latent, residual stream at one frame, residual stream at *all* frames, and raw
+observations — for one reason: **they cannot synthesise a valid observation.** The probe pins a
+4-dimensional read-out and leaves 124 dimensions free, and essentially every member of that solution
+set is not a picture of this world.
+
+Third independent route to the same conclusion, after `observation-space geometry` (2026-08-05,
+measured with **no model**) and `input_grad_steering` (2026-08-11, single-frame input gradients).
+
+**Owed:** replace the simulator's renderer with a **learned** `positions → observation` map fit on the
+training split. If that recovers most of the +0.626, the requirement is "any valid observation model",
+not "the true one" — which is something a model could own.
+
+**Caveats:** one model, one dataset, N=256. Step sizes chosen by read-out convergence; both writes
+reach an interesting-looking index only past that optimum and by degrading (activation α=0.4 →
+−0.084 at fidelity 1.091).
+
+---
+
+### 2026-08-18 — Rewriting the whole observed history crosses zero and holds, with no ground truth · `observed` ★-candidate
+
+**Evidence:** `scratch/2026-08-18-history-rewrite.md` ·
+`notebooks/experiments/editability/othello_gpt/history_rewrite.ipynb` (+ `history_edit.py`) ·
+`runs/transformers/W16`, `datasets/4_fixed_refl_inview`, `ef=20`, `K=15`, **N=256** — the same
+episodes as the Othello-port entry below.
+
+To teleport an object by `δ` at the edit frame, apply **the same `δ` to every prior frame**,
+rebuilding each observation from the model's **own decoded positions**, and teacher-force on that
+history. Velocity is constant in this world, so translating a whole track by a constant `δ` is
+itself a valid trajectory — the rewritten history is a *consistent world*, not one inconsistent
+frame the dynamics must absorb. **No ground truth is used by the method**: positions come from the
+probe reading the model's own residual stream, and rendering needs only radius and reflectivities,
+which on a `fixed_reflectivities` dataset are world constants shared by every episode.
+
+| arm | EI step 0 | EI step 14 | fidelity |
+|---|---|---|---|
+| Unsteered | −0.684 | −0.439 | 1.000 |
+| Reconstruction control (`δ=0`) | −0.569 | −0.375 | 1.039 |
+| Latent write (Othello method) | −0.538 | −0.428 | 0.994 |
+| Oracle observation *(leads by one)* | +0.126 | −0.030 | 0.858 |
+| **History rewrite (`δ`)** | **+0.626** | **+0.351** | **0.674** |
+| Oracle history rewrite (`δ`, GT positions) | +0.640 | +0.364 | 0.603 |
+
+1. Gain over its **own** reconstruction control: **+1.195** at step 0, **+0.727** at step 14. The
+   latent write gains +0.146 → +0.010 on the same episodes.
+2. **Not a degradation artefact** — fidelity **0.674**, i.e. the rollout ends **33% closer** to the
+   true post-edit world than doing nothing.
+3. **Decode error is nearly irrelevant.** The GT-position oracle reaches +0.640 against the decoded
+   +0.626 — a gap of **0.014** — despite a decoded-position RMSE of 0.49 sim units. The method needs
+   a **consistent** read-out, not an accurate one.
+4. **Depth sweep:** step-0 index +0.265 (rewrite depth 1) → +0.594 (depth 5), flat from depth 8;
+   step-14 index keeps climbing +0.080 → +0.302 (8) → **+0.355 (16)**, flattening near the model's
+   16-frame per-layer attention window. Placing the object and *holding* it need different amounts
+   of history. The window correspondence is **suggestive and untested** — it needs W2/W4.
+5. **A single rewritten observation frame beats every latent write**: depth 1 = +0.265 vs −0.538.
+
+**Why it matters:** it sharpens the thread's standing conclusion rather than overturning it. The
+negative was never "this world state cannot be changed" but **"the latent is not the surface on
+which it can be changed."** Everything that has ever worked here — counterfactual overwrite,
+freeze-time teacher forcing, and now this — writes through the **observation channel**. What is new
+is that this one needs **no oracle**.
+
+**Reading (not established):** result 3 points at **coherence of the evidence**, not precision of
+the write, as the barrier — an *inconsistent* write is rejected however accurately it hits the probe
+target, while a *consistent* one is honoured even when substantially inaccurate. Falsifiable:
+corrupt the rewritten history's internal consistency while holding accuracy fixed; the effect should
+die.
+
+**Caveats:** ⚠ **uses the renderer** — this is *not* a pure latent intervention and must never be
+quoted beside the latent editors as if it were one; the observation function is treated as known.
+Translating a track pushes it out of frustum on 10.0% of frames / 46.1% of episodes. One model, one
+dataset, N=256. Constant velocity is what makes a constant `δ` a valid rewrite.
+
+---
+
+### 2026-08-18 — Othello-GPT's probe and intervention, ported exactly: the probing replicates, the editing does not · `replicated` ★-candidate
+
+**Evidence:** `scratch/2026-08-18-othello-gpt-method-port.md` ·
+`notebooks/experiments/editability/othello_gpt/` (notebook + `othello_probe.py` + `pipeline.py`) ·
+transformer `runs/transformers/{W2,W4,W16}` (no new world models), `datasets/4_fixed_refl_inview`,
+`ef=20`, `K=15`, **N=256** edits; probes on 1500 test sequences held out **by sequence**.
+Source: Li et al., *Emergent World Representations*, ICLR 2023 (arXiv:2210.13382).
+
+Every editor in this thread is a **probe-derived write**, and every one fails. Othello-GPT is the
+strongest published claim that exactly this kind of write **succeeds**. Their method was ported
+unchanged — probe families (linear vs **one-hidden-layer** MLP), the activation update
+`x' ← x − α ∂L(p_θ(x), B')/∂x`, the **sequential multi-layer schedule** (write at the last timestep at
+residual point `L_s` **and every point after it**, alternating write and compute), the hold-the-rest
+term with weight `β` (App. G), and their null-intervention baseline.
+
+**1. The probing half replicates cleanly.** Best position R² **linear 0.798 → MLP 0.934** (+0.136),
+MLP rising monotonically with depth. Their §3 headline holds here: a nonlinear world representation
+is present and a linear probe under-reads it.
+
+**2. The intervention half does not.** The optimisation succeeds completely — read-out driven
+**3.35 → 0.007–0.018** sim units (99.5% reduction) at every applied layer — while the generation
+barely responds: Edit Index **−0.684 (unsteered) → −0.538**, a gain of **+0.146** on a ±1 scale. The
+waterfall is unambiguous: the object stays on the ghost locator and never reaches the target, in
+every sample and every arm.
+
+**3. Ignored, not destroyed; reverts within one frame.** Fidelity ratio **0.993–0.999** everywhere
+(no arm near the 1.05 guard). Arms collapse onto the unsteered curve **by step 1**; the gap decays
+**+0.146 → +0.010** by step 14.
+
+**4. Earlier applied layers propagate further** — −0.538 (points 0/1) → −0.565 (2) → −0.606 (3) →
+−0.622 (point 4), matching the structural prediction that an edit at residual point ℓ changes block
+inputs for layers > ℓ only.
+
+**5. A probe reading the ENTIRE world state changes nothing** — −0.539 (positions + velocities,
+8 dims, identical edit objective) vs −0.538 (positions only). ⚠ This is a **weak** test of
+completeness: velocity is barely readable here to begin with (per-dim R² **−0.04 to 0.45**), so the
+extra dimensions carry little information.
+
+**6. The single-frame ceiling on this model is itself low.** The oracle observation — the model simply
+*shown* the true post-edit frame — reaches only **+0.126**, decaying to −0.030. The probe write
+achieves ~**18%** of that (+0.146 of +0.810).
+
+**7. The optimiser decides which probe-satisfying write you land on.** At a matched selection rule
+(lowest read-out error), Adam's write is **1.7–4.9× larger in norm** and moves the generation; plain
+gradient descent lands the read-out with a smaller write and moves it essentially not at all (point 0:
+read-out 0.192, Edit Index **−0.680** = unsteered). The set of activations satisfying the probe is
+large and the probe constraint does not pin down a member the dynamics honour — the same shape as the
+2026-08-05 tangent-constrained result, reached from a different direction.
+
+**8. Flat across attention windows** — gain over each model's own unsteered index **+0.153** (W2) /
+**+0.137** (W4) / **+0.146** (W16).
+
+**Why it matters:** the probe-derived-write failure is **not an artefact of this repo's editor
+implementations**. The strongest published version of that method, with its own schedule, loss,
+multi-layer write and baseline, fails here too.
+
+**Reading (not established):** this does not contradict Li et al., it locates the difference, and the
+notebook does not separate the two candidates — (a) **the world**: their board state is discrete and
+exactly determined by the move sequence and the flipped tile is consumed directly by the legal-move
+computation, while ours is continuous and reaches the output only through a renderer (consistent with
+2026-08-05, which put `readable ≠ grabbable` in the world rather than the model); (b) **the read-out**:
+their probe predicts a quantity the next-token computation consumes, ours one merely correlated with
+what the decoder consumes.
+
+**Caveats:** one dataset, one architecture family, N=256. The probe is the **paper's** one-hidden-layer
+MLP, **not** `fit_readability_probes` (2×256) — the R² values are not comparable to readability numbers
+elsewhere in the repo. Held out by sequence, unlike the paper's by-frame split. Gates passed:
+`state_from_obs` vs one-pass forward 8.3e-07; identity write == free-run exactly 0; one intervention
+per episode (max jump 2.97 at `ef`, 0.246 anywhere else).
+
+---
 
 ### 2026-08-13 — Grabbability *decays* with capacity while the action interface *rises* · `replicated`
 

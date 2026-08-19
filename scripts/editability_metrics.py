@@ -110,6 +110,59 @@ class EditZones:
     differing_traj: np.ndarray | None = None
 
 
+def sim_config_from(sim: dict, n_obj: int):
+    """The one place a `SimConfig` is built for CLEAN reference rendering.
+
+    Inherits the dataset's rendering settings. Without this the reference worlds would be
+    rendered with the HARD ray-caster while the model was trained on soft renders, and every
+    §4 metric would be scored against the wrong ground truth. The same argument applies to the
+    observation CHANNEL: on an omniscient-2D dataset the reference worlds must be rasterised,
+    not ray-cast.
+
+    Note `obs_noise_std=0.0` — references are always clean renders. A caller that needs the
+    observation the model would actually have SEEN must add the dataset's noise itself.
+    """
+    from pim.simulator.sim import SimConfig
+
+    return SimConfig(
+        seed=0,
+        y_near=sim["y_near"],
+        y_far=sim["y_far"],
+        x_near=sim["x_near"],
+        x_far=sim["x_far"],
+        n_objects=n_obj,
+        radius=sim["radius"],
+        n_frames=1,
+        dt=float(sim["dt"]),
+        obs_res=sim["obs_res"],
+        refl_min=sim["refl_min"],
+        refl_max=sim["refl_max"],
+        fixed_reflectivities=True,
+        obs_noise_std=0.0,
+        boundary="open",
+        always_in_frustum=False,
+        soft_edge=sim.get("soft_edge", 0.0),
+        soft_shading=sim.get("soft_shading", "flat"),
+        soft_psf_sigma=sim.get("soft_psf_sigma", 0.0),
+        soft_occlusion_temp=sim.get("soft_occlusion_temp", 0.0),
+        omni2d=sim.get("omni2d", False),
+        omni2d_h=sim.get("omni2d_h", 48),
+        omni2d_w=sim.get("omni2d_w", 64),
+    )
+
+
+def object_constants(sim: dict, n_obj: int):
+    """(radii, reflectivities) — WORLD constants on a fixed-reflectivity dataset.
+
+    Both are identical for every episode, so rendering a counterfactual frame from decoded
+    positions needs no per-episode ground truth. That is what makes a history rewrite from the
+    model's own read-out well posed.
+    """
+    refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
+    rad = np.full(n_obj, sim["radius"], np.float32)
+    return rad, refl
+
+
 def build_edit_zones(
     *,
     pre_pos: np.ndarray,
@@ -136,41 +189,10 @@ def build_edit_zones(
     gt_edited_traj : (N, K, R) the sim's clean post-edit observations, `clean_obs[ef:ef+K]`.
     """
     from pim.simulator.renderer import render_frame
-    from pim.simulator.sim import SimConfig
 
     n = len(pre_pos)
     dt = float(sim["dt"])
-    cfg = SimConfig(
-        seed=0,
-        y_near=sim["y_near"],
-        y_far=sim["y_far"],
-        x_near=sim["x_near"],
-        x_far=sim["x_far"],
-        n_objects=n_obj,
-        radius=sim["radius"],
-        n_frames=1,
-        dt=dt,
-        obs_res=sim["obs_res"],
-        refl_min=sim["refl_min"],
-        refl_max=sim["refl_max"],
-        fixed_reflectivities=True,
-        obs_noise_std=0.0,  # both references are CLEAN renders
-        boundary="open",
-        always_in_frustum=False,
-        # Inherit the dataset's rendering. Without this the reference worlds would be
-        # rendered with the HARD ray-caster while the model was trained on soft renders,
-        # and every §4 metric would be scored against the wrong ground truth.
-        soft_edge=sim.get("soft_edge", 0.0),
-        soft_shading=sim.get("soft_shading", "flat"),
-        soft_psf_sigma=sim.get("soft_psf_sigma", 0.0),
-        soft_occlusion_temp=sim.get("soft_occlusion_temp", 0.0),
-        # Same argument for the observation CHANNEL: on an omniscient-2D dataset the
-        # two reference worlds must be rasterised, not ray-cast. `obs_res` already
-        # carries the flat grid size, so every zone mask below stays 1D and unchanged.
-        omni2d=sim.get("omni2d", False),
-        omni2d_h=sim.get("omni2d_h", 48),
-        omni2d_w=sim.get("omni2d_w", 64),
-    )
+    cfg = sim_config_from(sim, n_obj)
     refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
     rad = np.full(n_obj, sim["radius"], np.float32)
     R = int(sim["obs_res"])
@@ -316,6 +338,65 @@ def edit_scorecard(
         gt_traj_rmse=float(np.mean(step)),
         step_rmse_to_gt=step,
     )
+
+
+def direction_report(
+    pred0: np.ndarray,
+    unsteered0: np.ndarray,
+    zones: "EditZones",
+    *,
+    seed: int = 0,
+) -> dict:
+    """Is the change in the RIGHT DIRECTION, and how much of it was made?
+
+    The Edit Index is a ratio of distances, so it reports only how *close* the output got and
+    is blind to whether the change it made pointed the right way. A directionally-correct edit
+    that is 5% complete and a directionally-random one score nearly the same. For a thread whose
+    claim is about whether probe-derived *directions* are wrong, that distinction is the whole
+    question — so it gets its own measurement.
+
+    On the differing rays, with `required = gt_edited − gt_unedited` and
+    `achieved = pred0 − unsteered0`:
+
+    * ``direction_cos``      — cos(required, achieved), per sample then averaged. **Report the
+      angle beside it**: cos 0.44 is 64 degrees, not "mostly aligned" (`harness/ANALYSIS.md` §8).
+    * ``direction_cos_shuffled`` — the same with mismatched pairs. The chance level, which is
+      near zero but not exactly zero, so it must be measured rather than assumed.
+    * ``achieved_fraction`` — the projection of `achieved` onto `required`, as a fraction of
+      `required`. 1.0 = the full change was made; 0.05 = the edit is 5% complete.
+
+    Added 2026-08-18 after a qualitative panel plainly showed intensity appearing at the target
+    and decaying at the ghost while the Edit Index read −0.54. Both were right: the edit was
+    directionally real (cos +0.44 against a +0.05 control) and about 5% complete.
+    """
+    req = zones.gt_edited - zones.gt_unedited
+    got = pred0 - unsteered0
+    n = len(pred0)
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(n)
+    cos, frac, cos_s = [], [], []
+    for i in range(n):
+        m = zones.differing[i]
+        if not m.any():
+            continue
+        r, g = req[i, m], got[i, m]
+        nr, ng = np.linalg.norm(r), np.linalg.norm(g)
+        if nr > 1e-9 and ng > 1e-9:
+            cos.append(float(r @ g / (nr * ng)))
+            frac.append(float(r @ g / (nr * nr)))
+        rs = req[perm[i], m]
+        nrs = np.linalg.norm(rs)
+        if nrs > 1e-9 and ng > 1e-9:
+            cos_s.append(float(rs @ g / (nrs * ng)))
+    c = float(np.mean(cos)) if cos else float("nan")
+    return {
+        "direction_cos": c,
+        "direction_angle_deg": float(np.degrees(np.arccos(np.clip(c, -1, 1)))),
+        "direction_cos_median": float(np.median(cos)) if cos else float("nan"),
+        "direction_cos_shuffled": float(np.mean(cos_s)) if cos_s else float("nan"),
+        "achieved_fraction": float(np.mean(frac)) if frac else float("nan"),
+        "achieved_fraction_median": float(np.median(frac)) if frac else float("nan"),
+    }
 
 
 def fidelity_ratio(card: dict, unsteered_card: dict) -> float:

@@ -45,6 +45,15 @@ form, these requirements are universal:
 - **At least three sample rows — always.** The panel is judged qualitatively, so it needs
   3–4 examples per method to distinguish a real effect from a lucky sample. Two rows is not
   a comparison.
+- **⛔ Samples are drawn at random by default, and the selection rule goes in the figure title.**
+  Choosing the examples where an effect "should be most visible" is a biased draw whenever the
+  effect size correlates with the selection variable — and it usually does. Measured instance: a
+  panel built from the four largest-magnitude cases sat at the **98th percentile** of the outcome
+  distribution (+0.07 against a −0.54 mean), so the figure showed the best case and read as the
+  typical one, and the reader reasonably concluded the metric disagreeing with it was broken.
+  Random (seeded) is the default; stratified across the range is fine when the spread is the point.
+  An extreme-case panel may be shown **in addition**, titled explicitly as such. State the
+  population statistic the panel should be read against, in the caption.
 - **Each column shows its own output.** Never paint a shared row sourced from one privileged
   arm across all columns; it makes every method look as though it had access that only one
   of them had, and it hides the exact quantity being scored. Where one arm legitimately has

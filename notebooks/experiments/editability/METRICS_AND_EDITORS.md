@@ -117,6 +117,39 @@ the edit happened, or the one where it didn't?
 | **Edit Index** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(edited₀, gt_·)` over **differing rays**; per sample, then averaged | −1…+1 | ↑ | **+1** = it *is* the edited world · **0** = equidistant (ambiguous, or garbage) · **−1** = it *is* the unedited world. |
 | **Edit Index by step** | the same, at every rollout step, against the counterfactual world **rolled forward** (the edited object continuing along its own velocity, the other object on its true trajectory) | −1…+1 | ↑ | the bounded trajectory analogue of GT-traj RMSE. **Report it whenever you report the step-0 index** — landing an edit and *holding* it are different things (measured 2026-07-30: the decoder-gradient oracle scores **+0.94** at step 0 and decays to **−0.12** by step 14). |
 
+> ### ⭐ The Edit Index is BLIND TO DIRECTION — report `direction_cos` beside it (added 2026-08-18)
+> The index is a ratio of *distances*, so it measures only how **close** the output got. It cannot
+> distinguish **"the change pointed the wrong way"** from **"the change pointed the right way and was
+> 5% of the required size"** — both land near the unsteered value. For a thread whose central claim is
+> about whether probe-derived *directions* are wrong, that is the distinction that matters most, and
+> the canonical set was missing it.
+>
+> Measured on `W16` / N=256, the single-frame Othello write scores Edit Index **−0.538** against an
+> unsteered **−0.684** — which reads as "barely moved". But on the differing rays the change it made,
+> `(edited₀ − unsteered₀)`, has **cos = +0.443 (64°) against the required change, versus a
+> shuffled-pair chance level of +0.053** — and an **achieved fraction of 0.072**. The edit is
+> **directionally real and about 7% complete**. A qualitative panel shows that plainly (intensity
+> appearing at the target, decaying at the ghost) while the index reads as failure. *Both are correct.*
+>
+> **Always report `direction_cos` (with its angle and shuffled chance level) and `achieved_fraction`
+> beside any Edit Index used to support a claim about a direction.**
+> `editability_metrics.direction_report(pred0, unsteered0, zones)`.
+
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **direction cosine** | cos between achieved `(edited₀ − unsteered₀)` and required `(gt_edited − gt_unedited)`, on the **differing rays**, per sample then averaged | — | ↑ | report the **angle** and the **shuffled-pair chance level** — cos 0.44 is 64°, not "aligned" |
+| **achieved fraction** | projection of achieved onto required ÷ ‖required‖² | — | ↑ | 1.0 = complete edit, 0.05 = 5% complete |
+
+> ### ⛔ Do NOT select qualitative samples by largest teleport (added 2026-08-18)
+> Editors in this thread tend to have an effect that **grows with teleport size** while the unsteered
+> baseline is flat, so "the k largest teleports" is a biased draw. Measured 2026-08-18 on the
+> single-frame Othello write: the four largest-teleport episodes sat at the **98th percentile** of the
+> Edit Index distribution (**+0.07** against the **−0.54** mean; by teleport quartile the arm reads
+> −0.617 / −0.611 / −0.532 / −0.395 while unsteered stays ≈ −0.65…−0.70). A waterfall drawn that way
+> shows the best case and reads as the typical one. Use
+> `pipeline.representative_samples(zones.teleport, k)` — one per quantile band — and state the
+> selection rule in the caption.
+
 > ### ⚖ Calibration — what an Edit Index value actually looks like (added 2026-08-14)
 > The index is a *ratio of distances*, so it compresses hard near zero and small positive values are
 > much weaker edits than they sound. Writing `r = d_edit / d_uned`, the index is `(1 − r)/(1 + r)`:
@@ -210,6 +243,28 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 
 > **Uniform (unshrunk) INLP at k=29 is degenerate** — fidelity 1.57, every zone worse than unsteered, visually
 > striped garbage. Always use the R²-corrected targets, or truncate to k≈12.
+
+**ARCHITECTURE-SPECIFIC EDITOR — transformer residual stream only** (added 2026-08-18). Kept out of the table
+above because its outcome column would not mean the same thing: it writes to a *residual point*, which the GRU
+does not have, and it is measured on the transformer, so the numbers are **not** comparable to the GRU H256
+column.
+
+| editor | mechanism | needs | outcome on transformer W16 (N=256) |
+|---|---|---|---|
+| **Layerwise MLP Grad Steering (Othello-GPT) @L_s** | the method of Li et al. (ICLR 2023) ported exactly: gradient descent on the **activation** through a frozen **one-hidden-layer** MLP probe — `x' ← x − α ∂L/∂x` — applied at the **last timestep** at residual point `L_s` **and every point after it**, alternating write and compute. Loss = target term + `β` × hold-the-rest term (their App. G). | per-point MLP probe | **−0.54** (best, `L_s`=0/1) vs unsteered −0.68; read-out lands (3.35 → 0.008) but the generation does not follow; fidelity 0.99, reverts by step 1 |
+
+| **History Rewrite @depth** *(observation channel, not `h`)* | translate the edited object's **whole decoded track** by a constant `δ` and re-render every prior frame, then teacher-force. Positions come from the model's own probe read-out; rendering uses only world constants (radius, reflectivities) — **no per-episode ground truth**. `δ` from decoded quantities only. | position probe + renderer | **+0.626** step 0, **+0.351** step 14, fidelity **0.674** (own `δ=0` control −0.569) |
+
+> ⚠ **The history rewrite writes to the OBSERVATIONS, not to `h`** — it is not a latent editor and
+> must never be quoted in the same column as one. It treats the observation function as known. It is
+> listed here because it is the strongest edit in the thread and the contrast with the latent writes
+> is the point: the same displacement, applied to the past instead of the state, moves the index by
+> **+1.195** instead of +0.146. Detail: `othello_gpt/history_rewrite.ipynb`.
+
+Full port, deviations, and the optimiser caveat: `othello_gpt/README.md` and
+`othello_gpt/othello_gpt_probing.ipynb`. ⚠ Its probe is the **paper's one-hidden-layer** MLP, a *different
+object* from both `MLP Grad Steering`'s frozen 1×128 `MLPExtractor` and the repo-standard
+`fit_readability_probes` (2×256) — three distinct probes, three non-comparable R² scales.
 
 **LEARNED EDITORS — the world model or the editor was trained** (`trained_editability/`; each row is a
 **different world model**, so each must be read against **its own** unsteered index):
