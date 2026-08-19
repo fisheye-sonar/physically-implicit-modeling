@@ -231,7 +231,7 @@ Extra standards for that tier:
 
 ## Local instantiations (this project — not portable)
 
-- Canonical qualitative panel, 1D observations → the fixed specification in `../CLAUDE.md`
+- Canonical qualitative panel, 1D observations → the fixed specification in `../notebooks/experiments/editability/WATERFALL_SPEC.md`
 - Canonical qualitative panel, 2D observations →
   `../notebooks/experiments/editability/omniscient_2d/WATERFALL_SPEC_2D.md`, implemented in
   that directory's `frame_grid.py`

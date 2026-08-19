@@ -37,6 +37,7 @@ directories); several briefs carried no status line at all._
 
 | Direction | Tag | Sub-Q | Status |
 |---|---|---|---|
+| [`edit-direction-causality.md`](edit-direction-causality.md) | `[in-frame]` | 3 | proposed — follow-up to `latent_linearity`, 2026-08-19 |
 | [`curvature-metric-normalization.md`](curvature-metric-normalization.md) | `[in-frame]` | 1 | proposed — **owed fix**, see `../GOTCHAS.md` |
 | [`orthogonal-edits.md`](orthogonal-edits.md) | `[reframe]` | 3 | proposed |
 | [`endogenous-action-rssm.md`](endogenous-action-rssm.md) | `[reframe]` | 2, 3 | proposed |

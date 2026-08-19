@@ -15,7 +15,7 @@ Notebooks: `notebooks/experiments/editability/` (`canonical_state_editing`,
 
 ## Current understanding
 
-_Updated 2026-08-18._
+_Updated 2026-08-19._
 
 _(2026-08-17: backfill of 2026-07-18 → 2026-08-14, which the old promotion gate had blocked since
 2026-07-17.)_
@@ -52,6 +52,17 @@ _(2026-08-17: backfill of 2026-07-18 → 2026-08-14, which the old promotion gat
 5. **The un-edited complement is a decaying sensory trace**, not a record of past positions —
    the first content-level account of what the rest of `h` holds.
 
+6. **The edit direction is a well-defined object in every architecture, and a trained pathway reaches it.**
+   The two oracle mechanisms agree on the displacement at cos +0.59 … +0.91 across GRU, RSSM, transformer and
+   both DiT variants, and on the action-conditioned GRU the **trained action channel** lands within 29° of the
+   counterfactual oracle — the tightest pair measured. The agreement still buys no shared edit axis (cross-episode
+   cosine ≈ 0) and no probe visibility (at or below chance, except the latent DiT's 64-d code at 1.17×), so it
+   sharpens rather than overturns point 1: the map from intended change to required state change **exists**; it
+   is not a probe direction (2026-08-19).
+7. **`First Obs. TF` is not one number.** Whether a single uncued post-edit frame persists runs
+   −0.00 → +0.22 → +0.53 across GRUs that differ only in whether they saw teleports and whether those teleports
+   were cued by an action (2026-08-19).
+
 **Status of the older synthesis** (predictively sufficient but non-canonical; `readable ≠
 controllable`; the fiber not collapsed; curvature of the `(pos,vel)→h` embedding) — all still
 holds and is preserved below.
@@ -83,6 +94,66 @@ moves the obs partly by *scrambling*, not clean relocation).
 </details>
 
 ## Log
+
+### 2026-08-19 — The edit direction is well defined in every architecture, and a *trained* pathway lands on it · `replicated` ★-candidate
+
+**Evidence:** `scratch/2026-08-19-latent-edit-directions.md` ·
+`notebooks/experiments/editability/latent_linearity/` (notebook + `edit_directions.py` + `figures.py` +
+`LATENT_LINEARITY_RUNS.md`) · dataset 4 `edits` split N=256 (Part 1) and
+`datasets/15_teleport_eval_single/eval.h5` N=256 (Part 2) · runs `H256`, `4_dset4_refined_best`, `W16`,
+`0_latent_dit_z16_w4`, `9_dset4_dit_w4_d256`, `XG_A_H256`, `XG_C_H256`. **No models trained.**
+
+Sevan's spec: extend the ground-truth edit-direction analysis of 2026-08-03 to all four architectures, then ask
+whether the two *learned* edit pathways write the same displacement as the training-free oracles.
+
+**1. The two oracles agree on the displacement in every architecture.**
+`cos(Counterfactual Overwriting, Freeze-time Interp. TF @8)` per episode then averaged, edit-only Δh
+(`edited − matched control`, same noise draw), N=256: pixel DiT residual stream **+0.910 (25°)** · GRU `h`
+**+0.808 (36°)** · transformer residual stream **+0.806 (36°)** · latent DiT latent window **+0.667 (48°)** ·
+RSSM det+stoch **+0.593 (54°)**, against shuffled-pair controls of +0.00 ± 0.22 (4.0–5.5× enrichment on the
+projection fraction). Both mechanisms land the edit on every model (Edit Index +0.52 … +0.66, except the RSSM's
+freeze-time at +0.097) with fidelity 0.57–0.83, and the waterfalls confirm it in observation space.
+
+`replicated` because the GRU and RSSM values reproduce 2026-08-03's +0.799 / +0.569 on an **independently
+constructed** Δh — edit-only rather than raw, and with the RSSM's posterior/prior chain corrected — and because
+three further architectures give the same answer.
+
+**2. The trained action channel writes the oracle's displacement.** On `XG_A_H256`, the one checkpoint where all
+four mechanisms exist, all four land (counterfactual +0.643 · freeze-time +0.563 · **action interface +0.645** ·
+first-obs +0.216 vs unsteered −0.641), and their Δh mutually align at +0.72 … +0.87. The **tightest pair measured
+anywhere** is counterfactual overwrite vs the trained action channel: **+0.872 (29°), 5.9× chance.** A pathway
+learned from data and an oracle that rewrites the model's history arrive at nearly the same latent displacement.
+This is the first evidence here that "train something that emits Δh" targets a well-defined object rather than a
+hoped-for one. It is **correlational**: the falsifying test is to corrupt the action channel's write while
+holding its read-out accuracy fixed.
+
+**3. Whether one uncued post-edit frame persists is a fact about the training distribution, not the mechanism.**
+`First Obs. TF` step-0 Edit Index on three GRUs identical but for what they saw in training: **−0.002** never saw
+a teleport · **+0.216** teleports always cued by an action (`XG_A`) · **+0.532** teleports seen uncued (`XG_C`).
+Sevan predicted the action-conditioned model would not commit to an *uncued* teleport, and it does not, while the
+identical recipe with the action input removed does. `First Obs. TF` must therefore always be quoted with the
+model's training distribution attached.
+
+**4. What did not appear.** No shared "an object moved" axis: the cross-episode cosine between different edits'
+Δh is **+0.00 … +0.04** in every model and mechanism against a chance level of 0 (replicating 2026-08-03 §5's
++0.011 on four more state objects). And the direction stays at or below chance visibility to a linear position
+probe — row-space fraction ÷ chance: GRU 0.73× · transformer 0.49× · pixel DiT 0.14× · RSSM 0.03×; the
+action-induced Δh is 0.91×. **One exception: the latent DiT's 64-d carried code at 1.17×** (1.46× for first-obs)
+— the only state object above chance in the study, and it is also by far the least linearly readable
+(position R² 0.220 vs 0.74–0.86). Magnitudes are 2.4–6.4 × one ordinary dynamics step everywhere.
+
+**Why it matters for the thread.** The negative half of this thread's synthesis — probe-derived writes fail
+because there is no map from the intended change to the required state change — now has its positive half
+measured on four architectures: **the map exists and is well defined per episode**; it is simply not a probe
+direction and not a single shared axis. And point 2 says a learned pathway can reach it.
+
+**Caveats.** One checkpoint per architecture, one seed, one world. Part 2 is GRU-only because no teleport-trained
+RSSM / transformer / DiT exists in this repo (audit in `LATENT_LINEARITY_RUNS.md`), so mechanisms 3 and 4 are
+untested for architecture-independence. The RSSM is the outlier in every measure and its freeze-time arm barely
+edits, so part of its low cosine is the displacement of an edit that did not land.
+
+---
+
 
 ### 2026-08-18 — The Othello write applied to the WHOLE history, renderer-free: still fails. Frame validity, not consistency, is the barrier · `replicated` ★-candidate
 

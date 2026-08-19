@@ -12,7 +12,7 @@ full suite). When a notebook adds something genuinely new and it recurs, fold it
 **Consistency rules that always apply:** RMSE (never MSE); obs intensity ∈ [0,1]; positions in sim units;
 **every observation-space error is scored against the CLEAN render** (`clean_obs`), never the noisy `obs`;
 compare like-for-like (same metric set + units across anything compared); every comparison figure has a
-GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
+GT/reference column; waterfalls follow the fixed spec in `WATERFALL_SPEC.md`.
 
 > ### ⛔ Observation-space error is scored against `clean_obs` — always (added 2026-08-04)
 > This applies to **every** obs-space error, including one-off panels that do not run the §4 scorecard — that is
@@ -206,6 +206,39 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 
 ---
 
+### §5 — Latent edit-direction geometry  ⭐ **added 2026-08-19**
+
+> **Implemented once in `notebooks/experiments/editability/latent_linearity/edit_directions.py`.** Import it; do
+> not re-derive. These formalise what `delta_h_analysis` (2026-08-03) computed inline, now that a second thread
+> needs them.
+
+**What Δh is.** Every edit *mechanism* that works gives a ground-truth latent displacement
+`Δh = h(model told about the edit) − h(matched CONTROL that was not)`. The control is the same construction with
+the edit removed — the true history re-rendered, the freeze-time frames held at the pre-edit position, the no-op
+action, the unedited frame — and it carries the **same observation-noise draw** as the edited arm. Independent
+noise draws inject a difference unrelated to the edit that is large enough to dominate every cosine below.
+A `Δh` taken against the *unsteered* state instead is a different (weaker) quantity; label which one is meant.
+
+**Alignment.** A mechanism that consumes the post-edit frame (`First Obs. TF`) leaves the model one frame ahead of
+one that does not. Compare only at a common alignment — free-run the others one step — and say which.
+
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **latent edit-direction cosine** | `cos(Δh_a, Δh_b)` per episode, then averaged | −1…+1 | ↑ | **report the angle**: cos 0.6 is 53°, not "the same direction". Chance is **0** at every `H` |
+| **shuffled-pair control** | the same with `Δh_b` from a *different* episode (a derangement, so no true pair survives) | −1…+1 | — | the empirical chance level; use it rather than a formula |
+| **projection fraction** | `mean |cos(Δh_a, Δh_b)|` — the share of one displacement's magnitude lying along the other | 0…1 | ↑ | this is the "how much of the magnitude is in the same direction" number |
+| **enrichment** | projection fraction ÷ its shuffled control | × chance | ↑ | **the cross-architecture number.** `mean|cos|` for unrelated vectors falls as `√(2/πH)`, so a raw projection fraction compared across models of different `H` manufactures a trend that is entirely the moving chance level |
+| **‖Δh‖ ÷ ‖h‖** | edit size against the unedited state's own norm | fraction | — | meaningful **within** an architecture only |
+| **‖Δh‖ ÷ one dynamics step** | `‖Δh‖ ÷ mean_{last 5 pre-edit t} ‖h_t − h_{t−1}‖`, per episode | ratio | — | the scale that transfers **across** architectures. Pre-edit transitions only — the transition into the edit frame *is* the edit |
+| **direction consistency (cross-episode)** | mean cosine between the Δh of **different** episodes, over random pairs | −1…+1 | ↑ | ↑ would mean a generic "an object moved" axis exists. Chance is **0**; `1/√H` is the per-pair standard deviation, not a floor (`harness/ANALYSIS.md` §8.2) |
+| **probe row-space fraction** | `‖P_row·Δh‖/‖Δh‖`, `P_row = A⁺A` from the standard linear probe; report **÷ chance `√(d/H)`** | × chance | — | also the **ceiling on the cosine** any injection-style write could reach with this Δh. 1.0 = as visible as a random direction |
+
+> **Do not report the relative residual `‖Δa − Δb‖/‖Δa‖` beside the cosine and the magnitude ratio** — it is
+> algebraically determined by them (`residual² = r² + 1 − 2r·cos θ`) and reads as a contradiction when the reader
+> cannot see the identity. Same rule as the 2026-08-03 catch above.
+
+---
+
 ## Editors (write mechanisms on `h`) and references
 
 **References (never editors):**
@@ -288,6 +321,13 @@ test, not the "did it train" test.
 | **First Obs. TF** | teacher-force **one** frame — the real (**noisy**) `edits.obs[ef]`. The model simply gets to *see* the teleport. **LEADS every other column by one frame**; label it, never re-align the others. | −0.08 → −0.10 |
 | **Decoder Grad Steering k=1** | Adam on `h` so the decoder renders the GT edit-frame observation exactly | **+0.97 → +0.08** — nails the frame, then disintegrates into stripes; fidelity 0.98 |
 | **Decoder Grad Steering k=15** | Adam on `h` so the **whole 15-step rollout** matches the GT sequence (backprop through the dynamics) | **+0.83 → +0.77**, fidelity **0.20** — the only editor that both lands *and* persists |
+| **Action Interface** *(added 2026-08-19)* | issue the teleport through an **action channel the model was trained on**, then free-run without further actions. Only defined for a model whose action space *contains* the intervention — `XG_A_*` (`ActionGRUContinuousModel`, teleport-to-absolute-coordinate). Named "Action interface (oracle)" in `scripts/eval_action_sweep.py`; **`Action Interface` is the canonical name.** | **+0.645 → +0.473** on `XG_A_H256` (own unsteered −0.641), fidelity 0.51 — the strongest and best-held arm on that model |
+
+> **`First Obs. TF` is not one number — it is a fact about the training distribution** (measured 2026-08-19,
+> `latent_linearity/`, N=256 on a teleport-free eval set). Step-0 Edit Index on three GRUs identical but for what
+> they saw in training: **−0.002** never saw a teleport · **+0.216** teleports always cued by an action
+> (`XG_A_H256`) · **+0.532** teleports seen uncued (`XG_C_H256`). Quote it with the model's training
+> distribution attached, never as a property of the mechanism.
 
 **Learned / multi-step / observation-mediated editors (used in specific notebooks, cite don't recompute):**
 | editor | mechanism | where | outcome |
@@ -345,7 +385,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
 ---
 
 ## Conventions & known caveats (apply everywhere)
-- **Waterfalls:** one `waterfall_grid(...)` helper per notebook, matching the fixed spec (`../../../CLAUDE.md`):
+- **Waterfalls:** one `waterfall_grid(...)` helper per notebook, matching the fixed spec (`WATERFALL_SPEC.md`):
   `cmap="gray"` on dark bg, ~6 noisy context frames above a dashed edit-frame line, green target / red-dash ghost,
   figure-top legend, GT column. Below the edit line, **every column shows its OWN free-run starting at step 0**;
   the GT column shows `clean_obs[ef:ef+K]`. **Alignment:** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the
@@ -356,7 +396,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
   `controls/encoder_editing.ipynb` `waterfall_grid` and `scripts/eval_editability_endogenous.py` `waterfall()`.
 - **2D observations:** a literal waterfall cannot be drawn when a frame is a 2D raster. Use the sanctioned
   pair `frame_grid` + `frame_trails` (`omniscient_2d/frame_grid.py`, spec in
-  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `../../../CLAUDE.md`). Every
+  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `WATERFALL_SPEC.md`). Every
   content rule above still binds — including the shared-`ef`-row ban; only the axes (arms become rows),
   the locators (circles, so `aspect="equal"` is mandatory) and the time subsample change. The two panels
   ship **together**. Do not improvise a per-notebook substitute — that is exactly the drift this registry
@@ -370,7 +410,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
   > reference actually was, and it **hides the exact frame the §4 scorecard scores** (step 0). It also displayed
   > the *clean* render while the model that legitimately sees that frame is fed the **noisy** `edits.obs[ef]`.
   > Seeing the post-edit frame is a **property of one editor**, never a display convention. Treat any pre-2026-07-30
-  > waterfall built to the old rule as misaligned. Governing spec: `../../../CLAUDE.md`.
+  > waterfall built to the old rule as misaligned. Governing spec: `WATERFALL_SPEC.md`.
 - **±1 decode convention:** GRU `decode(h_t) ≈ obs[t+1]` (predict-next); RSSM `decode` reconstructs the current
   frame. Align rollout columns to the GT accordingly and footnote it.
 - **Clean vs noisy targets:** models train on **noisy** obs (`obs_noise_std=0.2`); evaluate next-step against **clean**

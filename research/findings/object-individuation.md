@@ -14,6 +14,8 @@ history-entangled state?
 
 ## Current understanding
 
+> **Updated 2026-08-19.** The action interface's *latent* effect is now measured: it writes the same displacement as the counterfactual oracle (cos +0.872, 29°) while remaining as probe-invisible as every other successful edit, and models trained with cued teleports are **less** willing to believe an uncued one (+0.22) than models trained on the same teleports uncued (+0.53). Previously:
+>
 > **Updated 2026-08-17.** The negative now holds under **endogenous** action too — an actor that
 > generates its own actions and acts on the world it must predict gains identifiability and
 > steerability localized to goal-directed agency, but still no grabbable object handle
@@ -47,6 +49,36 @@ scaffolding** in the architecture (RESEARCH.md) — and it deliberately leaves o
 would differ.
 
 ## Log
+
+### 2026-08-19 — The action interface writes the *same latent displacement* as the oracle, and it still is not a state handle · `observed` ★-candidate
+
+**Evidence:** `scratch/2026-08-19-latent-edit-directions.md` ·
+`notebooks/experiments/editability/latent_linearity/` · `datasets/15_teleport_eval_single/eval.h5`, N=256 ·
+runs `XG_A_H256`, `XG_C_H256`, `H256`. No models trained.
+
+The 2026-08-13 entry established that the **action interface** is a strong handle (+0.62) where latent editing
+is not. This measures *what it does to the state*: the displacement the trained action channel writes is
+**+0.872 (29°)** from the displacement the counterfactual-overwrite oracle writes — the tightest pair in that
+study, 5.9× the shuffled-pair chance level. The learned input pathway and a full history rewrite arrive at
+nearly the same place in latent space.
+
+**This does not turn the action channel into a state handle, and the numbers say why.** The action-induced Δh is
+**0.91× chance** in the linear position probe's row space — no more probe-visible than the oracles' — and its
+cross-episode cosine is **+0.010**, so there is no generic "teleport object k" direction to write either. The
+affordance still lives in the input→dynamics pathway; what is new is that the pathway's *effect on the state* is
+the same object the oracles produce, rather than some other route to a similar picture.
+
+**A second result about the input pathway.** Whether a single **uncued** post-edit observation persists is a
+fact about the training distribution: step-0 Edit Index **−0.002** (never saw a teleport) → **+0.216**
+(`XG_A`, teleports always cued by an action) → **+0.532** (`XG_C`, identical data and recipe with the action
+input removed). Being *told* about interventions during training makes the model **less** willing to believe an
+unexplained one — the action channel buys steerability and costs credulity.
+
+**Caveats:** GRU only (no teleport-trained RSSM/transformer/DiT exists); one seed; the alignment result is
+correlational until the action channel's write is corrupted at fixed read-out accuracy.
+
+---
+
 
 ### 2026-08-13 — The action interface is the handle; the latent is not · `replicated`
 

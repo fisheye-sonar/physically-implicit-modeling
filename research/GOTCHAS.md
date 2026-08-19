@@ -10,6 +10,42 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-08-19 — Two state-plumbing traps: the RSSM's prior/posterior chain, and the DiT family's hedged decode
+
+**Symptom (1):** a mechanism that teacher-forces *extra* frames onto an existing state (freeze-time, first-obs)
+behaves oddly on the RSSM but not on the GRU.
+
+**Cause:** `model.step(obs_t, state)` expects the **posterior** state at `t−1`, while the state that is aligned
+for `decode` is the **prior** at `t` (one `imagine_step` later). Round-tripping the prior back through
+`state_from_flat` and calling `step` therefore advances the deterministic core **twice**. `delta_h_analysis`'s
+`continue_from` does exactly this; the GRU is unaffected (its `imagine` is the identity), the RSSM is not.
+
+**Fix / check:** keep the **posterior** chain and apply `imagine` only at read-out — see
+`latent_linearity/edit_directions.py` (`observe` / `predictive`). Never round-trip a prior state through
+`state_from_flat` to resume teacher forcing.
+
+**Blast radius, measured 2026-08-19 (N=256, dataset 4):** smaller than it looks. The two paths give states
+**6.5%** apart in norm and a freeze-time Edit Index of **+0.097 (corrected) vs +0.091 (legacy)** — so the
+`delta_h_analysis` RSSM numbers stand, and **the double-advance is NOT the explanation for the RSSM's weak
+freeze-time arm** (+0.09 vs the GRU's +0.54). That remains open.
+
+---
+
+**Symptom (2):** an alignment check says the DiT's `decode(state)` matches the frame it just *consumed* better
+than the next one (k=−1 0.0985 vs k=0 0.1088) — "the DiT is off by one".
+
+**Cause:** it is not. The concat DiT's last token is `(obs[t], noise at τ=1)` and it predicts `obs[t+1]` by
+construction. Its **conditional-mean readout under-moves**: frame-to-frame change is 0.1024, so a prediction that
+hedges toward the current frame lands closer to it than to the next one while still being a correctly-aligned
+next-frame predictor. Both DiT variants do this; the GRU, RSSM and transformer do not.
+
+**Fix / check:** settle alignment against the model's **independently published next-step RMSE vs the clean
+render**, not against the argmin of a k-profile. Measured 2026-08-19: latent DiT `k=0` 0.1080 vs published
+0.1083; pixel DiT 0.1088 vs 0.1089. `latent_linearity/edit_directions.alignment_profile` returns the profile and
+the frame-change scale together for exactly this reading.
+
+---
+
 ### 2026-08-18 — The Edit Index cannot see direction, and largest-teleport samples are a biased draw
 
 **Symptom:** a qualitative panel plainly shows the edit working — intensity appearing at the target,

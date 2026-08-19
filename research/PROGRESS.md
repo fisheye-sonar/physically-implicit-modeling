@@ -3,9 +3,65 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-18 (branch `othello_gpt`: Othello-GPT method ported — probing replicates, editing does not; **then the same edit applied to the whole observed HISTORY crosses zero and holds, with no ground truth**)_
+_Last updated: 2026-08-19 (branch `latent_linearity`: the ground-truth edit direction is well defined in **all
+four architectures**, and the **trained action channel writes the oracle's displacement** at 29°)_
 
-## 2026-08-18 (latest, part 2) — The same edit, applied to the observed history instead of the latent, works
+## 2026-08-19 (latest) — `latent_linearity`: do the edits that work agree on a direction?
+
+New thread `notebooks/experiments/editability/latent_linearity/` (notebook `latent_edit_directions.ipynb`,
+`edit_directions.py`, `figures.py`, `README.md`, `LATENT_LINEARITY_RUNS.md`); note
+`scratch/2026-08-19-latent-edit-directions.md`; findings updated in `editability.md` (`replicated`,
+**★-candidate**), `architecture-independence.md` (`replicated`) and `object-individuation.md` (`observed`,
+**★-candidate**); metrics registered as `METRICS_AND_EDITORS.md` §5; two entries added to `GOTCHAS.md`.
+Figures in `runs/latent_linearity/figures/` (19 PNGs). **No models trained.** Notebook runs end-to-end in ~35 s.
+
+Sevan's spec: extend `delta_h_analysis`'s ground-truth edit-direction analysis to GRU / RSSM / transformer / DiT,
+then ask whether the two *learned* pathways (action channel, single post-edit frame) write the same displacement
+as the training-free oracles. Not about editors, and explicitly not about compositionality — that comes later.
+
+**HEADLINE 1 — the two oracles agree in every architecture.** `cos(counterfactual overwrite, freeze-time TF)`,
+edit-only Δh, N=256: pixel DiT **+0.910 (25°)** · GRU **+0.808 (36°)** · transformer **+0.806 (36°)** · latent
+DiT **+0.667 (48°)** · RSSM **+0.593 (54°)**, shuffled controls +0.00 ± 0.22. The GRU/RSSM values **replicate**
+2026-08-03's +0.799 / +0.569 on an independently built Δh, and three new architectures agree.
+
+**HEADLINE 2 — the trained action channel lands on the oracle's displacement.** On `XG_A_H256` all four
+mechanisms edit the generation (+0.643 / +0.563 / **+0.645** / +0.216 vs unsteered −0.641), and the tightest pair
+measured anywhere is **counterfactual overwrite vs the trained action channel: +0.872 (29°), 5.9× chance**. First
+evidence here that "train something that emits Δh" targets a well-defined object. Correlational — the falsifying
+test is in the new direction brief.
+
+**HEADLINE 3 — Sevan's prediction was right, and sharper than expected.** Whether one **uncued** post-edit frame
+persists is a fact about the training distribution: step-0 Edit Index **−0.002** (never saw a teleport) →
+**+0.216** (`XG_A`, teleports always cued by an action) → **+0.532** (`XG_C`, same data and recipe, action input
+removed). Being told about interventions in training makes a model *less* willing to believe an unexplained one.
+
+**The negatives replicate too.** No shared "an object moved" axis (cross-episode cosine +0.00 … +0.04 in every
+model and mechanism, chance 0), and the direction stays at or below chance visibility to a linear position probe
+(GRU 0.73× · transformer 0.49× · pixel DiT 0.14× · RSSM 0.03×; the action write 0.91×). **One exception worth
+pulling on: the latent DiT's 64-d carried code at 1.17× chance** — the only state object above it, and also the
+least linearly readable state in the study (position R² 0.220 vs 0.74–0.86).
+
+**Part 2 is GRU-only, and that is a checkpoint-inventory fact.** Audited every checkpoint under `runs/`: the only
+teleport-action-conditioned or teleport-observing world models in this repo are GRUs. The action-conditioned
+RSSMs (`runs/endogenous_rssm/R*`) take **forces**, which cannot express a teleport. Recorded in the thread
+registry with the table.
+
+**Machinery.** `scripts/editability_metrics.py` gained `shift_zones` (score an arm that leads by k frames) and
+absorbed `representative_samples` / `random_samples` from `othello_gpt/pipeline.py`, which now re-exports them.
+Two `GOTCHAS.md` entries: the RSSM prior/posterior round-trip in `delta_h_analysis`'s `continue_from` (real, but
+**measured and cleared** as the cause of its weak freeze-time arm: +0.097 corrected vs +0.091 legacy), and the
+DiT family's hedged decode reading as an off-by-one when it is not.
+
+**Awaiting Sevan:** `★` calls on the three headlines; whether the latent DiT's above-chance probe visibility is
+worth a look; and whether `directions/edit-direction-causality.md` (proposed today — the projection-decomposition
+causal test, plus a teleport-trained transformer and RSSM) should go `active`.
+
+**Standing substrate note:** this file is 220 KB and has become an append-only log rather than a handoff. Offered
+to compress it to current state plus a dated archive; awaiting a go-ahead.
+
+---
+
+## 2026-08-18 (part 2) — The same edit, applied to the observed history instead of the latent, works
 
 Sevan's follow-up spec, after reading part 1: (a) the edit frame looks nearly right, so plot it on
 its own — unedited vs post-edit model output against both ground-truth worlds — and **double-check

@@ -315,28 +315,7 @@ def run_arms(
     return rolls, cards, records
 
 
-def representative_samples(
-    teleport: np.ndarray, k: int = 4, seed: int = 0
-) -> list[int]:
-    """Sample indices spread across the teleport-size range, one per quantile band.
-
-    Picking the k LARGEST teleports flatters an editor: measured 2026-08-18, the four
-    largest-teleport episodes sat at the **98th percentile** of the Edit Index
-    distribution (+0.07 against a −0.54 mean), because this editor's effect grows with
-    teleport size while the unsteered baseline is flat. A qualitative panel selected that
-    way shows the best case and reads as the typical one.
-    """
-    order = np.argsort(teleport)
-    bands = np.array_split(order, k)
-    rng = np.random.default_rng(seed)
-    return [int(b[len(b) // 2]) if len(b) else int(rng.choice(order)) for b in bands]
-
-
-def random_samples(n: int, k: int = 4, seed: int = 0) -> list[int]:
-    """`k` episode indices drawn uniformly at random — the DEFAULT for any qualitative panel.
-
-    Seeded so the panel is reproducible. Use this unless there is a stated reason not to; if a
-    panel deliberately shows extreme cases, say so in the figure title (`harness/STYLE.md` §2).
-    """
-    rng = np.random.default_rng(seed)
-    return sorted(int(i) for i in rng.choice(n, size=min(k, n), replace=False))
+# Both sample selectors were promoted into `scripts/editability_metrics.py` on 2026-08-19 —
+# a second thread (`latent_linearity`) needed them, and a second copy is how a shared rule
+# drifts. Re-exported here so this module's API is unchanged.
+from editability_metrics import random_samples, representative_samples  # noqa: E402,F401

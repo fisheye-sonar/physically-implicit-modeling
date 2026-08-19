@@ -15,6 +15,21 @@ Notebooks: `notebooks/experiments/editability/00_master_editability.ipynb`,
 
 ## Current understanding
 
+> **Updated 2026-08-19.** A third addition, and it is a *positive* one. The **ground-truth edit direction is
+> well defined in every architecture tested** — the two oracle mechanisms' Δh agree at cos +0.59 … +0.91
+> (25°–54°) on GRU, RSSM, transformer, latent DiT and pixel DiT, against shuffled controls of +0.00 ± 0.22. So
+> what replicates across architectures is not only the *failure* of probe-derived writes but the *existence* of
+> the thing they fail to find. The accompanying negatives replicate too: no shared edit axis across episodes
+> (cross-episode cosine +0.00 … +0.04 everywhere) and at-or-below-chance probe visibility of the direction,
+> with one exception — the latent DiT's 64-d carried code at 1.17× chance, the only state object above it.
+> Evidence: `scratch/2026-08-19-latent-edit-directions.md`, `notebooks/experiments/editability/latent_linearity/`.
+> **Naming the state object is now load-bearing in practice, not just in principle:** the transformer and pixel
+> DiT are measured on their *recomputed residual stream* (their carried state is raw observations), the latent
+> DiT on its *carried latent window* (its activations are contaminated by the denoising iterate) — see that
+> thread's registry for the argument.
+
+> **Previously:**
+>
 > **Updated 2026-08-17.** Two additions change the shape of this concept. (1) **A causal
 > transformer has two state objects** — the carried observation buffer and the recomputed
 > residual stream — and they come apart, so "editability" was never a single property and every
@@ -52,6 +67,29 @@ does not fix it — motivating the RESEARCH.md thesis that canonicality likely n
 scaffolding, not stochastic latents. (Preliminary — two checkpoints.)
 
 ## Log
+
+### 2026-08-19 — The edit direction replicates as a positive across five state objects · `replicated`
+
+**Evidence:** `scratch/2026-08-19-latent-edit-directions.md` ·
+`notebooks/experiments/editability/latent_linearity/` · N=256, dataset 4 `edits` · runs `H256`,
+`4_dset4_refined_best`, `W16`, `0_latent_dit_z16_w4`, `9_dset4_dit_w4_d256`.
+
+Two oracle mechanisms that share nothing but their goal — a rewritten history and eight frozen-world frames —
+land on the same latent displacement in every architecture: cos **+0.910** (pixel DiT residual stream) ·
+**+0.808** (GRU `h`) · **+0.806** (transformer residual stream) · **+0.667** (latent DiT latent window) ·
+**+0.593** (RSSM det+stoch). The GRU and RSSM values replicate 2026-08-03 (+0.799 / +0.569) on an independently
+constructed Δh; the other three are new architectures.
+
+**Why it matters:** every prior cross-architecture entry in this file is a *negative* that replicates. This is
+the first *positive* one — the object that probe-derived writes miss exists, and exists everywhere. The
+architecture-specific caveat is unchanged and now unavoidable in practice: a transformer and a pixel DiT carry
+raw observations and recompute a stream, a latent DiT carries a learned code, so "the state" must be named.
+
+**Caveat:** one checkpoint per architecture, one seed. The RSSM's freeze-time arm barely edits (+0.097), so part
+of its lower cosine is the displacement of an edit that did not land.
+
+---
+
 
 ### 2026-08-11 — The compression hypothesis is refuted (VAE + latent DiT) · `observed`
 
