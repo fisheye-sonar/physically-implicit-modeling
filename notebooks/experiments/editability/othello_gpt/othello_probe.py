@@ -198,11 +198,29 @@ def fit_probe(
         yt = torch.tensor(y_tr, dtype=torch.float32, device=device)
         opt = torch.optim.Adam(probe.parameters(), lr=lr)
         n = len(xt)
+        # The loss is taken in STANDARDISED target space, so every output dimension
+        # contributes equally.
+        #
+        # `forward` un-standardises (`net(z) * y_std + y_mean`), so a raw-units loss is
+        # implicitly weighted by `y_std**2` per dimension — and on a combined
+        # position+velocity target that is a ~1000x weighting toward position (variance
+        # 3.0-3.6 vs 0.0033 in sim units). The velocity dimensions were then barely
+        # trained: measured 2026-08-19, mean velocity R2 0.158 with the raw-units loss
+        # vs 0.276 here, with the x-components roughly doubling (0.211 -> 0.518,
+        # 0.450 -> 0.730) and position paying almost nothing (0.938 -> 0.927). The
+        # balanced fit also matches a dedicated velocity-only probe (0.272), so the
+        # imbalance was the whole gap.
+        #
+        # The tell was that the MLP scored BELOW the linear probe on velocity
+        # (0.158 vs 0.200). A strictly more expressive probe losing to a linear one is a
+        # training failure, never a fact about the representation - the same diagnostic
+        # the repo standard records for its own 2026-08-11 undertraining fix.
+        ys_t = probe.y_std.detach()
         for ep in range(epochs):
             perm = torch.randperm(n, device=device)
             for i in range(0, n, batch):
                 idx = perm[i : i + batch]
-                loss = ((probe(xt[idx]) - yt[idx]) ** 2).mean()
+                loss = (((probe(xt[idx]) - yt[idx]) / ys_t) ** 2).mean()
                 opt.zero_grad()
                 loss.backward()
                 opt.step()

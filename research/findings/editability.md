@@ -284,10 +284,18 @@ MLP rising monotonically with depth. Their §3 headline holds here: a nonlinear 
 is present and a linear probe under-reads it.
 
 **2. The intervention half does not.** The optimisation succeeds completely — read-out driven
-**3.35 → 0.007–0.018** sim units (99.5% reduction) at every applied layer — while the generation
-barely responds: Edit Index **−0.684 (unsteered) → −0.538**, a gain of **+0.146** on a ±1 scale. The
-waterfall is unambiguous: the object stays on the ghost locator and never reaches the target, in
-every sample and every arm.
+**3.35 → 0.008–0.038** sim units at every applied layer — while the generation barely responds:
+Edit Index **−0.684 (unsteered) → −0.534**, a gain of **+0.150** on a ±1 scale. The waterfall is
+unambiguous: the object stays on the ghost locator and never reaches the target.
+
+⚠ **Two corrections, 2026-08-19, neither changing the qualitative conclusion.** (a) That is the
+**read-out-convergence** operating point (α = 0.05), chosen on principle — never select a step size
+by the outcome metric — but it is **not** the arm's best honest setting: the step-size sweep reaches
+**−0.194 at fidelity 1.014** (α = 0.3), inside the 1.05 guard, a gain of **+0.49**; +0.015 comes only
+at fidelity 1.263, i.e. by degrading. The originally reported gain understated the method ~3×.
+(b) The waterfall backing this was drawn from the **four largest teleports**, which sit at the
+**98th percentile** of the Edit Index distribution (+0.07 vs a −0.54 mean); panels are now randomly
+sampled. Both flagged by Sevan.
 
 **3. Ignored, not destroyed; reverts within one frame.** Fidelity ratio **0.993–0.999** everywhere
 (no arm near the 1.05 guard). Arms collapse onto the unsteered curve **by step 1**; the gap decays
@@ -297,10 +305,17 @@ every sample and every arm.
 −0.622 (point 4), matching the structural prediction that an edit at residual point ℓ changes block
 inputs for layers > ℓ only.
 
-**5. A probe reading the ENTIRE world state changes nothing** — −0.539 (positions + velocities,
-8 dims, identical edit objective) vs −0.538 (positions only). ⚠ This is a **weak** test of
-completeness: velocity is barely readable here to begin with (per-dim R² **−0.04 to 0.45**), so the
-extra dimensions carry little information.
+**5. A probe reading the ENTIRE world state changes nothing** — −0.553 (positions + velocities,
+8 dims, identical edit objective) vs −0.534 (positions only); if anything marginally worse.
+**Corrected 2026-08-19 — and the correction STRENGTHENS this point.** It was first reported with the
+caveat that it was a *weak* test of completeness because velocity read at only −0.04…0.45. That was a
+**bug in the probe's loss**, not a property of the model: the MSE was taken in raw target units, so
+each output dimension's gradient share scaled with its variance and position outweighed velocity
+~1000×. With the loss taken in standardised target space, velocity reads **−0.21 … 0.73**
+(x-components 0.518 / 0.730; mean 0.158 → 0.276, matching a dedicated velocity-only probe) while the
+edit arm moved only −0.539 → −0.553. The null therefore holds **with a genuinely informative velocity
+read-out**. Position R² and every edit result are unaffected — position dims span only 1.2× in
+variance. See `../GOTCHAS.md` (2026-08-19).
 
 **6. The single-frame ceiling on this model is itself low.** The oracle observation — the model simply
 *shown* the true post-edit frame — reaches only **+0.126**, decaying to −0.030. The probe write

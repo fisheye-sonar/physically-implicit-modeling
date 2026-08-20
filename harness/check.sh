@@ -55,15 +55,18 @@ for f in "${FILES[@]}"; do
   scanned=$((scanned + 1))
 
   # Body = everything before the "## Local instantiations" heading.
-  hits="$(awk -v fname="$f" '
+  # Match against the LINE ONLY, never a filename-prefixed line: the absolute path
+  # is not portable prose, and a deny term appearing in the checkout path made every
+  # line of every file a hit.
+  hits="$(awk '
       /^##[[:space:]]+Local instantiations/ { exit }
-      { printf "%s:%d:%s\n", fname, FNR, $0 }
-    ' "$f" | grep -n -i -E "$PATTERN" || true)"
+      { printf "%d:%s\n", FNR, $0 }
+    ' "$f" | grep -i -E "$PATTERN" || true)"
 
   if [ -n "$hits" ]; then
     violations=$((violations + 1))
     echo "✗ $f — project vocabulary in portable prose:"
-    echo "$hits" | sed 's/^[0-9]*://' | sed 's/^/    /'
+    echo "$hits" | sed "s|^|    $f:|"
     echo
   fi
 done

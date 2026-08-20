@@ -46,6 +46,47 @@ the frame-change scale together for exactly this reading.
 
 ---
 
+### 2026-08-19 — A probe fit on MIXED-SCALE targets barely trains the small ones
+
+**Symptom:** a nonlinear probe scores **below** the linear probe on some target dimension. That
+ordering is impossible for a strictly more expressive model that has actually trained, so it is
+always a training failure, never a fact about the representation. (Second instance of this class —
+the first was the 2026-08-11 undertraining fix recorded in `pim/extractors/standard.py`.)
+
+**Cause:** an unweighted MSE taken in **raw target units** weights each output dimension by its
+variance. In sim units the position dimensions have variance **3.0–3.6** and the velocity
+dimensions **0.0033** — a **~1000×** gradient-share imbalance — so a single probe fit on
+`(pos, vel)` together barely trains velocity. Standardising the targets *inside* the probe does not
+help if `forward` un-standardises before the loss: the residual becomes
+`y_std · (net − u)`, so the weighting reappears as `y_std²`.
+
+**Measured** (2026-08-19, `W16` residual point 3, 8-output probe, held-out by sequence):
+
+| | raw-units loss | balanced loss | velocity-only control | linear |
+|---|---|---|---|---|
+| obj0 vx | 0.211 | **0.518** | 0.495 | 0.252 |
+| obj1 vx | 0.450 | **0.730** | 0.733 | 0.435 |
+| mean velocity | **0.158** | **0.276** | 0.272 | 0.200 |
+| mean position | 0.938 | 0.927 | — | — |
+
+The balanced fit matches a dedicated velocity-only probe, so the imbalance was the entire gap.
+
+**Fix / check:** take the loss in **standardised** target space (each dimension weighted equally),
+or fit separate probes per target group. `othello_gpt/othello_probe.fit_probe` now does the former.
+`pim.extractors.fit_readability_probes` still takes a raw-units MSE but **has never been bitten,
+because the repo has always fit position and velocity as separate probes** (`eval_controls.py`);
+it now emits a warning if handed targets spanning >100× in variance.
+
+**Blast radius:** only probes fit on **combined** position+velocity targets — in practice just the
+`full` target in `othello_gpt/`. Every position-only probe is unaffected (its four dims span 1.2×),
+so all edit results that ran off the position probe stand. Pre-2026-08-19 velocity numbers from the
+`othello_gpt/` full-state probe under-read and are not comparable.
+
+**Diagnostic to keep:** *always check MLP ≥ linear per dimension.* It is the cheapest possible
+tripwire for a mis-trained probe and it caught both instances.
+
+---
+
 ### 2026-08-18 — The Edit Index cannot see direction, and largest-teleport samples are a biased draw
 
 **Symptom:** a qualitative panel plainly shows the edit working — intensity appearing at the target,

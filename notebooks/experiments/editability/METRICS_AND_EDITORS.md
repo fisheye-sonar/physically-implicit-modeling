@@ -117,6 +117,22 @@ the edit happened, or the one where it didn't?
 | **Edit Index** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(edited₀, gt_·)` over **differing rays**; per sample, then averaged | −1…+1 | ↑ | **+1** = it *is* the edited world · **0** = equidistant (ambiguous, or garbage) · **−1** = it *is* the unedited world. |
 | **Edit Index by step** | the same, at every rollout step, against the counterfactual world **rolled forward** (the edited object continuing along its own velocity, the other object on its true trajectory) | −1…+1 | ↑ | the bounded trajectory analogue of GT-traj RMSE. **Report it whenever you report the step-0 index** — landing an edit and *holding* it are different things (measured 2026-07-30: the decoder-gradient oracle scores **+0.94** at step 0 and decays to **−0.12** by step 14). |
 
+> ### ⛔ Never fit ONE probe on mixed-scale targets — check MLP ≥ linear per dimension (added 2026-08-19)
+> An unweighted MSE in raw target units gives each output dimension a gradient share proportional to
+> its **variance**. Position (variance 3.0–3.6 sim units) versus velocity (0.0033) is a **~1000×**
+> imbalance, so a combined `(pos, vel)` probe barely trains velocity. Measured on `W16`: mean velocity
+> R² **0.158** raw-units vs **0.276** with the loss taken in standardised target space — the
+> x-components roughly double — while position pays 0.938 → 0.927. A dedicated velocity-only probe
+> scores 0.272, i.e. the imbalance was the whole gap.
+>
+> **The tripwire is `MLP ≥ linear`, per dimension.** The mis-trained MLP read velocity at 0.158 while
+> the linear probe (exact `lstsq`, solved per column, immune to target scale) read 0.200. A strictly
+> more expressive probe scoring below a linear one is a **training failure**, never a property of the
+> representation. Check it every time.
+>
+> **What to do:** fit separate probes per target group (what `eval_controls.py` has always done, and
+> why no published repo number is affected), or take the loss in standardised target space.
+
 > ### ⭐ The Edit Index is BLIND TO DIRECTION — report `direction_cos` beside it (added 2026-08-18)
 > The index is a ratio of *distances*, so it measures only how **close** the output got. It cannot
 > distinguish **"the change pointed the wrong way"** from **"the change pointed the right way and was

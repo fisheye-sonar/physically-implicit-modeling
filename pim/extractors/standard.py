@@ -32,6 +32,8 @@ from __future__ import annotations
 import numpy as np
 import torch
 
+import warnings
+
 from .base import StateDefinition
 from .mlp import MLPExtractor
 
@@ -88,6 +90,21 @@ def fit_readability_probes(
         raise ValueError(
             f"expected (N, T, ·) arrays, got {states.shape} and {targets.shape}"
         )
+    # Mixed-scale targets are a trap here: `train_extractor` takes an unweighted MSE in
+    # RAW target units, so a dimension's gradient share scales with its variance. Fitting
+    # position and velocity in ONE probe would weight position ~1000x (variance 3.0-3.6 vs
+    # 0.0033 in sim units) and leave velocity barely trained. The repo has always fit them
+    # SEPARATELY, so no published number is affected — this guard exists so that stays true.
+    _v = targets.reshape(-1, targets.shape[-1]).var(0)
+    if _v.size > 1 and _v.max() > 100.0 * max(_v.min(), 1e-12):
+        warnings.warn(
+            f"fit_readability_probes: target dimensions span {_v.max() / max(_v.min(), 1e-12):.0f}x "
+            "in variance. The MSE is in raw units, so low-variance dimensions will be "
+            "under-trained. Fit them as separate probes (as eval_controls.py does), or "
+            "standardise the targets first.",
+            stacklevel=2,
+        )
+
     n_seq = states.shape[0]
     n_tr = int(round((1 - holdout) * n_seq))
     if not 0 < n_tr < n_seq:

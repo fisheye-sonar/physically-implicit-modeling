@@ -3,8 +3,68 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-19 (branch `latent_linearity`: the ground-truth edit direction is well defined in **all
-four architectures**, and the **trained action channel writes the oracle's displacement** at 29°)_
+_Last updated: 2026-08-20 (session start: repo path move broke the notebook filter and the harness lint, both fixed;
+an unrecorded 2026-08-19 `othello_gpt` correction pass found uncommitted on disk and written up below)_
+
+## 2026-08-20 — Session start: repo moved, three substrate breakages fixed; an unrecorded 08-19 correction pass found on disk
+
+Orchestrator re-onboard. No science this entry — substrate and record-keeping only.
+
+**The repo moved** from `/home/sevan/research/physically-implicit-modeling` to
+`/home/sevan/research/PIM/physically-implicit-modeling`, which silently broke three things:
+
+1. **`git`'s `nbstripout` filter pointed at the old absolute path** (`filter.nbstripout.clean`
+   and `diff.ipynb.textconv` in `.git/config`), so every notebook `git diff` printed
+   `external filter ... failed 127` and diffed raw JSON. Repointed at the new path; notebook
+   diffs strip correctly again. Anything committing a notebook before this would have failed.
+2. **`harness/check.sh` reported every line of every harness file as a violation.** The awk
+   pass prefixed each line with the absolute filename before grepping, and the deny-list
+   contains `\bpim\b`, matched case-insensitively — so the new `/PIM/` path component made
+   every line a hit. Now matched against the line only, with the filename added to the output
+   afterwards. Verified both ways: clean on the real harness (16 files), still catches a
+   planted violation.
+3. **`CLAUDE.md` claimed Python 3.12**; the venv is 3.13.5. Corrected.
+
+Health check: **178 tests pass**; `torch 2.11.0+cu130`, CUDA available (RTX 5090, 32 GB).
+
+**Found on disk and not in this file: a correction pass on the `othello_gpt` thread**, dated
+2026-08-19 in the artifacts, uncommitted. Written into `findings/editability.md` and
+`GOTCHAS.md` but never recorded here and with **no scratch note**. What it holds:
+
+- **A probe fit on mixed-scale targets barely trains the small dimensions.** An unweighted MSE
+  in raw target units gives each output dimension a gradient share proportional to its
+  variance — position 3.0–3.6 vs velocity 0.0033 in sim units, a ~1000x imbalance. Fix in
+  `othello_probe.fit_probe`: take the loss in standardised target space. Mean velocity R²
+  **0.158 → 0.276** on `W16`, matching a dedicated velocity-only probe (0.272); position pays
+  0.938 → 0.927. **The tripwire is `MLP ≥ linear`, per dimension** — the mis-trained MLP read
+  velocity *below* the linear probe (0.158 vs 0.200), which is impossible for a strictly more
+  expressive model that trained. Second instance of this class after 2026-08-11.
+  `pim.extractors.fit_readability_probes` now warns on >100x target-variance spread; no
+  published repo number is affected, because the repo has always fit position and velocity as
+  separate probes.
+- **This strengthens the full-state-probe null.** The "a probe reading the entire world state
+  changes nothing" result was originally hedged as a weak completeness test because velocity
+  was barely readable. That was the probe bug, not the model: with a genuinely informative
+  velocity read-out the edit arm still moves only −0.539 → −0.553.
+- **Two Sevan-flagged corrections to the 2026-08-18 entry**, neither changing the qualitative
+  conclusion: the reported gain used the read-out-convergence operating point (α = 0.05) and
+  **understated the method ~3x** — the step-size sweep reaches −0.194 at fidelity 1.014
+  (α = 0.3), inside the 1.05 guard, a gain of **+0.49**; and the backing waterfall was drawn
+  from the four largest teleports, which sit at the **98th percentile** of the Edit Index
+  distribution (+0.07 vs a −0.54 mean). Panels are now randomly sampled, with the extreme-case
+  panel kept as a separately titled addition (cell [9b]).
+
+**Owed for that pass** (not done by whoever ran it): a scratch note, and a commit. The working
+tree carries 7 modified files (`METRICS_AND_EDITORS.md`, both `othello_gpt` notebooks,
+`othello_probe.py`, `pim/extractors/standard.py`, `GOTCHAS.md`, `findings/editability.md`) on
+branch `latent_linearity`.
+
+**Still awaiting Sevan** (carried forward): the `★` calls on the 2026-08-18 and 2026-08-19
+entries; whether the latent DiT's above-chance probe visibility is worth a look; whether
+`directions/edit-direction-causality.md` goes `active`; and the standing offer to compress this
+file to current state plus a dated archive.
+
+---
 
 ## 2026-08-19 (latest) — `latent_linearity`: do the edits that work agree on a direction?
 
