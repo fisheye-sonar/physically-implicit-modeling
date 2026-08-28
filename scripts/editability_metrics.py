@@ -417,3 +417,68 @@ SCORECARD_COLUMNS = [
     ("collateral_rmse", "Collateral RMSE ↓", "{:.3f}"),
     ("edit_frame_rmse", "Edit-frame RMSE ↓", "{:.3f}"),
 ]
+
+
+def shift_zones(zones: EditZones, k: int, gt_edited_traj: np.ndarray) -> EditZones:
+    """Re-align an `EditZones` to rollout step `k` — for arms that LEAD by k frames.
+
+    `First Obs. TF` consumes the post-edit frame, so its rollout step 0 decodes frame `ef+k`
+    rather than `ef`. Scoring it against the edit-frame references would compare its output to
+    the wrong frame of both ground-truth worlds. `METRICS_AND_EDITORS.md` already says such an
+    arm must be labelled rather than re-aligned to the others; this is how it is *scored*.
+
+    The ray zones (`target` / `ghost` / `collateral`) are defined by the render at the edit frame
+    and are **not** carried forward — they come back empty, so `zone_rmse` returns NaN and the
+    table shows `n/a` rather than a number that quietly means something else. The Edit Index,
+    its by-step curve, and the trajectory RMSEs are all well defined at any step and are kept.
+
+    Parameters
+    ----------
+    zones          : built with `traj_pos=` / `gt_edited_traj=`, so the per-step worlds exist.
+    k              : how many frames the arm leads by.
+    gt_edited_traj : (N, K, R) the sim's clean post-edit observations, `clean_obs[ef:ef+K]`.
+    """
+    if zones.gt_unedited_traj is None or zones.differing_traj is None:
+        raise ValueError(
+            "shift_zones needs the per-step worlds; build_edit_zones(traj_pos=..., "
+            "gt_edited_traj=...) was not used"
+        )
+    empty = np.zeros_like(zones.target)
+    return EditZones(
+        gt_edited=gt_edited_traj[:, k],
+        gt_unedited=zones.gt_unedited_traj[:, k],
+        target=empty,
+        ghost=empty,
+        collateral=empty,
+        differing=zones.differing_traj[:, k],
+        teleport=zones.teleport,
+        gt_unedited_traj=zones.gt_unedited_traj[:, k:],
+        differing_traj=zones.differing_traj[:, k:],
+    )
+
+
+def representative_samples(
+    teleport: np.ndarray, k: int = 4, seed: int = 0
+) -> list[int]:
+    """Sample indices spread across the teleport-size range, one per quantile band.
+
+    Picking the k LARGEST teleports flatters an editor: measured 2026-08-18, the four
+    largest-teleport episodes sat at the **98th percentile** of the Edit Index distribution
+    (+0.07 against a −0.54 mean), because these editors' effect grows with teleport size while
+    the unsteered baseline is flat. A qualitative panel selected that way shows the best case and
+    reads as the typical one.
+    """
+    order = np.argsort(teleport)
+    bands = np.array_split(order, k)
+    rng = np.random.default_rng(seed)
+    return [int(b[len(b) // 2]) if len(b) else int(rng.choice(order)) for b in bands]
+
+
+def random_samples(n: int, k: int = 4, seed: int = 0) -> list[int]:
+    """`k` episode indices drawn uniformly at random — the DEFAULT for any qualitative panel.
+
+    Seeded so the panel is reproducible. Use this unless there is a stated reason not to; if a
+    panel deliberately shows extreme cases, say so in the figure title (`harness/STYLE.md` §2).
+    """
+    rng = np.random.default_rng(seed)
+    return sorted(int(i) for i in rng.choice(n, size=min(k, n), replace=False))

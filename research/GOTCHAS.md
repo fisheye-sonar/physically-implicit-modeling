@@ -10,6 +10,159 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-08-21 — `is_visible` is a no-op, and object index is confounded with brightness
+
+Two traps found while building occlusion controls. Neither invalidates a past result; both make it
+easy to write a wrong one.
+
+**1. `is_visible` means "overlaps the frustum", not "is unoccluded".** And every current dataset
+sets `always_in_frustum=True`, which makes the field **identically True** — measured 100.00% on
+`4_fixed_refl_inview`. So the `is_visible` masks in `othello_gpt/pipeline.probe_table` and
+everything downstream have **never filtered a single frame**. Harmless historically (masking
+nothing equals no mask) but the field is not an occlusion signal and must not be used as one.
+
+**The actual occlusion signal is `obs_id`** — which object each ray hit, `-1` for a miss. An object
+is fully occluded at frame `t` when it contributes **zero rays**: `(obs_id[:, t] == j).sum(-1) == 0`.
+On `4_fixed_refl_inview` that happens for **3.1% of frames per object** (6.3% of frames have at
+least one occluded object), in runs averaging 5.5 frames.
+
+⚠ **And occlusion in this world is not absence of information.** A fully hidden disc must lie
+*behind* the visible one and inside its angular shadow, so a single-frame MLP still reads its
+position at RMSE 0.87–0.98 against a 1.83 mean-predictor floor. Any "the observation cannot supply
+this, so the model must be carrying it" argument built on occlusion here is **invalid**. A clean
+test needs objects that leave the frustum, which `always_in_frustum=True` prevents by construction.
+
+**2. Object index is confounded with brightness.** `fixed_reflectivities=True` spaces
+reflectivities uniformly **in the same order every sample**, so "object 0" is always the dim one and
+"object 1" always the bright one. Object 1 is measurably easier to decode everywhere (visible
+position MLP RMSE 0.287 vs 0.422). 2026-08-05 found the same effect from the other side ("a linear
+map keys on brightness to tell the two apart"). **Per-object numbers are not interchangeable, and a
+result reported for one object is not a result about "an object".** Average over objects, or report
+both.
+
+---
+
+### 2026-08-20 — Seeding multiprocessing workers by pid makes a "seeded" corpus non-reproducible
+
+**Symptom:** a script sets one global `SEED`, generates its training corpus in a
+`multiprocessing.Pool`, and produces a **different corpus every run**. Measured here: the same
+`SEED = 0` and the same `N_GAMES = 20_000` gave **1,179,692 / 1,179,508 / 1,179,665** rows across
+three consecutive runs.
+
+**Cause:** the natural-looking pool idiom seeds each *worker process* once, from something
+process-local:
+
+```python
+Pool(n, initializer=lambda s: random.seed(s * 100_003 + os.getpid()), initargs=(seed,))
+```
+
+The corpus is then a function of process ids and of how the pool happened to chunk the work, not of
+`seed`. Nothing errors and the numbers look fine, because a large random corpus is statistically
+interchangeable with another one — which is exactly why it survives review.
+
+**Second-order damage:** any cache keyed on a property of the data (row count, a content hash)
+**can never hit**, so the expensive step silently recomputes every run. That is how this was found —
+a 37-minute probe grid refitting itself when it should have loaded from disk in seconds.
+
+**Fix:** seed per **work item**, not per worker, so each element is a pure function of
+`(seed, index)`:
+
+```python
+def _one(args):
+    i, seed = args
+    random.seed(seed * 1_000_003 + i)
+    return generate(i)
+
+pool.imap(_one, [(i, seed) for i in range(n)], chunksize=64)
+```
+
+**Check:** generate twice with the same seed and assert equality, and once with a different seed and
+assert inequality. Two lines, and it is the only thing that actually catches this.
+`othello_transfer/othello_data.synthetic_games` now does the above and is verified both ways.
+
+⚠ **Blast radius:** the `othello_transfer` runs of 2026-08-20 before this fix each used a *different*
+20k-game corpus. The reported numbers were stable across them (null baseline 2.723 identical, probe
+error 0.56–0.58%), so no conclusion changes — but pre-fix runs are not bit-reproducible.
+
+---
+
+### 2026-08-19 — Two state-plumbing traps: the RSSM's prior/posterior chain, and the DiT family's hedged decode
+
+**Symptom (1):** a mechanism that teacher-forces *extra* frames onto an existing state (freeze-time, first-obs)
+behaves oddly on the RSSM but not on the GRU.
+
+**Cause:** `model.step(obs_t, state)` expects the **posterior** state at `t−1`, while the state that is aligned
+for `decode` is the **prior** at `t` (one `imagine_step` later). Round-tripping the prior back through
+`state_from_flat` and calling `step` therefore advances the deterministic core **twice**. `delta_h_analysis`'s
+`continue_from` does exactly this; the GRU is unaffected (its `imagine` is the identity), the RSSM is not.
+
+**Fix / check:** keep the **posterior** chain and apply `imagine` only at read-out — see
+`latent_linearity/edit_directions.py` (`observe` / `predictive`). Never round-trip a prior state through
+`state_from_flat` to resume teacher forcing.
+
+**Blast radius, measured 2026-08-19 (N=256, dataset 4):** smaller than it looks. The two paths give states
+**6.5%** apart in norm and a freeze-time Edit Index of **+0.097 (corrected) vs +0.091 (legacy)** — so the
+`delta_h_analysis` RSSM numbers stand, and **the double-advance is NOT the explanation for the RSSM's weak
+freeze-time arm** (+0.09 vs the GRU's +0.54). That remains open.
+
+---
+
+**Symptom (2):** an alignment check says the DiT's `decode(state)` matches the frame it just *consumed* better
+than the next one (k=−1 0.0985 vs k=0 0.1088) — "the DiT is off by one".
+
+**Cause:** it is not. The concat DiT's last token is `(obs[t], noise at τ=1)` and it predicts `obs[t+1]` by
+construction. Its **conditional-mean readout under-moves**: frame-to-frame change is 0.1024, so a prediction that
+hedges toward the current frame lands closer to it than to the next one while still being a correctly-aligned
+next-frame predictor. Both DiT variants do this; the GRU, RSSM and transformer do not.
+
+**Fix / check:** settle alignment against the model's **independently published next-step RMSE vs the clean
+render**, not against the argmin of a k-profile. Measured 2026-08-19: latent DiT `k=0` 0.1080 vs published
+0.1083; pixel DiT 0.1088 vs 0.1089. `latent_linearity/edit_directions.alignment_profile` returns the profile and
+the frame-change scale together for exactly this reading.
+
+---
+
+### 2026-08-19 — A probe fit on MIXED-SCALE targets barely trains the small ones
+
+**Symptom:** a nonlinear probe scores **below** the linear probe on some target dimension. That
+ordering is impossible for a strictly more expressive model that has actually trained, so it is
+always a training failure, never a fact about the representation. (Second instance of this class —
+the first was the 2026-08-11 undertraining fix recorded in `pim/extractors/standard.py`.)
+
+**Cause:** an unweighted MSE taken in **raw target units** weights each output dimension by its
+variance. In sim units the position dimensions have variance **3.0–3.6** and the velocity
+dimensions **0.0033** — a **~1000×** gradient-share imbalance — so a single probe fit on
+`(pos, vel)` together barely trains velocity. Standardising the targets *inside* the probe does not
+help if `forward` un-standardises before the loss: the residual becomes
+`y_std · (net − u)`, so the weighting reappears as `y_std²`.
+
+**Measured** (2026-08-19, `W16` residual point 3, 8-output probe, held-out by sequence):
+
+| | raw-units loss | balanced loss | velocity-only control | linear |
+|---|---|---|---|---|
+| obj0 vx | 0.211 | **0.518** | 0.495 | 0.252 |
+| obj1 vx | 0.450 | **0.730** | 0.733 | 0.435 |
+| mean velocity | **0.158** | **0.276** | 0.272 | 0.200 |
+| mean position | 0.938 | 0.927 | — | — |
+
+The balanced fit matches a dedicated velocity-only probe, so the imbalance was the entire gap.
+
+**Fix / check:** take the loss in **standardised** target space (each dimension weighted equally),
+or fit separate probes per target group. `othello_gpt/othello_probe.fit_probe` now does the former.
+`pim.extractors.fit_readability_probes` still takes a raw-units MSE but **has never been bitten,
+because the repo has always fit position and velocity as separate probes** (`eval_controls.py`);
+it now emits a warning if handed targets spanning >100× in variance.
+
+**Blast radius:** only probes fit on **combined** position+velocity targets — in practice just the
+`full` target in `othello_gpt/`. Every position-only probe is unaffected (its four dims span 1.2×),
+so all edit results that ran off the position probe stand. Pre-2026-08-19 velocity numbers from the
+`othello_gpt/` full-state probe under-read and are not comparable.
+
+**Diagnostic to keep:** *always check MLP ≥ linear per dimension.* It is the cheapest possible
+tripwire for a mis-trained probe and it caught both instances.
+
+---
+
 ### 2026-08-18 — The Edit Index cannot see direction, and largest-teleport samples are a biased draw
 
 **Symptom:** a qualitative panel plainly shows the edit working — intensity appearing at the target,
@@ -247,15 +400,43 @@ owed: `research/directions/curvature-metric-normalization.md`.
 
 ---
 
-### Standing — pandas is not installed in the `.pim` venv
+### Standing — do not render tables with pandas, even though it is now installed
 
-**Symptom:** a notebook cell fails on `import pandas`.
+**Symptom:** a notebook renders a dense value set as a DataFrame instead of a markdown table.
 
-**Fix / check:** render dense value sets with `display(Markdown(...))` tables — which is the
-required form anyway (visible row/column structure, not aligned-monospace `print`). Do not
-reach for a DataFrame.
+**Status change 2026-08-20:** pandas *is* now in the `.pim` venv, pulled in as a transitive
+dependency of `seaborn` when `othello_transfer/` vendored Li et al.'s repo (`data/othello.py`
+imports `seaborn`, `psutil` and `pgn` at module level). Verified additive only — numpy 2.4.3
+and torch 2.11.0+cu130 unchanged, 178 tests still pass. The rule below is unchanged and is
+now a *convention* rather than an environment fact.
+
+**Fix / check:** render dense value sets with `display(Markdown(...))` tables — visible
+row/column structure, not aligned-monospace `print` and not a DataFrame repr.
 
 ---
+
+### Standing — `pgrep -f <name>` / `pkill -f <name>` match the shell running them
+
+**Symptom:** two flavours, both seen on 2026-08-21/22.
+1. A wait loop guarded by `pgrep -f "train\.py"` **never goes false**, because the polling
+   shell's own command line contains the string. An overnight chain sat idle for **6 hours**
+   after its job finished at 02:31.
+2. `pkill -f "<script>"` or `for p in $(pgrep -f "<script>")` **kills the shell executing it**,
+   mid-command. Happened three times in one night; twice it silently prevented a fix from being
+   written, so the old, broken version stayed on disk and looked applied.
+
+**Cause:** `-f` is a substring match over **every** command line on the box — including the
+current shell, any `tail`/`grep`/editor mentioning the name, and the agent's own tool calls.
+
+**Fix / check:**
+```bash
+nvidia-smi --query-compute-apps=pid --format=csv,noheader   # GPU work — authoritative
+ps -p "$PID" >/dev/null                                     # a PID captured at launch
+ps -eo pid,args | awk -v me=$$ '$1!=me && /bash .*driver\.sh/ {print $1}'   # exclude self
+```
+Always give a wait loop a timeout with a loud message, so a guard bug becomes a late start
+rather than a hang. After any `kill`, **verify the intended change actually landed** — do not
+assume the rest of the compound command ran.
 
 ### Standing — figure-heavy notebooks exceed the Read token cap
 
@@ -265,3 +446,12 @@ reach for a DataFrame.
 
 **Fix / check:** extract printed tables with a small script that iterates cells and prints
 `stream` / `text/plain` outputs while skipping `image/png`. Keep notebook outputs lean.
+
+**The editing consequence (2026-08-21).** `NotebookEdit` requires the notebook to have been read
+first, so once a notebook is over the cap it becomes **uneditable by the normal tool** — the case
+that bit `othello_transfer/controls.ipynb` (26k tokens against a 25k cap) and
+`probe_transfer.ipynb`. `CLAUDE.md` §8 forbids manipulating notebook JSON through Bash for good
+reason, and this is the one sanctioned exception: use a helper that touches **only** `source`,
+identifies the cell by its `# [N]` tag rather than by index, and **asserts the cell inventory is
+unchanged** afterwards. Never edit outputs, `execution_count`, or metadata by hand — re-execute
+with `nbconvert --inplace` instead. Prefer restructuring the notebook so it stays under the cap.

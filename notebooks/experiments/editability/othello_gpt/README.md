@@ -12,6 +12,18 @@ fails. Running their method unchanged separates **"their method is better than o
 **"their world is different from ours"** — very different consequences for the thread's central
 negative.
 
+> ### ⛔ This notebook is one half of a pair — read [`../othello_transfer/`](../othello_transfer/) with it
+> This thread runs **their method on our model**. It cannot rule out the third explanation for the
+> negative — that **our editor implementation is wrong** — because every editability number in the
+> repo comes from that same code, including this one. The mirror thread
+> [`../othello_transfer/`](../othello_transfer/) (opened 2026-08-20) runs **our probe and our editor,
+> unmodified, on their model**, against their own 1001-case benchmark, and is the positive control
+> that settles it. Its Table 4 carries all three columns side by side.
+>
+> `othello_probe.py` is **shared between the two threads** and is the single implementation of the
+> paper's probe and write. It gained a 3-way classification head on 2026-08-20 for the mirror
+> thread; the regression path this notebook uses is unchanged.
+
 ## Contents
 
 | file | what it is |

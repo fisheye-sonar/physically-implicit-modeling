@@ -60,8 +60,19 @@ import torch.nn as nn
 class WorldStateProbe(nn.Module):
     """Paper §3 probe: linear, or a 2-layer MLP with ONE hidden layer.
 
-    Maps a **raw** residual-stream activation to world-state values in **raw sim
-    units**. Standardisation moments are non-trainable buffers, so the module is a
+    Two output modes, same body:
+
+    * ``n_classes=None`` (default) — **regression**. Maps a **raw** residual-stream
+      activation to world-state values in **raw sim units**; ``d_out`` is the number of
+      scalars. This is what runs on this repo's own world model.
+    * ``n_classes=C`` — **C-way classification over ``d_out`` tiles**, added 2026-08-20
+      for `othello_transfer/`, where the state is 64 ternary tiles rather than continuous
+      scalars. ``forward`` then returns ``(B, d_out, C)`` logits and the ``y`` affine is
+      skipped (it is meaningless on logits). The body is otherwise **identical**, and at
+      ``C=3, d_out=64`` it is exactly the shape of Li et al.'s own
+      ``BatteryProbeClassificationTwoLayer``.
+
+    Standardisation moments are non-trainable buffers either way, so the module is a
     pure function of the raw activation and ``∂L/∂x`` is taken in the space the
     paper's update rule assumes.
     """
@@ -76,14 +87,17 @@ class WorldStateProbe(nn.Module):
         x_std=None,
         y_mean=None,
         y_std=None,
+        n_classes: int | None = None,
     ) -> None:
         super().__init__()
         self.d_in, self.d_out, self.hidden = d_in, d_out, hidden
+        self.n_classes = n_classes
+        n_final = d_out if n_classes is None else d_out * n_classes
         if hidden is None:  # paper §3.1 — linear probe
-            self.net = nn.Linear(d_in, d_out)
+            self.net = nn.Linear(d_in, n_final)
         else:  # paper §3.2 — softmax(W1 ReLU(W2 x)), one hidden layer
             self.net = nn.Sequential(
-                nn.Linear(d_in, hidden), nn.ReLU(), nn.Linear(hidden, d_out)
+                nn.Linear(d_in, hidden), nn.ReLU(), nn.Linear(hidden, n_final)
             )
         z = torch.zeros(d_in)
         o = torch.ones(d_in)
@@ -94,13 +108,17 @@ class WorldStateProbe(nn.Module):
         self.register_buffer("y_std", oo.clone() if y_std is None else y_std)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """(B, d_in) raw activation → (B, d_out) world state in raw sim units."""
+        """(B, d_in) raw activation → (B, d_out) values, or (B, d_out, n_classes) logits."""
         z = (x - self.x_mean) / self.x_std
-        return self.net(z) * self.y_std + self.y_mean
+        out = self.net(z)
+        if self.n_classes is not None:
+            return out.reshape(*out.shape[:-1], self.d_out, self.n_classes)
+        return out * self.y_std + self.y_mean
 
     @property
     def kind(self) -> str:
-        return "linear" if self.hidden is None else f"mlp-{self.hidden}"
+        base = "linear" if self.hidden is None else f"mlp-{self.hidden}"
+        return base if self.n_classes is None else f"{base}-{self.n_classes}way"
 
     @property
     def act_scale(self) -> float:
@@ -160,8 +178,23 @@ def fit_probe(
     batch: int = 4096,
     device: str = "cuda",
     seed: int = 0,
+    n_classes: int | None = None,
 ) -> tuple[WorldStateProbe, dict]:
-    """Fit one probe. `hidden=None` gives the paper's linear probe (closed-form)."""
+    """Fit one probe. `hidden=None` gives the paper's linear probe.
+
+    ``n_classes=None`` (default) is the regression fit used on this repo's own world
+    model: squared error in standardised target space, and the linear probe solved in
+    closed form.
+
+    ``n_classes=C`` (added 2026-08-20) is the **classification** fit for a state made of
+    ``d_out`` C-way tiles, which is what Li et al. actually train. ``y`` then holds
+    integer class labels ``(N, d_out)``, the loss is per-tile cross-entropy, and quality
+    is reported as an **error rate (%)** so it sits beside their Tables 1 and 2. The
+    linear probe is trained by the same SGD loop rather than ``lstsq``, which has no
+    multinomial analogue — so unlike the regression path, the linear-vs-MLP gap here
+    carries an optimiser difference of zero rather than an optimiser *advantage* to the
+    linear side.
+    """
     torch.manual_seed(seed)
     xm, xs = x_tr.mean(0), x_tr.std(0)
     # Floor the per-dim scale. Residual point 0 spans a 600x range of per-dim std
@@ -171,7 +204,11 @@ def fit_probe(
     # quality (the probe compensates with larger weights) and makes the descent
     # well-conditioned, which is what the paper's update rule assumes.
     xs = np.maximum(xs, 1e-2 * np.median(xs)) + 1e-8
-    ym, ys = y_tr.mean(0), y_tr.std(0) + 1e-6
+    if n_classes is None:
+        ym, ys = y_tr.mean(0), y_tr.std(0) + 1e-6
+    else:  # logits carry no target affine
+        ym = np.zeros(y_tr.shape[1], np.float32)
+        ys = np.ones(y_tr.shape[1], np.float32)
 
     probe = WorldStateProbe(
         x_tr.shape[1],
@@ -181,7 +218,52 @@ def fit_probe(
         x_std=torch.tensor(xs, dtype=torch.float32),
         y_mean=torch.tensor(ym, dtype=torch.float32),
         y_std=torch.tensor(ys, dtype=torch.float32),
+        n_classes=n_classes,
     ).to(device)
+
+    if n_classes is not None:
+        # Classification path: the paper's own objective, per-tile cross-entropy.
+        xt = torch.tensor(x_tr, dtype=torch.float32, device=device)
+        yt = torch.tensor(y_tr, dtype=torch.long, device=device)
+        opt = torch.optim.Adam(probe.parameters(), lr=lr)
+        n = len(xt)
+        for _ in range(epochs):
+            perm = torch.randperm(n, device=device)
+            for i in range(0, n, batch):
+                idx = perm[i : i + batch]
+                logits = probe(xt[idx])  # (b, d_out, C)
+                loss = torch.nn.functional.cross_entropy(
+                    logits.reshape(-1, n_classes), yt[idx].reshape(-1)
+                )
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+        probe.eval()
+
+        def _pred(x):
+            out = []
+            with torch.no_grad():
+                for i in range(0, len(x), 8192):
+                    xb = torch.tensor(x[i : i + 8192], dtype=torch.float32, device=device)
+                    out.append(probe(xb).argmax(-1).cpu().numpy())
+            return np.concatenate(out, 0)
+
+        hat_te, hat_tr = _pred(x_te), _pred(x_tr)
+        per_tile_err = (hat_te != y_te).mean(0)
+        stats = {
+            "error_rate": float((hat_te != y_te).mean() * 100.0),
+            "error_rate_insample": float((hat_tr != y_tr).mean() * 100.0),
+            "accuracy": float((hat_te == y_te).mean() * 100.0),
+            "per_tile_error_rate": (per_tile_err * 100.0).tolist(),
+            "majority_class_error_rate": float(
+                (1.0 - np.bincount(y_tr.reshape(-1), minlength=n_classes).max()
+                 / y_tr.size) * 100.0
+            ),
+            "n_train_rows": int(len(x_tr)),
+            "n_test_rows": int(len(x_te)),
+            "kind": probe.kind,
+        }
+        return probe, stats
 
     if hidden is None:
         # Closed-form least squares: strictly better than SGD for a linear map, so the
@@ -198,11 +280,29 @@ def fit_probe(
         yt = torch.tensor(y_tr, dtype=torch.float32, device=device)
         opt = torch.optim.Adam(probe.parameters(), lr=lr)
         n = len(xt)
+        # The loss is taken in STANDARDISED target space, so every output dimension
+        # contributes equally.
+        #
+        # `forward` un-standardises (`net(z) * y_std + y_mean`), so a raw-units loss is
+        # implicitly weighted by `y_std**2` per dimension — and on a combined
+        # position+velocity target that is a ~1000x weighting toward position (variance
+        # 3.0-3.6 vs 0.0033 in sim units). The velocity dimensions were then barely
+        # trained: measured 2026-08-19, mean velocity R2 0.158 with the raw-units loss
+        # vs 0.276 here, with the x-components roughly doubling (0.211 -> 0.518,
+        # 0.450 -> 0.730) and position paying almost nothing (0.938 -> 0.927). The
+        # balanced fit also matches a dedicated velocity-only probe (0.272), so the
+        # imbalance was the whole gap.
+        #
+        # The tell was that the MLP scored BELOW the linear probe on velocity
+        # (0.158 vs 0.200). A strictly more expressive probe losing to a linear one is a
+        # training failure, never a fact about the representation - the same diagnostic
+        # the repo standard records for its own 2026-08-11 undertraining fix.
+        ys_t = probe.y_std.detach()
         for ep in range(epochs):
             perm = torch.randperm(n, device=device)
             for i in range(0, n, batch):
                 idx = perm[i : i + batch]
-                loss = ((probe(xt[idx]) - yt[idx]) ** 2).mean()
+                loss = (((probe(xt[idx]) - yt[idx]) / ys_t) ** 2).mean()
                 opt.zero_grad()
                 loss.backward()
                 opt.step()
@@ -243,9 +343,20 @@ class EditSpec:
 
     values: torch.Tensor
     weight: torch.Tensor
+    n_classes: int | None = None
 
     def loss(self, pred: torch.Tensor) -> torch.Tensor:
-        return (self.weight * (pred - self.values) ** 2).sum(1).mean()
+        if self.n_classes is None:
+            return (self.weight * (pred - self.values) ** 2).sum(1).mean()
+        # Classification: the paper's literal objective — per-tile cross-entropy against
+        # `B' = B except at tile s`, weighted 1 on the changed tile and beta elsewhere,
+        # then averaged (their `torch.mean(weight_mask * loss)`).
+        ce = torch.nn.functional.cross_entropy(
+            pred.reshape(-1, self.n_classes),
+            self.values.reshape(-1).long(),
+            reduction="none",
+        ).reshape(self.values.shape)
+        return (self.weight * ce).mean()
 
 
 def build_edit_spec(
@@ -264,15 +375,18 @@ def build_edit_spec(
     """
     with torch.no_grad():
         base = probe(x0)  # the paper's baseline state B
+        if probe.n_classes is not None:
+            base = base.argmax(-1)  # their `labels_pre_intv`
     cm = (
         change_mask
         if torch.is_tensor(change_mask)
         else torch.tensor(change_mask, device=x0.device)
     )
     cm = cm.bool()
-    values = torch.where(cm, target_values, base)
-    weight = torch.where(cm, torch.ones_like(base), torch.full_like(base, beta))
-    return EditSpec(values=values, weight=weight)
+    values = torch.where(cm, target_values.to(base.dtype), base)
+    ones = torch.ones(base.shape, device=base.device, dtype=torch.float32)
+    weight = torch.where(cm, ones, torch.full_like(ones, beta))
+    return EditSpec(values=values, weight=weight, n_classes=probe.n_classes)
 
 
 def _descend(
@@ -344,16 +458,42 @@ def make_intervention_hook(
         if record is not None:
             with torch.no_grad():
                 rec = record.setdefault(layer, {})
-                rec["readout_err_before"] = float(
-                    torch.sqrt(
-                        (spec.weight * (probe(cur) - spec.values) ** 2).sum(1).mean()
+                # The objective's own value, before and after. `hit_target` below is an
+                # ARGMAX view of the same thing and saturates at 1.0 as soon as the write is
+                # large enough to flip one label, which makes it useless for choosing a step
+                # size once it does (measured 2026-08-20: 1.000 at every alpha in a 50x range).
+                # The loss keeps improving after that, so it is the criterion that can still
+                # tell a converged write from an under-converged one — and it is a property
+                # of the WRITE, never of the outcome.
+                rec["edit_loss_before"] = float(spec.loss(probe(cur)))
+                rec["edit_loss_after"] = float(spec.loss(probe(new)))
+                if spec.n_classes is None:
+                    rec["readout_err_before"] = float(
+                        torch.sqrt(
+                            (spec.weight * (probe(cur) - spec.values) ** 2).sum(1).mean()
+                        )
                     )
-                )
-                rec["readout_err_after"] = float(
-                    torch.sqrt(
-                        (spec.weight * (probe(new) - spec.values) ** 2).sum(1).mean()
+                    rec["readout_err_after"] = float(
+                        torch.sqrt(
+                            (spec.weight * (probe(new) - spec.values) ** 2).sum(1).mean()
+                        )
                     )
-                )
+                else:
+                    # Classification analogue: the fraction of tiles the probe reads as the
+                    # requested board B'. `hit_target` is the paper's own success criterion
+                    # (`num_error == 0` on the intervened tile). DIAGNOSTIC ONLY — the write
+                    # itself (`_descend`) is untouched by this branch.
+                    tgt = spec.values.long()
+                    chg = spec.weight >= 1.0
+                    for tag, act in (("before", cur), ("after", new)):
+                        hat = probe(act).argmax(-1)
+                        rec[f"readout_err_{tag}"] = float((hat != tgt).float().mean())
+                        rec[f"hit_target_{tag}"] = float(
+                            (hat == tgt)[chg].float().mean()
+                        )
+                        rec[f"hold_rest_{tag}"] = float(
+                            (hat == tgt)[~chg].float().mean()
+                        )
                 rec["delta_norm"] = float((new - cur).norm(dim=1).mean())
                 rec["x_norm"] = float(cur.norm(dim=1).mean())
         out = x.clone()

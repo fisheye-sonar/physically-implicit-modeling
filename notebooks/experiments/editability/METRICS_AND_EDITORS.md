@@ -12,7 +12,7 @@ full suite). When a notebook adds something genuinely new and it recurs, fold it
 **Consistency rules that always apply:** RMSE (never MSE); obs intensity ∈ [0,1]; positions in sim units;
 **every observation-space error is scored against the CLEAN render** (`clean_obs`), never the noisy `obs`;
 compare like-for-like (same metric set + units across anything compared); every comparison figure has a
-GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
+GT/reference column; waterfalls follow the fixed spec in `WATERFALL_SPEC.md`.
 
 > ### ⛔ Observation-space error is scored against `clean_obs` — always (added 2026-08-04)
 > This applies to **every** obs-space error, including one-off panels that do not run the §4 scorecard — that is
@@ -54,6 +54,7 @@ GT/reference column; waterfalls follow the fixed spec in `../../../CLAUDE.md`.
 | name | formula | units | better | notes |
 |---|---|---|---|---|
 | position / velocity R² | `1 − ‖Y − probe(h)‖²/‖Y − Ȳ‖²`, Y ∈ {pos, vel}, **scored on held-out sequences against the TRAIN mean** | — | ↑ | report **linear (lstsq)** and **MLP** separately — the linear axis carries the interesting signal. **Fit both with `pim.extractors.fit_readability_probes`** (below); do not hand-roll a probe. |
+| **Probe Skill** | `1 − probe_loss / trivial_predictor_loss`; trivial = **train**-split mean (regression) or per-dimension **train** majority class (classification) | — | ↑ | **1** perfect, **0** no better than ignoring the representation, **<0** the probe fitted its own training set. Regression branch is *exactly* R² against the train mean, so every R² already reported IS a Probe Skill — nothing to recompute. Exists so discworld (regression) and Othello (classification, error-rate) can share one figure axis. `pim.eval.probe_skill_regression` / `probe_skill_classification`; do not hand-roll. |
 
 > ### ⭐ STANDARD READABILITY PROBES (fixed 2026-08-06) — `pim.extractors.fit_readability_probes`
 > Two different MLP probes had been in use and their R² values are **not comparable**: `MLPExtractor` on its
@@ -116,6 +117,22 @@ the edit happened, or the one where it didn't?
 |---|---|---|---|---|
 | **Edit Index** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(edited₀, gt_·)` over **differing rays**; per sample, then averaged | −1…+1 | ↑ | **+1** = it *is* the edited world · **0** = equidistant (ambiguous, or garbage) · **−1** = it *is* the unedited world. |
 | **Edit Index by step** | the same, at every rollout step, against the counterfactual world **rolled forward** (the edited object continuing along its own velocity, the other object on its true trajectory) | −1…+1 | ↑ | the bounded trajectory analogue of GT-traj RMSE. **Report it whenever you report the step-0 index** — landing an edit and *holding* it are different things (measured 2026-07-30: the decoder-gradient oracle scores **+0.94** at step 0 and decays to **−0.12** by step 14). |
+
+> ### ⛔ Never fit ONE probe on mixed-scale targets — check MLP ≥ linear per dimension (added 2026-08-19)
+> An unweighted MSE in raw target units gives each output dimension a gradient share proportional to
+> its **variance**. Position (variance 3.0–3.6 sim units) versus velocity (0.0033) is a **~1000×**
+> imbalance, so a combined `(pos, vel)` probe barely trains velocity. Measured on `W16`: mean velocity
+> R² **0.158** raw-units vs **0.276** with the loss taken in standardised target space — the
+> x-components roughly double — while position pays 0.938 → 0.927. A dedicated velocity-only probe
+> scores 0.272, i.e. the imbalance was the whole gap.
+>
+> **The tripwire is `MLP ≥ linear`, per dimension.** The mis-trained MLP read velocity at 0.158 while
+> the linear probe (exact `lstsq`, solved per column, immune to target scale) read 0.200. A strictly
+> more expressive probe scoring below a linear one is a **training failure**, never a property of the
+> representation. Check it every time.
+>
+> **What to do:** fit separate probes per target group (what `eval_controls.py` has always done, and
+> why no published repo number is affected), or take the loss in standardised target space.
 
 > ### ⭐ The Edit Index is BLIND TO DIRECTION — report `direction_cos` beside it (added 2026-08-18)
 > The index is a ratio of *distances*, so it measures only how **close** the output got. It cannot
@@ -206,6 +223,62 @@ open-loop horizon RMSE vs clean; rollout total-variation ÷ GT-TV (≈1 = as sha
 
 ---
 
+### §5 — Latent edit-direction geometry  ⭐ **added 2026-08-19**
+
+> **Implemented once in `notebooks/experiments/editability/latent_linearity/edit_directions.py`.** Import it; do
+> not re-derive. These formalise what `delta_h_analysis` (2026-08-03) computed inline, now that a second thread
+> needs them.
+
+**What Δh is.** Every edit *mechanism* that works gives a ground-truth latent displacement
+`Δh = h(model told about the edit) − h(matched CONTROL that was not)`. The control is the same construction with
+the edit removed — the true history re-rendered, the freeze-time frames held at the pre-edit position, the no-op
+action, the unedited frame — and it carries the **same observation-noise draw** as the edited arm. Independent
+noise draws inject a difference unrelated to the edit that is large enough to dominate every cosine below.
+A `Δh` taken against the *unsteered* state instead is a different (weaker) quantity; label which one is meant.
+
+**Alignment.** A mechanism that consumes the post-edit frame (`First Obs. TF`) leaves the model one frame ahead of
+one that does not. Compare only at a common alignment — free-run the others one step — and say which.
+
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **latent edit-direction cosine** | `cos(Δh_a, Δh_b)` per episode, then averaged | −1…+1 | ↑ | **report the angle**: cos 0.6 is 53°, not "the same direction". Chance is **0** at every `H` |
+| **shuffled-pair control** | the same with `Δh_b` from a *different* episode (a derangement, so no true pair survives) | −1…+1 | — | the empirical chance level; use it rather than a formula |
+| **projection fraction** | `mean |cos(Δh_a, Δh_b)|` — the share of one displacement's magnitude lying along the other | 0…1 | ↑ | this is the "how much of the magnitude is in the same direction" number |
+| **enrichment** | projection fraction ÷ its shuffled control | × chance | ↑ | **the cross-architecture number.** `mean|cos|` for unrelated vectors falls as `√(2/πH)`, so a raw projection fraction compared across models of different `H` manufactures a trend that is entirely the moving chance level |
+| **‖Δh‖ ÷ ‖h‖** | edit size against the unedited state's own norm | fraction | — | meaningful **within** an architecture only |
+| **‖Δh‖ ÷ one dynamics step** | `‖Δh‖ ÷ mean_{last 5 pre-edit t} ‖h_t − h_{t−1}‖`, per episode | ratio | — | the scale that transfers **across** architectures. Pre-edit transitions only — the transition into the edit frame *is* the edit |
+| **direction consistency (cross-episode)** | mean cosine between the Δh of **different** episodes, over random pairs | −1…+1 | ↑ | ↑ would mean a generic "an object moved" axis exists. Chance is **0**; `1/√H` is the per-pair standard deviation, not a floor (`harness/ANALYSIS.md` §8.2) |
+| **probe row-space fraction** | `‖P_row·Δh‖/‖Δh‖`, `P_row = A⁺A` from the standard linear probe; report **÷ chance `√(d/H)`** | × chance | — | also the **ceiling on the cosine** any injection-style write could reach with this Δh. 1.0 = as visible as a random direction |
+
+> **Do not report the relative residual `‖Δa − Δb‖/‖Δa‖` beside the cosine and the magnitude ratio** — it is
+> algebraically determined by them (`residual² = r² + 1 − 2r·cos θ`) and reads as a contradiction when the reader
+> cannot see the identity. Same rule as the 2026-08-03 catch above.
+
+---
+
+### §6 — Othello transfer metrics  ⭐ **added 2026-08-20**
+
+> Used **only** in `othello_transfer/`, where the observation is a distribution over 64 board
+> squares rather than a 1D intensity scan. Implemented once in `othello_transfer/othello_data.py`.
+> **None of these share an axis with a §4 metric** — the constructions differ, so a reader could not
+> meaningfully subtract two bars across the two sections.
+
+| name | formula | units | better | notes |
+|---|---|---|---|---|
+| **Li error vs post-flip** | top-*N* predicted moves scored against the post-flip legal set, false positives + false negatives, `N = |legal set|`; equals `2(N − overlap)` | errors | ↓ | **their** §4.2 metric, and the replication target. Published: null intervention **2.68**, best intervention **0.12** at `L_s`=4 (natural benchmark). Reproduced null baseline here: **2.723** |
+| **Li error vs pre-flip** | the identical computation against the **pre**-flip legal set | errors | ↑ *(for a successful edit)* | **the guard, which they do not have.** Their metric alone cannot separate "the edit worked" from "the model was destroyed" — both move it. Null intervention: 2.723 post / **0.002** pre. A degraded model is high on **both**. Always report the pair |
+| **Edit Index (union support)** | `(d_uned − d_edit)/(d_uned + d_edit)`, `d_· = RMSE(model next-move distribution, gt_·)` over the **union** of the two legal sets | −1…+1 | ↑ | the §4 Edit Index translated. `gt_·` = **uniform over legal moves**, which is *exact* here, not an approximation: their generator draws moves uniformly from the legal set, so it is the Bayes-optimal predictor. Floor for the unedited model **−0.829**; a perfect predictor of the unedited world scores exactly −1 |
+| **Edit Index (symdiff support)** | the same, over squares whose **legality** changed | −1…+1 | ↑ | a **narrower** question — never quote it as the Edit Index. Floor **−0.943**. Union is the faithful translation of "differing rays" because the two uniform references renormalise (1/\|L₀\| vs 1/\|L₁\|) and so differ on shared legal squares too, in 69.9% of cases |
+| **legal mass** | predicted probability summed over the post-flip legal set | 0…1 | ↑ | a second guard: a write that destroys the model spills mass off the legal set |
+| **hit target / hold rest** | fraction of cases where the probe, after the write, reads the requested class at the flipped tile / at the other 63 tiles | 0…1 | ↑ | **hit target is the step-size selection criterion**, and it is their own success rule (`num_error == 0`). Never select on an outcome metric — 2026-08-19 |
+| **write size ‖Δx‖/‖x‖** ⭐ *added 2026-08-21* | norm of the applied residual-stream write, relative to the activation it is applied to, averaged over cases | ratio | — | **not a quality metric — an x-axis.** Different write mechanisms parameterise their step differently (`α` on a unit direction vs `α` on a pseudoinverse solve), so their `α` axes are not comparable and a sweep plotted against `α` compares nothing. This is the axis on which they are |
+
+> ⚠ **Reference scale.** The two ground-truth worlds sit **0.0193** apart in RMSE over 64 squares,
+> and the unedited model sits **0.0016** from its own world — a 12× margin. Any Edit Index movement
+> smaller than that margin is noise.
+
+---
+
 ## Editors (write mechanisms on `h`) and references
 
 **References (never editors):**
@@ -252,6 +325,7 @@ column.
 | editor | mechanism | needs | outcome on transformer W16 (N=256) |
 |---|---|---|---|
 | **Layerwise MLP Grad Steering (Othello-GPT) @L_s** | the method of Li et al. (ICLR 2023) ported exactly: gradient descent on the **activation** through a frozen **one-hidden-layer** MLP probe — `x' ← x − α ∂L/∂x` — applied at the **last timestep** at residual point `L_s` **and every point after it**, alternating write and compute. Loss = target term + `β` × hold-the-rest term (their App. G). | per-point MLP probe | **−0.54** (best, `L_s`=0/1) vs unsteered −0.68; read-out lands (3.35 → 0.008) but the generation does not follow; fidelity 0.99, reverts by step 1 |
+| **Nanda Direction Addition** ⭐ *added 2026-08-21* | `x ← x + α·p_d`, where `p_d` is a **linear** probe's weight column for the target read-out, added at the last timestep at every residual point. One vector addition, no gradients, no dependence on `x`. Nanda, Lee & Wattenberg 2309.00941 §4.1. Variant `p_target − p_current` is stronger. | linear probe | ⚠ **N=512, step 0 only — read against its OWN unsteered −0.601, not the −0.68 in the row above.** **−0.118** at α=1.0 (all 5 points) — and the movement is **degradation**: target RMSE *worsens* 0.311 → 0.375 and collateral RMSE is **3.6× worse**, 0.155 → 0.561. On Li et al.'s Othello-GPT the same editor scores Li error **0.062** / Edit Index **+0.603** |
 
 | **History Rewrite @depth** *(observation channel, not `h`)* | translate the edited object's **whole decoded track** by a constant `δ` and re-render every prior frame, then teacher-force. Positions come from the model's own probe read-out; rendering uses only world constants (radius, reflectivities) — **no per-episode ground truth**. `δ` from decoded quantities only. | position probe + renderer | **+0.626** step 0, **+0.351** step 14, fidelity **0.674** (own `δ=0` control −0.569) |
 
@@ -260,6 +334,29 @@ column.
 > listed here because it is the strongest edit in the thread and the contrast with the latent writes
 > is the point: the same displacement, applied to the past instead of the state, moves the index by
 > **+1.195** instead of +0.146. Detail: `othello_gpt/history_rewrite.ipynb`.
+
+> ⛔ **Re-applying a *recomputed* write at every residual point can destroy the edit** (found
+> 2026-08-21 on Othello-GPT, `othello_transfer/controls.ipynb` §4b). Pseudoinverse Injection solves
+> `Δ = A⁺(target − (Ax+b))` **against the current activation**, which encodes "hold everything else
+> at its present read-out". Re-solved at the next residual point, that constraint is imposed against
+> the *already-edited* stream and undoes the previous layer's write. On Li et al.'s model the same
+> editor scores Li error **0.052 / Edit Index +0.697** written at **one** mid-depth point and
+> **1.461 / −0.275** written at all nine — **28× worse**. The control that pins the mechanism is
+> that Nanda's *fixed* direction, which does not depend on `x`, gets **better** with more points
+> (0.236 → 0.062).
+>
+> Both methods work only at **mid-depth** (points 3–6 of 9) and fail at both ends: too early and the
+> write is recomputed away, too late and too few blocks remain to propagate it.
+>
+> ⚠ **This pathology is an Othello finding and does not carry over to discworld.**
+> `transformers/transformer_world_state.ipynb` §4 (2026-08-04) writes the injection at **each
+> residual point individually** on `W2`/`W4`/`W16` and finds it **inert at every one** — Edit Index
+> −0.65…−0.68, equal to each model's own unsteered value, fidelity ratio 1.00. The discworld numbers
+> are therefore *not* contaminated by the multi-layer effect. The one thing 2026-08-04 did **not** do
+> — sweep the step size — was run on 2026-08-21 (`othello_transfer/pinv_alpha_discworld.py`): α = 1
+> reproduces its −0.683…−0.669, and α ∈ 0.05…6.0 never crosses zero (best −0.443 at point 2, α = 6,
+> where the write is ‖Δh‖/‖h‖ = 0.909 and overshoots the read-out target 5×). **The full Othello
+> recipe has now been applied to `W16` and fails.**
 
 Full port, deviations, and the optimiser caveat: `othello_gpt/README.md` and
 `othello_gpt/othello_gpt_probing.ipynb`. ⚠ Its probe is the **paper's one-hidden-layer** MLP, a *different
@@ -288,6 +385,13 @@ test, not the "did it train" test.
 | **First Obs. TF** | teacher-force **one** frame — the real (**noisy**) `edits.obs[ef]`. The model simply gets to *see* the teleport. **LEADS every other column by one frame**; label it, never re-align the others. | −0.08 → −0.10 |
 | **Decoder Grad Steering k=1** | Adam on `h` so the decoder renders the GT edit-frame observation exactly | **+0.97 → +0.08** — nails the frame, then disintegrates into stripes; fidelity 0.98 |
 | **Decoder Grad Steering k=15** | Adam on `h` so the **whole 15-step rollout** matches the GT sequence (backprop through the dynamics) | **+0.83 → +0.77**, fidelity **0.20** — the only editor that both lands *and* persists |
+| **Action Interface** *(added 2026-08-19)* | issue the teleport through an **action channel the model was trained on**, then free-run without further actions. Only defined for a model whose action space *contains* the intervention — `XG_A_*` (`ActionGRUContinuousModel`, teleport-to-absolute-coordinate). Named "Action interface (oracle)" in `scripts/eval_action_sweep.py`; **`Action Interface` is the canonical name.** | **+0.645 → +0.473** on `XG_A_H256` (own unsteered −0.641), fidelity 0.51 — the strongest and best-held arm on that model |
+
+> **`First Obs. TF` is not one number — it is a fact about the training distribution** (measured 2026-08-19,
+> `latent_linearity/`, N=256 on a teleport-free eval set). Step-0 Edit Index on three GRUs identical but for what
+> they saw in training: **−0.002** never saw a teleport · **+0.216** teleports always cued by an action
+> (`XG_A_H256`) · **+0.532** teleports seen uncued (`XG_C_H256`). Quote it with the model's training
+> distribution attached, never as a property of the mechanism.
 
 **Learned / multi-step / observation-mediated editors (used in specific notebooks, cite don't recompute):**
 | editor | mechanism | where | outcome |
@@ -345,7 +449,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
 ---
 
 ## Conventions & known caveats (apply everywhere)
-- **Waterfalls:** one `waterfall_grid(...)` helper per notebook, matching the fixed spec (`../../../CLAUDE.md`):
+- **Waterfalls:** one `waterfall_grid(...)` helper per notebook, matching the fixed spec (`WATERFALL_SPEC.md`):
   `cmap="gray"` on dark bg, ~6 noisy context frames above a dashed edit-frame line, green target / red-dash ghost,
   figure-top legend, GT column. Below the edit line, **every column shows its OWN free-run starting at step 0**;
   the GT column shows `clean_obs[ef:ef+K]`. **Alignment:** `warm_up_to_edit` teacher-forces `obs[0..ef-1]`, so the
@@ -356,7 +460,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
   `controls/encoder_editing.ipynb` `waterfall_grid` and `scripts/eval_editability_endogenous.py` `waterfall()`.
 - **2D observations:** a literal waterfall cannot be drawn when a frame is a 2D raster. Use the sanctioned
   pair `frame_grid` + `frame_trails` (`omniscient_2d/frame_grid.py`, spec in
-  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `../../../CLAUDE.md`). Every
+  `omniscient_2d/WATERFALL_SPEC_2D.md`, approved 2026-08-12 and governed by `WATERFALL_SPEC.md`). Every
   content rule above still binds — including the shared-`ef`-row ban; only the axes (arms become rows),
   the locators (circles, so `aspect="equal"` is mandatory) and the time subsample change. The two panels
   ship **together**. Do not improvise a per-notebook substitute — that is exactly the drift this registry
@@ -370,7 +474,7 @@ space collapses onto an **8-dimensional `(pos, vel)` core** for every `n` (measu
   > reference actually was, and it **hides the exact frame the §4 scorecard scores** (step 0). It also displayed
   > the *clean* render while the model that legitimately sees that frame is fed the **noisy** `edits.obs[ef]`.
   > Seeing the post-edit frame is a **property of one editor**, never a display convention. Treat any pre-2026-07-30
-  > waterfall built to the old rule as misaligned. Governing spec: `../../../CLAUDE.md`.
+  > waterfall built to the old rule as misaligned. Governing spec: `WATERFALL_SPEC.md`.
 - **±1 decode convention:** GRU `decode(h_t) ≈ obs[t+1]` (predict-next); RSSM `decode` reconstructs the current
   frame. Align rollout columns to the GT accordingly and footnote it.
 - **Clean vs noisy targets:** models train on **noisy** obs (`obs_noise_std=0.2`); evaluate next-step against **clean**

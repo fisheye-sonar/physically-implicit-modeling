@@ -37,6 +37,11 @@ directories); several briefs carried no status line at all._
 
 | Direction | Tag | Sub-Q | Status |
 |---|---|---|---|
+| [`editability-scaling-sweep.md`](editability-scaling-sweep.md) | `[reframe]` | 1, 3 | **planning**, 2026-08-23 — the programme: when does an editable world model emerge, and does the environment move the gate? |
+| [`discworld-at-scale.md`](discworld-at-scale.md) | `[in-frame]` | 3 | **superseded**, 2026-08-22 — trigger did NOT fire; editability does not emerge with data. 10× rungs ran anyway (near-free) |
+| [`our-architecture-on-othello.md`](our-architecture-on-othello.md) | `[reframe]` | 3 | **in progress**, 2026-08-22 — ladder complete; **environment control shows the world is the variable** (`othello_arch/`) |
+| [`othello-architecture-on-discworld.md`](othello-architecture-on-discworld.md) | `[reframe]` | 3 | **proposed — fully specified**, 2026-08-21; awaiting **one** call (pilot `max_epochs`) |
+| [`edit-direction-causality.md`](edit-direction-causality.md) | `[in-frame]` | 3 | proposed — follow-up to `latent_linearity`, 2026-08-19 |
 | [`curvature-metric-normalization.md`](curvature-metric-normalization.md) | `[in-frame]` | 1 | proposed — **owed fix**, see `../GOTCHAS.md` |
 | [`orthogonal-edits.md`](orthogonal-edits.md) | `[reframe]` | 3 | proposed |
 | [`endogenous-action-rssm.md`](endogenous-action-rssm.md) | `[reframe]` | 2, 3 | proposed |

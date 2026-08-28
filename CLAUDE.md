@@ -72,7 +72,7 @@ bash harness/check.sh
 
 ## 4. Environment
 
-- Python 3.12 venv in `.pim/`; [direnv](https://direnv.net/) auto-activates via `.envrc`
+- Python 3.13 venv in `.pim/`; [direnv](https://direnv.net/) auto-activates via `.envrc`
   (else `source .pim/bin/activate`). Dependencies via Poetry.
 - **Run in the main working tree, not a git worktree** — `datasets/` and `runs/` are
   gitignored, so a worktree has no data or checkpoints to load.

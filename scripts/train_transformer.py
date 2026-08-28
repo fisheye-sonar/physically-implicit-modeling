@@ -52,6 +52,15 @@ def _parse():
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--run-dir", default="runs/transformers")
     p.add_argument("--run-name", required=True)
+    p.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="train on only the first N samples. Samples are written in seed order, so this "
+        "selects a PREFIX of the seed range — a smaller rung is a strict subset of a larger "
+        "one, and the split RNG depends only on the count and the seed, so the partition is "
+        "reproducible. Used by the data-scaling ladder to vary volume and nothing else.",
+    )
     return p.parse_args()
 
 
@@ -68,6 +77,7 @@ def main() -> None:
         batch_size=a.batch_size,
         seed=a.seed,
         device=device,
+        limit=a.limit,
     )
 
     mcfg = ModelConfig(
