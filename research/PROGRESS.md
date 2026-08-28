@@ -3,8 +3,456 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-20 (session start: repo path move broke the notebook filter and the harness lint, both fixed;
-an unrecorded 2026-08-19 `othello_gpt` correction pass found uncommitted on disk and written up below)_
+_Last updated: 2026-08-24 (morning; see the 08-24 section first)_
+
+_2026-08-22 (evening) — **the environment is what flips editability, and it
+replicates.** Li et al.'s architecture, ~900k sequences, same optimiser, at both 4 and 14 epochs:
+Othello reaches Edit Index **+0.24 / +0.23** with every guard clean (Li error 2.76 → **0.43**,
+legal mass → **0.973**); discworld under identical conditions reaches −0.11 / −0.18 and fails its
+guards. Architecture, editor, probe implementation, probe data, data volume and training length are
+all excluded. ⚠ Exactly ONE editor works — Nanda's `target − current` on the mine/theirs basis;
+the PI-injection claim from the 4-epoch pass is withdrawn._
+
+## 2026-08-24 — Overnight: the 20M Othello cell, and what it says about the sweep plan
+
+**Run `runs/scaling/BIG20M_othello_L`** — Transformer L (25.3M), 20M unique Othello games,
+780,000 steps at constant lr 1e-3 after 2,000 warmup, log-spaced checkpoints. Launched 18:51 on
+08-23. **COMPLETE** 14:10 on 08-24, 19.4 h. Best val **2.02798** at step 775,000, excess over Bayes **+0.01878**, final train-val gap **+0.0005** (no overfitting). 11 checkpoints, 1.1 GB. Driver `runs/ours_on_othello/
+bignight.sh`; heartbeat `runs/ours_on_othello/hb.sh`.
+
+### The finding: the 900k Othello model was memorising, and my "saturation" numbers were turnarounds
+
+Full write-up in **`research/scratch/2026-08-24-saturation-is-overfitting.md`**; figure
+`runs/scaling/loss_regime.png` (regenerate with `notebooks/experiments/editability/scaling/
+loss_regime_figure.py`).
+
+Same architecture, same environment, same optimiser — only the pool size differs:
+
+| | 900k games (`L90_theirs_othello`) | 20M games (running) |
+|---|---|---|
+| best val | 2.0881 @ step 58,000 | **2.02798 @ 775,000 (final)** |
+| excess over Bayes 2.0092 | +0.0789 | **+0.01878 — 4.2x closer** |
+| final train loss | **1.9204 — BELOW the floor** | 2.02755 — above it |
+| train–val gap | +0.2585 and climbing | **+0.0005 — flat, never overfit** |
+
+A train loss below `E[log |legal|]` is only reachable by memorising which legal move was drawn.
+**The 900k run is partly a lookup table over its pool.** Its val turns around at step 58,000 and
+gives back +0.0908.
+
+⚠ **The sweep's compute budget rested on a broken premise, and it was mine.** "Saturation ~6k
+steps at 90k games, ~58k at 900k → 20M saturates near 1–1.5M" extrapolated *overfitting
+turnarounds*, not convergence. The 20M cell has no turnaround. `directions/
+editability-scaling-sweep.md` is annotated at the top; do not trust its cost tables.
+
+Practically: **"train the 20M cell to saturation" is not well-posed.** Excess follows roughly
+`step^(-0.5)`, so each halving of excess costs ~4× the steps. A stopping point is a declared
+tolerance or budget, not a discovered fact — **an open decision for Sevan.**
+
+Second open decision: the curve now bends slightly *above* its own early power law (exponent
+drifted −0.526 → −0.465), most likely the **constant LR** settling at its noise floor. The repo's
+own reference is that annealing alone bought 0.0120 on the 14-epoch run. **Appending a short
+anneal after step 780k** would preserve every property constant LR was chosen for (all the
+constant-LR checkpoints are already on disk). Not done; awaiting a call.
+
+### Why this bears on editability
+
+`L90_theirs_othello`'s `best_model.pt` **is** the step-58,000 checkpoint, so the **+0.241 Edit
+Index in the 08-22 table was measured inside the memorising regime.** This does not invalidate the
+environment-flip result — both arms were matched on architecture, epochs and pool size, so the
+regime issue applies equally — but the Othello arm was never tested at its best. Ten checkpoints
+spanning a 512× range of training now exist for exactly that test.
+
+⚠ Checkpoints (powers of 2 from 1,000) and val passes (multiples of 5,000) are on **incommensurate
+grids**; no checkpoint has an exact val. Compute a per-checkpoint val during the sweep rather than
+reusing the nearest-neighbour numbers.
+
+### Machinery added overnight (202 tests passing, ruff clean)
+
+| what | where | guards |
+|---|---|---|
+| `MLP ≥ linear` tripwire | `pim/extractors/standard.py` (the canonical estimator, so every call site) | the 08-22 probe-starvation failure. Branches on the in-sample score to name **memorising** vs **under-trained** — opposite fixes. `mlp_r2_insample` is NaN when skipped, never the held-out value in disguise. |
+| provenance-verified probe cache | `editability.fit_probes` → `runs/othello_arch/probe_cache/` | the 08-21 bug where a random-init control was served the trained model's probes. Key includes the **weights**; a hit is verified against stored provenance and raises on mismatch; writes are atomic. |
+| **Probe Skill** | `pim/eval/probe_skill.py` | one axis for regression *and* classification probes. Regression branch is **exactly** R² against the train mean (asserted to 1e-12), so no existing number changes. Trivial predictor comes from **train**; majority is **per output dimension**. Registry row added. |
+
+Tests: `tests/test_probe_cache.py`, `tests/test_probe_skill.py`, and four tripwire tests in
+`tests/test_standard_probes.py`.
+
+### Editability on the finished 20M model (2026-08-24, later)
+
+`research/scratch/2026-08-24-othello-editability-20m.md`. Target `mine`, 20k probe games.
+**PI injection +0.6104** (pt 4), **Nanda target−current +0.3746**, Nanda addition +0.2403,
+grad steering −0.0007. Unedited −0.7126. Guards clean on the top three (Li 2.763 → 0.096–0.194
+with Li-pre staying 2.49–2.87; legal 0.857 → 0.99). Against the 900k model's +0.241, on identical
+architecture and environment — the model is the only difference.
+
+⚠ **PI injection is back and is now the strongest editor**, having been withdrawn on 08-22 when its
+4-epoch +0.138 did not survive to 14 epochs.
+
+The MLP probe story resolved in two parts: MLP-512 at the old 6,000-game default was **memorising**
+(0.98 rows/param, held-out worse than linear), and fixing capacity (MLP-128, 13.04 rows/param)
+collapses the in-sample gap ~10× — but it *still* sits 0.04–0.07 pp under linear at mid-depth,
+which cannot be memorisation. **mine/theirs is linearly decodable; the MLP adds nothing.** So
+grad steering's −0.0007 is **not** a probe artifact — re-run through clean MLP-128 probes gives
+**−0.0014**, identical within noise, guards failing the same way (Li 2.763 → 5.656, legal → 0.747).
+Gradient steering genuinely fails on Othello mine/theirs while the linear-probe editors reach +0.37
+and +0.61.
+
+⚠ Fixed on the way: `envctrl_eval.py` shared one probe-cache dir across all checkpoints with no
+model in the key — running it on BIG20M would have loaded L90's probes. Now per-fingerprint.
+
+## 2026-08-22 — The environment control, and the confound ladder finishing
+
+Thread `notebooks/experiments/editability/othello_arch/`; brief
+`directions/our-architecture-on-othello.md`; scratch `2026-08-21-ours-on-othello.md` Results 4–6;
+`findings/editability.md` (`observed`, ⭐-candidate).
+
+### The headline
+
+Their architecture (25,312,768 params, 8 blocks, `d_model` 512), ~900k sequences, 4 epochs, same
+optimiser and schedule — **environment as the only variable**:
+
+| epochs | environment | unedited EI | **best EI** | editor · target | Li ↓ | legal mass |
+|---|---|---|---|---|---|---|
+| 4 | **Othello** | −0.482 | **+0.241** ✓ | Nanda t−c · `mine` | 2.915 → **0.969** | 0.824 → 0.923 |
+| 14 | **Othello** | −0.591 | **+0.231** ✓ | Nanda t−c · `mine` | 2.763 → **0.432** | 0.849 → **0.973** |
+| 4 | **discworld** | −0.699 | −0.113 ⚠ | Nanda · `pos` | — | fidelity 1.042 |
+| 14 | **discworld** | −0.689 | −0.182 ⚠ | grad steering · `full` | — | fidelity 1.005 |
+
+Stable across 3.5× training; both arms improved as models and neither saturated. On Othello the
+edit **sharpens** while the index saturates (Li 0.969 → 0.432) — report Li error and legal mass
+beside the index, never the index alone.
+
+⚠ **One editor, one basis.** Nanda's `target − current` on **mine/theirs**. The same editor on
+absolute colour is catastrophic (Li 15.8, legal 0.091). **PI injection read +0.138 at 4 epochs and
+−0.013 at 14 — withdrawn.** Gradient steering fails on both targets, so its −0.010 was *not* the
+target artifact I suspected.
+
+### What was excluded on the way
+
+| confound | ruled out | how |
+|---|---|---|
+| probe implementation | 2026-08-20 | our code reproduces Li's intervention on Li's model |
+| probe training data | 2026-08-21 | saturates 140× short of theirs |
+| our editor | 2026-08-21 | the pseudoinverse is the **best** editor on their model, at a single mid-depth point |
+| data volume | 2026-08-22 | 222× on the Othello ladder moves absolute editability +0.059 → +0.098 |
+| architecture + volume + epochs | 2026-08-22 | the table above |
+
+### ⚠ Corrections made today, both caught by Sevan
+
+1. **I led with "gain over own null" for several messages.** It rises 3.8× across the Othello
+   ladder while *absolute* post-edit Edit Index is flat (+0.059 → +0.098) — the whole rise is the
+   null falling as the model becomes a better predictor of the *unedited* world. Report the null
+   and the absolute value together, never the gain alone.
+2. **The Othello row's three editors did not share a probe target** (Nanda/PI on `mine`, gradient
+   steering on `state`). Faithful to the two papers, but it makes the within-row editor comparison
+   uninterpretable. Both evaluators now sweep target as an explicit axis; re-runs queued.
+
+### Also today
+
+- **`ours_on_othello` full-ladder notebook: complete**, 15 cells, 0 errors, 3 figures, `results.json`.
+- **Discworld 10× data ladder:** `S0c_90k` 0.02112 → `S1_900k` **0.02034** at fixed 95,100 steps —
+  10× data buys 3.7%.
+- **`directions/discworld-at-scale.md` marked superseded**: its trigger did not fire.
+- **Harness hardened** (`ORCHESTRATION.md`): periodic monitoring must use a **self-re-arming**
+  scheduler, and `pgrep -f <name>` is banned as a liveness check — it cost 6 h of idle GPU when a
+  wait loop matched its own monitoring shell. Matching `GOTCHAS.md` entry added.
+
+### All of it ran; only `F_w40` is still going
+
+14-epoch rematch of both arms → editability of each → confound-free re-evaluation of the 4-epoch
+pair → `F_w40` (in flight). Results in `runs/othello_arch/*_editability.json`.
+
+### ⚠ Monitoring: `CronCreate` does not fire here — measured
+
+`harness/ORCHESTRATION.md` was edited this morning to prescribe a self-re-arming scheduler over
+hand-rolled watchers. **That was wrong and is reverted.** Over a **2 h 39 min idle window**
+(10:44 → 13:22) the cron produced **zero** wake-ups while background-task completions fired
+reliably all night. The prescribed pattern is now a **staggered bank** of `run_in_background`
+watchers (T+18, T+36, T+54 …), which removes the dependence on the agent re-arming without
+depending on a primitive that does not deliver. Verify a mechanism has fired; registration is not
+delivery.
+
+---
+
+## 2026-08-21 (later) — Nanda's write replicated, the pseudoinverse vindicated, and two review notebooks shipped
+
+Scratch `2026-08-21-linear-direction-interventions.md` (with a marked CORRECTION) and
+`2026-08-21-composition-random-baseline.md`; `findings/editability.md` and
+`findings/state-geometry.md` both updated. Code:
+`othello_transfer/{linear_intervention,single_layer,nanda_on_discworld,controls_lib}.py`,
+`latent_linearity/composition_lib.py`. **No models trained.**
+
+### 1. Nanda's linear-direction intervention replicates on their model, with our probe
+
+`x ← x + α·p_d` along **our** linear probe's weight column. Reproduced null **2.723**, identical to
+their Table 2. At α = 0.12: Li error **0.108** against their published **0.10**. The
+`target − current` variant reaches **0.026** / Edit Index **+0.691** — the best result anything has
+posted on this benchmark. Their Figure 7 shape reproduces (error collapses only once ≥ 6 residual
+points are written).
+
+### 2. ⚠ A correction I made the same day: our pseudoinverse is the *strongest* editor on their model
+
+I first reported that `inject_state` fails on Othello-GPT (never below Li 1.461) and started
+walking back 2026-08-20's "the editor is cleared". **That was wrong.** Sevan asked for the
+single-layer variant. Written at **one** residual point instead of nine:
+
+| point | 0 | 1 | 2 | 3 | 4 | **5** | 6 | 7 | 8 | all 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Li error ↓ | 2.719 | 2.721 | 2.581 | 0.763 | 0.296 | **0.052** | 0.695 | 1.872 | 2.164 | 1.461 |
+| Edit Index ↑ | −0.829 | −0.823 | −0.579 | +0.404 | +0.559 | **+0.697** | +0.206 | −0.443 | −0.136 | −0.275 |
+
+**The mechanism, with its control.** Multi-layer application *helps* Nanda's fixed direction
+(0.236 → 0.062) and *hurts* our pseudoinverse **28×** (0.052 → 1.461). A recomputed injection
+re-reads the probe against the already-edited stream and re-imposes "hold the other 63 tiles",
+undoing itself each layer; a fixed direction does not depend on `x` and cannot. 2026-08-20's
+clearance **stands unqualified**, and the 2 × 3 table is now all-green on their model:
+
+| mechanism | Othello-GPT (theirs) | discworld `W16` (ours) |
+|---|---|---|
+| Nanda linear-direction addition | **+0.603 ✓** | −0.118 ✗ (3.6× collateral) |
+| our gradient editor (`_descend`) | **+0.656 ✓** | −0.194 ✗ |
+| our pseudoinverse injection | **+0.697 ✓** (point 5 only) | −0.66 ✗ |
+
+**One live consequence.** A **depth confound** this cannot settle: `W16` has 5 residual points,
+Othello-GPT 9, and the error only collapses at ≥ 6 — a direct argument for run A.
+
+⚠ **I also claimed a second consequence — that a single-point pseudoinverse write on `W16` had never
+been tried — and that was wrong.** Sevan caught it. `transformers/transformer_world_state.ipynb` §4
+(2026-08-04) writes `h + (target − (Wh+b))W⁺` at **each residual point individually** on `W2`/`W4`/
+`W16` and finds it **inert at every one**: Edit Index −0.65…−0.68, equal to each model's own
+unsteered value, at fidelity ratio 1.00. So the multi-layer pathology is an Othello fact and does
+**not** contaminate the discworld numbers.
+
+### 2b. The one genuinely untried piece — the α sweep — is now run, and it closes the question
+
+`othello_transfer/pinv_alpha_discworld.py`, 9 s. 2026-08-04 took the full jump (α = 1) and never
+swept the step size; Othello's single-point optimum is α = 1.5 with a ~50× spread. Adding α as the
+only new axis, everything else held to 2026-08-04:
+
+| α | 0.05 | 0.25 | 1.0 | 2.0 | 4.0 | 6.0 |
+|---|---|---|---|---|---|---|
+| point 1 | −0.684 | −0.683 | −0.676 | −0.654 | −0.575 | −0.493 |
+| **point 2** (mid-depth) | −0.684 | −0.682 | −0.669 | −0.634 | −0.538 | **−0.443** |
+| point 4 (last) | −0.684 | −0.683 | −0.681 | −0.677 | −0.667 | −0.656 |
+
+**α = 1 reproduces 2026-08-04's −0.683…−0.669 against its published −0.68…−0.65** — the anchor holds.
+**Nothing crosses zero**, and the α response is monotonic with no optimum, the same signature as
+Nanda's addition here and the opposite of Othello's sharp peak. ⚠ The best cell is not an edit
+anyway: ‖Δh‖/‖h‖ = 0.909, read-out left 15.96 sim units past the target (5× the original 3.19 error),
+collateral RMSE +29% against target RMSE −8%. Where the write lands the read-out (α ≈ 1) the index is
+inert to three decimals.
+
+**The full Othello recipe — single point, mid-depth, α swept — has now been applied to `W16` and
+fails.** Nothing about editor parameterisation explains the discworld negative.
+
+### 3. Latent object-composition is mostly architectural (`latent_linearity/random_baseline.ipynb`)
+
+Sevan asked whether `delta_h_analysis` §7's composition result holds for an **untrained** model. It
+largely does — additivity is a first-order Taylor property of any smooth map. By composed cosine,
+random init at the identical config reads **+0.890** against trained **+0.904** (linear) and
+**+0.853** against **+0.835** (nonlinear — the untrained net is *higher*). Read against the
+**renderer's own** non-additivity (the two objects share rays; ceiling 0.406 → 0.207 across
+displacement scales), the trained *linear* model tracks that ceiling to ±0.05 at every scale while
+random init misses it by 0.03–0.10. **The strong claim is dead; a ceiling-tracking claim survives,
+on the linear family only.** Three flaws in my first pass had to be fixed to get here — uniform
+displacement direction, a shuffled floor that permuted only one delta, and measuring displacement
+from `positions[ef]` where the teleport is already in the data. All three inflated the effect.
+
+### 4. Two notebooks shipped, both executed clean
+
+- **`othello_transfer/controls.ipynb`** — 12 cells, 0 errors, ~4 min. Re-derives every number
+  quoted above and in `2026-08-21-probe-reality-checks.md`: probe-data scaling (with an assertion
+  anchoring to the published 0.9349), the observation-window baseline, the random-init baseline,
+  the intervention sweep, and the single-layer comparison. Figures `fig_controls_probe.png`,
+  `fig_controls_intervention.png`; results `runs/othello_transfer/results_controls.json`.
+- **`latent_linearity/random_baseline.ipynb`** — 10 cells, 0 errors, ~15 s. Figure
+  `fig1_composition_random_baseline.png`; results `runs/latent_linearity/random_baseline_results.json`.
+
+⚠ **A tooling limitation worth knowing** (recorded in `GOTCHAS.md`): both notebooks exceed the
+`Read` token cap once figures are embedded, and `NotebookEdit` requires a prior `Read`. Post-execution
+cell edits must go through small JSON helpers that touch only `source` and assert the cell inventory
+is unchanged.
+
+---
+
+## 2026-08-21 — Four controls on what our probes read; planning the architecture port
+
+`othello_transfer/probe_scaling.py`; scratch `2026-08-21-probe-data-scaling.md`;
+`findings/editability.md` updated (`observed`). ~3 min, no models trained.
+
+**Result:** discworld probe quality is **data-saturated**. Sweeping probe training data over a 60x
+range on `W16` (48k → 2.88M rows) moves MLP position R² **0.9315 → 0.9604**, +0.029, with successive
+steps of +0.015 / +0.007 / +0.006 / **+0.001** — flat by ~1.5M rows, short of Othello's ≈6.7M. The
+test-split fit at 1500 sequences reproduces the published **0.9349** exactly. So the ~140x
+probe-data gap against Li et al. is **not** an explanation for the editability negative; the 0.96
+ceiling belongs to `W16`'s residual stream, not to probe fitting.
+
+**Three further controls the same day** (`scratch/2026-08-21-probe-reality-checks.md`), prompted by
+Sevan's low-dimensional-observation-manifold hypothesis and his occluded-disc proposal:
+
+- **Raw-observation baseline.** Linear probe on the observation the model receives: R² **0.292**
+  (1 frame) → **0.323** (16-frame window); MLP **0.851**. Trained latent: 0.803 linear / 0.944 MLP.
+- **Random-weight baseline** (Li et al.'s own `--random` control). Random init reads **0.559 linear
+  / 0.819 MLP**. ⚠ **This corrected an overstatement I made earlier the same day** — of the trained
+  latent's +0.48 linear gain over the raw observation, **about half is the architecture**, and
+  training contributes +0.244. What survives: the depth *trend* separates them cleanly (random
+  declines with depth, trained rises), and **the model's real achievement is linearisation** —
+  position is already nonlinearly present in the observation (MLP 0.851) and the model makes it
+  linearly accessible. **Nonlinearly, our probe is largely reading the observation, not a learned
+  state.** Against Li et al., where training removes ~93% of the random model's error versus ~71%
+  of its unexplained variance here.
+- **Occluded discs — inconclusive, and the dataset cannot fix it.** A single frame reads a fully
+  occluded disc at RMSE 0.87–0.98 (floor 1.83), because occlusion here constrains a disc to the
+  *angular shadow* of the visible one rather than hiding it. The trained latent is no better than
+  random init on object 1, and there is **no decay with time hidden** — the signature of a per-frame
+  constraint, not a carried state.
+
+**Two traps recorded in `GOTCHAS.md`:** `is_visible` means frustum overlap and is **identically
+True** on every current dataset, so the visibility masks in `othello_gpt/pipeline` have never
+filtered anything; and object index is confounded with brightness under `fixed_reflectivities=True`.
+
+**Where the confound elimination stands.** Editor implementation: cleared (2026-08-20). Probe
+training data: cleared (today). Still open: **model** training data (3.6M unique frames against
+their 1.2B unique transitions) and **architecture** — which the planned run folds together
+deliberately.
+
+**Planned next (Sevan, 2026-08-21): "run A" — their architecture on discworld at their data scale.**
+minGPT verbatim with two substitutions (`nn.Embedding` → `Linear(128, 512)`; logit head →
+`Linear(512, 128)`, CE → MSE), 8 blocks / 8 heads / `d_model` 512 / full causal / learned absolute
+positions / dropout 0.1, `block_size` 39, trained on ~25M freshly generated dataset-#4-config
+episodes. Sevan has explicitly authorised violating the registry's `d_model` = 256 convention for
+this run, and accepted that multiple variables move at once: the bet is that the negative survives
+all of them, in which case none of them was the cause. Run B (their architecture at our current data
+scale) is **not** to be run unless A shows editability.
+
+**Feasibility, measured:** generation 645 episodes/s/core → **25M in ~30 min on 32 cores**; storage
+**1.19 TB** all fields, **0.54 TB** dropping `obs_depth`/`obs_id` (regenerable from seeds),
+0.27 TB at fp16; training ~975M transitions ≈ their 1.2B, one pass, order 0.5–2 h.
+
+~~**New run-A decision surfaced 2026-08-21:** `always_in_frustum` for the corpus.~~ **Not a
+decision.** Sevan rejected the inference it rested on ("I'm also not convinced that this means we
+need discs that leave the frustum — that seems like a jump in logic I don't follow") and has settled
+it: run A uses the standard world, `always_in_frustum = true`, matching dataset 4. I kept carrying
+it as open after it had been answered; it is struck here and removed from the brief.
+
+~~**Seven decisions raised with Sevan and awaiting their call**~~ — **all seven were settled the
+same day** and are recorded in the brief's *Provenance of the decisions* section: noisy training
+target · **no** ReLU after the input projection · dropout 0.1 kept · their Trainer and schedule ·
+seed-range asserts (generating from base_seed 0 would regenerate #4's test and edits episodes as
+training data and silently destroy the eval) · reuse #4's test/edits splits · 200k-episode probe
+split. Left stale here for two days; struck 2026-08-21.
+
+---
+
+## 2026-08-20 (later) — NEW thread `othello_transfer`: our probe and our editor on THEIR model — **REPRODUCED, and the implementation question is closed**
+
+New thread `notebooks/experiments/editability/othello_transfer/` (`probe_transfer.ipynb`,
+`othello_shim.py`, `othello_data.py`, `transfer_pipeline.py`, `board_grid.py`, `README.md`,
+`OTHELLO_TRANSFER_RUNS.md`). `othello_gpt/othello_probe.py` extended **in place** with a 3-way
+classification head. `METRICS_AND_EDITORS.md` §6 registers the new metrics; note
+`scratch/2026-08-20-othello-transfer.md`; `findings/editability.md` updated (`replicated`,
+**★-candidate**) and its Current understanding point 1 rewritten. Outputs in
+`runs/othello_transfer/` (5 figures, `results.json`, `probe_cache/`). **Status: complete.**
+
+**HEADLINE — our editor reproduces their intervention, by a wide margin.** Null 2.723 (their 2.68) →
+best **0.016** (their 0.12): a **170x** error reduction against their 22x. Probe: **0.57%** error at
+the best layer against their 1.7%. Stable across three independent full runs, two probe widths, two
+step counts, two step sizes, nine applied layers and both held-out conventions. **The discworld
+editability negative is not a bug in our probe fitting, edit objective, descent, or multi-layer
+schedule** — that exact code, unmodified, works on the model the result was published on.
+
+**On the Edit Index, the axis that compares the two worlds:** Othello **−0.829 → +0.656** (crosses
+zero, 81% of available headroom); discworld `W16` −0.684 → −0.194 (never crosses, 29%). On the
+symmetric-difference support the sweep reaches +0.868 against a −0.943 floor.
+
+**Three secondary results.** (1) **Nanda's linear finding reproduces exactly** — linear probe 23.90%
+in absolute colour vs **0.72%** in mine/theirs, so Li's "linear probes fail" is a coordinate-frame
+artifact. (2) **Their frame-level split does not inflate their number** — 0.57% vs 0.66% by
+convention, against the +0.34 R² inflation the same change causes on discworld. (3) **The probe
+constraint does not pin down the write on their model either**: `hit_target` reads 1.000 at every
+alpha over a 50x range and the edit objective reaches ≥99% of its best reduction throughout, while
+the outcome moves by a factor of **83**. That makes 2026-08-18's "the optimiser decides which
+probe-satisfying write you land on" a property of probe-derived writes generally, not of our world.
+
+**What it does NOT settle:** the two remaining explanations — the *world* (discrete board consumed
+directly by the legal-move computation vs continuous positions reaching the output only through a
+renderer) and the *read-out* (their probe predicts a quantity the computation consumes; ours one
+merely correlated with it). Both survive. The cleanest next test is the read-out one, flagged on
+2026-08-18 and still unbriefed.
+
+**A reproducibility bug found and fixed on the way out.** The corpus generator seeded each
+multiprocessing worker from its **pid**, so `SEED = 0` produced a different 20k-game corpus every
+run (1,179,692 / 1,179,508 / 1,179,665 rows across three runs) and the probe cache — keyed on row
+count — could never hit, silently refitting a 37-minute grid each time. Now seeded per work item and
+verified reproducible both ways; recorded in `GOTCHAS.md`. The reported numbers were stable across
+the pre-fix runs (null baseline 2.723 identical, probe error 0.56–0.58%), so no conclusion changes,
+but those runs are not bit-reproducible. **The committed artifact is the post-fix run** (5th
+execution, 72 min, `probe_cache/probe_grid_e8664d50f504.pt`), which re-runs bit-identically.
+
+**Process note worth reading.** The first two runs were scored at the wrong operating point. Run 1
+selected the step size by read-out convergence — which **saturates** here — and so picked the
+smallest alpha, understating the method ~100x. Run 2's replacement (objective convergence)
+saturated too. Run 3 stops selecting: it sweeps applied layer at **both** ends of the range, labelled
+"smallest probe-satisfying write" and "best of the swept range", and reports both. This is the
+2026-08-19 correction's failure mode in mirror image, and it is now written into the notebook and
+`METRICS_AND_EDITORS.md` rather than only into a run.
+
+**The direction is the point.** `othello_gpt/` (2026-08-18) ran *their method on our model*. This
+runs *our probe and our editor, unmodified, on their model*, against their own 1001-case benchmark.
+It is the positive control for the one explanation of the editability negative that no experiment in
+the thread could rule out: **that our editor implementation is simply wrong.** Every editability
+number in the repo comes from that code.
+
+**Sevan's spec, in his words:** keep as much of their architecture and environment fixed as
+possible, keep as much of our probe and intervention code fixed as possible, build the minimal
+bridge, and make data and design decisions that mimic Li et al. Explicitly **not** their
+intervention code — ours, "because I need to be sure it wasn't my implementation for how to do the
+editing that was failing."
+
+**The bridge is 135 lines and contains no editing logic.** `othello_shim.py` supplies the seven
+names our editing code calls over their unmodified minGPT `GPT`. Gated as **bit-identical** to their
+`GPT.forward` and to `GPTforProbing` at all nine residual points. `build_edit_spec`,
+`make_intervention_hook` and `_descend` run byte-identical.
+
+**Recovered the dead artifacts before any of this was possible.** All four of the paper's Google
+Drive links are **404** (verified against a known-public Drive folder as a control). The checkpoint
+came from the third-party mirror `sbentley/othello-world-ckpts` and was verified three ways:
+loads into their own `GPT` (141/141 keys), **functionally identical to the authors' TransformerLens
+conversion** (max probability difference 2.1e-6), and reproduces the paper's legal-move property
+(99.98% of mass on the legal set). The championship dataset is ~93% reconstructible from the public
+WTHOR archive if ever needed — 136,055 games parsed and validated against their own rules engine.
+
+**Findings already banked from triage, before the main run:**
+- The shipped `intervention_benchmark.pkl` is the paper's **natural** subset: our reproduced
+  null-intervention baseline is **2.723** against their published 2.68 natural / 2.59 unnatural.
+  1001 cases, all integrity checks clean. The flip changes **2.1 of 64 squares** on average.
+- **The Edit Index translates, and the reference is exact rather than approximate.** Their generator
+  draws moves uniformly from the legal set, so uniform-over-legal *is* the true conditional
+  distribution. The unedited model sits **0.0016** RMSE from it per square against a **0.0193**
+  separation between the two worlds — a 12x margin. Floors: **−0.829 (union support)**,
+  −0.943 (symdiff); a perfect predictor of the unedited world scores exactly −1.
+- **Two things about their released code**, both flagged in the notebook: `train_probe_othello.py`
+  never calls `model.eval()`, so their probe harvest ran with dropout live at p=0.1; and it
+  hardcodes `data_root="data/othello_championship"` even for the synthetic model, on a frame-level
+  `random_split` — the leakage convention `harness/ANALYSIS.md` §2 exists to avoid. Their 1.7% is a
+  frame-split number. We report both conventions, never merged.
+
+**Substrate:** `seaborn`, `psutil`, `pgn` added to `.pim` (their `data/othello.py` imports them at
+module level); `pandas` came along with `seaborn`, so the standing GOTCHAS entry asserting its
+absence was rewritten as a convention rather than an environment fact. Verified additive only —
+numpy and torch unchanged, 178 tests pass. `othello_gpt/README.md` gained the required pointer to
+this thread and back.
+
+**Owed / awaiting Sevan:** the `★` call on this entry; whether the read-out explanation gets a
+direction brief; and whether the persistence question (step 0 only here, deliberately) is worth
+designing. Two substrate items flagged for a decision rather than fixed silently: **notebook cells
+here were edited through a narrow script, not `NotebookEdit`** — this notebook is 26k tokens and
+`Read` caps at 25k, so the sanctioned tool chain is blocked (the `GOTCHAS.md` "figure-heavy
+notebooks exceed the Read token cap" case); and **`pandas` is now in `.pim`** as a transitive
+dependency of `seaborn`, which their `data/othello.py` imports at module level (verified additive
+only; the standing GOTCHAS entry was rewritten from an environment fact into a convention).
+
+---
 
 ## 2026-08-20 — Session start: repo moved, three substrate breakages fixed; an unrecorded 08-19 correction pass found on disk
 

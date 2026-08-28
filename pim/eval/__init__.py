@@ -5,6 +5,7 @@ Layout:
   baselines.py        — reference RMSE baselines from dataset arrays
   prediction.py       — single-step / horizon / mse-by-context metrics
   recovery.py         — fit_probes, eval_recovery_multi
+  probe_skill.py      — Probe Skill: one axis for regression + classification probes
   rollout.py          — observation drift, position drift, coherence
   controllability.py  — warm_up_to_edit, rollout_steered/unsteered, eval_controllability
 """
@@ -38,6 +39,11 @@ from pim.eval.prediction import (
     eval_horizon_mse,
     eval_mse_by_context,
     eval_single_step,
+)
+from pim.eval.probe_skill import (
+    probe_skill_classification,
+    probe_skill_regression,
+    trivial_error_rate,
 )
 from pim.eval.recovery import (
     RecoveryMetrics,
@@ -74,6 +80,10 @@ __all__ = [
     # recovery
     "RecoveryMetrics",
     "fit_probes",
+    # probe_skill
+    "probe_skill_regression",
+    "probe_skill_classification",
+    "trivial_error_rate",
     "eval_recovery",
     "eval_recovery_multi",
     # rollout

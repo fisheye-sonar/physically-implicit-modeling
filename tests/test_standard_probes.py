@@ -7,6 +7,8 @@ published results are tied to that exact architecture.
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 import pytest
 import torch
@@ -82,3 +84,58 @@ def test_rejects_wrong_rank() -> None:
     S, Y = _data()
     with pytest.raises(ValueError, match=r"\(N, T"):
         fit_readability_probes(S.reshape(-1, S.shape[-1]), Y.reshape(-1, Y.shape[-1]))
+
+
+# ── the MLP-below-linear tripwire (added 2026-08-24) ─────────────────────────────────────────
+# Guards the failure that produced the 2026-08-22 velocity-decodability numbers: 262k probe
+# parameters fit on 48k rows scored 0.954-0.959 in-sample against -0.073/-0.090 held-out, and
+# were read as "velocity is barely decodable" in two findings before the cause was spotted.
+
+def _fit(n_seq, *, noise_target, seed=0, n_t=20, h=16, d=3):
+    rng = np.random.default_rng(seed)
+    s = rng.normal(size=(n_seq, n_t, h)).astype(np.float32)
+    y = (rng.normal(size=(n_seq, n_t, d)) if noise_target
+         else (s.reshape(-1, h) @ rng.normal(size=(h, d))).reshape(n_seq, n_t, d)).astype(np.float32)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        r = fit_readability_probes(s, y, device="cpu", seed=seed)
+    return r, [x for x in w if "scored BELOW" in str(x.message)]
+
+
+def test_tripwire_silent_when_mlp_matches_linear():
+    """A well-posed fit must not warn: the MLP ties the linear probe within tolerance."""
+    r, trip = _fit(120, noise_target=False)
+    assert r["gap"] > -0.01, r["gap"]
+    assert not trip, trip[0].message if trip else None
+
+
+def test_tripwire_fires_on_a_memorising_probe():
+    """Starved MLP: perfect in-sample, negative held-out, below the linear probe."""
+    r, trip = _fit(12, noise_target=True)
+    assert r["mlp_r2"] < r["linear_r2"] - 0.01
+    assert r["mlp_r2_insample"] > r["mlp_r2"] + 0.10
+    assert len(trip) == 1
+    assert "memorising the probe training set" in str(trip[0].message)
+
+
+def test_tripwire_names_undertrained_separately_from_overfit():
+    """Low in-sample AND low held-out is an under-trained probe — the opposite fix."""
+    rng = np.random.default_rng(3)
+    s = rng.normal(size=(40, 20, 16)).astype(np.float32)
+    y = (s.reshape(-1, 16) @ rng.normal(size=(16, 3))).reshape(40, 20, 3).astype(np.float32)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        r = fit_readability_probes(s, y, device="cpu", seed=0, n_epochs=1, lr=1e-6)
+        trip = [x for x in w if "scored BELOW" in str(x.message)]
+    assert trip, "a probe trained for 1 epoch at lr=1e-6 should trip the wire"
+    m = str(trip[0].message)
+    assert "under-trained probe, not an overfit one" in m
+    assert "memorising" not in m
+    assert r["mlp_r2_insample"] < r["mlp_r2"] + 0.10
+
+
+def test_mlp_insample_is_never_the_heldout_value_in_disguise():
+    """The in-sample field must be a genuine train-split score, not a copy of the held-out one."""
+    r, _ = _fit(12, noise_target=True)
+    assert r["mlp_r2_insample"] != r["mlp_r2"]
+    assert r["mlp_r2_insample"] > 0.9   # it memorised the train split

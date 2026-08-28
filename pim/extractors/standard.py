@@ -155,6 +155,48 @@ def fit_readability_probes(
 
     lin_r2 = _r2(pred_te, Yte, mu)
     mlp_r2 = _r2(pm, Yte, mu)
+    # In-sample MLP score, for the overfit diagnostic below. NaN when skipped — never
+    # substitute the held-out value here, which would make an overfitting probe look healthy.
+    with torch.no_grad():
+        if len(Xtr) <= 400_000:
+            _pi = np.concatenate([
+                mlp(torch.tensor(Xtr[i:i + 65536], dtype=torch.float32, device=device))
+                .cpu().numpy()
+                for i in range(0, len(Xtr), 65536)
+            ])
+            mlp_r2_insample = _r2(_pi, Ytr, mu)
+        else:
+            mlp_r2_insample = float("nan")
+
+    # ── tripwire: an MLP must not lose to a linear probe on held-out data ─────
+    # The MLP can represent the linear map exactly, so mlp_r2 < linear_r2 means it fitted the
+    # probe TRAINING set rather than the representation, and both numbers are untrustworthy.
+    # Measured 2026-08-22: 262k probe parameters on 48k rows gave in-sample velocity R² of
+    # 0.954-0.959 against held-out -0.073/-0.090. Those were read as "velocity is barely
+    # decodable" and quoted in two findings; refitting on 10k sequences gave held-out 0.83.
+    # The fix is more probe sequences, not a different probe.
+    if mlp_r2 < lin_r2 - 0.01:
+        # TWO different faults produce this symptom and they need opposite fixes, so name the
+        # one actually seen rather than assuming. High in-sample + low held-out is memorisation
+        # (fix: more probe sequences). Low in-sample AND low held-out is a probe that never fit
+        # at all (fix: more epochs / higher lr / wider hidden layer).
+        overfit = mlp_r2_insample > mlp_r2 + 0.10
+        cause = (
+            f"It scores {mlp_r2_insample:+.4f} IN-SAMPLE, so it is memorising the probe "
+            f"training set rather than reading the representation. It was given {n_tr} training "
+            f"sequences; refit with more (>=10k)."
+            if overfit
+            else
+            f"It scores only {mlp_r2_insample:+.4f} in-sample too, so it has not fit the "
+            f"training data either — this is an under-trained probe, not an overfit one. "
+            f"Increase n_epochs / lr / mlp_hidden rather than adding sequences."
+        )
+        warnings.warn(
+            f"fit_readability_probes: MLP probe ({mlp_r2:+.4f} R²) scored BELOW the linear probe "
+            f"({lin_r2:+.4f}) on held-out data. {cause} Do not report a decodability number from "
+            f"this call until it is resolved.",
+            stacklevel=2,
+        )
     return dict(
         linear_r2=lin_r2,
         mlp_r2=mlp_r2,
@@ -162,6 +204,7 @@ def fit_readability_probes(
         linear_rmse=float(np.sqrt(((pred_te - Yte) ** 2).mean())),
         mlp_rmse=float(np.sqrt(((pm - Yte) ** 2).mean())),
         linear_r2_insample=_r2(Xtr @ sol[:-1] + sol[-1], Ytr, mu),
+        mlp_r2_insample=mlp_r2_insample,
         n_train_seq=n_tr,
         n_heldout_seq=n_seq - n_tr,
         A=A.astype(np.float32),

@@ -11,15 +11,17 @@ dataset `4_fixed_refl_inview`, 2 objects, fixed reflectivities.
 
 ## Current understanding
 
-> **Updated 2026-08-17.** Three additions. (1) The **linear position code spans ~116 of 256
-> dimensions**, not 4 — smeared, with a gradual decay that makes any single dimensionality
+> **Updated 2026-08-21.** Three additions (2026-08-17) plus one qualification.
+> (1) The **linear position code spans ~116 of 256 dimensions**, not 4 — smeared, with a gradual decay that makes any single dimensionality
 > number threshold-dependent (2026-08-05). (2) **Canonicality gets worse with capacity** — the
 > MLP fiber residual rises monotonically in all four model families, so readability and
 > canonicality move in opposite directions (2026-08-13). (3) The `Δh` of a *working* edit is
 > large, mutually distinct across edits, and probe-orthogonal — the geometric form of the
 > reachability ceiling (2026-08-03). Also recorded: the object-superposition evidence was a
 > **decoder artifact** on affine decoders, and the result survives re-measurement on nonlinear
-> ones (2026-08-05).
+> ones (2026-08-05) — but **only in a weak form**: a randomly initialised network of the same
+> config matches the composed cosine, so what training buys is that the linear model's latent
+> tracks the *observation's own* additivity ceiling, and nothing more (2026-08-21).
 
 ### Previous synthesis (mutable summary)
 
@@ -36,6 +38,46 @@ own neighborhood — which for real states **floors at ~0.75–0.84 and never co
 to 0** (an earlier "local resid ≈0" was a projection tautology; see log).
 
 ## Log
+
+### 2026-08-21 — Latent object-composition is mostly architectural; the strong form does not survive a random-init baseline · `replicated` · **qualifies 2026-08-05**
+
+**Evidence:** `scratch/2026-08-21-composition-random-baseline.md` ·
+`notebooks/experiments/editability/latent_linearity/random_baseline.ipynb` (+ `composition_lib.py`)
+· dataset 4, N=256 real teleport edits from `edits.h5`, four displacement scales, two random seeds.
+
+**Qualifies the 2026-08-05 entry below**, which cleared the *decoder* confound but never ran the
+*training* control. Prompted by Sevan asking whether the composition result holds for an
+**untrained** model. It largely does. Additivity is a first-order Taylor property of any smooth map, so random weights —
+which give a smooth *deterministic* function, not a random one — have a large architectural floor.
+
+**By composed cosine, training is worth nothing.** At the real teleport scale: trained linear
+**+0.904** vs randomly initialised at the identical config **+0.890**; trained nonlinear **+0.835**
+vs random **+0.853** — the untrained net is *higher*. Training moves the metric +0.014 on one
+family and −0.018 on the other. The measurement is anchored: trained linear reproduces §7's
+**+0.873** and its `‖composed‖/‖direct‖` **1.13**.
+
+**Read against the renderer's own non-additivity, training does separate — on the linear family.**
+The two objects share rays, so the observation itself is not additive; its relative residual is
+**0.406 / 0.373 / 0.285 / 0.207** across scales 1.0 → 0.125. *Excess* over that ceiling:
+
+| scale | 1.0 | 0.5 | 0.25 | 0.125 |
+|---|---|---|---|---|
+| trained linear | **+0.046** | **−0.004** | **−0.019** | **+0.004** |
+| random linear | +0.104 | +0.064 | +0.037 | +0.028 |
+| trained nonlinear | +0.241 | +0.138 | +0.077 | +0.073 |
+| random nonlinear | +0.208 | +0.150 | +0.121 | +0.109 |
+
+**Why it matters:** the claim survives only in a restated, much weaker form — *the trained linear
+model's latent is as additive as the observation it is trained to predict, and no less*. That is a
+**ceiling-tracking** claim, not a superposition claim, and the nonlinear family does not support
+even that at the real edit scale. The strong reading — "the latent superposes object edits, and
+that is learned" — is dead. Three flaws in the first pass had to be fixed to get here (uniform
+displacement direction, a shuffled floor that permuted only one delta, and measuring displacement
+from `positions[ef]` where the teleport is already in the data); all three made the effect look
+larger.
+
+---
+
 
 ### 2026-08-13 — Canonicality gets *worse* with capacity · `replicated`
 
@@ -80,6 +122,7 @@ matched norm; composed with the **wrong** object).
 **Why it matters:** a textbook case of a result that was true while its evidence was vacuous.
 The correct response was to re-measure on a decoder where the identity does not hold for free,
 not to withdraw the claim.
+
 
 ---
 

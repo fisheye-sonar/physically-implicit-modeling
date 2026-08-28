@@ -15,7 +15,7 @@ Notebooks: `notebooks/experiments/editability/` (`canonical_state_editing`,
 
 ## Current understanding
 
-_Updated 2026-08-19._
+_Updated 2026-08-21._
 
 _(2026-08-17: backfill of 2026-07-18 → 2026-08-14, which the old promotion gate had blocked since
 2026-07-17.)_
@@ -31,8 +31,17 @@ _(2026-08-17: backfill of 2026-07-18 → 2026-08-14, which the old promotion gat
    (`h`, encoder input `x`, and a VAE latent all fail), not the metric used to take the
    step (whitening helps and is not enough), and **not this repo's editor implementations** —
    the strongest published probe-derived write, Othello-GPT's multi-layer activation gradient,
-   was ported exactly and fails here too (2026-08-18). What was missing is a **map from the
-   intended change to the required state change** — which a pseudoinverse estimates badly.
+   was ported exactly and fails here too (2026-08-18), and the converse test settles it — **our own
+   probe and editor code, unmodified, reproduces Li et al.'s intervention on Li et al.'s model**
+   (2026-08-20: error 2.723 → 0.016 against their published 2.68 → 0.12; Edit Index −0.829 →
+   +0.656). **Three** independent probe-derived writes now do this — Nanda's linear-direction
+   addition, our gradient editor, and our pseudoinverse injection — and all three fail on discworld
+   (2026-08-21). The instrument works. ⚠ On Othello the pseudoinverse only works when written at a
+   **single mid-depth residual point**; written at every point it re-imposes its own hold-constraint
+   against the already-edited stream and undoes itself (28× worse). That pathology does **not**
+   explain the discworld negative: `transformers/transformer_world_state.ipynb` (2026-08-04) already
+   writes at each residual point individually and finds the injection inert at every one. What was missing is a **map from the intended
+   change to the required state change** — which a pseudoinverse estimates badly.
 2. **Why the probe direction is wrong is inherited from the world, not learned.** The
    required displacement is near-orthogonal to what a probe-derived write can apply, and this
    holds **in observation space itself**, before any model is trained. `readable ≠ grabbable`
@@ -94,6 +103,283 @@ moves the obs partly by *scrambling*, not clean relocation).
 </details>
 
 ## Log
+
+### 2026-08-22 — ⭐ The ENVIRONMENT is what flips editability; replicated at 3.5× the training · `replicated` ★-candidate
+
+**Evidence:** `notebooks/experiments/editability/othello_arch/`; scratch
+`../scratch/2026-08-21-ours-on-othello.md` Result 6; `runs/othello_arch/*_editability.json`.
+Prompted by Sevan: *"we don't yet have any example where … the only thing changed being the
+environment, has editability on Othello but not discworld."*
+
+Both rows use **Li et al.'s architecture** (25,312,768 params — their exact count — 8 blocks,
+`d_model` 512, full causal, learned absolute positions, dropout 0.1), ~900k training sequences,
+batch 256, lr 1e-3, 5% warmup + cosine, grad-clip 1.0. Every editor is run on **every** probe
+target with a matched alpha sweep.
+
+| epochs | environment | unedited EI | **best EI** | editor · target | Li ↓ | legal mass |
+|---|---|---|---|---|---|---|
+| 4 | **Othello** | −0.482 | **+0.241** ✓ | Nanda t−c · `mine` | 2.915 → **0.969** | 0.824 → 0.923 |
+| 14 | **Othello** | −0.591 | **+0.231** ✓ | Nanda t−c · `mine` | 2.763 → **0.432** | 0.849 → **0.973** |
+| 4 | **discworld** | −0.699 | −0.113 ⚠ | Nanda · `pos` | — | fidelity 1.042 |
+| 14 | **discworld** | −0.689 | −0.182 ⚠ | grad steering · `full` | — | fidelity 1.005 |
+
+✓ guards pass · ⚠ degradation (fidelity ≥ 1.005, collateral 2–5× the unedited 0.133).
+
+**The split is stable across 3.5× training**, and both arms improved as models while still
+descending at their final epoch — so neither is saturated and the comparison is not tilted. On
+Othello the edit *sharpens* with training even as the index saturates (Li error 0.969 → 0.432,
+legal mass 0.923 → 0.973), which is a standing reason to report Li error and legal mass beside the
+index rather than the index alone.
+
+**⚠ Exactly one editor works, on one basis.** Nanda's `target − current` on **mine/theirs** reaches
++0.231; the same editor on absolute colour is catastrophic (Li 15.8, legal mass 0.091). PI
+injection read +0.138 at 4 epochs but **−0.013 at 14 — that claim is withdrawn**. Gradient steering
+fails on both targets, so its −0.010 was not a target artifact as I had suspected. What transfers
+is specifically the direction in the basis Nanda's paper argues Othello-GPT encodes linearly.
+
+**Why it matters.** This closes the confound ladder the thread has climbed since 2026-08-18: probe
+implementation (2026-08-20), probe training data (2026-08-21), our editor implementation
+(2026-08-21), data volume (2026-08-22, 222× moves absolute editability only +0.059 → +0.098), and
+now **architecture, data volume and training length jointly**. What remains is the world.
+
+⚠ **Scope.** (a) The two environments' Edit Index share a name and a range but **not a
+construction** — ray-RMSE vs a move distribution over 64 squares against uniform-over-legal. Read
+each row against its own unedited column. (b) The Othello arms received ~11% more sequences and
+steps than the discworld arms. (c) One seed per cell.
+
+---
+
+### 2026-08-21 (later) — Three independent probe-derived writes all succeed on THEIR model and all fail on ours; and the pseudoinverse destroys itself when written at every layer · `replicated` ★-candidate
+
+**Evidence:** `othello_transfer/{linear_intervention,single_layer,nanda_on_discworld}.py` and
+`controls.ipynb` §4; scratch `../scratch/2026-08-21-linear-direction-interventions.md`. Their model
+`gpt_synthetic`, their 1001-case intervention benchmark, our linear mine/theirs probe (0.72%
+held-out error). ~15 min, no models trained. Prompted by Sevan asking for Nanda's linear-direction
+method to be replicated with our probe, and then for the pseudoinverse to be given "a real shot".
+
+**Nanda's method replicates on their model.** `x ← x + α·p_d` along our probe's weight column, at
+every residual point. Our reproduced null is **2.723**, identical to their Table 2. At α = 0.12 we
+get Li error **0.108** against their published **0.10**; the `target − current` variant reaches
+**0.026** / Edit Index **+0.691**, the best result anything has posted on this benchmark. Their
+Figure 7 shape reproduces: writing at points 0–5 does almost nothing, the error collapses only at
+6+.
+
+**Our pseudoinverse is not a weak editor — it was being applied wrongly.** Written at all nine
+points it never beats Li error 1.461. Written at **one** point it is the strongest mechanism
+tested:
+
+| point written | 0 | 1 | 2 | 3 | 4 | **5** | 6 | 7 | 8 | all 9 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Li error ↓ | 2.719 | 2.721 | 2.581 | 0.763 | 0.296 | **0.052** | 0.695 | 1.872 | 2.164 | 1.461 |
+| Edit Index ↑ | −0.829 | −0.823 | −0.579 | +0.404 | +0.559 | **+0.697** | +0.206 | −0.443 | −0.136 | −0.275 |
+
+**The mechanism is an asymmetry, and the control supplies it.** Multi-layer application *helps*
+Nanda's fixed direction (0.236 at the best single point → 0.062 at all nine) and *hurts* our
+pseudoinverse **28×** (0.052 → 1.461). A recomputed injection re-reads the probe against the
+already-edited stream and re-imposes "hold the other 63 tiles at their current read-out", so each
+layer undoes the previous layer's edit. A fixed direction does not depend on `x` and cannot do
+this. Both methods work only at **mid-depth** (points 3–6) and fail at both ends.
+
+**The 2 × 3 table.**
+
+| mechanism | Othello-GPT (theirs) | discworld `W16` (ours) |
+|---|---|---|
+| Nanda linear-direction addition | **+0.603 ✓** (Li 0.062, all 9 points) | −0.118 ✗ (3.6× collateral) |
+| our gradient editor (`_descend`) | **+0.656 ✓** (Li 0.016) | −0.194 ✗ |
+| our pseudoinverse injection | **+0.697 ✓** (Li 0.052, point 5 only) | −0.66 ✗ |
+
+**Why it matters.** 2026-08-20 cleared the *gradient* editor; this clears the *pseudoinverse* too,
+and adds a third mechanism. All three succeed on their model and fail on ours, so "probe-derived
+writes fail here" is now a statement about **the world or the read-out**, not about any editor's
+implementation. ⚠ **One correction is recorded in the scratch note:** on first reading the
+all-layer sweep I concluded our pseudoinverse fails on their model and started to walk back
+2026-08-20's clearance. The single-layer control falsified that; the walk-back was wrong and
+2026-08-20 stands unqualified.
+
+**On discworld, Nanda's method does not rescue anything** (`W16`, N = 512, our linear regression
+probe, pure X displacement of object 0, step 0 only). Edit Index −0.601 → −0.118 at best, and the
+movement is degradation: target RMSE gets *worse* (0.311 → 0.375) and collateral RMSE is **3.6×
+worse** (0.155 → 0.561) — the write drags the *other* object. The α trend is monotonic with no
+optimum, unlike Othello's clean peak at α ≈ 0.12–0.18 with collateral *improving*.
+
+**One live consequence.** ⚠ **A depth confound this run cannot settle.** `W16` has 4 layers =
+**5** residual points; Othello-GPT has 9, and the reproduced Figure 7 shows the error only collapses
+once ≥ 6 are written. We cannot write to 6 points because we do not have them. This is a direct
+argument for `directions/othello-architecture-on-discworld.md`.
+
+> ⚠ **Corrected within the day, before anything was built on it.** This entry first carried a second
+> consequence — "a single-point pseudoinverse write on `W16` has never been tried" — which is
+> **false**. `transformers/transformer_world_state.ipynb` §4 (2026-08-04) applies exactly that write,
+> `h + (target − (Wh+b))W⁺`, at **each residual point individually**, on all three windows, and finds
+> it **inert at every depth**: Edit Index −0.65…−0.68, equal to each model's own unsteered value, at
+> fidelity ratio 1.00. Sevan caught the error.
+
+**The one genuinely untried piece, and it is now run** (`othello_transfer/pinv_alpha_discworld.py`,
+same day). 2026-08-04 took the **full jump** (α = 1) and never swept the step size, where Othello's
+single-point optimum is α = 1.5 with a ~50× spread. Adding α ∈ 0.05…6.0 as the only new axis, on
+2026-08-04's exact configuration:
+
+- **The anchor reproduces**: α = 1.0 gives Edit Index −0.683…−0.669 across the five points, against
+  that day's published −0.68…−0.65.
+- **α does not rescue it.** Best cell of the 5 × 11 grid is point 2 (mid-depth), α = 6.0, at
+  **−0.443** from an unsteered −0.684. It never crosses zero, and the α response is **monotonic with
+  no optimum** — the same signature as Nanda's addition here, and the opposite of Othello's sharp
+  peak.
+- ⚠ **That best cell is not an edit.** The write is ‖Δh‖/‖h‖ = 0.909 and leaves the read-out **15.96
+  sim units** from the target, overshooting by ~5× the original 3.19 error; collateral RMSE rises
+  +29% while target RMSE improves 8%. At every α where the write actually lands the read-out
+  (α ≈ 1, probe error 0.000) the index is inert to three decimals.
+
+**So the full Othello recipe — single residual point, mid-depth, step size swept — has now been
+applied to discworld and fails.** The multi-layer pathology explains nothing about the discworld
+negative.
+
+---
+
+
+### 2026-08-21 — What our probes read: data-saturated, half architecture, and mostly the observation · `observed`
+
+**Evidence:** `othello_transfer/probe_scaling.py`; scratch `../scratch/2026-08-21-probe-data-scaling.md`.
+Model `W16`, dataset `4_fixed_refl_inview`, residual point 3, the thread's own probe and fitting
+loop (`othello_probe.fit_probe`, hidden 512, 200 epochs, held out by sequence). Sequence count is
+the only variable. ~3 min.
+
+Every editability number in this thread fits probes on **1500 sequences (48k rows)**; Li et al. fit
+theirs on **≈6.7M rows** — a ~140x gap, and therefore a live alternative explanation for the
+negative ("our probes were simply under-fit"). Sweeping the sequence count over a **60x** range:
+
+| train rows | 48k | 160k | 480k | 1.44M | 2.88M |
+|---|---|---|---|---|---|
+| MLP (512) R² | 0.9315 | 0.9469 | 0.9538 | 0.9593 | **0.9604** |
+| linear R² | 0.7546 | 0.7618 | 0.7672 | 0.7649 | 0.7650 |
+
+**60x more probe data buys +0.029 R².** Successive steps give +0.015 / +0.007 / +0.006 / **+0.001**
+— saturated by ~1.5M rows, short of Othello's scale; extrapolating puts their data volume at ≈0.961.
+The test-split fit at 1500 sequences reproduces the published **0.9349** exactly, anchoring the curve
+to the quoted number.
+
+**Reading:** the 0.96 ceiling is a property of `W16`'s residual stream, not of probe fitting. This
+compounds with 2026-08-18, where the intervention drove the probe read-out from **3.35 → 0.007–0.018**
+sim units and the generation still did not move — probe *accuracy* was already known not to be the
+binding constraint, and probe *data* now is not either.
+
+**Three further controls the same day** (`../scratch/2026-08-21-probe-reality-checks.md`;
+`othello_transfer/{obs_window_probe,random_init_control,occlusion_probe}.py`), which qualify the
+above considerably:
+
+**(a) Raw-observation baseline.** A linear probe on the noisy observation the model receives reads
+position at R² **0.292** (1 frame) → **0.323** (16-frame window) — temporal integration buys +0.03.
+An MLP on the same input reads **0.851**. The trained latent reads 0.803 linear / 0.944 MLP.
+
+**(b) Random-weight baseline** — Li et al.'s own `--random` control, two seeds, same architecture
+and data. Random init reads **0.559 linear / 0.819 MLP** at point 2. So of the trained latent's
++0.48 linear gain over the raw observation, **roughly half is the architecture and half is
+learning** (+0.244 from training). ⚠ This corrects an overstatement made earlier the same day that
+attributed the whole gain to the model. What survives: training contributes +0.244 linear / +0.14
+MLP, and the **depth trend** separates them qualitatively — random decodability *declines* with
+depth (MLP 0.842 → 0.785) while trained decodability *rises* (0.853 → 0.944). **The model's real
+achievement is linearisation**, not discovery: position is already nonlinearly present in the
+observation (MLP 0.851) and the model makes it linearly accessible (0.323 → 0.803).
+
+**The consequence for the thread, stated plainly:** nonlinearly, our probe is largely reading the
+*observation*, not a learned state. Li et al.'s randomized network sits at ~26% error against a 47%
+constant-guess floor while their trained nonlinear probe reaches 1.7% — training removes ~93% of
+the random model's error, against ~71% of the random model's unexplained variance here. **In their
+world board-state decodability is almost entirely computed; in ours most of the nonlinear position
+decodability is supplied by the observation.**
+
+**(c) Occluded discs** (Sevan's proposal — restrict to discs contributing zero rays, defined from
+`obs_id`). **Inconclusive, and the dataset cannot make it conclusive.** A single frame reads a
+fully occluded disc at RMSE 0.87–0.98 against a 1.83 mean-predictor floor, because occlusion here
+constrains a disc to the *angular shadow* of the visible one rather than hiding it. On object 1 the
+trained latent (0.779) is no better than random init (0.773) or the raw window (0.801); only object
+0 gains (0.812 vs 0.976). **No decay with time hidden** (obj 0: 0.791 at 1 frame → 0.824 at 9+),
+which is what a per-frame shadow constraint predicts and not what a carried state predicts. A clean
+persistence test needs a world where objects genuinely exit the frustum.
+
+**Two traps found, both recorded in `../GOTCHAS.md`:** `is_visible` means *frustum overlap* and is
+identically True on every current dataset, so the visibility masks in `othello_gpt/pipeline` have
+never filtered anything; and object index is confounded with brightness under
+`fixed_reflectivities=True`, so per-object numbers are not interchangeable.
+
+**Scope:** `W16` at one residual point; the GRU is not yet run. R² 0.96 is not 1.0 and this says more
+data will not recover the remaining 4% — whether that residual matters is a separate question. Says
+nothing about the **model**-training data confound (3.6M unique frames against their 1.2B), which is
+what the planned architecture-port run is for.
+
+### 2026-08-20 — Our probe and our editor reproduce Li et al.'s intervention on THEIR model · `replicated` ★-candidate
+
+**Evidence:** `notebooks/experiments/editability/othello_transfer/probe_transfer.ipynb`;
+scratch `../scratch/2026-08-20-othello-transfer.md`; `runs/othello_transfer/` (5 figures,
+`results.json`). Model `gpt_synthetic` (Li et al.'s own checkpoint, provenance and verification in
+`othello_transfer/OTHELLO_TRANSFER_RUNS.md`). 20,000 synthetic games → 1,179,401 probe rows;
+108 probes; 72 intervention arms; all 1001 cases of their shipped benchmark per arm. Stable across
+three independent full runs.
+
+**This closes the implementation question.** Every editability number in this thread comes from
+`othello_gpt/othello_probe.py` — its probe fitting, its edit objective, its activation descent, its
+multi-layer schedule. Until now nothing could test that code independently, because it was the only
+instrument. Run **unmodified** on the model Li et al. published their intervention on, through a
+135-line bridge that is gated bit-identical to their own forward pass and contains no editing logic,
+it produces:
+
+| | Li et al. | ours, our code, their model |
+|---|---|---|
+| null intervention | 2.68 | **2.723** |
+| best intervention | 0.12 (at `L_s`=4) | **0.016** |
+| error reduction | 22x | **170x** |
+| nonlinear probe, best layer | 1.7% error | **0.57%** |
+
+**On the Edit Index — the axis that compares the two worlds.** Same formula; the ground-truth
+reference is uniform-over-legal, which is *exact* here because their generator draws moves uniformly
+from the legal set:
+
+| | unsteered | best arm | gain | crosses zero |
+|---|---|---|---|---|
+| Othello, their model, our code | **−0.829** | **+0.656** | +1.49 | **yes** |
+| discworld transformer `W16`, our model, our code | −0.684 | −0.194 | +0.49 | **no** |
+
+81% of the available headroom against 29%, and the sign is the point: on Othello the output stops
+being the unedited world and becomes the edited one. On the symmetric-difference support the sweep
+reaches **+0.868** against a −0.943 floor.
+
+**Three secondary results.**
+1. **Nanda's linear finding reproduces exactly.** Linear probe at its best layer: **23.90%** error
+   in absolute colour, **0.72%** in mine/theirs. Li's "linear probes fail" (20.4%) is a
+   coordinate-frame artifact; the board was linearly decodable all along.
+2. **Their frame-level split does not inflate their number.** 0.57% (frame) vs 0.66% (sequence) at
+   the best layer — ~0.1 pp, against the +0.34 R² inflation the same convention causes on discworld
+   (`../GOTCHAS.md`, 2026-08-14). Board state changes enough per move that little leaks.
+3. **The probe constraint does not pin down the write on their model either.** `hit_target` reads
+   **1.000 at every alpha across a 50x range**, and the edit objective reaches ≥99% of its best
+   reduction throughout, while the outcome moves by a factor of **83**. No write-side criterion can
+   select a step size. This makes the 2026-08-18 discworld observation — *the optimiser decides
+   which probe-satisfying write you land on* — a property of probe-derived writes generally, not of
+   this world.
+
+**Guard.** The best arm raises legal mass 0.858 → **0.998** and pre-flip error 0.002 → 2.214: it
+left the old world rather than degrading. Li et al. report no such guard; their metric alone cannot
+separate a successful edit from a destroyed model, and at α = 0.1 arms visibly degrade.
+
+**Scope, stated plainly.** This is a statement about **our implementation and nothing else.** It
+does **not** discriminate between the two remaining explanations for the discworld negative — the
+*world* (their board is discrete and consumed directly by the legal-move computation; our positions
+are continuous and reach the output only through a renderer, consistent with 2026-08-05 locating
+`readable ≠ grabbable` in the renderer) and the *read-out* (their probe predicts a quantity the
+computation demonstrably consumes; ours one merely correlated with it). Both survive. What is
+removed is the third possibility, live since 2026-07-08, that the editor code was simply wrong.
+
+**Caveats.** The MLP ≥ linear tripwire fired 8 times, all on mine/theirs, all with both probes under
+3.2% and a largest gap of 0.19 pp — read as two probes at the ceiling of an easy target rather than
+an undertrained MLP, since on absolute colour the ordering holds by 23 pp. Everything is **step 0
+only**, matching their benchmark; persistence, where discworld's edits actually die, is untested
+here. Deliberate deviations from Li et al. (synthetic rather than championship games, `model.eval()`,
+input standardisation inside the probe, 20k games) are listed in the notebook's summary.
+
+**Why `replicated` rather than `observed`:** the result holds across two probe widths, two step
+counts, two step sizes, nine applied layers, two held-out conventions and three independent full
+runs, and it reproduces an externally published number rather than only an internal one. It is not
+`established` — it rests on one model in one domain, and nothing else yet depends on it.
 
 ### 2026-08-19 — The edit direction is well defined in every architecture, and a *trained* pathway lands on it · `replicated` ★-candidate
 

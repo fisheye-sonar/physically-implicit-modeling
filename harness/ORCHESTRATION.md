@@ -87,18 +87,69 @@ For anything that outlives a foreground call:
    foreground timeout and any session restart. Make it write machine-readable progress and
    checkpoints so a poll is a cheap parse, a crash loses at most the in-flight unit, and the
    job is resumable.
-2. **Launch a harness-tracked watcher** with `run_in_background: true`: a poll loop that sleeps
-   and exits when either ~25 minutes elapse or the job finishes or dies (grep the log for a
-   completion sentinel, or check the process). Its completion fires a task notification that
-   **reliably re-invokes you** — that is the wake signal.
-3. **On wake:** check status, then either relaunch a fresh watcher or finalize.
+2. **⛔ Arm a SELF-RE-ARMING periodic heartbeat before anything else.** A recurring scheduled
+   job (`CronCreate` with `recurring: true`, every 15–20 min) that fires **regardless of
+   events**. This is mandatory for any job expected to outlive one reply, and it is not
+   optional just because event watchers are also in place.
+3. **Then** add event watchers (`run_in_background: true` poll loops) for the specific
+   moments you care about. These are a *latency* optimisation on top of the heartbeat, never a
+   replacement for it.
+4. **On wake:** check status, then either advance the chain or finalize.
 
-**Prefer a script you wrote and tested over a scheduling primitive you did not.** Wake-up and
-scheduling tools have proved unreliable in practice — a pending wake can be cancelled by
-ordinary session activity — while background-task completion notifications have fired every
-time. When both are available, use the one whose failure mode you can see.
+### ⛔ Continuity must not depend on the agent re-arming
 
-Tell the human you are going quiet until the watcher fires.
+A `run_in_background` watcher fires **exactly once**. Continuity therefore depends on the agent
+remembering to relaunch one every single time — and that has failed **twice**, the second time
+within hours of an explicit promise not to let it lapse. On 2026-08-22 an overnight chain stalled
+at 02:31 and nobody noticed until 08:50: six hours of idle GPU.
+
+**The fix is a STAGGERED BANK of background watchers, not a scheduler.** Queue many at once with
+increasing sleeps — T+18, T+36, T+54 … — so a guaranteed cadence exists for hours without any
+re-arming. Top the bank up whenever one fires and you are already awake.
+
+> ⚠ **Measured 2026-08-22, and it reverses a change made that morning.** `CronCreate` was tried as
+> the self-re-arming heartbeat. Over a **2 h 39 min idle window** (10:44 → 13:22) it produced
+> **zero** wake-ups, while background-task completions fired reliably all night. The morning's
+> edit here — "use a primitive that re-arms itself" — was written from a theory about forgetting,
+> not from evidence, and it overrode correct guidance. **Restored: prefer a script you wrote and
+> tested over a scheduling primitive you did not.** Wake-ups and scheduling tools have repeatedly
+> proved unreliable; background-task completion notifications have not. When both are available,
+> use the one whose failure mode you can see — and *verify it has actually fired* rather than
+> assuming registration means delivery.
+
+Put the **stall check in each watcher's own output**, so it survives context loss: *if the work
+looks idle but the driver is alive and the logs have not advanced since the last check, the chain
+is stuck — diagnose and restart rather than wait.*
+
+Put the **stall check in the heartbeat's own prompt**, so it survives context loss: *if the
+work looks idle but the driver is alive and the logs have not advanced since the last check,
+the chain is stuck — diagnose and restart rather than wait.*
+
+### ⛔ `pgrep -f <name>` is not a liveness check
+
+It substring-matches **every command line on the machine**, including the monitoring shell
+that is running the check, and including any editor, tail, or grep that merely mentions the
+name. Both failure directions have bitten this project repeatedly in one night:
+
+- **False positive** — a wait loop guarded by `pgrep -f "train\.py"` never went false, because
+  the polling shells' own command lines contained the string. The chain waited six hours for a
+  process that had already exited.
+- **False positive on kill** — `pkill -f <script>` and `for p in $(pgrep -f <script>)` matched
+  the shell executing them and killed it mid-command, three times, twice silently preventing a
+  fix from ever being written to disk.
+
+Use something that cannot be confused by text:
+
+```bash
+nvidia-smi --query-compute-apps=pid --format=csv,noheader   # GPU work: authoritative
+ps -p "$PID" >/dev/null                                     # a PID you captured yourself
+ps -eo pid,args | awk -v me=$$ '$1!=me && /bash .*driver\.sh/ {print $1}'   # exclude self
+```
+
+And give every wait loop a **timeout with a loud message**, so a guard bug degrades into a late
+start rather than an indefinite hang.
+
+Tell the human you are going quiet until the heartbeat fires, and say how often it fires.
 
 ---
 

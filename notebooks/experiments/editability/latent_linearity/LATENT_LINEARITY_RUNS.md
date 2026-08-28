@@ -67,13 +67,30 @@ Checked against every checkpoint under `runs/` on 2026-08-19:
 So Part 2 is GRU-only. That is a fact about the checkpoint inventory, not about the architectures, and it is what
 a follow-up would have to train to make mechanisms 3 and 4 architecture-independent the way 1 and 2 now are.
 
+## Part 3 — the composition random-init control (added 2026-08-21)
+
+`random_baseline.ipynb` asks whether latent object-composition is *learned*. It needs a trained
+model and an **untrained** one at the identical config, so the pair is the unit of analysis here.
+
+| descriptive label (use this in figures) | run code | source registry | state analysed | why this one |
+|---|---|---|---|---|
+| **TRAINED linear enc+dec** | `H256` | [`../controls/CONTROL_RUNS.md`](../controls/CONTROL_RUNS.md) | GRU hidden state `h` (256) | affine encoder and decoder — the family `delta_h_analysis` §7 measured |
+| **TRAINED nonlinear enc+dec** | `NL_enc2dec2_s0` | [`../nonlinear_gru/NONLINEAR_GRU_RUNS.md`](../nonlinear_gru/NONLINEAR_GRU_RUNS.md) | GRU hidden state `h` (256) | 2-hidden-layer encoder **and** decoder — the family the 2026-08-05 decoder-artifact correction moved the claim onto |
+| **RANDOM s0 / s1 · {linear, nonlinear} enc+dec** | — | *(constructed in `composition_lib.models`)* | GRU hidden state `h` (256) | `GRUModel(ModelConfig(...))` at the identical `enc_hidden_layers` / `dec_hidden_layers`, `torch.manual_seed(s)`, never trained. Two seeds because one cannot distinguish an architectural floor from a lucky draw |
+
+Evaluated on `datasets/4_fixed_refl_inview/edits.h5`, N = 256, edit frame 20, at four displacement
+scales {1.0, 0.5, 0.25, 0.125} of the recorded teleport. **No models were trained**; the random
+arms are constructed at load time and are reproducible from the seed alone.
+
 ## Code in this directory
 
 | file | what it is |
 |---|---|
 | `edit_directions.py` | the one implementation of the four mechanisms' Δh and the geometry metrics — state plumbing, evidence rendering, cosine / magnitude / consistency / row-space reports |
+| `composition_lib.py` | the composition measurement — the real-teleport edit set (with the un-teleport reconstruction), the four counterfactual renders, the observation ceiling, the trained/random model set, and the metrics |
 | `figures.py` | figure builders; every one takes `models` and `arms` as ordered lists so an added architecture or mechanism is a data change, not a re-layout |
 | `latent_edit_directions.ipynb` | the notebook — orchestration, tables, and the dated results block |
+| `random_baseline.ipynb` | the composition random-init control — orchestration, tables, and its `Summary` block |
 
 Metrics come from `scripts/editability_metrics.py` and probes from `pim.extractors.fit_readability_probes`;
 neither is re-derived here. Metric definitions: [`../METRICS_AND_EDITORS.md`](../METRICS_AND_EDITORS.md) §4–§5.
