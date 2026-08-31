@@ -32,8 +32,8 @@ from pathlib import Path
 
 import numpy as np
 
-from pim.simulator.config import SimConfig
-from pim.simulator.interactive import InteractiveConfig, InteractiveWorld
+from pim.environments.discworld.config import SimConfig
+from pim.environments.discworld.interactive import InteractiveConfig, InteractiveWorld
 
 # ── Keyboard layout (matplotlib key names) ────────────────────────────────────
 # object 0 = WASD, object 1 = arrow keys (IJKL accepted as an alternative).

@@ -1,7 +1,7 @@
 """Tests for the canonical waterfall (`pim.figures.waterfall_grid`).
 
 These lock in the spec rules that are enforced structurally rather than by documentation —
-see `notebooks/experiments/editability/WATERFALL_SPEC.md`. The point of the helper is that the
+see `research/specs/WATERFALL_SPEC.md`. The point of the helper is that the
 recurring violations become impossible or loud, so these tests guard exactly that.
 """
 

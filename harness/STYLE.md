@@ -231,12 +231,9 @@ Extra standards for that tier:
 
 ## Local instantiations (this project — not portable)
 
-- Canonical qualitative panel, 1D observations → the fixed specification in `../notebooks/experiments/editability/WATERFALL_SPEC.md`
-- Canonical qualitative panel, 2D observations →
-  `../notebooks/experiments/editability/omniscient_2d/WATERFALL_SPEC_2D.md`, implemented in
-  that directory's `frame_grid.py`
-- Metric and method registry →
-  `../notebooks/experiments/editability/METRICS_AND_EDITORS.md`
+- Canonical qualitative panel, 1D observations → the fixed specification in
+  `../research/specs/WATERFALL_SPEC.md`, implemented once in `pim/figures/waterfall.py`
+- Metric and method registry → `../research/REGISTRY.md`
 - Figure theme in use → `pim/figures/theme.py` (`style_ax`, `style_ax_dark`, `PALETTE`)
-- Run registries → the `*_RUNS.md` file in each thread directory under
-  `../notebooks/experiments/editability/`
+- Run record → `runs/<topic>/<run>/` (config.json + commit_sha + scores.json), aggregated
+  by `../notebooks/build_full_table.ipynb`

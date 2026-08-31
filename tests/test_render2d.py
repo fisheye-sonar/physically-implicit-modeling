@@ -12,8 +12,8 @@ import dataclasses
 import numpy as np
 import pytest
 
-from pim.simulator.config import SimConfig, obs_dim
-from pim.simulator.render2d import (
+from pim.environments.discworld.config import SimConfig, obs_dim
+from pim.environments.discworld.render2d import (
     grid_axes,
     grid_shape,
     omni2d_enabled,
@@ -23,8 +23,8 @@ from pim.simulator.render2d import (
     validate,
     world_extent,
 )
-from pim.simulator.renderer import render_frame, render_scene
-from pim.simulator.sim import simulate
+from pim.environments.discworld.renderer import render_frame, render_scene
+from pim.environments.discworld.sim import simulate
 
 
 def _cfg(**kw) -> SimConfig:
@@ -81,7 +81,7 @@ def test_defaults_are_bit_identical():
 
 def test_dispatch_untouched_when_disabled(monkeypatch):
     """The 2D branch is not merely inert when disabled — it is never called."""
-    import pim.simulator.render2d as r2d
+    import pim.environments.discworld.render2d as r2d
 
     def _boom(*a, **k):  # pragma: no cover - must not run
         raise AssertionError("omni2d renderer called with omni2d disabled")

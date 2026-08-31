@@ -37,3 +37,8 @@
 
 ## Kept in place: `_smoke/` (new-scheme pipeline smoke runs), `probe_cache/` (the
 ## canonical fingerprinted probe cache — no config.json, so the master scan skips it)
+
+## Probe relocation (2026-08-31, per Sevan: probes live with their runs)
+- canonical probe fits moved from `probe_cache/{discworld,othello}/` into
+  `initial_othello_comparison/{L-dw-20m,L-oth-20m}/probes/` (cache keys are
+  provenance hashes, directory-independent — every future lookup hits in place)

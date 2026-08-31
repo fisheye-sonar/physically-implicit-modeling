@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import torch
 
-from pim.world_models.transformer import ModelConfig, TransformerModel
+from pim.models.transformer_s import ModelConfig, TransformerS as TransformerModel
 
 
 def _model(**kw):

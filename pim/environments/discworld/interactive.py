@@ -58,7 +58,16 @@ from typing import Any, Literal
 
 import numpy as np
 
-from .actions import _obj_in_frustum
+# inlined from the retired actions.py (the only symbol interactive needed from it)
+
+
+def _obj_in_frustum(p, r, cfg) -> bool:
+    """True if a circle of radius ``r`` centred at ``p`` is fully inside the frustum."""
+    x, y = float(p[0]), float(p[1])
+    if not (y - r >= cfg.y_near and y + r <= cfg.y_far):
+        return False
+    x_lim = float(frustum_half_width(y, cfg)) - r
+    return abs(x) <= x_lim
 from .config import SimConfig
 from .sim import OBJECT_COLORS, frustum_half_width
 

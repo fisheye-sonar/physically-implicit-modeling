@@ -16,9 +16,9 @@ import numpy as np
 import pytest
 import torch
 
-from pim.simulator.config import SimConfig
-from pim.simulator.renderer import render_frame
-from pim.simulator.soft_render import (
+from pim.environments.discworld.config import SimConfig
+from pim.environments.discworld.renderer import render_frame
+from pim.environments.discworld.soft_render import (
     render_frame_soft,
     render_frame_torch,
     soft_enabled,

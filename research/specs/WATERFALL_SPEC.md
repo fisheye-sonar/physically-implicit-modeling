@@ -7,18 +7,17 @@ one shared helper. What follows is the project-specific *form* those rules take 
 observation, where a frame is one row of pixels and a whole sequence fits in one image with
 time on the vertical axis.
 
-For a **2D raster** observation a literal waterfall cannot be drawn — use the sanctioned
-`frame_grid` + `frame_trails` pair specified in
-[`omniscient_2d/WATERFALL_SPEC_2D.md`](omniscient_2d/WATERFALL_SPEC_2D.md). Do not improvise
-a substitute and do not fall back to scalar figures.
+(The 2D-raster variant and its `frame_grid` implementation were retired with the
+omniscient-2d thread in the 2026-08-31 housecleaning; recover both from the
+`pre-cleanup-2026-08` tag if that observation channel returns.)
 
 ---
 
 ## The fixed spec — do NOT invent a colormap
 
 Observation waterfalls use **`cmap="gray"` on the dark background** — the
-`notebooks/world_model_eval.ipynb` / `00_master_editability.ipynb` **Fig 5a** style, which is
-the canonical reference. **Never magma, viridis, or the pink-purple scheme.**
+style the retired `00_master_editability.ipynb` Fig 5a established (the canonical
+reference renders live in `pim/figures/waterfall.py`). **Never magma, viridis, or the pink-purple scheme.**
 
 Every waterfall comparison has:
 
@@ -83,16 +82,11 @@ Two rules are enforced **structurally**, so the common violations cannot be expr
 
 Fewer than three sample rows raises a warning rather than failing silently.
 
-> ### ⚠ Migration debt (recorded 2026-08-17)
-> **Eighteen** separate `waterfall` implementations existed when `waterfall_grid` was written —
-> in `scripts/eval_editability_endogenous.py`, `history_editing/history_tools.py`, and sixteen
-> notebooks. That is the exact drift this spec was written to prevent, and prose alone did not
-> prevent it: each copy re-decided the colormap, the context frames, and the alignment.
->
-> **New work must use `pim.figures.waterfall_grid`.** The existing copies are not yet migrated;
-> migrating them is a mechanical pass worth doing thread by thread, verifying each rendered
-> panel against the eyeball check below. Until a notebook is migrated, treat its waterfall as
-> unverified against this spec.
+> ### Migration debt — RESOLVED by deletion (2026-08-31)
+> Eighteen separate `waterfall` implementations once existed across the retired experiment
+> notebooks — the drift this spec was written to prevent. The housecleaning removed every
+> copy along with its notebook; `pim.figures.waterfall_grid` is now the only implementation
+> in the tree, and new work has nothing else to reach for.
 
 ## Eyeball check before committing
 

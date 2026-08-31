@@ -130,18 +130,27 @@ def load_bench(model, n: int = 192, target: str = "pos",
 
 def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "test",
                family: str = "linear", log=print, basis_name: str = "cartesian",
-               cache: bool = True, data_dir: Path | None = None) -> dict:
+               cache: bool = True, data_dir: Path | None = None,
+               cache_dir: Path | None = None) -> dict:
     """One probe per residual point, held out BY SEQUENCE. ``family`` linear|mlp.
 
     ``data_dir`` supplies a LARGER corpus for probe fitting only — the bench stays the
     canonical edit set regardless. Cached with full provenance (``pim.probes.cache``).
+
+    ``cache_dir`` is where the fitted probes LIVE. Canonical scoring passes the run's
+    own ``runs/<topic>/<run>/probes/`` so every run dir is self-contained (re-tests
+    never refit, and archiving a run carries its probes); the shared pool
+    ``runs/probe_cache/discworld/`` is only the fallback for ad-hoc fits. The model
+    fingerprint stays in every key either way, so a copied or overwritten checkpoint
+    can never be served another model's probes.
     """
+    store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
     dd = Path(data_dir) if data_dir is not None else DATA
-    fname, prov = PROBE_CACHE.key(model, target=target, n_seq=int(n_seq), split=split,
-                                  family=family, basis=basis_name, seed=SEED,
-                                  data=str(dd))
+    fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=split,
+                            family=family, basis=basis_name, seed=SEED,
+                            data=str(dd))
     if cache:
-        hit = PROBE_CACHE.load(fname, prov, device=DEV)
+        hit = store.load(fname, prov, device=DEV)
         if hit is not None:
             if log:
                 log(f"    probe cache HIT  {fname}  ({target}/{family}/{basis_name}/"
@@ -177,7 +186,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
             log(f"    point {ell}: R2 {s['r2']:+.4f}  rmse {s['rmse']:.4f}")
     del R
     if cache:
-        PROBE_CACHE.store(fname, prov, out)
+        store.store(fname, prov, out)
         if log:
             log(f"    probe cache WROTE {fname}")
     return out

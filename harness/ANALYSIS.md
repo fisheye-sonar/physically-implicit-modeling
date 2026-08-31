@@ -198,11 +198,13 @@ the words strictly.
 
 ## Local instantiations (this project — not portable)
 
-- Shared metric implementations → `../scripts/editability_metrics.py`
-  (`build_edit_zones`, `edit_scorecard`, `fidelity_ratio`)
-- Standard held-out read-out estimators → `pim.extractors.fit_readability_probes`
-  (`pim/extractors/standard.py`)
-- Metric registry, formulas and units →
-  `../notebooks/experiments/editability/METRICS_AND_EDITORS.md`
+- Shared metric implementations → `pim/metrics/` (`editability.py`, `othello_moves.py`,
+  `decodability.py`) — arrays in, numbers out; never re-derive at a call site
+- Standard held-out read-out estimators → `pim.probes` (`fit_linear`, `fit_mlp` — MLP-128,
+  held out by sequence, `check_probe_sanity` tripwire)
+- The registry of canonical objects (environments, architectures, probes, editors,
+  metrics, runs) → `../research/REGISTRY.md`
+- Canonical scores → `runs/<topic>/<run>/scores.json`, written ONLY by
+  `../notebooks/master_eval.ipynb` (no metric math in the notebook)
 - Known traps, stale conventions, and non-comparable historical numbers →
   `../research/GOTCHAS.md`

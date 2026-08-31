@@ -31,9 +31,9 @@ import json
 import time
 from pathlib import Path
 
-from pim.simulator.config import SimConfig
-from pim.simulator.dataset import DatasetConfig, generate_dataset
-from pim.simulator.edits_dataset import EditDatasetConfig, generate_edits_dataset
+from pim.environments.discworld.config import SimConfig
+from pim.environments.discworld.dataset import DatasetConfig, generate_dataset
+from pim.environments.discworld.edits_dataset import EditDatasetConfig, generate_edits_dataset
 
 
 def parse_args() -> argparse.Namespace:
