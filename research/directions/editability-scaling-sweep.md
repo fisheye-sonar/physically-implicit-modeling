@@ -71,8 +71,12 @@ equally consistent with "no world model" and "we probed the wrong basis". See be
 
 ## Still to decide
 
-1. **The depth coordinate for discworld's frustum basis.** In progress — see
-   `../scratch/2026-08-23-frustum-basis.md`. Depth manifests in the observation *only* as apparent
+1. **The depth coordinate for discworld's frustum basis. STILL OPEN as of 2026-08-25.**
+   ⛔ `../scratch/2026-08-23-frustum-basis.md`, cited here and in `pim/simulator/frustum.py`, was
+   **never written** — there is no empirical ranking of the five candidates. `inv_y` was used for
+   the 20M discworld analysis because it is `frustum.py`'s default and what the `w ∝ 1/depth`
+   derivation argues for, **not** because it won a comparison. Linear-only probes make sweeping all
+   five ~30 min (`research/scratch/2026-08-25-discworld-at-scale.md` §7). Depth manifests in the observation *only* as apparent
    width, so `y` (what the simulator reports and the model never sees) is likely the wrong choice.
 2. **Checkpoint schedule.** Log-spaced in steps, so the training-length axis is evenly sampled on
    the log x-axis: roughly 2^k · 1000 steps.

@@ -55,6 +55,7 @@ for _p in (str(_HERE), str(_HERE.parent / "othello_gpt"), str(_REPO), str(_REPO 
         sys.path.insert(0, _p)
 
 import othello_probe as op  # noqa: E402
+from pim.editors.probe_steering import inject_state  # noqa: E402
 from editability_metrics import (  # noqa: E402
     build_edit_zones,
     edit_index_by_step,
@@ -387,7 +388,10 @@ def pinv_single_point(model, b: Bench, probes: dict, alphas) -> list[dict]:
         h0 = model.flat_state(b.state)
         err0 = float(((h0 @ W + bb) - b.tgt).norm(dim=1).mean())
         for a in alphas:
-            delta = a * ((b.tgt - (h0 @ W + bb)) @ Wp)
+            # `inject_state` is the alpha=1 jump; alpha scales it as a lerp from h0. Calling the
+            # canonical editor rather than re-deriving the formula is the point — the two were
+            # verified equal to 1e-6 on this bench before the swap (2026-08-31).
+            delta = a * (inject_state(h0, b.tgt, W.T, Wp.T, bb) - h0)
             h = h0 + delta
             roll = model.rollout_with_edit(b.state, ell, h, K_ROLL).cpu().numpy()
             recs.append({"editor": "PI injection (1 point)", "point": ell, "alpha": a,

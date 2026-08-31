@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-24 (morning; see the 08-24 section first)_
+_Last updated: 2026-08-31 (recording the 08-24/25 discworld-at-scale work; see the 08-25 section first)_
 
 _2026-08-22 (evening) — **the environment is what flips editability, and it
 replicates.** Li et al.'s architecture, ~900k sequences, same optimiser, at both 4 and 14 epochs:
@@ -12,6 +12,96 @@ legal mass → **0.973**); discworld under identical conditions reaches −0.11 
 guards. Architecture, editor, probe implementation, probe data, data volume and training length are
 all excluded. ⚠ Exactly ONE editor works — Nanda's `target − current` on the mine/theirs basis;
 the PI-injection claim from the 4-epoch pass is withdrawn._
+
+## 2026-08-25 — Discworld at 20M: at the Bayes floor, and still not editable
+
+Full write-up **`research/scratch/2026-08-25-discworld-at-scale.md`** — read it before acting on
+any of this. Thread `notebooks/experiments/editability/discworld_scale/`; runs
+`runs/discworld_scale/`. (Recorded 08-31; the run finished 08-25.)
+
+### The headline
+
+`BIG20M_discworld_L` — Transformer L (25,371,776 params) on **20,000,000 discworld sequences** at
+`position_noise_std=0.04`, 780,000 steps = 11.09 epochs, every optimiser setting matched to the
+Othello 20M run. **Best val 0.022873 @ step 660,000**, 8.04 h, 22 checkpoints.
+
+**It sits 3.16% above a state-omniscient oracle and is still not editable.**
+
+| bound (400 seqs x 39 frames, scored exactly as val_loss is) | MSE | RMSE |
+|---|---|---|
+| knows `clean_{t+1}` exactly — obs-noise floor | 0.018866 | 0.1374 |
+| knows true `(pos, vel)` at t — **strict lower bound on Bayes** | 0.022171 | 0.1489 |
+| the model | 0.022873 | 0.1512 |
+
+82.5% of the loss is observation noise, 14.4% process noise, **3.1% everything else**. Bayes risk
+brackets to [0.022171, 0.022873], so **further training can buy at most 0.000702 MSE (1.5% RMSE)**.
+The curve agrees: plateaued at **step 50,000 of 780,000**; the last 610,000 steps bought 0.000105
+with a train-val gap of ~0 throughout. Othello was still improving at step 775,000.
+
+### Editability — unedited baseline EI -0.6998
+
+| editor | cart `pos` | cart `full` | inv_y `pos` | inv_y `full` |
+|---|---|---|---|---|
+| PI injection | +0.0475 | +0.0522 | **+0.0874** | **+0.0854** |
+| Nanda addition | -0.0380 | -0.0915 | -0.0172 | -0.0513 |
+| MLP grad steering | -0.2043 | -0.1895 | *(linear-only)* | — |
+
+⚠ **PI is destructive, not a weak success.** Best arm at **alpha 175, the top of the sweep**;
+target RMSE **1.22x worse**, **collateral 5.4x worse**, edit-frame 1.43x worse — only ghost
+improves, which any destruction achieves. EI rises monotonically with collateral across the alpha
+sweep: the output moves away from the unedited world without moving toward the edited one, so
+`d_u ~ d_e` and the index drifts to ~0. **EI near zero is the ambiguity point, not partial
+success.** `fidelity_ratio` cannot see this (0.993 cartesian; **1.09-1.35 in frustum, i.e. WORSE
+than doing nothing**) — always read target/ghost/collateral beside it.
+
+Linear probes read position at mean R^2 **0.9461 (cart) / 0.9716 (inv_y)**; velocity 0.6878 /
+0.6998. So "undertrained" and "no world model" are both dead as explanations. What blocks editing
+is the **representation's geometry** or the **editors**.
+
+### Three traps recorded in the write-up
+
+1. ⛔ **Never quote the "overall" probe R^2.** `othello_probe._r2` pools over all dims, so it is
+   variance-weighted, and position holds **99.9%** of the variance. Cartesian's unweighted mean is
+   0.817 against the pooled 0.9440; within frustum, `u` outweighs `1/y` by **120x**, so `inv_y`'s
+   0.9836 is nearly blind to the depth coordinate. **Quote per-dimension numbers.** Fitting is fine
+   (`fit_probe` divides by `y_std`) — only the summary statistic is skewed.
+2. ⚠ **The frustum result is UNCONTROLLED.** No random-init or observation-space baseline exists in
+   that basis; the cartesian ones are on `W16`, and both control scripts have zero `basis`
+   references. `u = x/(k*y)` is essentially the ray index, so the gain may be "easier function of
+   the raw observation" rather than anything about the model. **~15 min to fix; blocking.**
+3. ⚠ **The Edit Index scale is really +0.82 to -0.80, not +/-1** — the scorecard scores against the
+   CLEAN render while the model is trained on the NOISY one, and clipped noise puts the optimal
+   background at **+0.0798** across **74% of rays**. No conclusion to date is affected.
+
+### Not done — a power outage killed the chain at the analysis stage
+
+Training had already finished and every checkpoint survived.
+
+1. **The 900k rung** `L90_discworld_pn04` (`runs/discworld_scale/chain.sh` stage 5,
+   `--limit 900000 --steps 316406`), ~3.2 h + analysis. Never started.
+2. MLP probes / grad steering in frustum (~8 min).
+3. The frustum baselines in trap 2 above (blocking).
+4. **The frustum depth coordinate was never settled** — five candidates, and
+   `2026-08-23-frustum-basis.md`, cited by both `editability-scaling-sweep.md` and `frustum.py`,
+   was never written. `inv_y` was used because it is the module default and what the derivation
+   argues for, **not** because it won a comparison. Linear-only makes all five ~30 min.
+
+### Machinery (202 tests green)
+
+`discworld_scale/{corpus,train}.py`, `runs/discworld_scale/{gen,chain,hb}.sh`. Corpus
+`datasets/20_dwscale_20m` (410 GB, 20M seqs, seeds 10,000,000..19,510,499,999, **0 duplicates,
+disjoint from dset4 and dset17**); probe corpus `datasets/21_dwscale_probe` (120k, seeds 9e11) —
+dset 4's test split holds only 10,000, far short of what keeps an MLP probe honest.
+
+⛔ **The generator retries at a DIFFERENT seed** (`pim/simulator/dataset.py:111`,
+`seed + attempt * 1_000_000`, up to 300 attempts), so any shard wider than 1M samples can silently
+duplicate sequences. Shards are 500k with a 500M stride, making collisions structurally impossible;
+`corpus.verify()` asserts it. Measured retry rate at these settings: **0.0000%**.
+
+⛔ `train.py`'s `ckpt_base=0` used to spin forever (`s *= 2` never advances from 0) — no output,
+GPU idle, indistinguishable from a stalled loader. Guarded. A ">230x thread-thrashing slowdown"
+claimed while debugging that was **wrong**; it is retracted in the file's comments, and capped vs
+uncapped thread pools are indistinguishable.
 
 ## 2026-08-24 — Overnight: the 20M Othello cell, and what it says about the sweep plan
 

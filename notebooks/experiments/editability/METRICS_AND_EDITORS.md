@@ -104,6 +104,19 @@ differ at all (`|gt_edited − gt_unedited| > 1e-3`) — the support of the Edit
 all RMSE against `gt_edited`, all in observation-intensity units, all lower-is-better, no normalisation:
 | name | formula | units | better | notes |
 |---|---|---|---|---|
+
+> ⛔ **Two reporting traps found 2026-08-25** (`research/scratch/2026-08-25-discworld-at-scale.md`):
+> 1. **The aggregate probe R² is variance-weighted, not a per-dimension mean.**
+>    `othello_probe._r2` sums `ss_res`/`ss_tot` over all output dims at once, and position carries
+>    **99.9%** of the target variance. On the 20M discworld model the unweighted mean is 0.817
+>    against a pooled 0.9440; in the frustum basis `u` outweighs `1/y` by **120×**, so the
+>    aggregate is nearly blind to depth. **Report per-dimension numbers.** (Fitting is unaffected —
+>    `fit_probe` normalises by `y_std`.)
+> 2. **`fidelity_ratio` cannot see a destructive edit.** It is a whole-rollout average and read
+>    0.993 for an edit whose collateral RMSE was **5.4× worse** than doing nothing. Always report
+>    **target / ghost / collateral** beside it, and treat an Edit Index near 0 as the *ambiguity*
+>    point (equidistant from both references), never as partial success.
+
 | **Target RMSE** | `RMSE(edited₀, gt_edited)` over **target rays** | obs | ↓ | did the object appear where it should? |
 | **Ghost RMSE** | `RMSE(edited₀, gt_edited)` over **ghost rays** | obs | ↓ | did it leave where it was? (replaces "ghost ratio") |
 | **Collateral RMSE** | `RMSE(edited₀, gt_edited)` over **collateral rays** | obs | ↓ | was the other object left alone? |
