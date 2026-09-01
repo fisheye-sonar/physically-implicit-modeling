@@ -16,7 +16,15 @@ was uninterpretable against the canonical eval).
 | shorthand | class | definition | splits |
 |---|---|---|---|
 | `dw-pn04` | discworld | `datasets/discworld/dw-pn04/instance.json` | train 20M (memmap) · probe 120k · eval 10k+10k · edits 10k (EF=20) |
+| `dw-noiseless` | discworld | `datasets/discworld/dw-noiseless/instance.json` | identical to `dw-pn04` in every field **except** `obs_noise_std = 0.0` AND `position_noise_std = 0.0` — the noise ablation at mass scale (2026-08-31). Same split sizes; seeds are a FRESH block (base 30e9) |
 | `oth-uniform` | othello | `datasets/othello/oth-uniform/instance.json` | train [0,20M) · test [90M,+10k) · probe [91M,+20k) · edits = Li's 1001 cases |
+
+⛔ **Seeds are never shared across discworld instances**, even to "pair" worlds:
+`always_in_frustum` accepts initial conditions by simulating forward, and the noise
+draws are consumed *inside* that acceptance loop, so the same seed with noise off gives
+an unrelated world (measured 2026-08-31: 0/5 IC matches, ~5-unit divergence). The
+per-instance seed blocks and their disjointness proofs live in
+`pim/environments/discworld/bigcorpus.py::INSTANCES`.
 
 ## Architectures
 
@@ -58,7 +66,7 @@ memorisation) runs on every paired fit; violations are recorded in `scores.json`
 |---|---|---|
 | **PI** | `pim/editors/pinv.py` — pseudoinverse injection, **z-space + y-affine** ("zspace") | the minimum-norm Δh that lands the LIN read-out on the target; α=1 = the exact jump. `"legacy"` reproduces pre-2026-08-31 discworld numbers (the y-affine bug) and is never quoted as PI |
 | **ND** | `pim/editors/nanda.py` — Nanda direction addition | α·‖x‖·d̂ along the probe weight row(s), standardised; `add_sub` = target−current |
-| **GS** | `pim/editors/grad_steer.py` — Li §4.1 MLP gradient steering | descent on the activation through the frozen MLP-128 probe, sequentially from L_s across every later point |
+| **GS** | `pim/editors/grad_steer.py` — Li §4.1 MLP gradient steering | descent on the activation through the frozen MLP-128 probe, sequentially from L_s across every later point. ⛔ `target_labels` MUST share a coordinate frame with the probe being steered — a mismatch converges onto a well-formed but WRONG class and looks like a failed editor (the 2026-08-31 GS-mine bug, worth 0.70 Edit Index; `scores.json::probe_sources` records the pairing) |
 | nullspace (non-default) | `pim/editors/nullspace.py` | Σₖ Aₖ⁺(tₖ − pₖ(h)) over the whole cascade — the row-space objection's answer |
 | oracle: overwrite | `pim/editors/oracle_overwrite.py` | the state the model would have on the post-edit history (ceiling) |
 | oracle: freeze-interp | `pim/editors/freeze_interpolation.py` | N rendered frozen frames teacher-forced through the observation channel |
@@ -97,6 +105,7 @@ else `runs/archive/`. Runs live at `runs/<topic>/<name>/`; each carries `config.
 |---|---|---|---|
 | `initial_othello_comparison/L-oth-20m` | Transformer-L (tokens) | oth-uniform | 780k steps, best val 2.02798 (excess over Bayes +0.019) |
 | `initial_othello_comparison/L-dw-20m` | Transformer-L (regression) | dw-pn04 | 780k steps, best val 0.022873 (3.16% over the state oracle) |
+| `noise_ablation/L-dw-noiseless-20m` | Transformer-L (regression) | dw-noiseless | 780k steps, matched recipe — the noise ablation (2026-08-31) |
 | _planned_: S-oth / S-dw | Transformer-S | both | fresh trainings under the new scheme (W16 and the old S rungs failed the rule and are archived) |
 
 ## Evaluation
