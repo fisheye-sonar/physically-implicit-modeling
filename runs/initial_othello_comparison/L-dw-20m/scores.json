@@ -5,8 +5,8 @@
  "instance": "dw-pn04",
  "val_loss": 0.02287266807979904,
  "n_points": 9,
- "eval_version": "2026-09-01.1",
- "commit_sha": "6d188794301897ed40d54e7907e0b7b866e44530",
+ "eval_version": "2026-09-01.2",
+ "commit_sha": "9b87bae6e52a39a9386487476802987c4daab632",
  "settings": {
   "dw_probe_seqs": 30000,
   "oth_probe_games": 20000,

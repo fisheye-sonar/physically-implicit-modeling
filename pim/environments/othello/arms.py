@@ -118,14 +118,29 @@ class ProbeGrid:
     stats: list
 
 
-def fit_probe_grid(model, data, *, targets=("state", "mine"),
-                   families=("linear", "mlp"), splits=("frame", "sequence"),
+def fit_probe_grid(model, data, *, targets=("mine",),
+                   families=("linear", "mlp"), splits=("sequence",),
                    holdout: float = 0.2, epochs: int = 200, batch: int = 4096,
                    lr: float = 1e-3, seed: int = 0, log=print,
                    cache: bool = True, cache_dir=None) -> ProbeGrid:
     """One probe per (target, family, split, residual point). Cached with the model
     fingerprint in the key. ``family`` "mlp" = the canonical MLP-128 (Li's own shape
-    for classification). Harvests one residual point at a time (~2.4 GB, not 22)."""
+    for classification). Harvests one residual point at a time (~2.4 GB, not 22).
+
+    Defaults narrowed 2026-09-01 from 72 fits to 18, both cuts settled by measurement:
+
+    * ``targets=("mine",)`` — mine/theirs only. Absolute colour ("state") is Li et al.'s
+      original frame; Nanda showed it is not linearly decodable while mine/theirs is, and
+      once the GS target-frame bug was fixed every editor's best arm read mine/theirs
+      probes. Nothing needs ``state`` any more.
+    * ``splits=("sequence",)`` — whole games held out, this repo's anti-leak rule. The
+      ``frame`` split (Li's pooled-row convention, kept for a while as the anchor to
+      their published tables) measured 0.976 against sequence's 0.975 at 20k games, so
+      the leak does not bite at this corpus size and the honest split costs nothing.
+
+    Both axes remain arguments: pass them explicitly to reproduce an older grid or to
+    re-measure either claim.
+    """
     from pim.environments.othello.data import harvest_point
 
     # per-run home when the caller names one (canonical scoring passes the run's own

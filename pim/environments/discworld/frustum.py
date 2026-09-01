@@ -107,6 +107,11 @@ def ray_index(u: np.ndarray, obs_res: int = 128) -> np.ndarray:
 # candidates below are ranked by that argument but chosen **empirically** — see
 # `research/scratch/2026-08-23-frustum-basis.md`.
 
+# ``basis(..., depth="frustum")`` is the canonical alias: one name for "the frustum
+# basis" in configs, tables and scores.json, so the depth coordinate can be re-settled
+# without renaming every artifact that mentions it. Currently -> inv_y.
+CANONICAL_DEPTH = "inv_y"
+
 DEPTHS = {
     "y": lambda x, y, sim: y,                                   # axial depth (the sim's leftover)
     "rho": lambda x, y, sim: np.hypot(x, y),                    # Euclidean range
@@ -126,14 +131,17 @@ def lateral(pos: np.ndarray, sim: dict) -> np.ndarray:
     return x / (scale * np.where(np.abs(y) < 1e-6, 1e-6, y))
 
 
-def basis(pos: np.ndarray, vel: np.ndarray | None, sim: dict, depth: str = "inv_y"):
+def basis(pos: np.ndarray, vel: np.ndarray | None, sim: dict, depth: str = "frustum"):
     """(u, g(x,y)) and their time derivatives, for any named depth parameterisation.
+
+    ``depth="frustum"`` (the default) resolves to ``CANONICAL_DEPTH``; the five concrete
+    names stay available for pilots that re-settle which one that should be.
 
     Velocities are taken by central differences on the analytic map rather than by hand-derived
     Jacobians — one code path for five candidates, and no algebra to get wrong. Verified against
     the closed form for `u` and `y` to ~1e-6.
     """
-    g = DEPTHS[depth]
+    g = DEPTHS[CANONICAL_DEPTH if depth == "frustum" else depth]
     x, y = pos[..., 0], pos[..., 1]
     fpos = np.stack([lateral(pos, sim), g(x, y, sim)], axis=-1)
     if vel is None:

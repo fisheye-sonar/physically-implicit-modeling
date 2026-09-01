@@ -43,3 +43,4 @@
   `initial_othello_comparison/{L-dw-20m,L-oth-20m}/probes/` (cache keys are
   provenance hashes, directory-independent — every future lookup hits in place)
 - smoke-run probe fits moved from probe_cache pools into runs/pipeline_smoke/*/probes/ (same relocation rule as the canonical runs)
+- `runs/pipeline_smoke/` → `runs/_pipeline_smoke/` (underscore prefix = skipped by the master scan; these were 600-step pipeline tests, 0.077% of a canonical run, never interpretable as results)
