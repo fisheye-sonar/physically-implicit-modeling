@@ -3,7 +3,60 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-31 (evening) — THE HOUSECLEANING: canonical core built, old tree deleted, both canonical runs scored_
+_Last updated: 2026-09-01 (early) — noise ablation done: removing ALL noise does NOT make discworld editable_
+
+_2026-09-01 — **Two results, both from the new canonical pipeline, both overnight.**_
+
+**1. GS-mine: a wrong negative retired.** Li-style gradient steering "failing" through
+mine/theirs probes on Othello (EI −0.0014, on record since 08-24) was a **target-frame
+bug** — the arm fed mine/theirs probes the benchmark's *absolute-colour* labels. Isolated
+at identical point/α, varying only the frame and the probe set: mine targets **+0.6451**,
+absolute **−0.0534**, and the OLD and NEW probes agree to four decimals in both frames
+(probe quality was never involved; the old sweep did include α 0.05 at all nine points,
+so not a grid artefact either). **GS-mine +0.6459 is now the strongest Othello editor**,
+Li error **0.036** — below Li et al.'s published best intervention of 0.12 — guards clean.
+All four best Othello arms now read mine/theirs probes: Nanda's frame wins for editing as
+well as decoding. `grad_steer_arm` takes an explicit `target_labels`, and every
+`scores.json` records `probe_sources`. → `scratch/2026-08-31-gs-mine-frame-mismatch.md`
+
+**2. Noise ablation — the headline, and it is negative.**
+`noise_ablation/L-dw-noiseless-20m` = dw-pn04 with `obs_noise_std` AND
+`position_noise_std` both **0.0**, everything else byte-identical (Transformer-L
+25,371,776 params, 20M sequences, 780k steps, matched recipe; 8.03 h vs 8.04 h).
+
+| | dw-pn04 | dw-noiseless | L-oth-20m |
+|---|---|---|---|
+| best val | 0.022873 | **0.001063** (21.5× better) | 2.02798 |
+| unedited EI | −0.700 | **−0.924** | −0.713 |
+| PI | +0.175 · fid 1.11 | **+0.218 · fid 1.16** | **+0.610** ✓ |
+| ND | −0.038 | −0.037 | +0.447 / +0.622 ✓ |
+| GS | −0.195 | −0.114 | +0.471 / **+0.646** ✓ |
+
+Every editor lands where it did with noise; PI's +0.218 is again **destructive**
+(fidelity 1.16, collateral 0.513 vs 0.118 unedited = 4.3×), not an edit. **A model 21.5×
+better at its own objective is no more editable** — prediction quality is not the gate.
+
+Two side findings worth more than the headline: (a) the unedited EI floor moves −0.700 →
+**−0.924**, confirming the ±0.82 compression noted 08-25 was an artefact of scoring a
+noise-trained model against clean renders — the editors now have MORE headroom and still
+do not use it; (b) **noise was making the code more linear**: LIN skill 0.944 → 0.872
+while MLP *rises* 0.977 → 0.979 (velocity worst: o1·vy LIN 0.526 → 0.173, MLP 0.651 →
+0.542) — same information, less linearly accessible without noise.
+
+**Where this leaves the paper.** Three "artefact" explanations for the discworld negative
+are now closed: not data scale (20M), not architecture (Li et al.'s own minGPT), not
+noise (both channels off). The live structural differences vs Othello are **continuous vs
+discrete state**, **regression vs classification**, and **the observation being a
+projection** (occlusion, perspective) rather than full information.
+→ `scratch/2026-09-01-noise-ablation.md`
+
+**Open:** the floor for a noiseless world is not zero (a 128-ray quantised render limits
+how precisely the initial state is inferable), so part of the 0.00106 is irreducible —
+cheap CPU work, not yet run. Also pending: whether to drop `state` probes from the Othello
+grid now that no editor needs them (72 → ~29 fits), and Sevan's call on committing to
+sequence-split only.
+
+_Previous update: 2026-08-31 (evening) — THE HOUSECLEANING: canonical core built, old tree deleted, both canonical runs scored_
 
 _2026-08-31 — **The housecleaning.** The project re-centred on editability and the repo was
 rebuilt around a small canonical core so every number is reviewable line by line. Everything
