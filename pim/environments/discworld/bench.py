@@ -226,13 +226,74 @@ def _roll_hook(model, state, hook, steps: int = K_ROLL):
 @torch.no_grad()
 def unsteered(model, b: Bench) -> dict:
     """No intervention, through the IDENTICAL rollout path (state written back unchanged)."""
-    ell = model.n_layers  # last residual point
-    as_activations(model, ell)
-    roll = model.rollout_with_edit(b.state, ell, model.flat_state(b.state),
-                                   K_ROLL).cpu().numpy()
+    roll = unsteered_rollout(model, b)
     c = score(model, b, roll)
     c["fidelity_ratio"] = 1.0
     return c
+
+
+# ── rollouts (the editors' writes, without the scoring) ──────────────────────
+#
+# The *_arm functions score; these return the rollout itself, for qualitative panels
+# (`notebooks/make_waterfalls.ipynb`). Each arm below is defined in terms of these, so
+# an editor's write exists exactly once and a picture can never disagree with a score.
+
+
+@torch.no_grad()
+def free_rollout(model, obs: np.ndarray, teacher_force: int, steps: int) -> np.ndarray:
+    """Teacher-force ``obs[:, :teacher_force]``, then free-run ``steps`` frames.
+
+    No edit anywhere. Step 0 of the returned rollout is the model's prediction OF frame
+    ``teacher_force`` — i.e. it aligns with ``clean_obs[:, teacher_force : +steps]``.
+    """
+    x = torch.from_numpy(np.asarray(obs)[:, :teacher_force]).float().to(DEV)
+    s = model.state_from_obs(x)
+    pred = model.decode(s)
+    out = [pred]
+    s = model.advance(s, pred)
+    for _ in range(steps - 1):
+        pr, s = model.predict_step(s)
+        out.append(pr)
+    return torch.stack(out, 1).cpu().numpy()
+
+
+@torch.no_grad()
+def unsteered_rollout(model, b: Bench) -> np.ndarray:
+    """The no-intervention rollout, through the IDENTICAL path an edit takes."""
+    ell = model.n_layers
+    as_activations(model, ell)
+    return model.rollout_with_edit(b.state, ell, model.flat_state(b.state),
+                                   K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def pinv_rollout(model, b: Bench, probe, ell: int, alpha: float,
+                 space: str = "zspace") -> np.ndarray:
+    """PI's rollout at one residual point and step size."""
+    as_activations(model, ell)
+    h0 = model.flat_state(b.state)
+    h = h0 + alpha * pinv_step(h0, b.tgt, probe, space=space)
+    return model.rollout_with_edit(b.state, ell, h, K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def nanda_rollout(model, b: Bench, probe, ell: int, alpha: float) -> np.ndarray:
+    """ND's rollout at one residual point and step size."""
+    d = probe_direction(probe, b.out_dims)
+    return _roll_hook(model, b.state, addition_hook(ell, d, alpha))
+
+
+def grad_steer_rollout(model, b: Bench, probes: dict, start_layer: int, alpha: float,
+                       n_steps: int = 100, beta: float = 0.2) -> np.ndarray:
+    """GS's rollout from ``start_layer`` and every residual point after it."""
+    pts = {e: probes[e][0] for e in probes if e >= start_layer}
+    specs = {}
+    for e, pr in pts.items():
+        as_activations(model, e)
+        specs[e] = build_edit_spec(pr, model.flat_state(b.state), b.change_mask,
+                                   b.tgt, beta=beta)
+    hook = make_intervention_hook(pts, specs, start_layer, alpha=alpha, n_steps=n_steps)
+    return _roll_hook(model, b.state, hook)
 
 
 # ── the three workhorse arms ─────────────────────────────────────────────────
@@ -241,10 +302,9 @@ def unsteered(model, b: Bench) -> dict:
 @torch.no_grad()
 def nanda_arm(model, b: Bench, probe, ell: int, alphas) -> list[dict]:
     """ND at one residual point, α swept. Direction = the edited object's read-out rows."""
-    d = probe_direction(probe, b.out_dims)
     recs = []
     for a in alphas:
-        roll = _roll_hook(model, b.state, addition_hook(ell, d, a))
+        roll = nanda_rollout(model, b, probe, ell, a)
         recs.append({"editor": "ND", "point": ell, "alpha": float(a),
                      "write_ratio": float(a), **score(model, b, roll)})
     return recs
