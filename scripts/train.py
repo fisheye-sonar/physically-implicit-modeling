@@ -52,6 +52,9 @@ def _parse():
     p.add_argument("--steps", type=int, required=True)
     p.add_argument("--limit", type=int, default=None,
                    help="train on the first N sequences of the pool (data-scale axis)")
+    p.add_argument("--instance", default=None,
+                   help="environment instance (discworld: dw-pn04 | dw-noiseless; "
+                        "othello: oth-uniform). Default: the env's canonical instance.")
     # the canonical recipe; override only deliberately
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--lr", type=float, default=1e-3)
@@ -81,6 +84,7 @@ def main() -> None:
     if a.env == "discworld":
         from pim.environments.discworld import bigcorpus as bc
 
+        bc.use_instance(a.instance or "dw-pn04")
         arch = a.arch  # regression head
         mc = ({"obs_res": bc.OBS_RES, "block_size": bc.FRAMES - 1}
               if a.arch == "transformer_l" else
@@ -89,7 +93,7 @@ def main() -> None:
         source = discworld_source(bc.open_obs("r"), n_total=bc.N_TOTAL,
                                   batch_size=a.batch_size, seed=a.seed, device=DEV,
                                   limit=a.limit,
-                                  meta={"instance": "dw-pn04", "corpus": str(bc.OUT)})
+                                  meta={"instance": bc.INSTANCE, "corpus": str(bc.OUT)})
     else:
         from pim.environments.othello import corpus as oc
 

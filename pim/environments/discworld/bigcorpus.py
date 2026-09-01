@@ -57,26 +57,79 @@ import h5py
 import numpy as np
 
 REPO = Path(__file__).resolve().parents[3]
-# The canonical instance path; the legacy location is honoured until the Phase-2 data
-# move lands (see runs-of-2026-08-31 housecleaning plan). New corpora go to the former.
-_NEW = REPO / "datasets" / "discworld" / "dw-pn04" / "train"
-_LEGACY = REPO / "datasets" / "20_dwscale_20m"
-OUT = _NEW if _NEW.exists() else _LEGACY
 SHARD_N, N_SHARDS = 500_000, 40
-BASE_SEED, SEED_STRIDE = 10_000_000, 500_000_000
+SEED_STRIDE = 500_000_000
 N_TOTAL = SHARD_N * N_SHARDS                 # 20,000,000
 FRAMES, OBS_RES = 40, 128
 VAL_N = 2_000_000                            # matches Othello's val_fraction 0.1 on 20M
 TRAIN_N = N_TOTAL - VAL_N
 
-# ranges that must stay untouched — evaluation lives here
-FORBIDDEN = [(0, 120_000, "dset4"), (3_000_000, 3_950_000, "dset17")]
+_COMMON_FLAGS = ["--n-objects", "2", "--frames", str(FRAMES), "--obs-res", str(OBS_RES),
+                 "--boundary", "open", "--fixed-reflectivities", "--always-in-frustum"]
 
-SIM_FLAGS = [
-    "--n-objects", "2", "--frames", str(FRAMES), "--obs-res", str(OBS_RES),
-    "--boundary", "open", "--position-noise", "0.04", "--obs-noise-std", "0.2",
-    "--fixed-reflectivities", "--always-in-frustum",
-]
+# ── the instance registry ─────────────────────────────────────────────────────
+# One entry per environment instance that owns a 20M streaming corpus. `forbidden`
+# lists every seed range OTHER data lives in — verify() hard-fails on any overlap.
+# ⛔ Cross-instance seed sharing is deliberate-only: dw-noiseless uses FRESH seeds
+# because pairing with dw-pn04 is impossible (always_in_frustum accepts ICs by
+# simulating the trajectory forward, consuming noise draws in the acceptance loop —
+# measured 2026-08-31: same seed, noise off => unrelated worlds, drift ~5 units).
+INSTANCES = {
+    "dw-pn04": {
+        "base_seed": 10_000_000,
+        "sim_flags": _COMMON_FLAGS + ["--position-noise", "0.04", "--obs-noise-std", "0.2"],
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17")],
+    },
+    "dw-noiseless": {  # dw-pn04 with ALL noise off; everything else identical
+        "base_seed": 30_000_000_000,
+        "sim_flags": _COMMON_FLAGS + ["--position-noise", "0.0", "--obs-noise-std", "0.0"],
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite")],
+    },
+}
+
+
+def instance_dir(inst: str) -> Path:
+    return REPO / "datasets" / "discworld" / inst
+
+
+def train_dir(inst: str) -> Path:
+    d = instance_dir(inst) / "train"
+    if inst == "dw-pn04" and not d.exists():          # pre-move legacy location
+        return REPO / "datasets" / "20_dwscale_20m"
+    return d
+
+
+def _spec(inst: str) -> dict:
+    if inst not in INSTANCES:
+        raise KeyError(f"unknown instance {inst!r}; registered: {sorted(INSTANCES)}")
+    return INSTANCES[inst]
+
+
+# module-level default: the original canonical instance (back-compat for existing callers)
+INSTANCE = "dw-pn04"
+OUT = train_dir(INSTANCE)
+BASE_SEED = INSTANCES[INSTANCE]["base_seed"]
+SIM_FLAGS = INSTANCES[INSTANCE]["sim_flags"]
+FORBIDDEN = INSTANCES[INSTANCE]["forbidden"]
+
+
+def use_instance(inst: str) -> None:
+    """Point every module function at one instance's paths, seeds, and flags.
+
+    The generation/verify functions below deliberately kept their original (verified)
+    bodies over module globals; this is the one switch that rebinds them. Call it
+    FIRST — the __main__ entry does, from its argv."""
+    global INSTANCE, OUT, BASE_SEED, SIM_FLAGS, FORBIDDEN
+    spec = _spec(inst)
+    INSTANCE = inst
+    OUT = train_dir(inst)
+    BASE_SEED = spec["base_seed"]
+    SIM_FLAGS = spec["sim_flags"]
+    FORBIDDEN = spec["forbidden"]
 
 
 def shard_seed(k: int) -> int:
@@ -168,6 +221,9 @@ def open_obs(mode: str = "r") -> np.memmap:
 if __name__ == "__main__":
     import concurrent.futures as cf
 
+    if len(sys.argv) > 1:
+        use_instance(sys.argv[1])
+    print(f"instance {INSTANCE}: corpus -> {OUT}, base seed {BASE_SEED:,}", flush=True)
     OUT.mkdir(parents=True, exist_ok=True)
     if not obs_path().exists():                             # sparse allocate, filled per shard
         np.memmap(obs_path(), dtype=np.float32, mode="w+",

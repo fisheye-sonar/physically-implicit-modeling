@@ -28,12 +28,22 @@ Output
 import argparse
 import dataclasses
 import json
+import sys
 import time
 from pathlib import Path
 
-from pim.environments.discworld.config import SimConfig
-from pim.environments.discworld.dataset import DatasetConfig, generate_dataset
-from pim.environments.discworld.edits_dataset import EditDatasetConfig, generate_edits_dataset
+# self-locating, like every other entry point in scripts/ — this script used to depend
+# on an ambient PYTHONPATH set by its caller, which broke it when run directly.
+_REPO = Path(__file__).resolve().parents[1]
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+
+from pim.environments.discworld.config import SimConfig  # noqa: E402
+from pim.environments.discworld.dataset import DatasetConfig, generate_dataset  # noqa: E402
+from pim.environments.discworld.edits_dataset import (  # noqa: E402
+    EditDatasetConfig,
+    generate_edits_dataset,
+)
 
 
 def parse_args() -> argparse.Namespace:
