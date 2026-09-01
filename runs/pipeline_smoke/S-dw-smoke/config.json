@@ -1,0 +1,36 @@
+{
+  "arch": "transformer_s",
+  "model": {
+    "input_dim": 128,
+    "d_model": 256,
+    "n_layers": 4,
+    "n_heads": 4,
+    "mlp_ratio": 4.0,
+    "window": 16
+  },
+  "train": {
+    "steps": 600,
+    "batch_size": 256,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "grad_clip": 1.0,
+    "lr_schedule": "constant",
+    "warmup_steps": 20,
+    "ckpt_base": 64,
+    "val_every": 50,
+    "seed": 0
+  },
+  "data": {
+    "env": "discworld",
+    "n_total": 200000,
+    "n_train": 180000,
+    "n_val": 20000,
+    "objective": "mse",
+    "instance": "dw-pn04",
+    "corpus": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/train"
+  },
+  "n_params": 3225472,
+  "commit_sha": "1c7f5033f6bd92fa8ecfae097790c4839d308067",
+  "steps_per_epoch": 703.125,
+  "epochs": 0.8533333333333334
+}

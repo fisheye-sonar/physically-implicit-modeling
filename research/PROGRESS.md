@@ -3,7 +3,49 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-31 (recording the 08-24/25 discworld-at-scale work; see the 08-25 section first)_
+_Last updated: 2026-08-31 (evening) — THE HOUSECLEANING: canonical core built, old tree deleted, both canonical runs scored_
+
+_2026-08-31 — **The housecleaning.** The project re-centred on editability and the repo was
+rebuilt around a small canonical core so every number is reviewable line by line. Everything
+pre-existing is recoverable at the git tag **`pre-cleanup-2026-08`**; nothing was deleted from
+`runs/`, `logs/`, `outputs/`, or `datasets/` (moves only, ledgered in each tree's `MOVES.md`)._
+
+- **The canonical core is `pim/`** — environments (discworld + vendored othello, each instance
+  packaged with its data + `instance.json`), models (Transformer-S/L × regression/token heads —
+  the four old minGPT bridges collapsed to one), probes (LIN + **MLP-128** canonical + nullspace
+  cascade, fingerprint-keyed caches), editors (**PI z-space+y-affine** / ND / GS workhorses +
+  nullspace + two oracle editors), metrics (Probe Skill; the two Edit Index constructions get
+  distinct names), training (ONE loop, two objectives; defaults = the matched BIG20M recipe).
+  Index: **`research/REGISTRY.md`** (replaces METRICS_AND_EDITORS.md). Every port was
+  equivalence-gated on the real canonical checkpoints before the old copy was deleted —
+  bit-identical forwards, bit-identical probe fits, editor arms reproducing stored numbers to
+  full precision (PI +0.6104 to 4 decimals; ND −0.0380; GS −0.0014; gates .9925/.9980).
+- **The y-affine bug** (see `scratch/2026-08-31-pi-y-affine-bug.md`): every pre-08-31 discworld
+  PI number solved standardised-y read-outs against raw-unit targets (Othello was structurally
+  immune). Fixing it ~tripled the best EI (+0.05→+0.18) **and sharpened the negative**: the α=1
+  write that provably lands the read-out leaves the generation at the unedited floor. Canonical
+  PI is `"zspace"`; `"legacy"` reproduces old numbers and is never quoted as PI. The landing
+  check now goes through `probe.forward` itself, so the bug class is unrepresentable.
+- **Canonical scoring**: `notebooks/master_eval.ipynb` scans `runs/**` (excluding `archive/` and
+  `_`-topics), scores every run identically — no metric math in notebooks — and writes
+  `scores.json` + the fitted probes into **the run's own dir** (`probes/`; re-tests never
+  refit). `build_full_table.ipynb` renders Table 1 decodability (FIRST, deliberately),
+  Table 1b discworld per-component decodability, Table 2 editability with guards.
+- **First master table** (`initial_othello_comparison`, the only two runs passing the
+  canonical-runs rule): decodability ≈ **0.94–0.98 on both sides**, tripwire clean — so
+  decodability is NOT what separates the environments. Editability: **Othello editable by every
+  workhorse editor** (PI **+0.610**, ND **+0.622** single-point / +0.447 plain, GS **+0.471**
+  through state probes = Li §4.1 verbatim; li-vs-pre guards all ≥1.8) vs **discworld by none**
+  (best PI +0.175 with fidelity 1.11 = destructive; ND/GS negative). Two documented method
+  deltas vs old records: ND is now swept per-point (beats the every-layer form +0.62 vs +0.37),
+  and GS steers through *state* probes (works, +0.47) where the old mine-target arm failed.
+- **Runs**: `runs/<topic>/<run>/` with config.json + commit_sha + probes/ + scores.json;
+  W16, the S rungs and the L90 pair are archived (non-canonical data/recipes). Fresh canonical
+  Transformer-S runs on both instances are the first post-cleanup trainings to schedule.
+- **Pending** (unchanged, now cheaper on the clean base): canonical S runs, the fixed-noise 900k
+  DW rung, frustum baselines + the depth-coordinate question, optional Othello LR anneal.
+
+_Previous update: 2026-08-31 (recording the 08-24/25 discworld-at-scale work; see the 08-25 section first)_
 
 _2026-08-22 (evening) — **the environment is what flips editability, and it
 replicates.** Li et al.'s architecture, ~900k sequences, same optimiser, at both 4 and 14 epochs:

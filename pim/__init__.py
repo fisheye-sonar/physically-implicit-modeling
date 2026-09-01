@@ -1,57 +1,27 @@
+"""physically-implicit-modeling (pim) — the canonical core.
+
+The project studies **world-model editability**: probes can read object state out of a
+trained sequence model, but can a write to that read-out change what the model
+generates? Two environments answer differently — Othello (editable at scale) and
+discworld (not) — and everything here exists to make that comparison airtight: the
+architectures, probes, editors, metrics, and training recipe are IDENTICAL across
+environments up to the input/output projection and the loss.
+
+Five packages, strict roles (index of every canonical object: ``research/REGISTRY.md``):
+
+    environments/   the worlds — discworld (sim, rendering, data, bench) and othello
+                    (vendored generator, corpus, bench, arms); an *instance* packages
+                    one configuration with all its splits (instance.json)
+    models/         Transformer-S and Transformer-L, each with regression AND token
+                    heads; protocol.py documents THE surface everything drives
+    probes/         LIN + MLP-128 (+ the nullspace cascade); fits held out by
+                    sequence; fingerprinted caches
+    editors/        PI / ND / GS workhorses + nullspace + two oracle editors
+    metrics/        decodability (Probe Skill), discworld and Othello editability —
+                    arrays in, numbers out, never imports matplotlib
+    training/       ONE loop, two objectives; defaults ARE the canonical recipe
+    figures/        theme + the canonical waterfall + scaling panels
+
+Canonical scores come from ``notebooks/master_eval.ipynb`` into each run's
+``scores.json``; the pre-2026-08-31 tree lives at the ``pre-cleanup-2026-08`` git tag.
 """
-physically-implicit-modeling  (pim)
-=====================================
-Toy simulation for studying implicit vs explicit world representations.
-
-Toy world
----------
-The world is a 2D trapezoid (frustum cross-section).  Circles move through it
-with approximately linear trajectories.  The observer sits at the origin,
-outside the frustum, and only receives the 1D observation signal — never the
-2D state directly.
-
-Because the frustum is a proper perspective cone (x_max(y) = tan(half_fov)·y),
-the near plane is proportionally narrower and the far plane is wider.
-
-2D state
---------
-``sim.Scene.positions`` — shape (n_frames, n_objects, 2) — is the explicit
-latent state.  It represents everything a perfect world model would need to
-track.  The 2D visualisation in ``viz`` renders this state for human inspection
-only; it is not part of the observation pipeline.
-
-1D observation
---------------
-At each frame, ``renderer.render_frame`` casts rays analytically from the
-observer through the scene and returns the depth of the first circle hit by
-each ray.  Closer objects subtend more rays (appear larger) and move faster
-across the scan (appear to move faster) — both depth-perspective effects arise
-naturally from the geometry.  Optional Gaussian noise can be added.
-
-Explicit interface points  (for future model comparisons)
----------------------------------------------------------
-- Latent state       →  ``simulator.sim.Scene.positions``
-- State update       →  ``simulator.sim.simulate``
-- Observation render →  ``simulator.renderer.render_frame`` / ``render_scene``
-- Visual render      →  ``simulator.viz.animate_scene``  (human-facing only)
-"""
-
-from pim.simulator.config import SimConfig
-from pim.simulator.sim import Scene, simulate
-from pim.simulator.renderer import render_frame, render_scene
-from pim.simulator.viz import animate_scene, save_animation
-from pim.simulator.dataset import DatasetConfig, generate_dataset, load_sample, reconstruct_clean_obs
-
-__all__ = [
-    "SimConfig",
-    "Scene",
-    "simulate",
-    "render_frame",
-    "render_scene",
-    "animate_scene",
-    "save_animation",
-    "DatasetConfig",
-    "generate_dataset",
-    "load_sample",
-    "reconstruct_clean_obs",
-]

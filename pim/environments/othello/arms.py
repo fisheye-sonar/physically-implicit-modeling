@@ -262,11 +262,19 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
 
 def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
                    alpha: float, n_steps: int, beta: float,
-                   optimizer: str = "adam") -> tuple[np.ndarray, dict]:
+                   optimizer: str = "adam",
+                   target_labels=None) -> tuple[np.ndarray, dict]:
     """GS over the 1001 cases — ``transfer_pipeline.run_arm``, on the canonical parts.
 
     Bucket by bucket, because the intervention hook writes ``x[:, -1]`` and every row
     in a batch must have its last real move at the same index.
+
+    ``target_labels`` selects the TARGET FRAME the descent aims for, and must match
+    the frame of the probes steered through. Default None = ``bench.new_class``
+    (absolute colour, Li §4.1 verbatim — pair with the ``state`` probes). Pass the
+    mine-coordinate targets from ``case_targets(bench)[1]`` to steer through the
+    ``mine`` probes instead — the open question (2026-08-31) is whether GS is dead
+    in that frame or the old negative was an artefact of the pre-canonical probes.
     """
     n_points = model.n_layers + 1
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
@@ -278,9 +286,10 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
         x0 = {ell: rs[ell][:, -1] for ell in range(n_points)}
         cm = np.zeros((bsz, N_TILES), bool)
         cm[np.arange(bsz), bench.pos_int[ids]] = True
+        lab = bench.new_class if target_labels is None else np.asarray(target_labels)
         tv = torch.zeros(bsz, N_TILES, dtype=torch.long, device=DEV)
         tv[torch.arange(bsz), torch.from_numpy(bench.pos_int[ids]).to(DEV)] = (
-            torch.from_numpy(bench.new_class[ids]).to(DEV))
+            torch.from_numpy(lab[ids]).to(DEV))
         specs = {ell: build_edit_spec(probes[ell], x0[ell], cm, tv, beta=beta)
                  for ell in range(n_points)}
         hook = make_intervention_hook(probes, specs, start_layer, alpha=alpha,

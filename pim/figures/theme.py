@@ -3,7 +3,7 @@
 All result figures (metrics, recovery, drift) use the light/academic theme.
 Figures that show the simulator as an artifact (waterfall panels) use the
 dark theme. The two are imported from pim.figures.theme and from
-pim.simulator.viz respectively.
+pim.environments.discworld.viz respectively.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def style_ax(ax: plt.Axes) -> None:
 
 def style_ax_dark(ax: plt.Axes) -> None:
     """Dark/simulator theme for one Axes (waterfall panels)."""
-    from pim.simulator.viz import _BG_HEX as _DARK_BG_HEX, _TICK_COLOR as _DARK_TICK_COLOR
+    from pim.environments.discworld.viz import _BG_HEX as _DARK_BG_HEX, _TICK_COLOR as _DARK_TICK_COLOR
     ax.set_facecolor(_DARK_BG_HEX)
     for spine in ax.spines.values():
         spine.set_edgecolor(_DARK_TICK_COLOR)

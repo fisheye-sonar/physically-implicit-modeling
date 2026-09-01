@@ -42,3 +42,4 @@
 - canonical probe fits moved from `probe_cache/{discworld,othello}/` into
   `initial_othello_comparison/{L-dw-20m,L-oth-20m}/probes/` (cache keys are
   provenance hashes, directory-independent — every future lookup hits in place)
+- smoke-run probe fits moved from probe_cache pools into runs/pipeline_smoke/*/probes/ (same relocation rule as the canonical runs)
