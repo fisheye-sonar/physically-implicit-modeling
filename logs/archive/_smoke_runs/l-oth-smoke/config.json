@@ -1,0 +1,32 @@
+{
+  "arch": "transformer_l_tokens",
+  "model": {
+    "vocab": 61,
+    "block_size": 59
+  },
+  "train": {
+    "steps": 120,
+    "batch_size": 256,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "grad_clip": 1.0,
+    "lr_schedule": "constant",
+    "warmup_steps": 20,
+    "ckpt_base": 64,
+    "val_every": 50,
+    "seed": 0
+  },
+  "data": {
+    "env": "othello",
+    "n_total": 90000,
+    "n_train": 81000,
+    "n_val": 9000,
+    "objective": "ce",
+    "instance": "oth-uniform",
+    "corpus": "datasets/othello/oth-uniform/corpus/train_90000.npz"
+  },
+  "n_params": 25312768,
+  "commit_sha": "d086d43a837a8b24cb6c62064e056ad7348da138",
+  "steps_per_epoch": 316.40625,
+  "epochs": 0.37925925925925924
+}

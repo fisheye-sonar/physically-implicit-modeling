@@ -93,7 +93,13 @@ bash harness/check.sh
 - Environment instances (data + `instance.json` manifest) →
   `datasets/<class>/<instance>/`; legacy datasets in `datasets/archive/`
 - Runs → `runs/<topic>/<run>/` (checkpoints, `config.json`, `commit_sha`,
-  `metrics.jsonl`, `scores.json`); pre-cleanup runs in `runs/archive/`
+  `metrics.jsonl`, `probes/`, `scores.json`); pre-cleanup runs in `runs/archive/`
+- ⛔ **`runs/` holds TRAINED RUNS AND NOTHING ELSE.** One directory per trained model,
+  each self-contained. Driver logs, chain scripts, stall checks, pilots, scratch
+  analyses and shared caches go to `logs/` (drivers → `logs/drivers/<campaign>/`);
+  one-off experiment output goes to `outputs/`. A stray `.log` or a `probe_cache/`
+  beside the run directories is how `runs/` became a junkyard once already
+  (cleared 2026-09-01).
 - Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run table →
   `notebooks/build_full_table.ipynb`
 - Run-orchestration shell scripts → `scripts/drivers/` (committed, never ad-hoc)

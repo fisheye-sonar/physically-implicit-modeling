@@ -52,3 +52,9 @@
 - `XG_C_H32.log` → `archive/XG_C_H32.log`
 - `XG_C_H512.log` → `archive/XG_C_H512.log`
 - `XG_C_H8.log` → `archive/XG_C_H8.log`
+
+## 2026-09-01 — runs/ cleanup: runs/ holds TRAINED RUNS ONLY
+- `runs/dw_noiseless/` (chain driver logs + stall-check script) → `logs/drivers/dw_noiseless/`
+- `runs/dw_noiseless_driver.log` → `logs/drivers/`
+- `runs/probe_cache/` (the shared ad-hoc fallback pool; every CANONICAL fit now lives in its own run's `probes/`) → `logs/archive/probe_cache_shared_pool/` — kept rather than deleted, per the no-delete rule
+- `runs/_smoke/` (throwaway 30–120 step pipeline checks, 352 MB) → `logs/archive/_smoke_runs/`

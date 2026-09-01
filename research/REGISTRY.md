@@ -104,7 +104,11 @@ scale is ≈ +0.82…−0.80, not ±1 (clean-render reference vs noisy-trained m
 
 The rule: canonical dataset AND canonical architecture AND canonical training setup —
 else `runs/archive/`. Runs live at `runs/<topic>/<name>/`; each carries `config.json`,
-`commit_sha`, checkpoints, and its canonical `scores.json`.
+`commit_sha`, checkpoints, `probes/` (with `INDEX.md`), and its canonical `scores.json`.
+
+⛔ **`runs/` holds trained runs and nothing else** — no driver logs, no chain scripts,
+no pilots, no shared caches. Those go to `logs/` (`logs/drivers/<campaign>/` for chain
+output); one-off experiment artifacts go to `outputs/`.
 
 | run | arch | instance | status |
 |---|---|---|---|
