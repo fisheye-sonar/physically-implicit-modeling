@@ -403,12 +403,31 @@ def direction_report(
 
 
 def fidelity_ratio(card: dict, unsteered_card: dict) -> float:
-    """`GT-traj RMSE(editor) / GT-traj RMSE(unsteered)`.
+    """THE guard, one definition in both environments (2026-09-01):
 
-    > 1 means the edited rollout ended up FURTHER from the true post-edit world than
-    doing nothing at all — the edit degraded the model rather than steering it.
+        RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)
+
+    evaluated on the **edit step only** (`edit_frame_rmse`, over the whole frame).
+    **> 1 means the edit left the model FURTHER from the true post-edit world than doing
+    nothing** — degraded, not steered. < 1 is a real improvement. The Othello counterpart
+    is `pim.metrics.othello_moves.move_fidelity_ratio`, same formula and polarity.
+
+    Why step 0 and not the rollout (changed 2026-09-01; it used to be `gt_traj_rmse`):
+    an activation edit touches step 0 alone — every later step is recomputed from a
+    window holding the *unedited* history plus one edited frame. Averaging 15 such steps
+    dilutes the very thing the guard is for. Measured on the two canonical discworld
+    runs, the step-0 form flags PI at 1.63 / 1.69 where the rollout form managed only
+    1.11 / 1.16, and ND at 2.23 / 2.82 against 1.14 / 1.12.
+
+    The rollout question — *can an edited frame survive re-entry into unedited context?*
+    — is real but separate; `gt_traj_rmse` stays in the scorecard so that ratio remains
+    one division away, under its own name and never as this guard.
+
+    Complements the Edit Index rather than repeating it: the index is **relative** (which
+    world is the output nearer?) so a wrecked output can still score mildly positive —
+    discworld PI reads +0.26 at fidelity 1.16. This is **absolute** and catches that.
     """
-    return card["gt_traj_rmse"] / max(unsteered_card["gt_traj_rmse"], 1e-9)
+    return card["edit_frame_rmse"] / max(unsteered_card["edit_frame_rmse"], 1e-9)
 
 
 # Column order used by every editability table, so the notebooks agree.

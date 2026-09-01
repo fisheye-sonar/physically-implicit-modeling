@@ -7,7 +7,15 @@ Three modules, one per question:
     editability.py    did an edit land, on discworld?  ray-zone RMSEs, the Edit Index,
                       fidelity_ratio, the edit scorecard.
     othello_moves.py  did an edit land, on Othello?    Li error, legal mass, the
-                      legal-set Edit Index (``edit_index_legal``), the move scorecard.
+                      legal-set Edit Index (``edit_index_legal``), the move scorecard,
+                      and the guard (``move_fidelity_ratio``).
+
+THE GUARD, one definition and one polarity in both environments (2026-09-01):
+``RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)``,
+evaluated on the **edit step only** — ``fidelity_ratio`` on discworld,
+``move_fidelity_ratio`` on Othello. **> 1 = degraded, not steered.** It is the absolute
+counterpart to the Edit Index, which is relative and so cannot see a wrecked output that
+happens to land marginally nearer the edited world.
 
 The two Edit Index constructions share the formula and the axis but not the ingredients,
 so they keep distinct names and modules — quote which one you mean.
@@ -43,6 +51,8 @@ from pim.metrics.othello_moves import (
     N_TILES,
     edit_index_legal,
     li_error,
+    move_fidelity_ratio,
+    move_rmse,
     move_scorecard,
     uniform_over_legal,
 )
@@ -74,5 +84,7 @@ __all__ = [
     "edit_index_legal",
     "li_error",
     "move_scorecard",
+    "move_rmse",
+    "move_fidelity_ratio",
     "uniform_over_legal",
 ]

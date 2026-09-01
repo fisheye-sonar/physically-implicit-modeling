@@ -185,13 +185,22 @@ def fit_probe_grid(model, data, *, targets=("state", "mine"),
 
 
 @torch.no_grad()
-def unsteered(model, bench: Benchmark) -> dict:
-    """No intervention — the −0.829 floor every arm is read against."""
+def unsteered_probs(model, bench: Benchmark) -> np.ndarray:
+    """(1001, 64) no-intervention move distributions.
+
+    Both the −0.829 Edit Index floor and the guard's DENOMINATOR
+    (``move_fidelity_ratio``) are computed from these, so the baseline exists once.
+    """
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
     for toks, ids in zip(bench.tokens, bench.case_ids):
         idx = torch.from_numpy(toks).to(DEV)
         probs[ids] = board_probs(model.decode(idx))
-    return move_scorecard(probs, bench.legal_pre, bench.legal_post)
+    return probs
+
+
+def unsteered(model, bench: Benchmark) -> dict:
+    """No intervention — the −0.829 floor every arm is read against."""
+    return move_scorecard(unsteered_probs(model, bench), bench.legal_pre, bench.legal_post)
 
 
 @torch.no_grad()

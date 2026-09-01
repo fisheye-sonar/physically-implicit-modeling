@@ -85,10 +85,15 @@ call site.
 | R² / error rate | `decodability.py` / probe fit stats | the native per-environment forms, reported alongside |
 | **Edit Index** (discworld) | `editability.py::edit_index` — (d_uned − d_edit)/(d_uned + d_edit) on the differing rays | +1 = the edited world, −1 = the unedited; effective range ≈ +0.82…−0.80 because scoring is against the clean render |
 | zone RMSEs, scorecard | `editability.py` — target / ghost / collateral / edit-frame | absolute, in intensity units |
-| **fidelity ratio** | `editability.py::fidelity_ratio` | >1 = the edited rollout ended FURTHER from the true post-edit world than doing nothing; no success claim survives that |
+| **fidelity ratio** (THE guard) | `editability.py::fidelity_ratio` (discworld) · `othello_moves.py::move_fidelity_ratio` (Othello) | ONE definition and polarity in both environments since 2026-09-01: `RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)`, **at the edit step only**. **>1 = the edit degraded the model rather than steering it**; no success claim survives that. It is the ABSOLUTE counterpart to the Edit Index, which is *relative* and so scores a wrecked output mildly positive when it lands marginally nearer the edited world. Discworld: whole frame. Othello: all 64 squares (never the union support — the guard must see collateral damage outside the edit's own zone) |
 | **Edit Index (legal)** (othello) | `othello_moves.py::edit_index_legal` | same formula, uniform-over-legal reference worlds (exact — the generator IS uniform); union support headline, symdiff alongside |
-| Li error / legal mass | `othello_moves.py` | their §4.2 metric, kept under their name; `li_error_vs_pre` is the degradation guard they lack |
+| Li error / legal mass | `othello_moves.py` | their §4.2 metric, kept under their name — the anchor to Li et al.'s published numbers (null 2.68 → 0.12), never structural. ⚠ `li_error_vs_pre` is a DIAGNOSTIC, not the guard: it is one half of the pair the Edit Index is already built from, and "higher is better" only holds up to the pre→post separation (2.763 on `L-oth-20m`) — beyond that means drifting away from BOTH worlds |
 | gates | `environments/othello/arms.py::gates` | legal mass, top-1, CE with the **exact** Bayes floors (bayes_ce = E[log‖legal‖]) |
+
+⚠ **Do not read the Edit Index without the fidelity ratio.** The index answers *which
+world is the output nearer* (relative); the guard answers *did the output get further
+from the truth than doing nothing* (absolute). Discworld PI reads EI **+0.22** at
+fidelity **1.69** — a destroyed frame, not an edit, and only the guard says so.
 
 Reporting traps (carried from METRICS_AND_EDITORS.md): (a) aggregate probe R² is
 variance-weighted — position dominates velocity ~1000:1; quote per-dim; (b) fidelity

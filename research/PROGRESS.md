@@ -3,7 +3,54 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-01 (early) — noise ablation done: removing ALL noise does NOT make discworld editable_
+_Last updated: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
+
+_2026-09-01 (later) — **The guard is now one metric everywhere** (EVAL_VERSION 2026-09-01.1,
+all five runs rescored):_
+
+    fidelity = RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)
+               evaluated at the EDIT STEP ONLY.   > 1 = degraded, not steered.
+
+Three changes, all Sevan's calls:
+
+1. **Step 0, not the rollout.** An activation edit touches step 0 alone; later steps are
+   recomputed from a window holding the *unedited* history plus one edited frame, so
+   averaging 15 of them dilutes exactly what the guard is for. Measured: the step-0 form
+   flags discworld PI at **1.63 / 1.69** where the rollout form managed 1.11 / 1.16, and
+   ND at **2.23 / 2.82** against 1.14 / 1.12. `gt_traj_rmse` stays in the scorecard, so
+   the rollout ratio — *can an edited frame survive re-entry into unedited context?* — is
+   one division away under its own name, never as this guard.
+2. **Othello gets one at last** (`move_fidelity_ratio`), RMSE over **all 64 squares**
+   against uniform-over-legal-post. RMSE not Li error: Li error is a top-N *set* mismatch,
+   integer-valued, blind to probability magnitude and compressive at the good end (it
+   renders GS-mine vs PI as 0.013 vs 0.041 — a 3× spread on a handful of misordered
+   squares — where RMSE gives the honest 0.207 vs 0.243). All-64 not union-support,
+   because a guard restricted to the edit's own zone cannot see collateral damage.
+   RMSE is also the distance `edit_index_legal` is already built from, so the two
+   environments now share one construction rather than a shared name.
+3. **`li_error_vs_pre` is retired from the guard column** — it is a DIAGNOSTIC (one half
+   of the pair the Edit Index already uses) and its "higher is better" holds only up to
+   the pre→post separation, 2.763. It stays in `scores.json` as the anchor to Li et al.'s
+   published units.
+
+**The table now reads on one axis** (EI / fid, ↓ good):
+
+| run | env | unedited | PI | ND | GS | GS-mine |
+|---|---|---|---|---|---|---|
+| L-oth-20m | othello | −0.713 | +0.610 · **0.24** | +0.447 · **0.34** | +0.471 · **0.38** | +0.646 · **0.21** |
+| L-dw-20m | discworld | −0.700 | +0.175 · **1.63** | −0.038 · **2.23** | −0.195 · 0.94 | — |
+| L-dw-noiseless-20m | discworld | −0.924 | +0.218 · **1.69** | −0.037 · **2.82** | −0.114 · 0.97 | — |
+
+Every Othello editor moves the prediction 3–5× CLOSER to the post-edit world than doing
+nothing; every positive-EI discworld editor moves it 1.6–2.8× FURTHER. That contrast is
+the finding, and it is now a single number rather than two metrics with opposite
+polarity sharing a column.
+
+⚠ **Never quote an Edit Index without the guard.** The index is *relative* (which world
+is the output nearer) so a wrecked output still scores mildly positive — discworld PI,
+EI +0.22 at fidelity 1.69. The guard is *absolute* and is the only thing that says so.
+
+_Previous update: 2026-09-01 (early) — noise ablation done: removing ALL noise does NOT make discworld editable_
 
 _2026-09-01 — **Two results, both from the new canonical pipeline, both overnight.**_
 

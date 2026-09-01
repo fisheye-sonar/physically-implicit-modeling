@@ -23,7 +23,8 @@ import numpy as np
 
 N_TILES = 64  # 8x8 board; probability vectors over squares are laid out row-major
 
-__all__ = ["N_TILES", "li_error", "uniform_over_legal", "edit_index_legal", "move_scorecard"]
+__all__ = ["N_TILES", "li_error", "uniform_over_legal", "edit_index_legal",
+           "move_scorecard", "move_rmse", "move_fidelity_ratio"]
 
 
 def li_error(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
@@ -119,3 +120,45 @@ def move_scorecard(
         "li_error_vs_post_per_case": e_post.tolist(),
         "edit_index_union_per_case": ei_u.tolist(),
     }
+
+
+# ── the guard ────────────────────────────────────────────────────────────────
+
+
+def move_rmse(probs: np.ndarray, legal: list[list[int]]) -> float:
+    """Mean per-case RMSE between the predicted move distribution and uniform-over-legal.
+
+    Over **all 64 squares**, deliberately: the discworld counterpart (`edit_frame_rmse`)
+    is whole-frame so that the guard can see collateral damage OUTSIDE the edit's own
+    support. Restricting this to the differing squares — the Edit Index's support — would
+    blind it to exactly the failure a guard exists for.
+
+    This is the same distance ``edit_index_legal`` compares two worlds with; here it is
+    an absolute error against one world.
+    """
+    out = []
+    for i, L in enumerate(legal):
+        if not L:
+            continue
+        out.append(float(np.sqrt(((probs[i] - uniform_over_legal(L)) ** 2).mean())))
+    return float(np.mean(out))
+
+
+def move_fidelity_ratio(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
+                        legal_post: list[list[int]]) -> float:
+    """THE guard, Othello side — same formula and polarity as the discworld one:
+
+        RMSE(edited prediction, post-edit GT) / RMSE(unsteered prediction, post-edit GT)
+
+    **> 1 = the edit left the model further from the post-edit world than doing nothing.**
+    Every measurement here is step-0 already (Othello has no rollout), so the "edit step
+    only" rule is automatic rather than a restriction.
+
+    RMSE rather than `li_error` on purpose. Li error is a top-N **set** mismatch —
+    integer-valued, blind to probability magnitude, and compressive at the good end
+    (measured 2026-09-01: it renders GS-mine vs PI as 0.013 vs 0.041, a 3x spread built
+    on a handful of misordered squares, where RMSE gives the honest 0.207 vs 0.243).
+    `li_error` keeps its own role as the anchor to Li et al.'s published numbers.
+    """
+    d0 = move_rmse(probs_unsteered, legal_post)
+    return move_rmse(probs_edited, legal_post) / max(d0, 1e-12)
