@@ -5,8 +5,8 @@
  "instance": "dw-pn04",
  "val_loss": 0.026679520844481885,
  "n_points": 5,
- "eval_version": "2026-08-31.1",
- "commit_sha": "1c7f5033f6bd92fa8ecfae097790c4839d308067",
+ "eval_version": "2026-08-31.2",
+ "commit_sha": "5490172d9493bd37f2b3d4504b6c32dcc7f61446",
  "settings": {
   "dw_probe_seqs": 30000,
   "oth_probe_games": 20000,
@@ -94,7 +94,7 @@
   "oth_gs_beta": 0.2,
   "oth_gates_games": 10000
  },
- "minutes": 5.0,
+ "minutes": 1.4,
  "targets": {
   "pos": {
    "unedited": {
@@ -5586,5 +5586,6 @@
     }
    ]
   }
- }
+ },
+ "probe_dir": "/home/sevan/research/PIM/physically-implicit-modeling/runs/pipeline_smoke/S-dw-smoke/probes"
 }

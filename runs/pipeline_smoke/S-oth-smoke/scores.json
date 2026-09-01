@@ -5,8 +5,8 @@
  "instance": "oth-uniform",
  "val_loss": 2.6782957210046363,
  "n_points": 5,
- "eval_version": "2026-08-31.1",
- "commit_sha": "1c7f5033f6bd92fa8ecfae097790c4839d308067",
+ "eval_version": "2026-08-31.2",
+ "commit_sha": "5490172d9493bd37f2b3d4504b6c32dcc7f61446",
  "settings": {
   "dw_probe_seqs": 30000,
   "oth_probe_games": 20000,
@@ -94,7 +94,7 @@
   "oth_gs_beta": 0.2,
   "oth_gates_games": 10000
  },
- "minutes": 12.0,
+ "minutes": 5.8,
  "gates": {
   "legal_mass": 0.6313438229189026,
   "top1_legal": 0.8135859720064319,
@@ -104,6 +104,14 @@
   "bayes_top1": 0.17040739733593277,
   "n_positions": 589564,
   "n_games": 10000
+ },
+ "probe_dir": "/home/sevan/research/PIM/physically-implicit-modeling/runs/pipeline_smoke/S-oth-smoke/probes",
+ "probe_sources": {
+  "PI": "mine|linear|frame",
+  "ND": "mine|linear|frame",
+  "ND-sub": "mine|linear|frame",
+  "GS": "state|mlp|frame (targets: absolute colour, Li \u00a74.1)",
+  "GS-mine": "mine|mlp|frame (targets: mine/theirs via case_targets)"
  },
  "probe_skill": {
   "state|linear|frame": [
@@ -739,6 +747,17 @@
    "edit_index_union": -0.029594770011588483,
    "edit_index_symdiff": 0.10523357139035573,
    "legal_mass": 0.4453253149986267,
+   "n_scored": 1001
+  },
+  "GS-mine": {
+   "editor": "GS-mine",
+   "point": 2,
+   "alpha": 0.2,
+   "li_error_vs_post": 8.481518481518481,
+   "li_error_vs_pre": 9.062937062937063,
+   "edit_index_union": -0.008341354737786306,
+   "edit_index_symdiff": 0.24396562562032556,
+   "legal_mass": 0.5118774175643921,
    "n_scored": 1001
   }
  },
@@ -2454,6 +2473,226 @@
   },
   {
    "editor": "GS",
+   "point": 8,
+   "alpha": 0.7,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 0,
+   "alpha": 0.05,
+   "li_error_vs_post": 8.227772227772228,
+   "li_error_vs_pre": 8.637362637362637,
+   "edit_index_union": -0.011045298814892838,
+   "edit_index_symdiff": 0.21281554416592446,
+   "legal_mass": 0.5325231552124023,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 0,
+   "alpha": 0.2,
+   "li_error_vs_post": 8.96903096903097,
+   "li_error_vs_pre": 9.480519480519481,
+   "edit_index_union": -0.010757892274367084,
+   "edit_index_symdiff": 0.23726692954727827,
+   "legal_mass": 0.4901523292064667,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 0,
+   "alpha": 0.35,
+   "li_error_vs_post": 9.414585414585414,
+   "li_error_vs_pre": 9.93006993006993,
+   "edit_index_union": -0.01398134062785168,
+   "edit_index_symdiff": 0.21742544538681088,
+   "legal_mass": 0.4580951929092407,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 0,
+   "alpha": 0.7,
+   "li_error_vs_post": 9.89010989010989,
+   "li_error_vs_pre": 10.431568431568431,
+   "edit_index_union": -0.015079515767986206,
+   "edit_index_symdiff": 0.22245741114971,
+   "legal_mass": 0.4272342324256897,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 2,
+   "alpha": 0.05,
+   "li_error_vs_post": 8.071928071928072,
+   "li_error_vs_pre": 8.48951048951049,
+   "edit_index_union": -0.010833068682278534,
+   "edit_index_symdiff": 0.19892900548613388,
+   "legal_mass": 0.543684720993042,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 2,
+   "alpha": 0.2,
+   "li_error_vs_post": 8.481518481518481,
+   "li_error_vs_pre": 9.062937062937063,
+   "edit_index_union": -0.008341354737786306,
+   "edit_index_symdiff": 0.24396562562032556,
+   "legal_mass": 0.5118774175643921,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 2,
+   "alpha": 0.35,
+   "li_error_vs_post": 8.925074925074926,
+   "li_error_vs_pre": 9.44055944055944,
+   "edit_index_union": -0.013520324862480886,
+   "edit_index_symdiff": 0.21626006323257407,
+   "legal_mass": 0.48134782910346985,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 2,
+   "alpha": 0.7,
+   "li_error_vs_post": 9.31068931068931,
+   "li_error_vs_pre": 9.764235764235764,
+   "edit_index_union": -0.014525925629886739,
+   "edit_index_symdiff": 0.20486543571734908,
+   "legal_mass": 0.45442941784858704,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 4,
+   "alpha": 0.05,
+   "li_error_vs_post": 7.84015984015984,
+   "li_error_vs_pre": 8.015984015984015,
+   "edit_index_union": -0.0307748760485532,
+   "edit_index_symdiff": 0.10013651680289308,
+   "legal_mass": 0.535873293876648,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 4,
+   "alpha": 0.2,
+   "li_error_vs_post": 8.33966033966034,
+   "li_error_vs_pre": 8.66933066933067,
+   "edit_index_union": -0.01506187555666671,
+   "edit_index_symdiff": 0.19800663027797147,
+   "legal_mass": 0.5164827108383179,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 4,
+   "alpha": 0.35,
+   "li_error_vs_post": 8.75924075924076,
+   "li_error_vs_pre": 9.132867132867133,
+   "edit_index_union": -0.011566107971802514,
+   "edit_index_symdiff": 0.21734034976615102,
+   "legal_mass": 0.4980148673057556,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 4,
+   "alpha": 0.7,
+   "li_error_vs_post": 9.488511488511488,
+   "li_error_vs_pre": 9.984015984015985,
+   "edit_index_union": -0.014090230803321812,
+   "edit_index_symdiff": 0.21137626613697713,
+   "legal_mass": 0.4412834346294403,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 6,
+   "alpha": 0.05,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 6,
+   "alpha": 0.2,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 6,
+   "alpha": 0.35,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 6,
+   "alpha": 0.7,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 8,
+   "alpha": 0.05,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 8,
+   "alpha": 0.2,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
+   "point": 8,
+   "alpha": 0.35,
+   "li_error_vs_post": 7.892107892107892,
+   "li_error_vs_pre": 7.702297702297702,
+   "edit_index_union": -0.048788453136014064,
+   "edit_index_symdiff": -0.011986182587310155,
+   "legal_mass": 0.5358556509017944,
+   "n_scored": 1001
+  },
+  {
+   "editor": "GS-mine",
    "point": 8,
    "alpha": 0.7,
    "li_error_vs_post": 7.892107892107892,

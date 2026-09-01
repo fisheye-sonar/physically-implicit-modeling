@@ -5,8 +5,8 @@
  "instance": "dw-pn04",
  "val_loss": 0.02287266807979904,
  "n_points": 9,
- "eval_version": "2026-08-31.1",
- "commit_sha": "88ba7cdc793ba598a11a0a1eb9a013b6d0c0777a",
+ "eval_version": "2026-08-31.2",
+ "commit_sha": "5490172d9493bd37f2b3d4504b6c32dcc7f61446",
  "settings": {
   "dw_probe_seqs": 30000,
   "oth_probe_games": 20000,
@@ -94,7 +94,7 @@
   "oth_gs_beta": 0.2,
   "oth_gates_games": 10000
  },
- "minutes": 12.3,
+ "minutes": 3.3,
  "targets": {
   "pos": {
    "unedited": {
@@ -9858,5 +9858,6 @@
     }
    ]
   }
- }
+ },
+ "probe_dir": "/home/sevan/research/PIM/physically-implicit-modeling/runs/initial_othello_comparison/L-dw-20m/probes"
 }
