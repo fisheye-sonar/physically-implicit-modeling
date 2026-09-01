@@ -121,3 +121,55 @@ class warnings_as_errors:
 
     def __exit__(self, *exc):
         return self._cm.__exit__(*exc)
+
+
+# ── signed-error columns (added 2026-09-01) ──────────────────────────────────
+
+
+def _arrs(n=3, k=4, w=8):
+    rng = np.random.default_rng(0)
+    return (rng.random((n, k, w)), rng.random((n, 2, w)), rng.random((n, k, w)))
+
+
+def test_diff_column_is_appended_after_value_columns():
+    roll, ctx, gt = _arrs()
+    fig = waterfall_grid({"model": roll}, ctx, gt, title="t",
+                         diff_columns={"model − GT": roll - gt})
+    titles = [ax.get_title() for ax in fig.axes[: 3]]
+    assert "GT" in titles[0] and "model" == titles[1].strip()
+    assert "−" in titles[2] or "-" in titles[2]
+
+
+def test_diff_scale_is_symmetric_and_shared():
+    """Every error cell uses ±diff_scale — never a per-sample normalisation."""
+    roll, ctx, gt = _arrs()
+    fig = waterfall_grid({"m": roll}, ctx, gt, title="t",
+                         diff_columns={"d": roll - gt}, diff_scale=0.25)
+    diff_imgs = [im for ax in fig.axes for im in ax.get_images()
+                 if im.get_cmap().name == "pim_diff"]
+    assert diff_imgs, "no cell drawn with the diverging colormap"
+    assert all(im.get_clim() == (-0.25, 0.25) for im in diff_imgs)
+
+
+def test_diff_column_keeps_context_grayscale():
+    """The context strip is an observation, not an error — it must not be recoloured."""
+    roll, ctx, gt = _arrs()
+    fig = waterfall_grid({"m": roll}, ctx, gt, title="t",
+                         diff_columns={"d": roll - gt})
+    last_col_axes = fig.axes[2::3]
+    for ax in last_col_axes[:1]:
+        cmaps = {im.get_cmap().name for im in ax.get_images()}
+        assert cmaps == {"gray", "pim_diff"}, cmaps
+
+
+def test_diff_column_name_collision_raises():
+    roll, ctx, gt = _arrs()
+    with pytest.raises(ValueError, match="own name"):
+        waterfall_grid({"m": roll}, ctx, gt, title="t", diff_columns={"m": roll - gt})
+
+
+def test_legend_omits_locators_that_are_not_drawn():
+    roll, ctx, gt = _arrs()
+    fig = waterfall_grid({"m": roll}, ctx, gt, title="t")     # no target/ghost passed
+    labels = {t.get_text() for t in fig.legends[0].get_texts()}
+    assert labels == {"edit frame"}

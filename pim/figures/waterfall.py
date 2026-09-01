@@ -1,6 +1,6 @@
 """The one waterfall implementation.
 
-`notebooks/experiments/editability/WATERFALL_SPEC.md` is the specification; this is its
+`research/specs/WATERFALL_SPEC.md` is the specification; this is its
 single implementation. Route **every** 1D-observation waterfall through `waterfall_grid`.
 Eighteen separate copies of this panel existed as of 2026-08-17, which is exactly the drift
 the spec was written to prevent — each copy re-decided the colormap, the context frames, and
@@ -15,6 +15,9 @@ Two spec rules are enforced structurally rather than by documentation:
   a shared teacher-forced row painted across every column cannot be expressed at all.
 * **Fixed intensity scaling.** `vmin`/`vmax` default to 0/1 and are applied to every cell, so
   per-cell autoscaling — which makes a collapsed arm look normal — cannot happen by accident.
+  The same rule binds the signed-difference columns (`diff_columns`), whose symmetric scale
+  is `diff_scale` for every cell in the figure: an error map normalised per sample would
+  make a badly wrong panel and a nearly perfect one look identical.
 """
 
 from __future__ import annotations
@@ -23,6 +26,7 @@ import warnings
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
@@ -35,6 +39,11 @@ EDIT_LINE = "#e8ecf5"
 TARGET_C = "#00b050"
 GHOST_C = "#ff3b30"
 
+# Signed-error colormap for `diff_columns`: under-prediction red, over-prediction green,
+# ZERO ERROR = the dark background, so a correct panel disappears and only mistakes show.
+# Reuses the locator colours so one hue means one thing across the whole figure.
+DIFF_CMAP = LinearSegmentedColormap.from_list("pim_diff", [GHOST_C, DARK_BG, TARGET_C])
+
 MIN_SAMPLE_ROWS = 3
 
 
@@ -44,6 +53,8 @@ def waterfall_grid(
     gt: np.ndarray,
     *,
     title: str,
+    diff_columns: dict[str, np.ndarray] | None = None,
+    diff_scale: float = 1.0,
     sample_idx: np.ndarray | list[int] | None = None,
     target_x: np.ndarray | None = None,
     ghost_x: np.ndarray | None = None,
@@ -72,6 +83,17 @@ def waterfall_grid(
         column. Every observation-space reference is scored and drawn against the clean render.
     title
         A single what-is-shown title. Results belong in a dated results block, not here.
+    diff_columns
+        ``{column name: signed error}``, each ``(n_samples, K, W)`` = **prediction − GT**.
+        Drawn after the prediction columns on `DIFF_CMAP`: under-prediction red,
+        over-prediction green, zero error the background colour, so a correct panel goes
+        dark and only mistakes are visible. The context strip stays grayscale above the
+        line, as in every other column.
+    diff_scale
+        Symmetric range of the error colormap (``±diff_scale``), FIXED across every cell
+        in the figure. Observations live in [0, 1] so 1.0 is the true worst case; lower it
+        to amplify small errors, but state the value when quoting the figure — it is the
+        difference between "small error" and "rescaled to look large".
     sample_idx
         Which rows of the arrays to draw. Defaults to the first ``MIN_SAMPLE_ROWS``. Fewer
         than three rows warns: a waterfall is judged qualitatively and two rows cannot
@@ -101,8 +123,13 @@ def waterfall_grid(
         )
 
     n_ctx = context.shape[1]
-    names = [gt_label, *columns.keys()]
-    bodies: dict[str, np.ndarray] = {gt_label: gt, **columns}
+    diff_columns = diff_columns or {}
+    if set(diff_columns) & set(columns):
+        raise ValueError(
+            f"diff_columns reuse value-column names {sorted(set(diff_columns) & set(columns))}; "
+            f"give the error map its own name (e.g. 'X − GT') so the legend stays unambiguous")
+    names = [gt_label, *columns.keys(), *diff_columns.keys()]
+    bodies: dict[str, np.ndarray] = {gt_label: gt, **columns, **diff_columns}
 
     fig, axes = plt.subplots(
         len(sample_idx),
@@ -118,17 +145,30 @@ def waterfall_grid(
             ax.set_facecolor(DARK_BG)
 
             body = np.asarray(bodies[name])[smp]
-            panel = np.concatenate([np.asarray(context)[smp], body], axis=0)
+            ctx = np.asarray(context)[smp]
+            n_body, width = body.shape
 
             # Fixed scaling on every cell — never per-cell autoscale.
-            ax.imshow(
-                panel,
-                cmap="gray",
-                vmin=vmin,
-                vmax=vmax,
-                aspect="auto",
-                interpolation="nearest",
-            )
+            if name in diff_columns:
+                # Two draws: the observed context stays grayscale (it is an observation,
+                # not an error), the body is the signed error on the diverging map.
+                ax.imshow(ctx, cmap="gray", vmin=vmin, vmax=vmax, aspect="auto",
+                          interpolation="nearest",
+                          extent=(-0.5, width - 0.5, n_ctx - 0.5, -0.5))
+                ax.imshow(body, cmap=DIFF_CMAP, vmin=-diff_scale, vmax=diff_scale,
+                          aspect="auto", interpolation="nearest",
+                          extent=(-0.5, width - 0.5, n_ctx + n_body - 0.5, n_ctx - 0.5))
+                ax.set_xlim(-0.5, width - 0.5)
+                ax.set_ylim(n_ctx + n_body - 0.5, -0.5)
+            else:
+                ax.imshow(
+                    np.concatenate([ctx, body], axis=0),
+                    cmap="gray",
+                    vmin=vmin,
+                    vmax=vmax,
+                    aspect="auto",
+                    interpolation="nearest",
+                )
 
             # The edit-frame boundary: context above, each column's own free-run below.
             ax.axhline(n_ctx - 0.5, color=EDIT_LINE, lw=1.4, ls="--")
@@ -152,16 +192,25 @@ def waterfall_grid(
             if c == 0:
                 ax.set_ylabel(f"sample {smp}\ntime ↓", color=DARK_TEXT, fontsize=8)
 
-    handles = [
-        Line2D([], [], color=EDIT_LINE, ls="--", lw=1.4, label="edit frame"),
-        Line2D([], [], color=TARGET_C, lw=1.2, label="target"),
-        Line2D([], [], color=GHOST_C, ls="--", lw=1.2, label="ghost"),
-    ]
+    # Only advertise locators that are actually drawn — a legend entry for an absent
+    # marker reads as "this panel has none of those", which is a different claim.
+    handles = [Line2D([], [], color=EDIT_LINE, ls="--", lw=1.4, label="edit frame")]
+    if target_x is not None:
+        handles.append(Line2D([], [], color=TARGET_C, lw=1.2, label="target"))
+    if ghost_x is not None:
+        handles.append(Line2D([], [], color=GHOST_C, ls="--", lw=1.2, label="ghost"))
+    if diff_columns:
+        handles += [
+            Line2D([], [], color=GHOST_C, lw=6,
+                   label=f"under-predicts (−{diff_scale:g})"),
+            Line2D([], [], color=TARGET_C, lw=6,
+                   label=f"over-predicts (+{diff_scale:g})"),
+        ]
     fig.legend(
         handles=handles,
         loc="upper center",
         bbox_to_anchor=(0.5, 1.0),
-        ncol=3,
+        ncol=len(handles),
         frameon=False,
         handlelength=2.6,
         labelcolor=DARK_TEXT,
