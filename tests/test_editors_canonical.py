@@ -151,3 +151,39 @@ def test_multiprobe_oracle_targets_equal_subspace_projection():
     per = [casc.read(k, h0 + dh) for k in range(casc.n_probes)]
     got = multiprobe_delta(casc, h0, None, per_probe_targets=per)
     assert np.abs(got - dh @ S @ S.T).max() < 1e-8
+
+
+# ── dims-restricted PI (added 2026-09-01) ────────────────────────────────────
+#
+# Lets a probe fitted on the FULL state drive only part of it, so "one probe set
+# instead of two" can be tested rather than assumed.
+
+
+def test_dims_restricted_solve_lands_only_those_dims(probe):
+    torch.manual_seed(7)
+    h0 = torch.randn(B, H)
+    tgt = torch.randn(B, D) * 2 + torch.tensor([0.0, 8.0, 0.0, 8.0])
+    read = probe(h0 + pinv_step(h0, tgt, probe, dims=[0, 1]))
+    assert (read[:, :2] - tgt[:, :2]).abs().max() < 1e-3      # driven dims land
+    assert (read[:, 2:] - tgt[:, 2:]).abs().max() > 1e-2      # the rest stay free
+
+
+def test_dims_restricted_write_is_smaller():
+    """A rank-k solve has a larger null space than the full-rank one, so it writes less.
+    That is the whole reason the restriction might beat a separately-fitted probe."""
+    torch.manual_seed(8)
+    p = WorldStateProbe(H, D, None, x_std=torch.rand(H) + 0.2,
+                        y_std=torch.rand(D) + 0.5, y_mean=torch.randn(D))
+    with torch.no_grad():
+        p.net.weight.copy_(torch.randn(D, H) * 0.2)
+    p.eval()
+    h0, tgt = torch.randn(B, H), torch.randn(B, D)
+    full = pinv_step(h0, tgt, p).norm(dim=1).mean()
+    sub = pinv_step(h0, tgt, p, dims=[0, 1]).norm(dim=1).mean()
+    assert sub < full
+
+
+def test_dims_none_is_the_unrestricted_solve(probe):
+    torch.manual_seed(9)
+    h0, tgt = torch.randn(B, H), torch.randn(B, D)
+    assert torch.equal(pinv_step(h0, tgt, probe), pinv_step(h0, tgt, probe, dims=None))

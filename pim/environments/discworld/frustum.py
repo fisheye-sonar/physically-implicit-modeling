@@ -13,8 +13,16 @@ Read off `pim/simulator/renderer.py`, not assumed:
   the lateral coordinate that maps **linearly onto the observation cells**. Using the angle
   ``atan2(x, y)`` instead is a monotone but *nonlinear* reparameterisation which no longer lines up
   with the sensor, so a linear probe would have to undo an arctangent.
-* ``render_frame`` returns ``hit_depth = dy * t``, i.e. the **y-coordinate** of the hit, and culls
-  on ``y in [y_near, y_far]``. Depth is therefore ``y``, not Euclidean range ``sqrt(x^2 + y^2)``.
+* ⛔ **Depth is never observed.** ``render_frame`` computes ``hit_depth``, but the observation
+  is ``obs_intensity`` alone — the *reflectivity* of the first object hit, which does not vary
+  with distance. ``obs_depth`` is not even stored (``bigcorpus.strip_shard`` drops it). Depth
+  reaches the model only through **apparent width** (a nearer object subtends more rays) and
+  **occlusion ordering**. So the depth coordinate is NOT settled by "the renderer returns y":
+  the question is which function of depth is linear in what the model can see, which favours
+  ``width`` and its on-axis equivalent ``inv_y`` (apparent half-width is ``r/(scale*y)``) over
+  ``y`` or ``rho``. See ``research/GOTCHAS.md``, 2026-09-01. The depth candidates below exist
+  precisely because this is an empirical question; ``basis(depth="frustum")`` resolves to
+  whichever ``CANONICAL_DEPTH`` currently names.
 
 The reference direction is the frustum centreline (``u = 0`` at ``x = 0``). Choosing a wall instead
 is an additive offset, which a linear probe absorbs into its bias — it cannot matter.

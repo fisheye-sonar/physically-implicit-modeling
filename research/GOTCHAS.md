@@ -10,6 +10,63 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-01 — ND (Nanda direction addition) is ill-posed for a continuous target
+
+Nanda's method is **one fixed direction, one swept scalar**. That is coherent on Othello,
+where every edit is the same categorical change (flip one tile to one of three classes),
+so a single α can be correct for all 1001 cases and the class selects the direction's
+sign for free.
+
+It is **not** coherent on discworld, where each of the 192 edits is a teleport of a
+different distance and direction. Three defects compound: the direction is sign-blind
+(α > 0, so it can only push each read-out up, while ~half the teleports need a decrease);
+the x and y rows are summed into one direction, so a single scalar moves both in a fixed
+ratio; and it never consults `t − p(h)`, so it cannot tell a nudge from a teleport.
+Sweeping α therefore picks the best single COMPROMISE across heterogeneous edits, which
+can be bad for every individual case.
+
+⛔ **Do not compare discworld's ND number to Othello's** — they are not the same method
+applied to two worlds. Discworld ND is computed into `scores.json` for the record and is
+omitted from the tables.
+
+If a discworld analogue is ever wanted, note where each candidate lands:
+* per-case magnitude `Σⱼ (tⱼ − pⱼ(h))·Wⱼ/x_std` is `Aᵀ(t − p)` — the **transpose** step,
+  genuinely distinct from PI's `A⁺(t − p)` (transpose ignores A's conditioning), but
+  already most of the way toward PI;
+* holding the other object fixed is a **projection onto null(A_hold)**, `d − A_hold⁺(A_hold d)`,
+  NOT a subtraction of its rows (subtracting would drive the other object backwards, which
+  is not what "hold" means). `pim/editors/nullspace.py` already has that machinery — and
+  PI satisfies this constraint already, via its full-state target.
+
+The more ND is repaired, the more it becomes PI; the value of three editors is that they
+are three mechanisms.
+
+### 2026-09-01 — The model NEVER OBSERVES DEPTH. Do not reason from `hit_depth`.
+
+`render_frame` computes and returns `hit_depth`, but **it is not part of the observation
+and never has been.** The observation is `obs_intensity` alone — for each ray, the
+*reflectivity* of the first object hit (`obs_intensity[hit] = reflectivities[first_hit]`),
+a value that does not depend on distance at all. `obs_depth` is not even stored: the 20M
+corpus drops it as "dead weight" (`bigcorpus.strip_shard`), and training consumes
+`obs_intensity` exclusively.
+
+So depth reaches the model through exactly two channels, both indirect:
+
+1. **Apparent width** — a nearer object subtends more rays. This is the dominant one.
+2. **Occlusion ordering** — which object wins a contested ray.
+
+⛔ **The trap** (hit twice, most recently in the frustum-basis discussion): reading
+"`render_frame` returns `hit_depth = y`, so depth is `y` not Euclidean range" and
+concluding that `y` is therefore the natural depth coordinate for a probe target. That
+sentence is about the renderer's *internals*. Since the model cannot see depth in any
+form, the right question is not "what does the renderer compute" but "**what function of
+depth is linear in what the model can actually see**" — which points at apparent width
+(`width`, and its close relative `inv_y`: for an on-axis object the apparent half-width
+is exactly `r/(scale·y)`), not at `y` or `rho`.
+
+The lateral coordinate has no such ambiguity: rays are uniform in `tan θ`, so
+`u = x/(scale·y)` is *literally* the ray index, and it is observed directly.
+
 ### 2026-08-21 — `is_visible` is a no-op, and object index is confounded with brightness
 
 Two traps found while building occlusion controls. Neither invalidates a past result; both make it

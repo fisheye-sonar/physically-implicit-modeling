@@ -107,24 +107,38 @@ def pinv_maps(probe: WorldStateProbe) -> dict[str, PinvMap]:
 
 @torch.no_grad()
 def pinv_step(h0: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
-              space: str = "zspace") -> torch.Tensor:
+              space: str = "zspace", dims=None) -> torch.Tensor:
     """The α=1 write: Δh such that the probe reads ``target`` at ``h0 + Δh``.
 
     ``target`` is ALWAYS in the probe's output units (raw sim units for regression) —
     the space choice changes the solve, never the meaning of the target. Scale the
     returned step by α for a sweep; α=1 is the exact jump and the honest headline.
+
+    ``dims`` restricts the solve to a SUBSET of the probe's output dimensions: the
+    write then lands only those read-outs and leaves the rest free, so a probe fitted
+    on the full state can drive position alone. The pseudoinverse is taken on the
+    sub-matrix, so this is a genuine rank-len(dims) solve with a correspondingly larger
+    null space (a smaller write), not a masked version of the full one.
     """
     maps = pinv_maps(probe)
     if space not in maps:
         raise KeyError(f"space must be one of {sorted(maps)}, got {space!r}")
     m = maps[space]
+    idx = None if dims is None else list(dims)
     if m.space == "zspace":
         z0 = (h0 - probe.x_mean) / probe.x_std
         tgt_net = (target - probe.y_mean) / probe.y_std
-        z1 = inject_state(z0, tgt_net, m.A, m.A_pinv, m.b)
+        A, b = m.A, m.b
+        if idx is not None:
+            A, b, tgt_net = A[idx], b[idx], tgt_net[..., idx]
+        z1 = inject_state(z0, tgt_net, A, torch.linalg.pinv(A), b)
         return (z1 - z0) * probe.x_std
     # raw and legacy solve directly over h (legacy against the WRONG-units target;
     # that is exactly what makes it legacy)
+    A, b, tgt = m.A, m.b, target
+    if idx is not None:
+        A, b, tgt = A[idx], b[idx], target[..., idx]
+        return inject_state(h0, tgt, A, torch.linalg.pinv(A), b) - h0
     return inject_state(h0, target, m.A, m.A_pinv, m.b) - h0
 
 
