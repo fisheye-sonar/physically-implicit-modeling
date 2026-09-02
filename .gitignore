@@ -214,3 +214,10 @@ runs/
 
 # Personal Claude Code permission posture (machine-specific; keep out of the repo)
 .claude/settings.local.json
+.scratch/
+# experiments/: scripts, drivers, scores are tracked; bulk artefacts are not
+experiments/**/data/
+experiments/**/probes/
+experiments/**/outputs/
+experiments/_archive/probe_cache_shared_pool/
+logs/experiments/_archive/
