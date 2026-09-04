@@ -63,6 +63,10 @@ class SimConfig:
 
     # ---- 1D observation -------------------------------------------------
     obs_res: int = 128
+    # Cast ``obs_res`` rays but DROP the first and last — the two that run exactly along
+    # the frustum walls — from the observation, so ``obs_dim`` is ``obs_res - 2``. Added
+    # 2026-09-03 for the 8-ray instance (10 cast, 8 kept); False for every earlier one.
+    drop_edge_rays: bool = False
     # Each object is assigned a reflectivity drawn from Uniform(refl_min, refl_max).
     # Rays return that object's reflectivity as intensity, with no depth falloff.
     refl_min: float = 0.4
@@ -151,4 +155,6 @@ def obs_dim(cfg: SimConfig) -> int:
     """
     if getattr(cfg, "omni2d", False):
         return int(cfg.omni2d_h) * int(cfg.omni2d_w)
+    if getattr(cfg, "drop_edge_rays", False):
+        return int(cfg.obs_res) - 2
     return int(cfg.obs_res)

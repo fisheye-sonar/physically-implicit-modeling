@@ -1,13 +1,9 @@
-# scripts/drivers — canonical run orchestration
+# scripts/drivers — generic run-queue infrastructure
 
-Shell scripts that queue or chain training/evaluation runs live HERE and nowhere else —
-committed, never ad-hoc — so even the automation that produced a batch of runs is part
-of the record. (The old pattern of one-off `.sh` files scattered through `runs/` is what
-this replaces; those are archived with their runs.)
+Only orchestration that belongs to **no particular experiment** lives here:
 
-Conventions:
-- one driver per campaign, named after the runs/ topic dir it fills
-  (e.g. `initial_othello_comparison.sh`)
-- every launched run goes through `scripts/train.py`, so config.json + commit_sha +
-  arch-stamped checkpoints are guaranteed
-- notify (ntfy) at stage boundaries when a driver runs unattended
+- `queue_after.sh <unit> <command…>` — wait for a systemd user unit to finish (or fail),
+  then run the command. One heavy job at a time.
+
+Every experiment's own drivers (training chains, scoring chains) live with the experiment
+in `experiments/<name>/drivers/` — see `experiments/README.md`. Moved there 2026-09-02.

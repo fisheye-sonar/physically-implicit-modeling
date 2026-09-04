@@ -47,6 +47,10 @@ CACHE = Path("datasets/othello/oth-uniform/corpus")
 TRAIN_LO = 0
 TEST_LO, TEST_N = 90_000_000, 10_000
 PROBE_LO, PROBE_N = 91_000_000, 20_000
+# probe_large: the probe-CAPACITY sweep corpus (2026-09-02) — 170k games ≈ 4.7M positions,
+# 5x the canonical probe rows, so wide probes are data-limited by width, not memorisation.
+# A fresh disjoint index range; the canonical probe split is untouched.
+PROBE_LARGE_LO, PROBE_LARGE_N = 92_000_000, 170_000
 
 # The ladder. Every rung runs the SAME number of optimiser steps; only the pool differs.
 LADDER = {"M": 90_000, "L1": 1_000_000, "L2": 5_000_000, "D": 20_000_000}
@@ -108,7 +112,8 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
     """
     CACHE.mkdir(parents=True, exist_ok=True)
     out = {}
-    plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N)]
+    plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N),
+            ("probe_large", PROBE_LARGE_LO, PROBE_LARGE_N)]
     if only is not None:
         plan = [x for x in plan if x[0] in only]
     for name, lo, n in plan:
@@ -161,3 +166,26 @@ if __name__ == "__main__":
         te, _ = load(paths["test"])
         pr, _ = load(paths["probe"])
         assert_disjoint(train=tr[: min(len(tr), 200_000)], test=te, probe=pr)
+
+
+def probe_data(path: Path, n: int | None = None):
+    """``tokens_and_labels`` for a corpus split, CACHED beside it as ``<stem>_labels.npz``.
+
+    Labelling replays every game through the board simulator (~10 min for 170k games), so
+    the result is a corpus artefact, not something to recompute per caller.
+    """
+    import dataclasses
+
+    from pim.environments.othello.data import ProbeData, canonical_vocab, tokens_and_labels
+
+    path = Path(path)
+    tok, ln = load(path)
+    n = len(tok) if n is None else min(n, len(tok))
+    cache = path.with_name(f"{path.stem}_labels_{n}.npz")
+    if cache.exists():
+        z = np.load(cache)
+        return ProbeData(**{k: z[k] for k in z.files})
+    itos = {v: k for k, v in canonical_vocab().items()}
+    data = tokens_and_labels([[itos[int(t)] for t in row[:L]] for row, L in zip(tok[:n], ln[:n])])
+    np.savez(cache, **{f.name: getattr(data, f.name) for f in dataclasses.fields(data)})
+    return data

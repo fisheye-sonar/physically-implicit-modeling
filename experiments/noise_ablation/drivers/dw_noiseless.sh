@@ -25,12 +25,12 @@
 # skips runs already at EVAL_VERSION; training refuses to silently clobber a run dir).
 # Re-running this script after a crash continues from where it stopped.
 set -u
-cd "$(dirname "$0")/../.." || exit 1
+cd "$(dirname "$0")/../../.." || exit 1
 ROOT=$PWD
 PY=$ROOT/.pim/bin/python
 NT=https://ntfy.sh/swirling-tornado-ai691k
 INST=dw-noiseless
-LOGS=$ROOT/runs/dw_noiseless/logs
+LOGS=$ROOT/logs/noise_ablation/dw_noiseless
 RUN_TOPIC=noise_ablation
 RUN_NAME=L-dw-noiseless-20m
 mkdir -p "$LOGS"

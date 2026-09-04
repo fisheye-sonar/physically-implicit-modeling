@@ -95,14 +95,16 @@ bash harness/check.sh
 - Runs → `runs/<topic>/<run>/` (checkpoints, `config.json`, `commit_sha`,
   `metrics.jsonl`, `probes/`, `scores.json`); pre-cleanup runs in `runs/archive/`
 - ⛔ **`runs/` holds TRAINED RUNS AND NOTHING ELSE.** One directory per trained model,
-  each self-contained. Driver logs, chain scripts, stall checks, pilots, scratch
-  analyses and shared caches go to `logs/` (drivers → `logs/drivers/<campaign>/`);
-  one-off experiment output goes to `outputs/`. A stray `.log` or a `probe_cache/`
+  each self-contained. Everything else an experiment produces lives in
+  `experiments/<name>/` (see `experiments/README.md`) and its run logs in
+  `logs/<name>/`; `logs/` holds LOGS ONLY. A stray `.log` or a `probe_cache/`
   beside the run directories is how `runs/` became a junkyard once already
   (cleared 2026-09-01).
 - Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run table →
   `notebooks/build_full_table.ipynb`
-- Run-orchestration shell scripts → `scripts/drivers/` (committed, never ad-hoc)
+- Experiments — the quarantined workspace: scripts, drivers, data, outputs, scores,
+  probes, one folder per experiment → `experiments/<name>/`; generic run-queue
+  infrastructure only → `scripts/drivers/`
 - ⛔ **Nothing is ever deleted from `runs/`, `outputs/`, `logs/`, or `datasets/`** —
   they are not in git. Moves only, recorded in that tree's `MOVES.md`.
 - The pre-housecleaning tree (every retired experiment, editor, and architecture) →

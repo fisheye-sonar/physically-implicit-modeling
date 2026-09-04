@@ -44,7 +44,7 @@ def _parse():
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--env", required=True, choices=("discworld", "othello"))
     p.add_argument("--arch", required=True,
-                   choices=("transformer_s", "transformer_l"),
+                   choices=("transformer_s", "transformer_l", "recurrent_l"),
                    help="task head (regression vs tokens) is implied by --env")
     p.add_argument("--topic", required=True,
                    help="runs/<topic>/<run-name>/ — the line of work this run belongs to")
@@ -53,7 +53,7 @@ def _parse():
     p.add_argument("--limit", type=int, default=None,
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
-                   help="environment instance (discworld: dw-pn04 | dw-noiseless; "
+                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray; "
                         "othello: oth-uniform). Default: the env's canonical instance.")
     # the canonical recipe; override only deliberately
     p.add_argument("--batch-size", type=int, default=256)
@@ -88,6 +88,9 @@ def main() -> None:
         arch = a.arch  # regression head
         mc = ({"obs_res": bc.OBS_RES, "block_size": bc.FRAMES - 1}
               if a.arch == "transformer_l" else
+              # Recurrent-L: 4 x 1024 GRU ~= Transformer-L's 25.4M params (2026-09-02)
+              {"input_dim": bc.OBS_RES, "d_model": 1024, "n_layers": 4, "dropout": 0.1}
+              if a.arch == "recurrent_l" else
               {"input_dim": bc.OBS_RES, "d_model": 256, "n_layers": 4,
                "n_heads": 4, "mlp_ratio": 4.0, "window": 16})
         source = discworld_source(bc.open_obs("r"), n_total=bc.N_TOTAL,
@@ -97,6 +100,8 @@ def main() -> None:
     else:
         from pim.environments.othello import corpus as oc
 
+        if a.arch == "recurrent_l":
+            raise SystemExit("recurrent_l has no token head yet (discworld only)")
         arch = a.arch + "_tokens"
         mc = ({"vocab": 61, "block_size": 59}
               if a.arch == "transformer_l" else

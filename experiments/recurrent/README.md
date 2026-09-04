@@ -1,0 +1,3 @@
+# recurrent
+
+**Question:** is recomputation-from-history the gate on discworld editability? A 4×1024 GRU (`pim/models/recurrent.py`) carries its edited state forward and cannot re-derive it from earlier positions. **Status:** done 2026-09-02 — same editability signature as Transformer-L on both instances; recomputation ruled out. Drivers: `drivers/recurrent_dw.sh` (first run), `drivers/recurrent.sh <instance> <name>` (parameterised); `scripts/smoke_recurrent.py` is the new-architecture eval smoke. Runs: `runs/architecture_gate/`; logs `logs/recurrent/`. Finding: `research/findings/recurrent-l.md`.

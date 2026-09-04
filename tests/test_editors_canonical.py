@@ -187,3 +187,60 @@ def test_dims_none_is_the_unrestricted_solve(probe):
     torch.manual_seed(9)
     h0, tgt = torch.randn(B, H), torch.randn(B, D)
     assert torch.equal(pinv_step(h0, tgt, probe), pinv_step(h0, tgt, probe, dims=None))
+
+
+# ── the discworld dim sets (added 2026-09-01) ────────────────────────────────
+#
+# Discworld fits ONE full-state probe set and sweeps editability over both dim sets.
+# These pin the two properties that make that safe: "pos" really does drive only the
+# position read-outs, and the dims it drops become HOLD constraints for GS rather than
+# vanishing from the loss (dropping them entirely would silently license the editor to
+# move velocity anywhere, which is the opposite of "edit position only").
+
+
+def test_dim_sets_name_the_position_readouts():
+    from pim.environments.discworld.bench import DIM_SETS, N_OBJ, dim_idx
+
+    assert DIM_SETS["pos"] == tuple(range(2 * N_OBJ))   # x,y per object
+    assert dim_idx("all") is None                       # None == every read-out
+    with pytest.raises(KeyError):
+        dim_idx("velocity")
+
+
+def test_restrict_mask_keeps_only_the_named_dims():
+    from pim.environments.discworld.bench import restrict_mask
+
+    cm = torch.zeros(3, 8, dtype=torch.bool)
+    cm[:, [0, 1, 4, 5]] = True                          # object 0: pos AND vel
+    assert torch.equal(restrict_mask(cm, "all"), cm)     # "all" is a no-op
+    got = restrict_mask(cm, "pos")
+    assert got[:, [0, 1]].all() and not got[:, 4:].any()
+
+
+def test_restricted_mask_holds_the_dropped_dims_at_their_pre_edit_value():
+    """The dropped velocity dims stay in the GS loss as hold-the-rest constraints."""
+    from pim.environments.discworld.bench import restrict_mask
+
+    torch.manual_seed(11)
+    p = WorldStateProbe(H, 8, None, x_std=torch.rand(H) + 0.2,
+                        y_std=torch.ones(8), y_mean=torch.zeros(8)).eval()
+    x0 = torch.randn(B, H)
+    cm = torch.zeros(B, 8, dtype=torch.bool)
+    cm[:, [0, 1, 4, 5]] = True
+    tv = torch.full((B, 8), 9.0)
+    spec = build_edit_spec(p, x0, restrict_mask(cm, "pos"), tv, beta=0.2)
+    with torch.no_grad():
+        base = p(x0)
+    assert torch.allclose(spec.values[:, [0, 1]], tv[:, [0, 1]])      # driven
+    assert torch.allclose(spec.values[:, 4:6], base[:, 4:6])          # held, not free
+
+
+def test_readout_error_scores_only_the_driven_dims(probe):
+    """A dims-restricted write lands exactly; scoring it over ALL dims would call that
+    exact landing a miss, which is what the dims argument exists to prevent."""
+    torch.manual_seed(12)
+    h0 = torch.randn(B, H)
+    tgt = torch.randn(B, D) * 2 + torch.tensor([0.0, 8.0, 0.0, 8.0])
+    h1 = h0 + pinv_step(h0, tgt, probe, dims=[0, 1])
+    assert readout_error(h1, tgt, probe, dims=[0, 1]) < 1e-3
+    assert readout_error(h1, tgt, probe) > 1.0

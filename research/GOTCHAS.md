@@ -512,3 +512,66 @@ reason, and this is the one sanctioned exception: use a helper that touches **on
 identifies the cell by its `# [N]` tag rather than by index, and **asserts the cell inventory is
 unchanged** afterwards. Never edit outputs, `execution_count`, or metadata by hand — re-execute
 with `nbconvert --inplace` instead. Prefer restructuring the notebook so it stays under the cap.
+
+## 2026-09-01 — `fit_probes` is a 20 GB call, and OOM takes the whole desktop with it
+
+`dwb.fit_probes(..., n_seq=30_000)` calls `collect_residuals`, which materialises
+**every residual point for every frame at once**: `30_000 × 39 × 512 × 9 × 4 B ≈ 21.6 GB`.
+On a 59 GB box that is survivable alone and fatal in company. It has now killed VSCode
+twice: once run in the foreground, once by launching a pilot in the background and then
+running a second probe-touching script **in the same message**, so two collections
+overlapped.
+
+**Rules, in order of how often I break them:**
+
+1. **Never start a second probe/model script while a pilot is running.** Check first:
+   `ps -eo pid,etime,args | awk '/pilots\//&&!/awk/'`. One probe job at a time, always.
+2. **Never call `fit_probes` from an inline `python - << EOF` heredoc.** Those run in the
+   foreground, uncapped, and take the editor down with them. Pilots go in
+   `experiments/<name>/scripts/*.py`, launched detached with a memory cap.
+3. **To inspect a probe, load the cache file — do not refit.** `probes_<hash>.pt` is a few
+   MB; `torch.load(..., map_location="cpu")` answers almost every question ("are these two
+   probes the same?", "what is W?") for ~0 memory. `INDEX.md` in the cache dir maps hash →
+   provenance. Refitting to look at a probe is never the right move.
+4. **Cap every launch**: `systemd-run --scope -p MemoryMax=24G` (or `ulimit -v`) so a
+   runaway job dies alone instead of taking the session with it.
+5. `n_seq = 8_000` (≈5.8 GB) is the pilot default; 30 000 is for the scorer only, run alone.
+
+A killed job leaves a truncated `logs/<name>/*.log` with only its header line — that is the
+OOM signature, distinct from a traceback. Check `free -g` and the log tail together.
+
+## 2026-09-01 — pre-housecleaning Othello checkpoints say `arch: "theirs"`
+
+The original Othello trainer stamped every intermediate `ckpt/step_*.pt` of `L-oth-20m` with
+`arch: "theirs"` (its name for the vendored minGPT); only `best_model.pt` was re-stamped
+`transformer_l_tokens` during the housecleaning. `pim.models.registry._infer_arch` trusts an
+explicit `arch` key, so loading one of those files raises `KeyError: unknown arch 'theirs'`.
+The discworld intermediates carry no `arch` key at all and infer correctly from their shape.
+`experiments/training_curve/scripts/make_training_curve.py` normalises the key when it lays a checkpoint out as a run
+dir; do the same for any other consumer of the old `ckpt/` files. (Cost the overnight chain one
+restart — the failure came after eight discworld points had scored.)
+
+## 2026-09-02 — `collect_residuals` held the residual stack TWICE (fixed)
+
+`np.concatenate` over a list of per-batch arrays allocates the full result while the list
+is still alive, so the peak was **2×** the stack: 43 GB for Transformer-L at 30k sequences
+(the "44.9 GB under a 45G cap" near-miss on 2026-09-01) and 49 GB for the 1024-wide
+Recurrent-L, which was OOM-killed 40 s into scoring. Now preallocated and filled in place;
+peak = one copy (21.6 / 24.6 GB). The lesson generalises: every "materialise the whole
+probe corpus" path must be checked for a hidden second copy before it is trusted under a
+memory cap, because the cap turns a transient into a kill.
+
+## dw-8ray (2026-09-04): edge-pinned α grid, no-support edit cases, edits sampler attempts
+
+* The canonical PI α grid (0.1 … 175) was tuned on 128-ray instances. On `dw-8ray` the best
+  PI arm is the LAST grid value with the index still rising; the extended check
+  (`experiments/dw8ray_alpha_check/`) shows the index plateaus at +0.3 by α ≈ 250–1000, so the
+  canonical +0.297 is a lower bound by ~0.02. Read an edge-pinned α as "check the plateau",
+  not as a wrong-units bug (the y-affine signature) — the readout errors are sane here.
+* At 8 rays ~15 % of the 192 edit cases have NO differing ray between the edited and unedited
+  worlds; those cases carry no Edit-Index support (nanmean drops them). Coarse observation =
+  wider error bars on the mean, same definition.
+* Radius-1.0 discs make a collision-free, in-frustum teleport rarer: `generate_dataset.py`'s
+  default `--max-edit-attempts 50` fails ~1 case in 100. dw-8ray is generated with 2000
+  (cases that succeed within 50 draws are unchanged); `bigcorpus` carries the flag for the
+  shards' throwaway edits splits too.

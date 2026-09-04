@@ -44,3 +44,4 @@ __all__ = [
     "TransformerL",
     "TransformerLTokens",
 ]
+from pim.models.recurrent import RecurrentConfig, RecurrentL  # noqa: E402,F401

@@ -60,12 +60,21 @@ REPO = Path(__file__).resolve().parents[3]
 SHARD_N, N_SHARDS = 500_000, 40
 SEED_STRIDE = 500_000_000
 N_TOTAL = SHARD_N * N_SHARDS                 # 20,000,000
-FRAMES, OBS_RES = 40, 128
+FRAMES = 40
+OBS_RES = 128   # observation WIDTH of the current instance (rays kept) — rebound by use_instance()
 VAL_N = 2_000_000                            # matches Othello's val_fraction 0.1 on 20M
 TRAIN_N = N_TOTAL - VAL_N
 
-_COMMON_FLAGS = ["--n-objects", "2", "--frames", str(FRAMES), "--obs-res", str(OBS_RES),
+_COMMON_FLAGS = ["--n-objects", "2", "--frames", str(FRAMES),
                  "--boundary", "open", "--fixed-reflectivities", "--always-in-frustum"]
+_RAYS_128 = ["--obs-res", "128"]
+# dw-8ray (2026-09-03): 10 rays CAST, the two wall-aligned ones dropped -> 8 kept; radius 1.0
+_RAYS_8 = ["--obs-res", "10", "--drop-edge-rays", "--radius", "1.0",
+           "--max-edit-attempts", "2000"]   # radius-1 teleports need more tries (shards make 100 edits)
+_NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
+               (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+               (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")]
 
 # ── the instance registry ─────────────────────────────────────────────────────
 # One entry per environment instance that owns a 20M streaming corpus. `forbidden`
@@ -77,17 +86,39 @@ _COMMON_FLAGS = ["--n-objects", "2", "--frames", str(FRAMES), "--obs-res", str(O
 INSTANCES = {
     "dw-pn04": {
         "base_seed": 10_000_000,
-        "sim_flags": _COMMON_FLAGS + ["--position-noise", "0.04", "--obs-noise-std", "0.2"],
-        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17")],
+        "obs_dim": 128,
+        "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.04", "--obs-noise-std", "0.2"],
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large")] + _NEW_RANGES,
     },
     "dw-noiseless": {  # dw-pn04 with ALL noise off; everything else identical
         "base_seed": 30_000_000_000,
-        "sim_flags": _COMMON_FLAGS + ["--position-noise", "0.0", "--obs-noise-std", "0.0"],
+        "obs_dim": 128,
+        "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"],
         "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
                       (10_000_000, 19_800_000_000, "dw-pn04 train"),
                       (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
                       (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
-                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite")],
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large")] + _NEW_RANGES,
+    },
+    "dw-8ray": {  # dw-noiseless with disc radius 1.0 and 8 usable rays (10 cast, wall rays dropped)
+        "base_seed": 60_000_000_000,
+        "obs_dim": 8,
+        "sim_flags": _COMMON_FLAGS + _RAYS_8 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"],
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")],
     },
 }
 
@@ -123,9 +154,10 @@ def use_instance(inst: str) -> None:
     The generation/verify functions below deliberately kept their original (verified)
     bodies over module globals; this is the one switch that rebinds them. Call it
     FIRST — the __main__ entry does, from its argv."""
-    global INSTANCE, OUT, BASE_SEED, SIM_FLAGS, FORBIDDEN
+    global INSTANCE, OUT, BASE_SEED, SIM_FLAGS, FORBIDDEN, OBS_RES
     spec = _spec(inst)
     INSTANCE = inst
+    OBS_RES = int(spec.get("obs_dim", 128))
     OUT = train_dir(inst)
     BASE_SEED = spec["base_seed"]
     SIM_FLAGS = spec["sim_flags"]

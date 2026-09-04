@@ -68,6 +68,10 @@ def parse_args() -> argparse.Namespace:
     g.add_argument("--n-objects",  type=int,   default=2)
     g.add_argument("--frames",     type=int,   default=40)
     g.add_argument("--obs-res",    type=int,   default=128)
+    g.add_argument("--drop-edge-rays", action="store_true", default=False,
+                   help="cast obs-res rays but drop the first and last (the frustum-wall "
+                        "rays); the observation is then obs-res - 2 wide")
+    g.add_argument("--radius",     type=float, default=0.5, help="disc radius, world units")
     g.add_argument("--boundary",   choices=["bounce", "open", "wrap"], default="open")
     g.add_argument("--direction-noise", type=float, default=0.0,
                    help="Velocity angle noise per step (radians)")
@@ -154,6 +158,8 @@ def main() -> None:
         n_objects=args.n_objects,
         n_frames=args.frames,
         obs_res=obs_res,
+        drop_edge_rays=args.drop_edge_rays,
+        radius=args.radius,
         boundary=args.boundary,
         direction_noise_std=args.direction_noise,
         speed_noise_std=args.speed_noise,

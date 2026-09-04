@@ -22,6 +22,17 @@ def _fov_scale(cfg: SimConfig) -> float:
     return cfg.x_far / cfg.y_far
 
 
+def _keep(hit_depth, hit_id, obs_intensity, cfg: SimConfig):
+    """Drop the two wall-aligned rays (first and last) when the config asks for it.
+
+    The caster still casts all ``obs_res`` rays with the unchanged geometry, so the kept
+    rays are bit-identical to rays ``1..obs_res-2`` of the full render (2026-09-03).
+    """
+    if getattr(cfg, "drop_edge_rays", False):
+        return hit_depth[1:-1], hit_id[1:-1], obs_intensity[1:-1]
+    return hit_depth, hit_id, obs_intensity
+
+
 def render_frame(
     positions: np.ndarray,  # (n_objects, 2)
     radii: np.ndarray,  # (n_objects,)
@@ -73,7 +84,7 @@ def render_frame(
     obs_intensity = np.zeros(R)
 
     if n == 0:
-        return hit_depth, hit_id, obs_intensity
+        return _keep(hit_depth, hit_id, obs_intensity, cfg)
 
     cx = positions[:, 0]  # (N,)
     cy = positions[:, 1]  # (N,)
@@ -119,7 +130,7 @@ def render_frame(
         obs_intensity += rng.normal(0.0, cfg.obs_noise_std, R)
         obs_intensity = np.clip(obs_intensity, 0.0, 1.0)
 
-    return hit_depth, hit_id, obs_intensity
+    return _keep(hit_depth, hit_id, obs_intensity, cfg)
 
 
 def render_scene(scene: Scene) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

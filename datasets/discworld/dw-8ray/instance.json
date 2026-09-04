@@ -1,0 +1,61 @@
+{
+ "instance": "dw-8ray",
+ "environment": "discworld",
+ "objective": "mse",
+ "created": "2026-09-03 (the ray-count ablation: dw-noiseless with 8 usable rays and disc radius 1.0)",
+ "description": "Identical to dw-noiseless (no position noise, no observation noise, 2 objects, 40 frames, fixed reflectivities, always-in-frustum, open boundary, 20M training sequences, matched Transformer-L recipe) in every field except two: the disc radius is DOUBLED (1.0 instead of 0.5) and the observation is 8 rays instead of 128. The 8 rays are obtained by casting 10 rays with the unchanged ray-caster geometry and dropping the first and last, which run exactly along the frustum walls (`drop_edge_rays`), so the kept rays are rays 1..8 of a 10-ray render. With radius 1.0 a disc at the far plane lights ~1.3 of the 8 rays and one at the near plane ~5; at radius 0.5 a far disc would light < 1 ray.",
+ "sim": {
+  "n_objects": 2,
+  "n_frames": 40,
+  "obs_res": 10,
+  "drop_edge_rays": true,
+  "obs_dim": 8,
+  "radius": 1.0,
+  "obs_noise_std": 0.0,
+  "position_noise_std": 0.0,
+  "boundary": "open",
+  "fixed_reflectivities": true,
+  "always_in_frustum": true
+ },
+ "splits": {
+  "train": {
+   "path": "train/",
+   "format": "flat float32 memmap obs.f32 (N,40,8) + meta.h5; see train/corpus.json",
+   "n": 20000000,
+   "train_n": 18000000,
+   "val_n": 2000000,
+   "seed_law": "shard k covers base seeds 60_000_000_000 + k*500_000_000 .. +500_000 (40 shards). Same stride/shard law as dw-noiseless; verified by bigcorpus.verify() against every other range.",
+   "notes": "data-scale rungs are strict prefixes (mask, never regenerate); val = the LAST 2M sequences"
+  },
+  "probe_train": {
+   "path": "probe/ (test split)",
+   "n": 120000,
+   "base_seed": 980000000200,
+   "notes": "probe fitting only; 80/20 held out BY SEQUENCE inside the fit; canonical fits use the first 30k"
+  },
+  "eval": {
+   "path": "eval/ (val.h5 / test.h5)",
+   "n_val": 10000,
+   "n_test": 10000,
+   "base_seeds": {
+    "val": 85100000000,
+    "test": 85200000000
+   }
+  },
+  "edits": {
+   "path": "eval/edits.h5",
+   "n": 10000,
+   "base_seed": 85300000000,
+   "edit_frame": 20,
+   "notes": "THE editability bench for this instance; first 192 cases, K_ROLL=15 — same construction as dw-pn04 / dw-noiseless, so Edit Indices are directly comparable in definition; with 8 rays the differing-ray support is coarse (1-3 rays per edit), so per-case indices are noisier. Generated with --max-edit-attempts 2000 (default 50): radius-1.0 discs make a collision-free in-frustum teleport target rarer and ~1 case in 100 needs more than 50 draws; cases that succeed within 50 are identical to what the default would give (same RNG stream)."
+  },
+  "probe_large": {
+   "path": "probe_250k/ (test split)",
+   "n": 250000,
+   "base_seed": 990000000200,
+   "notes": "the 5x observation-floor corpus for Table 3 (see dw-pn04.probe_large). Never used for canonical scoring."
+  }
+ },
+ "seed_disjointness": "train [60.0e9, 80.0e9) · eval suite [85.0e9, 85.4e9) · probe suite [980.0e9, 981e9) · probe_large [990e9, 991e9) — pairwise disjoint, and disjoint from dw-pn04 (train [10e6, 19.8e9), probe [900e9, 901e9), probe_large [960e9, 961e9)) and dw-noiseless (train [30e9, 50e9), eval [52e9, 52.4e9), probe [950e9, 951e9), probe_large [970e9, 971e9)). Enforced by bigcorpus.INSTANCES['dw-8ray']['forbidden'] and asserted by verify().",
+ "why_fresh_seeds": "As for dw-noiseless: always_in_frustum accepts initial conditions by simulating forward, and the doubled radius changes which initial conditions are accepted, so reusing another instance's seeds would not give paired worlds."
+}

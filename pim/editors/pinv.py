@@ -143,10 +143,19 @@ def pinv_step(h0: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
 
 
 @torch.no_grad()
-def readout_error(h: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe) -> float:
+def readout_error(h: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
+                  dims=None) -> float:
     """Mean ‖probe(h) − target‖ in the probe's OUTPUT units — the landing check.
 
     Uses ``probe.forward`` itself, so a decomposition can never disagree with it
     silently (the failure mode the y-affine bug lived in for nine days).
+
+    ``dims`` restricts the norm to the read-outs the write actually DROVE, so a
+    dims-restricted solve is still scored on whether it landed. Measuring a rank-k
+    write against all d outputs reports the undriven dims as error and makes an exact
+    landing look like a miss.
     """
-    return float((probe(h) - target).norm(dim=-1).mean())
+    err = probe(h) - target
+    if dims is not None:
+        err = err[..., list(dims)]
+    return float(err.norm(dim=-1).mean())

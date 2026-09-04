@@ -221,3 +221,10 @@ experiments/**/probes/
 experiments/**/outputs/
 experiments/_archive/probe_cache_shared_pool/
 logs/experiments/_archive/
+# logs/ holds logs only and is never tracked (2026-09-01; *.log was already ignored, the
+# ledgers and driver artefacts inside it are local too)
+logs/
+# bulk derived arrays: regenerable in minutes from the tracked scripts + summaries
+experiments/_archive/_smoke_runs/
+experiments/othello_causal_state/scores/per_square_*.npz
+experiments/othello_causal_state/scores/relevance_*.npz

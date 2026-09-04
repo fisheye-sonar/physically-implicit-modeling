@@ -26,6 +26,7 @@ from pathlib import Path
 
 import torch
 
+from pim.models.recurrent import RecurrentConfig, RecurrentL
 from pim.models.transformer_l import TransformerL, TransformerLTokens
 from pim.models.transformer_s import ModelConfig as SConfig
 from pim.models.transformer_s import TransformerS, TransformerSTokens
@@ -53,7 +54,12 @@ def _build_l_tokens(cfg: dict):
     return TransformerLTokens(**keep)
 
 
+def _build_recurrent(cfg: dict):
+    return RecurrentL(RecurrentConfig(**cfg))
+
+
 BUILDERS = {
+    "recurrent_l": _build_recurrent,
     "transformer_s": _build_s,
     "transformer_s_tokens": _build_s_tokens,
     "transformer_l": _build_l,

@@ -25,7 +25,7 @@ import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Polygon
 
-from .config import SimConfig
+from .config import SimConfig, obs_dim
 from .sim import Scene
 
 # ── Aesthetic constants ───────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ def animate_scene(
     mode_tag = (
         "model  (intensity)" if waterfall_mode == "model" else "human  (color+depth)"
     )
-    wf_display = np.zeros((n_frames, cfg.obs_res, 4))
+    wf_display = np.zeros((n_frames, obs_dim(cfg), 4))
     wf_display[:, :, :3] = _BG
     wf_display[:, :, 3] = 1.0
 
@@ -264,19 +264,19 @@ def animate_scene(
         aspect="auto",
         origin="upper",
         interpolation="nearest",
-        extent=[0, cfg.obs_res, n_frames, 0],
+        extent=[0, obs_dim(cfg), n_frames, 0],
     )
     ax_f.set_xlabel("scan position", color=_TEXT_COLOR, fontsize=10)
     ax_f.set_ylabel("frame", color=_TEXT_COLOR, fontsize=10)
     ax_f.set_title(
         f"1D observation  ({mode_tag})", color=_TEXT_COLOR, fontsize=11, pad=8
     )
-    ax_f.set_xlim(0, cfg.obs_res)
+    ax_f.set_xlim(0, obs_dim(cfg))
     ax_f.set_ylim(n_frames, 0)
 
     # horizontal highlight that tracks the current frame on the waterfall
     (frame_line,) = ax_f.plot(
-        [0, cfg.obs_res],
+        [0, obs_dim(cfg)],
         [0.5, 0.5],
         color="white",
         linewidth=1.4,

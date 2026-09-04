@@ -1,53 +1,62 @@
 {
-  "instance": "dw-pn04",
-  "environment": "discworld",
-  "objective": "mse",
-  "created": "2026-08-31 (assembled from datasets 20/21/4 during housecleaning)",
-  "description": "THE canonical discworld instance: 2 objects, 40 frames, 128 rays, obs_noise_std 0.2, position_noise_std 0.04 ('pn04'), fixed reflectivities, always_in_frustum, open boundary. All three parts verified to share this sim config; the pn04 name exists because dataset 17 silently used position noise 0.0 and its results were uninterpretable against this eval set.",
-  "sim": {
-    "n_objects": 2,
-    "n_frames": 40,
-    "obs_res": 128,
-    "obs_noise_std": 0.2,
-    "position_noise_std": 0.04,
-    "boundary": "open",
-    "fixed_reflectivities": true,
-    "always_in_frustum": true
+ "instance": "dw-pn04",
+ "environment": "discworld",
+ "objective": "mse",
+ "created": "2026-08-31 (assembled from datasets 20/21/4 during housecleaning)",
+ "description": "THE canonical discworld instance: 2 objects, 40 frames, 128 rays, obs_noise_std 0.2, position_noise_std 0.04 ('pn04'), fixed reflectivities, always_in_frustum, open boundary. All three parts verified to share this sim config; the pn04 name exists because dataset 17 silently used position noise 0.0 and its results were uninterpretable against this eval set.",
+ "sim": {
+  "n_objects": 2,
+  "n_frames": 40,
+  "obs_res": 128,
+  "obs_noise_std": 0.2,
+  "position_noise_std": 0.04,
+  "boundary": "open",
+  "fixed_reflectivities": true,
+  "always_in_frustum": true
+ },
+ "splits": {
+  "train": {
+   "path": "train/",
+   "format": "flat float32 memmap obs.f32 (N, 40, 128) + meta.h5; see train/corpus.json",
+   "n": 20000000,
+   "train_n": 18000000,
+   "val_n": 2000000,
+   "seed_law": "shard k covers base seeds 10_000_000 + k*500_000_000 .. +500_000; retries offset by +1M per attempt (max 300), so the 500M stride and 500k shard size make collisions impossible. Verified: 0 duplicate seeds, disjoint from eval and legacy dset17.",
+   "notes": "data-scale rungs are strict prefixes of this pool (mask, never regenerate); val = the LAST 2M sequences"
   },
-  "splits": {
-    "train": {
-      "path": "train/",
-      "format": "flat float32 memmap obs.f32 (N, 40, 128) + meta.h5; see train/corpus.json",
-      "n": 20000000,
-      "train_n": 18000000,
-      "val_n": 2000000,
-      "seed_law": "shard k covers base seeds 10_000_000 + k*500_000_000 .. +500_000; retries offset by +1M per attempt (max 300), so the 500M stride and 500k shard size make collisions impossible. Verified: 0 duplicate seeds, disjoint from eval and legacy dset17.",
-      "notes": "data-scale rungs are strict prefixes of this pool (mask, never regenerate); val = the LAST 2M sequences"
-    },
-    "probe_train": {
-      "path": "probe/ (test split, first n_seq sequences)",
-      "n": 120000,
-      "base_seed": 900000000200,
-      "notes": "probe fitting only; the 80/20 held-out split is BY SEQUENCE inside the fit. Sized so MLP-128 probes stay out of the memorisation regime (>=10 rows/param)."
-    },
-    "eval": {
-      "path": "eval/ (val.h5 / test.h5)",
-      "n_val": 10000,
-      "n_test": 10000,
-      "base_seeds": {"val": 90000, "test": 100000}
-    },
-    "edits": {
-      "path": "eval/edits.h5",
-      "n": 10000,
-      "base_seed": 110000,
-      "edit_frame": 20,
-      "notes": "THE editability bench: every Edit Index in the project is scored on the first 192 of these (pim.environments.discworld.bench, K_ROLL=15)"
-    }
+  "probe_train": {
+   "path": "probe/ (test split, first n_seq sequences)",
+   "n": 120000,
+   "base_seed": 900000000200,
+   "notes": "probe fitting only; the 80/20 held-out split is BY SEQUENCE inside the fit. Sized so MLP-128 probes stay out of the memorisation regime (>=10 rows/param)."
   },
-  "provenance": {
-    "train": "was datasets/20_dwscale_20m (generated 2026-08-25)",
-    "probe": "was datasets/21_dwscale_probe (generated 2026-08-25)",
-    "eval": "was datasets/4_fixed_refl_inview (generated 2026-08; seed 42 config, split base seeds 0/90k/100k/110k)"
+  "eval": {
+   "path": "eval/ (val.h5 / test.h5)",
+   "n_val": 10000,
+   "n_test": 10000,
+   "base_seeds": {
+    "val": 90000,
+    "test": 100000
+   }
   },
-  "seed_disjointness": "train seeds [10.0e6, 19.51e9] vs eval/edits seeds [0, 120k) vs probe seeds [9.0e11, ...) — pairwise disjoint by construction and verified (train/corpus.json)"
+  "edits": {
+   "path": "eval/edits.h5",
+   "n": 10000,
+   "base_seed": 110000,
+   "edit_frame": 20,
+   "notes": "THE editability bench: every Edit Index in the project is scored on the first 192 of these (pim.environments.discworld.bench, K_ROLL=15)"
+  },
+  "probe_large": {
+   "path": "probe_250k/ (test split)",
+   "n": 250000,
+   "base_seed": 960000000200,
+   "notes": "added 2026-09-02 for the probe-capacity sweep (experiments/probe_capacity): 250k sequences \u2248 4.7M... rows at 39 frames = 9.75M rows; 5x+ the canonical probe rows. Fresh seed block 960e9 (retries offset +1M/attempt, max 300 \u2192 span < 960.4e9), disjoint from every range in bigcorpus.INSTANCES. Never used for canonical scoring."
+  }
+ },
+ "provenance": {
+  "train": "was datasets/20_dwscale_20m (generated 2026-08-25)",
+  "probe": "was datasets/21_dwscale_probe (generated 2026-08-25)",
+  "eval": "was datasets/4_fixed_refl_inview (generated 2026-08; seed 42 config, split base seeds 0/90k/100k/110k)"
+ },
+ "seed_disjointness": "train seeds [10.0e6, 19.51e9] vs eval/edits seeds [0, 120k) vs probe seeds [9.0e11, ...) \u2014 pairwise disjoint by construction and verified (train/corpus.json)"
 }

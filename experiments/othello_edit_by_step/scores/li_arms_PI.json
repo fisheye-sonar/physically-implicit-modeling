@@ -1,0 +1,616 @@
+{
+ "label": "li",
+ "editor": "PI",
+ "run": "L-oth-20m",
+ "probe_grid": "probes_37e891b4279cd312.pt",
+ "probe_family": "linear",
+ "settings": {
+  "oth_probe_games": 20000,
+  "oth_alpha_nd": [
+   0.05,
+   0.1,
+   0.2,
+   0.35,
+   0.5,
+   0.75,
+   1.0,
+   1.5,
+   2.0
+  ],
+  "oth_alpha_pi": [
+   0.25,
+   0.5,
+   1.0,
+   1.5,
+   2.0,
+   3.0,
+   5.0
+  ],
+  "oth_gs_layers": [
+   0,
+   2,
+   4,
+   6,
+   8
+  ],
+  "oth_alpha_gs": [
+   0.05,
+   0.2,
+   0.35,
+   0.7
+  ],
+  "oth_gs_steps": 100,
+  "oth_gs_beta": 0.2,
+  "oth_gates_games": 10000
+ },
+ "arms": [
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 0.25,
+   "write_ratio": 0.039285413025376886,
+   "edit_index_union": -0.7126279235625186,
+   "fidelity_ratio": 1.0000108453855474,
+   "li_error_vs_post": 2.7652347652347653
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 0.5,
+   "write_ratio": 0.07857082605075377,
+   "edit_index_union": -0.7122801184159601,
+   "fidelity_ratio": 1.0000690660390223,
+   "li_error_vs_post": 2.769230769230769
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 1.0,
+   "write_ratio": 0.15714165210150755,
+   "edit_index_union": -0.6765336519402821,
+   "fidelity_ratio": 0.9990513106004988,
+   "li_error_vs_post": 2.7672327672327675
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 1.5,
+   "write_ratio": 0.23571248194919184,
+   "edit_index_union": -0.6453653709341011,
+   "fidelity_ratio": 0.9994755481591673,
+   "li_error_vs_post": 2.763236763236763
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 2.0,
+   "write_ratio": 0.3142833042030151,
+   "edit_index_union": -0.6450600334141912,
+   "fidelity_ratio": 1.0049645769132824,
+   "li_error_vs_post": 2.775224775224775
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 3.0,
+   "write_ratio": 0.4714249638983837,
+   "edit_index_union": -0.6443623960733873,
+   "fidelity_ratio": 1.013062378429788,
+   "li_error_vs_post": 2.839160839160839
+  },
+  {
+   "editor": "PI",
+   "point": 0,
+   "alpha": 5.0,
+   "write_ratio": 0.7857082703938851,
+   "edit_index_union": -0.6480310276235561,
+   "fidelity_ratio": 1.0287878993937547,
+   "li_error_vs_post": 2.955044955044955
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 0.25,
+   "write_ratio": 0.032882680400059774,
+   "edit_index_union": -0.7126119038096137,
+   "fidelity_ratio": 0.9999750748195488,
+   "li_error_vs_post": 2.769230769230769
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 0.5,
+   "write_ratio": 0.06576536080011955,
+   "edit_index_union": -0.7126149370098847,
+   "fidelity_ratio": 0.9999551650002483,
+   "li_error_vs_post": 2.7672327672327675
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 1.0,
+   "write_ratio": 0.1315307216002391,
+   "edit_index_union": -0.712651781850771,
+   "fidelity_ratio": 0.9998982133088382,
+   "li_error_vs_post": 2.769230769230769
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 1.5,
+   "write_ratio": 0.19729608297348022,
+   "edit_index_union": -0.7118292356994675,
+   "fidelity_ratio": 0.9994680355615367,
+   "li_error_vs_post": 2.7592407592407593
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 2.0,
+   "write_ratio": 0.2630614432004782,
+   "edit_index_union": -0.7085886674987639,
+   "fidelity_ratio": 0.9982493022605403,
+   "li_error_vs_post": 2.751248751248751
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 3.0,
+   "write_ratio": 0.39459216594696045,
+   "edit_index_union": -0.6805069308043572,
+   "fidelity_ratio": 0.9838829118455421,
+   "li_error_vs_post": 2.6713286713286712
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 5.0,
+   "write_ratio": 0.6576536057087091,
+   "edit_index_union": -0.5606195045007598,
+   "fidelity_ratio": 0.9403557368909297,
+   "li_error_vs_post": 2.4315684315684316
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 0.25,
+   "write_ratio": 0.05227581741145024,
+   "edit_index_union": -0.712641522323075,
+   "fidelity_ratio": 0.9999371411150886,
+   "li_error_vs_post": 2.7712287712287713
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 0.5,
+   "write_ratio": 0.10455163482290047,
+   "edit_index_union": -0.7126723497917222,
+   "fidelity_ratio": 0.9998757218376372,
+   "li_error_vs_post": 2.7612387612387614
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 1.0,
+   "write_ratio": 0.20910326964580095,
+   "edit_index_union": -0.7116395848494398,
+   "fidelity_ratio": 0.9990748133552317,
+   "li_error_vs_post": 2.7292707292707292
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 1.5,
+   "write_ratio": 0.31365490475526225,
+   "edit_index_union": -0.6857020185691547,
+   "fidelity_ratio": 0.9862969201344959,
+   "li_error_vs_post": 2.6313686313686313
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 2.0,
+   "write_ratio": 0.4182065392916019,
+   "edit_index_union": -0.6014479645681341,
+   "fidelity_ratio": 0.9411906006775996,
+   "li_error_vs_post": 2.4235764235764234
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 3.0,
+   "write_ratio": 0.6273098095105245,
+   "edit_index_union": -0.32253890991355627,
+   "fidelity_ratio": 0.7808439545309768,
+   "li_error_vs_post": 1.812187812187812
+  },
+  {
+   "editor": "PI",
+   "point": 2,
+   "alpha": 5.0,
+   "write_ratio": 1.0455163373396947,
+   "edit_index_union": 0.06198612004500398,
+   "fidelity_ratio": 0.6057909915569875,
+   "li_error_vs_post": 1.1888111888111887
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 0.25,
+   "write_ratio": 0.05888219306675287,
+   "edit_index_union": -0.7125133316651507,
+   "fidelity_ratio": 0.999814029847629,
+   "li_error_vs_post": 2.7532467532467533
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 0.5,
+   "write_ratio": 0.11776438613350575,
+   "edit_index_union": -0.7121807275353523,
+   "fidelity_ratio": 0.9992960790591229,
+   "li_error_vs_post": 2.7372627372627374
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 1.0,
+   "write_ratio": 0.2355287722670115,
+   "edit_index_union": -0.6838376260910668,
+   "fidelity_ratio": 0.9834256391695928,
+   "li_error_vs_post": 2.5454545454545454
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 1.5,
+   "write_ratio": 0.3532931541021054,
+   "edit_index_union": -0.47720373855793696,
+   "fidelity_ratio": 0.8654111318265455,
+   "li_error_vs_post": 2.055944055944056
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 2.0,
+   "write_ratio": 0.471057544534023,
+   "edit_index_union": -0.13835757971903465,
+   "fidelity_ratio": 0.6580964319112574,
+   "li_error_vs_post": 1.3226773226773227
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 3.0,
+   "write_ratio": 0.7065863082042108,
+   "edit_index_union": 0.3180692685168798,
+   "fidelity_ratio": 0.3988156942444539,
+   "li_error_vs_post": 0.6033966033966034
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 5.0,
+   "write_ratio": 1.1776438584694495,
+   "edit_index_union": 0.4800633546516305,
+   "fidelity_ratio": 0.38062362806628913,
+   "li_error_vs_post": 0.4595404595404595
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 0.25,
+   "write_ratio": 0.0760179151995824,
+   "edit_index_union": -0.7124386353106196,
+   "fidelity_ratio": 0.9996505271548557,
+   "li_error_vs_post": 2.7292707292707292
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 0.5,
+   "write_ratio": 0.1520358303991648,
+   "edit_index_union": -0.7069690527328364,
+   "fidelity_ratio": 0.9956819552429046,
+   "li_error_vs_post": 2.6193806193806193
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 1.0,
+   "write_ratio": 0.3040716607983296,
+   "edit_index_union": -0.41104261234188405,
+   "fidelity_ratio": 0.8263403544282026,
+   "li_error_vs_post": 1.884115884115884
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 1.5,
+   "write_ratio": 0.456107490337812,
+   "edit_index_union": 0.24154633200963277,
+   "fidelity_ratio": 0.4209144189452052,
+   "li_error_vs_post": 0.6513486513486514
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 2.0,
+   "write_ratio": 0.6081433215966592,
+   "edit_index_union": 0.5254121604734171,
+   "fidelity_ratio": 0.25528203087751766,
+   "li_error_vs_post": 0.2137862137862138
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 3.0,
+   "write_ratio": 0.912214980675624,
+   "edit_index_union": 0.6078598033574586,
+   "fidelity_ratio": 0.24072442108722703,
+   "li_error_vs_post": 0.11188811188811189
+  },
+  {
+   "editor": "PI",
+   "point": 4,
+   "alpha": 5.0,
+   "write_ratio": 1.5203582873711219,
+   "edit_index_union": 0.4122775149942002,
+   "fidelity_ratio": 0.6165016469338719,
+   "li_error_vs_post": 0.8871128871128872
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 0.25,
+   "write_ratio": 0.06434417659273514,
+   "edit_index_union": -0.7117717770618369,
+   "fidelity_ratio": 0.9990030953310152,
+   "li_error_vs_post": 2.693306693306693
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 0.5,
+   "write_ratio": 0.12868835318547028,
+   "edit_index_union": -0.6760053103005644,
+   "fidelity_ratio": 0.9792384059202945,
+   "li_error_vs_post": 2.4495504495504496
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 1.0,
+   "write_ratio": 0.25737670637094057,
+   "edit_index_union": 0.0726147379858989,
+   "fidelity_ratio": 0.5657455065866966,
+   "li_error_vs_post": 0.8431568431568431
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 1.5,
+   "write_ratio": 0.3860650612757756,
+   "edit_index_union": 0.5177618244158473,
+   "fidelity_ratio": 0.276734420311576,
+   "li_error_vs_post": 0.14185814185814186
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 2.0,
+   "write_ratio": 0.5147534127418811,
+   "edit_index_union": 0.5968289872821932,
+   "fidelity_ratio": 0.2307803157548751,
+   "li_error_vs_post": 0.07592407592407592
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 3.0,
+   "write_ratio": 0.7721301225515512,
+   "edit_index_union": 0.5447210695650752,
+   "fidelity_ratio": 0.33714624285012246,
+   "li_error_vs_post": 0.22777222777222778
+  },
+  {
+   "editor": "PI",
+   "point": 5,
+   "alpha": 5.0,
+   "write_ratio": 1.286883560510782,
+   "edit_index_union": 0.27670204783567753,
+   "fidelity_ratio": 0.9020611841896846,
+   "li_error_vs_post": 1.5144855144855145
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 0.25,
+   "write_ratio": 0.028533444954798773,
+   "edit_index_union": -0.7122805469330946,
+   "fidelity_ratio": 0.9994093345748586,
+   "li_error_vs_post": 2.7132867132867133
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 0.5,
+   "write_ratio": 0.057066889909597546,
+   "edit_index_union": -0.7016527136033022,
+   "fidelity_ratio": 0.9923866153963593,
+   "li_error_vs_post": 2.5534465534465536
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 1.0,
+   "write_ratio": 0.11413377981919509,
+   "edit_index_union": -0.4668048832474917,
+   "fidelity_ratio": 0.876891241431588,
+   "li_error_vs_post": 1.948051948051948
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 1.5,
+   "write_ratio": 0.17120067030191422,
+   "edit_index_union": -0.24691091952695152,
+   "fidelity_ratio": 0.7713656912794697,
+   "li_error_vs_post": 1.6283716283716283
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 2.0,
+   "write_ratio": 0.22826755963839018,
+   "edit_index_union": -0.10245753756313605,
+   "fidelity_ratio": 0.7035166782712068,
+   "li_error_vs_post": 1.3706293706293706
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 3.0,
+   "write_ratio": 0.34240134060382843,
+   "edit_index_union": 0.06163285194729012,
+   "fidelity_ratio": 0.6746003138405148,
+   "li_error_vs_post": 1.112887112887113
+  },
+  {
+   "editor": "PI",
+   "point": 6,
+   "alpha": 5.0,
+   "write_ratio": 0.5706688922185165,
+   "edit_index_union": 0.08901299686974902,
+   "fidelity_ratio": 0.9576222254578958,
+   "li_error_vs_post": 1.6463536463536463
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 0.25,
+   "write_ratio": 0.022170366217883732,
+   "edit_index_union": -0.7034401849154875,
+   "fidelity_ratio": 0.9950642472196559,
+   "li_error_vs_post": 2.687312687312687
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 0.5,
+   "write_ratio": 0.044340732435767465,
+   "edit_index_union": -0.6795177970156989,
+   "fidelity_ratio": 0.9902376773110944,
+   "li_error_vs_post": 2.629370629370629
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 1.0,
+   "write_ratio": 0.08868146487153493,
+   "edit_index_union": -0.5745127016131883,
+   "fidelity_ratio": 0.9580131048700434,
+   "li_error_vs_post": 2.305694305694306
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 1.5,
+   "write_ratio": 0.13302219630433962,
+   "edit_index_union": -0.42451595295513156,
+   "fidelity_ratio": 0.9253579158393007,
+   "li_error_vs_post": 2.097902097902098
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 2.0,
+   "write_ratio": 0.17736292974306986,
+   "edit_index_union": -0.31185860913317126,
+   "fidelity_ratio": 0.9215278977790806,
+   "li_error_vs_post": 1.988011988011988
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 3.0,
+   "write_ratio": 0.26604439260867924,
+   "edit_index_union": -0.18743896061622214,
+   "fidelity_ratio": 0.975260715179623,
+   "li_error_vs_post": 1.8681318681318682
+  },
+  {
+   "editor": "PI",
+   "point": 7,
+   "alpha": 5.0,
+   "write_ratio": 0.4434073200592628,
+   "edit_index_union": -0.07745825847378958,
+   "fidelity_ratio": 1.1828257643177391,
+   "li_error_vs_post": 1.8201798201798203
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 0.25,
+   "write_ratio": 0.016403527679638222,
+   "edit_index_union": -0.5832425040317278,
+   "fidelity_ratio": 0.9313945594450245,
+   "li_error_vs_post": 2.125874125874126
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 0.5,
+   "write_ratio": 0.032807055359276444,
+   "edit_index_union": -0.4204925519253864,
+   "fidelity_ratio": 0.897190721831987,
+   "li_error_vs_post": 1.948051948051948
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 1.0,
+   "write_ratio": 0.06561411071855289,
+   "edit_index_union": -0.21366735578143384,
+   "fidelity_ratio": 0.9135323949791628,
+   "li_error_vs_post": 1.87012987012987
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 1.5,
+   "write_ratio": 0.09842116557634793,
+   "edit_index_union": -0.11475537316462806,
+   "fidelity_ratio": 1.004086672506353,
+   "li_error_vs_post": 1.858141858141858
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 2.0,
+   "write_ratio": 0.13122822143710577,
+   "edit_index_union": -0.06547429085738721,
+   "fidelity_ratio": 1.1348384535940856,
+   "li_error_vs_post": 1.8161838161838162
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 3.0,
+   "write_ratio": 0.19684233115269587,
+   "edit_index_union": -0.023848518627647725,
+   "fidelity_ratio": 1.445762536241084,
+   "li_error_vs_post": 1.8141858141858143
+  },
+  {
+   "editor": "PI",
+   "point": 8,
+   "alpha": 5.0,
+   "write_ratio": 0.32807054542578185,
+   "edit_index_union": -0.0016874580266986368,
+   "fidelity_ratio": 2.059835595693182,
+   "li_error_vs_post": 1.8501498501498501
+  }
+ ],
+ "minutes": 0.1
+}

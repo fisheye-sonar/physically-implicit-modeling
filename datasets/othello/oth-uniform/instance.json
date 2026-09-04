@@ -1,31 +1,48 @@
 {
-  "instance": "oth-uniform",
-  "environment": "othello",
-  "objective": "ce",
-  "created": "2026-08-31 (corpus moved from runs/ours_on_othello/corpus during housecleaning)",
-  "description": "THE canonical Othello instance: synthetic games from Li et al.'s generator, which draws uniformly from the legal set at every move — so uniform-over-legal is the exact conditional distribution and the Bayes-optimal predictor (bayes_ce ~ 2.009 val / 2.011 test; bayes_top1 0.1704).",
-  "generator": "pim.environments.othello.vendor.othello.get_ood_game, seeded per game index: random.seed(0 * 1_000_003 + i)",
-  "splits": {
-    "train": {
-      "path": "corpus/train_<n>.npz",
-      "index_range": [0, 20000000],
-      "notes": "data-scale rungs are strict prefixes (M 90k ⊂ L1 1M ⊂ L2 5M ⊂ D 20M); the 10% val split is a seeded permutation applied by the training source"
-    },
-    "test": {
-      "path": "corpus/test_10000.npz",
-      "index_range": [90000000, 90010000],
-      "notes": "the held-out gates: legal-move mass, top-1-legal, excess CE over bayes_ce"
-    },
-    "probe": {
-      "path": "corpus/probe_20000.npz",
-      "index_range": [91000000, 91020000]
-    },
-    "edits": {
-      "path": "pim/environments/othello/vendor/intervention_benchmark.pkl",
-      "n": 1001,
-      "notes": "Li et al.'s shipped intervention cases — THE editability bench (theirs, unmodified)"
-    }
+ "instance": "oth-uniform",
+ "environment": "othello",
+ "objective": "ce",
+ "created": "2026-08-31 (corpus moved from runs/ours_on_othello/corpus during housecleaning)",
+ "description": "THE canonical Othello instance: synthetic games from Li et al.'s generator, which draws uniformly from the legal set at every move \u2014 so uniform-over-legal is the exact conditional distribution and the Bayes-optimal predictor (bayes_ce ~ 2.009 val / 2.011 test; bayes_top1 0.1704).",
+ "generator": "pim.environments.othello.vendor.othello.get_ood_game, seeded per game index: random.seed(0 * 1_000_003 + i)",
+ "splits": {
+  "train": {
+   "path": "corpus/train_<n>.npz",
+   "index_range": [
+    0,
+    20000000
+   ],
+   "notes": "data-scale rungs are strict prefixes (M 90k \u2282 L1 1M \u2282 L2 5M \u2282 D 20M); the 10% val split is a seeded permutation applied by the training source"
   },
-  "disjointness": "splits are disjoint index ranges of one seed; pim.environments.othello.corpus.assert_disjoint hashes actual token rows and hard-fails on overlap",
-  "provenance": "corpus .npz files generated 2026-08-21 in runs/ours_on_othello/corpus (see datasets/MOVES.md); train_90000.npz.regen-dup is a byte-identical regeneration kept as evidence of determinism"
+  "test": {
+   "path": "corpus/test_10000.npz",
+   "index_range": [
+    90000000,
+    90010000
+   ],
+   "notes": "the held-out gates: legal-move mass, top-1-legal, excess CE over bayes_ce"
+  },
+  "probe": {
+   "path": "corpus/probe_20000.npz",
+   "index_range": [
+    91000000,
+    91020000
+   ]
+  },
+  "edits": {
+   "path": "pim/environments/othello/vendor/intervention_benchmark.pkl",
+   "n": 1001,
+   "notes": "Li et al.'s shipped intervention cases \u2014 THE editability bench (theirs, unmodified)"
+  },
+  "probe_large": {
+   "path": "corpus/probe_large_170000.npz",
+   "index_range": [
+    92000000,
+    92170000
+   ],
+   "notes": "added 2026-09-02 for the probe-capacity sweep (experiments/probe_capacity): 170k games \u2248 4.7M positions, 5x the canonical probe rows. Never used for canonical scoring."
+  }
+ },
+ "disjointness": "splits are disjoint index ranges of one seed; pim.environments.othello.corpus.assert_disjoint hashes actual token rows and hard-fails on overlap",
+ "provenance": "corpus .npz files generated 2026-08-21 in runs/ours_on_othello/corpus (see datasets/MOVES.md); train_90000.npz.regen-dup is a byte-identical regeneration kept as evidence of determinism"
 }

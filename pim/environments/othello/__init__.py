@@ -15,7 +15,12 @@ Module map:
     bench.py    the editability bench: Benchmark buckets + mine/theirs case targets
 """
 
-from pim.environments.othello.bench import Benchmark, case_targets, load_benchmark
+from pim.environments.othello.bench import (
+    Benchmark,
+    benchmark_from_cases,
+    case_targets,
+    load_benchmark,
+)
 from pim.environments.othello.data import (
     CENTRE,
     N_CLASSES,
@@ -41,6 +46,7 @@ __all__ = [
     "synthetic_games",
     "tokens_and_labels",
     "Benchmark",
+    "benchmark_from_cases",
     "case_targets",
     "load_benchmark",
 ]

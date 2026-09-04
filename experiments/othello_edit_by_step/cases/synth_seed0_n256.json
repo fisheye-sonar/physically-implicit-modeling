@@ -1,0 +1,487 @@
+{
+ "name": "synth_seed0_n256",
+ "seed": 0,
+ "per_step": 256,
+ "steps": [
+  1,
+  59
+ ],
+ "n_cases": 14848,
+ "source": "oth-uniform corpus TEST split (oc.build(LADDER['D'])['test'], 10000 games)",
+ "recipe": "length-t prefix of a held-out game; one uniformly random occupied non-centre square flipped to the opposite colour; rejected if the legal set is unchanged or empty",
+ "stats": {
+  "1": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 0,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "2": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 0,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "3": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 20,
+   "rejected_empty_legal": 5,
+   "rejected_no_legal_pre": 0
+  },
+  "4": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 1,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "5": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 7,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "6": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 9,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "7": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 13,
+   "rejected_empty_legal": 1,
+   "rejected_no_legal_pre": 0
+  },
+  "8": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 16,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "9": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 21,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "10": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 12,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "11": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 22,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "12": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 27,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "13": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 33,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "14": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 41,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "15": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 10000,
+   "rejected_same_legal": 38,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "16": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9997,
+   "rejected_same_legal": 41,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "17": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9996,
+   "rejected_same_legal": 41,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "18": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9996,
+   "rejected_same_legal": 65,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "19": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9996,
+   "rejected_same_legal": 68,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "20": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9994,
+   "rejected_same_legal": 61,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "21": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9994,
+   "rejected_same_legal": 59,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "22": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 68,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "23": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 80,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "24": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 95,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "25": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 109,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "26": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 100,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "27": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9993,
+   "rejected_same_legal": 125,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "28": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 103,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "29": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 152,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "30": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 144,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "31": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 159,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "32": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 160,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "33": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 166,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "34": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 202,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "35": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 234,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "36": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 258,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "37": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 275,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "38": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 283,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "39": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 366,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "40": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 346,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "41": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 369,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "42": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 396,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "43": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 519,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "44": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 499,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "45": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 533,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "46": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 480,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "47": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 713,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "48": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 634,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "49": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 854,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "50": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 967,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "51": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 1132,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "52": {
+   "n": 256,
+   "games_tried": 257,
+   "pool": 9992,
+   "rejected_same_legal": 1285,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "53": {
+   "n": 256,
+   "games_tried": 257,
+   "pool": 9992,
+   "rejected_same_legal": 1748,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "54": {
+   "n": 256,
+   "games_tried": 256,
+   "pool": 9992,
+   "rejected_same_legal": 1787,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "55": {
+   "n": 256,
+   "games_tried": 259,
+   "pool": 9992,
+   "rejected_same_legal": 2477,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "56": {
+   "n": 256,
+   "games_tried": 270,
+   "pool": 9992,
+   "rejected_same_legal": 3662,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "57": {
+   "n": 256,
+   "games_tried": 286,
+   "pool": 9992,
+   "rejected_same_legal": 5540,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "58": {
+   "n": 256,
+   "games_tried": 334,
+   "pool": 9989,
+   "rejected_same_legal": 9007,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "59": {
+   "n": 0,
+   "games_tried": 9984,
+   "pool": 9984,
+   "rejected_same_legal": 583843,
+   "rejected_empty_legal": 257,
+   "rejected_no_legal_pre": 84
+  }
+ },
+ "minutes": 3.4
+}

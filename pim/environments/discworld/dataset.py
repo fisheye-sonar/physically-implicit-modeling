@@ -169,39 +169,39 @@ def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
     kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
 
     hf.create_dataset(
-        "obs_intensity", (N, F, R), dtype="float32", chunks=(C, F, R), **kw
+        "obs_intensity", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw
     )
     if soft_enabled(dcfg.sim):
         hf.create_dataset(
-            "obs_clean", (N, F, R), dtype="float32", chunks=(C, F, R), **kw
+            "obs_clean", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw
         )
-    hf.create_dataset("obs_depth", (N, F, R), dtype="float32", chunks=(C, F, R), **kw)
-    hf.create_dataset("obs_id", (N, F, R), dtype="int8", chunks=(C, F, R), **kw)
+    hf.create_dataset("obs_depth", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw)
+    hf.create_dataset("obs_id", (N, F, R), dtype="int8", chunks=(min(C, N), F, R), **kw)
     hf.create_dataset(
-        "is_visible", (N, F, max_obj), dtype="bool", chunks=(C, F, max_obj), **kw
+        "is_visible", (N, F, max_obj), dtype="bool", chunks=(min(C, N), F, max_obj), **kw
     )
     hf.create_dataset(
         "positions",
         (N, F, max_obj, 2),
         dtype="float32",
-        chunks=(C, F, max_obj, 2),
+        chunks=(min(C, N), F, max_obj, 2),
         **kw,
     )
     hf.create_dataset(
         "velocities",
         (N, F, max_obj, 2),
         dtype="float32",
-        chunks=(C, F, max_obj, 2),
+        chunks=(min(C, N), F, max_obj, 2),
         **kw,
     )
     hf.create_dataset(
-        "colors", (N, max_obj, 3), dtype="float32", chunks=(C, max_obj, 3), **kw
+        "colors", (N, max_obj, 3), dtype="float32", chunks=(min(C, N), max_obj, 3), **kw
     )
     hf.create_dataset(
-        "radii", (N, max_obj), dtype="float32", chunks=(C, max_obj), **kw
+        "radii", (N, max_obj), dtype="float32", chunks=(min(C, N), max_obj), **kw
     )
     hf.create_dataset(
-        "reflectivities", (N, max_obj), dtype="float32", chunks=(C, max_obj), **kw
+        "reflectivities", (N, max_obj), dtype="float32", chunks=(min(C, N), max_obj), **kw
     )
     hf.create_dataset("n_objects", (N,), dtype="uint8", chunks=(min(C * F, N),), **kw)
     hf.create_dataset("seeds", (N,), dtype="int64", chunks=(min(C * F, N),), **kw)

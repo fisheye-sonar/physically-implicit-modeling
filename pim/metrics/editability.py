@@ -138,6 +138,7 @@ def sim_config_from(sim: dict, n_obj: int):
         n_frames=1,
         dt=float(sim["dt"]),
         obs_res=sim["obs_res"],
+        drop_edge_rays=sim.get("drop_edge_rays", False),   # 8-ray instance (2026-09-03)
         refl_min=sim["refl_min"],
         refl_max=sim["refl_max"],
         fixed_reflectivities=True,
@@ -191,6 +192,7 @@ def build_edit_zones(
                   forward so the Edit Index can be evaluated at every rollout step.
     gt_edited_traj : (N, K, R) the sim's clean post-edit observations, `clean_obs[ef:ef+K]`.
     """
+    from pim.environments.discworld.config import obs_dim
     from pim.environments.discworld.renderer import render_frame
 
     n = len(pre_pos)
@@ -198,7 +200,7 @@ def build_edit_zones(
     cfg = sim_config_from(sim, n_obj)
     refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
     rad = np.full(n_obj, sim["radius"], np.float32)
-    R = int(sim["obs_res"])
+    R = obs_dim(cfg)                 # rays KEPT (obs_res - 2 when the wall rays are dropped)
 
     # the counterfactual world: the edited object never teleported, so it simply
     # continued from its pre-edit position along its own velocity; the other object

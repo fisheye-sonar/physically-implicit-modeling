@@ -112,6 +112,64 @@ def _split(n_seq: int, seq_of_row: np.ndarray, how: str, holdout: float, seed: i
     return np.where(tr_mask)[0], np.where(~tr_mask)[0]
 
 
+def observation_probes(data, family: str = "linear", target: str = "mine",
+                       holdout: float = 0.2, seed: int = 0, cache_dir=None,
+                       cache: bool = True, log=print, epochs: int | None = None) -> tuple:
+    """The OBSERVATION floor: the canonical probes fitted to the causal MOVE history
+    instead of a model's residual stream. No model is involved.
+
+    Matched to ``fit_probe_grid`` in every other respect — same games, same target
+    frame, same SEEDed sequence split (identical permutation, so the held-out games are
+    literally the same ones), same probe families, same padding mask.
+
+    ⚠ **Read this floor differently from discworld's.** An Othello board is a
+    DETERMINISTIC function of the move sequence, so the state is perfectly recoverable
+    from these features in principle. A low number here therefore means "a linear map /
+    one hidden layer cannot compute the flip rules from raw moves", never "the
+    information is not in the input". Discworld's observation is genuinely lossy by
+    comparison (noise, and depth is never directly observed).
+
+    Returns ``(probe, stats)`` — ONE probe; there is no residual point to sweep.
+    """
+    import torch as _t
+
+    from pim.environments.othello.data import canonical_vocab
+    from pim.probes.baselines import CausalHistory, fit_baseline_probe
+    from pim.probes.mlp import CANONICAL_HIDDEN
+
+    store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
+    n_seq = int(len(data.tokens))
+    vocab = len(canonical_vocab())
+    extra = {} if epochs is None else {"epochs": int(epochs)}   # see discworld.bench
+    fname, prov = store.key(None, kind="othello_observation", target=target,
+                            family=family, holdout=holdout, seed=seed, n_seq=n_seq,
+                            n_rows=int(data.mask.sum()), vocab=vocab, **extra)
+    if cache:
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            if log:
+                log(f"    obs-baseline cache HIT  {fname}")
+            return hit
+    # the same permutation _split draws for "sequence" — identical held-out games
+    order = np.random.default_rng(seed).permutation(n_seq)
+    cut = int(round((1 - holdout) * n_seq))
+    tr, te = order[:cut], order[cut:]
+
+    y = data.mine if target == "mine" else data.labels
+    hist = CausalHistory(_t.from_numpy(data.tokens).to(DEV), kind="one_hot", vocab=vocab)
+    out = fit_baseline_probe(
+        hist, _t.from_numpy(y.astype("int64")).to(DEV), tr, te,
+        hidden=None if family == "linear" else CANONICAL_HIDDEN, n_classes=3,
+        row_mask=_t.from_numpy(data.mask).to(DEV), seed=seed, log=log, **extra)
+    if log:
+        st = out[1]
+        log(f"    obs baseline [{target}/{family}]: err {st['error_rate']:.2f}% "
+            f"(in-sample {st['error_rate_insample']:.2f}%, d_in {st['d_in']})")
+    if cache:
+        store.store(fname, prov, out)
+    return out
+
+
 @dataclass
 class ProbeGrid:
     probes: dict  # (target, family, split, point) -> WorldStateProbe

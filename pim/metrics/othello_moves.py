@@ -144,6 +144,24 @@ def move_rmse(probs: np.ndarray, legal: list[list[int]]) -> float:
     return float(np.mean(out))
 
 
+def move_rmse_per_case(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
+    """(n_cases,) the distances ``move_rmse`` averages; NaN where the legal set is empty."""
+    out = np.full(len(legal), np.nan)
+    for i, L in enumerate(legal):
+        if L:
+            out[i] = float(np.sqrt(((probs[i] - uniform_over_legal(L)) ** 2).mean()))
+    return out
+
+
+def move_fidelity_ratio_per_case(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
+                                 legal_post: list[list[int]]) -> np.ndarray:
+    """(n_cases,) ``move_fidelity_ratio`` before its mean — the guard per case, so it can
+    be read by game position. Note the canonical scalar is a ratio of MEANS; this is the
+    per-case ratio, whose mean is not the same number."""
+    d0 = move_rmse_per_case(probs_unsteered, legal_post)
+    return move_rmse_per_case(probs_edited, legal_post) / np.maximum(d0, 1e-12)
+
+
 def move_fidelity_ratio(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
                         legal_post: list[list[int]]) -> float:
     """THE guard, Othello side — same formula and polarity as the discworld one:

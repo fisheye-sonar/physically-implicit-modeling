@@ -16,6 +16,8 @@ the move.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -102,8 +104,19 @@ class WorldStateProbe(nn.Module):
 
 
 @torch.no_grad()
-def collect_residuals(model, obs: np.ndarray, batch: int = 128) -> np.ndarray:
+def collect_residuals(model, obs: np.ndarray, batch: int = 128,
+                      memmap: str | Path | None = None,
+                      points: "list[int] | None" = None) -> np.ndarray:
     """(n_points, N, T, d_model) residual stream at every residual point/position.
+
+    ``points``: keep only these residual points (in the given order) — the capacity sweep
+    probes ONE layer of a 250k-sequence corpus, where all nine points would be 180 GB.
+
+    ``memmap``: a path to back the array with a file instead of RAM. At 30k sequences the
+    stack is 21.6 GB (Transformer-L) / 24.6 GB (Recurrent-L, d=1024), and the probe fits
+    add ~4 GB per temporary at d=1024 (``X[tr]``, its standardised copy, the augmented
+    lstsq matrix) — together past a 45G cap, which is how the first Recurrent-L score died
+    (2026-09-02). File-backed pages are RECLAIMABLE under a memory cap; RAM pages are not.
 
     Uses the model's one-pass banded forward, which *is* the sliding window (the band
     mask is the window), so this is exactly the activation a step-by-step rollout
@@ -111,15 +124,30 @@ def collect_residuals(model, obs: np.ndarray, batch: int = 128) -> np.ndarray:
     ``tests/test_transformer.py::test_buffer_rollout_matches_full_sequence``.
     """
     dev = next(model.parameters()).device
-    out: list[np.ndarray] = []
+    # Preallocated and filled in place. The previous list-then-concatenate held the
+    # whole stack TWICE at the end: 2 x 21.6 GB for Transformer-L at 30k sequences (a
+    # 44.9 GB near-miss under a 45G cap, 2026-09-01) and 2 x 24.6 GB for Recurrent-L,
+    # which was OOM-killed mid-score (2026-09-02). Peak is now one copy.
+    out: np.ndarray | None = None
     for i in range(0, len(obs), batch):
         o = torch.from_numpy(obs[i : i + batch]).float().to(dev)
         tokens = model.embed(o)
         _, resids = model._run(
             tokens, model._seq_mask(o.shape[1], dev), want_resid=True
         )
-        out.append(torch.stack(resids, 0).float().cpu().numpy())
-    return np.concatenate(out, axis=1)
+        stack = torch.stack(resids, 0)
+        if points is not None:
+            stack = stack[list(points)]
+        chunk = stack.float().cpu().numpy()
+        if out is None:
+            shape = (chunk.shape[0], len(obs), *chunk.shape[2:])
+            out = (np.lib.format.open_memmap(str(memmap), mode="w+", dtype=np.float32,
+                                             shape=shape)
+                   if memmap is not None else np.empty(shape, dtype=np.float32))
+        out[:, i : i + chunk.shape[1]] = chunk
+    if memmap is not None:
+        out.flush()
+    return out
 
 
 # ── Fitting ───────────────────────────────────────────────────────────────────

@@ -40,7 +40,10 @@ class ProbeCache:
     def key(self, model, **prov) -> tuple[str, dict]:
         """(filename, provenance). Every input that changes the fitted probe belongs in
         ``prov`` — target, n_seq, split, hidden, basis, seed, data path, …"""
-        full = {"model": fingerprint(model),
+        # model=None is the OBSERVATION baseline: those probes read the raw input
+        # history, so there is no model to fingerprint. Every other key is unchanged,
+        # and "none" can never collide with a real 12-hex fingerprint.
+        full = {"model": fingerprint(model) if model is not None else "none",
                 "span": int(getattr(model, "state_span", -1)),
                 "v": self.VERSION, **prov}
         h = hashlib.blake2b(repr(sorted(full.items())).encode(), digest_size=8).hexdigest()

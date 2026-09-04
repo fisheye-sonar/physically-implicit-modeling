@@ -21,6 +21,8 @@ is reproducible via ``space="legacy"``.
 from __future__ import annotations
 
 import json
+import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,7 +42,7 @@ from pim.metrics.editability import (
 from pim.probes.base import collect_residuals
 from pim.probes.cache import ProbeCache
 from pim.probes.linear import fit_linear
-from pim.probes.mlp import fit_mlp
+from pim.probes.mlp import CANONICAL_HIDDEN, fit_mlp
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
@@ -145,7 +147,12 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     can never be served another model's probes.
     """
     store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
-    dd = Path(data_dir) if data_dir is not None else DATA
+    # .resolve(): the cache key must not depend on how the path was SPELLED. A
+    # relative data_dir (a pilot run from the repo root) and an absolute one
+    # (master_eval, which resolves REPO) hashed to DIFFERENT keys, so every probe
+    # was fitted and stored twice — and a 4-probe refit is a ~24 GB job that once
+    # OOM-killed the desktop (2026-09-01).
+    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
     fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=split,
                             family=family, basis=basis_name, seed=SEED,
                             data=str(dd))
@@ -169,7 +176,16 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     # take a 40-frame episode; truncating here keeps both architectures on one path.
     span = getattr(model, "state_span", obs.shape[1])
     obs = obs[:, : min(obs.shape[1], span)]
-    R = collect_residuals(model, obs, batch=64)  # (NP, N, T, d)
+    # Disk-backed: the stack alone is 21.6-24.6 GB and the fits' temporaries must fit
+    # beside it under the memory cap (see collect_residuals). Deleted after the fits.
+    # ⛔ NOT the system tempdir: /tmp is tmpfs (RAM) on the lab box, which is how the
+    # first "disk-backed" attempt filled 24.6 GB of RAM and hit a quota (2026-09-02).
+    # The repo lives on nvme with terabytes free; .scratch/ is gitignored.
+    _sdir = Path(__file__).resolve().parents[3] / ".scratch"
+    _sdir.mkdir(exist_ok=True)
+    _tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=_sdir)
+    _tmp.close()
+    R = collect_residuals(model, obs, batch=64, memmap=_tmp.name)  # (NP, N, T, d)
     y = y[:, : R.shape[2]]
     rng = np.random.default_rng(SEED)
     perm = rng.permutation(n_seq)
@@ -185,10 +201,72 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
         if log:
             log(f"    point {ell}: R2 {s['r2']:+.4f}  rmse {s['rmse']:.4f}")
     del R
+    os.unlink(_tmp.name)
     if cache:
         store.store(fname, prov, out)
         if log:
             log(f"    probe cache WROTE {fname}")
+    return out
+
+
+def observation_probes(target: str = "full", n_seq: int = 30_000, split: str = "test",
+                       family: str = "linear", basis_name: str = "cartesian",
+                       span: int = 39, data_dir=None, cache_dir=None,
+                       cache: bool = True, log=print, epochs: int | None = None) -> tuple:
+    """The OBSERVATION floor: the canonical probes fitted to the causal observation
+    history instead of a model's residual stream. No model is involved at all.
+
+    Matched to ``fit_probes`` in every other respect — same corpus, same ``n_seq``, same
+    SEEDed 80/20 split by sequence (identical permutation, so the held-out episodes are
+    literally the same ones), same targets, same basis, same probe families — so the
+    only difference between this row of Table 3 and a model row is the features.
+
+    ``span`` matches the model's ``state_span`` so frames align one-for-one; the feature
+    at frame t is obs[0..t] zero-padded to span, i.e. exactly what the model has consumed
+    when its residual stream is read at t. Returns ``(probe, stats)`` — ONE probe, since
+    there is no residual point to sweep.
+    """
+    import torch as _t
+
+    from pim.probes.baselines import CausalHistory, fit_baseline_probe
+
+    store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
+    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
+    # `epochs` enters the key only when set: the canonical fit (200 epochs on 30k) keeps its
+    # existing keys; the 5x-corpus floor runs 50 epochs (>= 2x the canonical step count).
+    extra = {} if epochs is None else {"epochs": int(epochs)}
+    fname, prov = store.key(None, kind="observation", target=target, n_seq=int(n_seq),
+                            split=split, family=family, basis=basis_name, seed=SEED,
+                            span=int(span), data=str(dd), **extra)
+    if cache:
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            if log:
+                log(f"    obs-baseline cache HIT  {fname}")
+            return hit
+    with h5py.File(dd / f"{split}.h5", "r") as f:
+        obs = f["obs_intensity"][:n_seq].astype(np.float32)
+        pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+    sim = json.load(open(dd / "dataset.json"))["sim"]
+    bp, bv = _to_basis(pos, vel, sim, basis_name)
+    y = bp.reshape(n_seq, bp.shape[1], -1)
+    if target == "full":
+        y = np.concatenate([y, bv.reshape(n_seq, bv.shape[1], -1)], axis=-1)
+    obs, y = obs[:, :span], y[:, :span]
+    # THE SAME permutation fit_probes draws — the two floors and the model are compared
+    # on identical held-out episodes, not merely on splits of the same size.
+    perm = np.random.default_rng(SEED).permutation(n_seq)
+    tr, te = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
+    hist = CausalHistory(_t.from_numpy(obs).to(DEV))
+    out = fit_baseline_probe(hist, _t.from_numpy(y).float().to(DEV), tr, te,
+                             hidden=None if family == "linear" else CANONICAL_HIDDEN,
+                             seed=SEED, log=log, **extra)
+    if log:
+        log(f"    obs baseline [{basis_name}/{family}]: R2 {out[1]['r2']:+.4f} "
+            f"(in-sample {out[1]['r2_insample']:+.4f}, d_in {out[1]['d_in']})")
+    if cache:
+        store.store(fname, prov, out)
     return out
 
 
@@ -214,7 +292,13 @@ def score(model, b: Bench, roll: np.ndarray, uns_card: dict | None = None) -> di
 
 @torch.no_grad()
 def _roll_hook(model, state, hook, steps: int = K_ROLL):
-    """Free-run whose FIRST step is produced under a callable edit hook."""
+    """Free-run whose FIRST step is produced under a callable edit hook.
+
+    A recurrent model carries its edited hiddens forward (``rollout_with_hook``); the
+    transformers carry only the observation window, so for them the hook shapes one
+    prediction and the rest of the rollout is recomputed unedited."""
+    if hasattr(model, "rollout_with_hook"):
+        return model.rollout_with_hook(state, hook, steps).cpu().numpy()
     pred = model.decode(state, edit=hook)
     out, s = [pred], model.advance(state, pred)
     for _ in range(steps - 1):
@@ -268,76 +352,126 @@ def unsteered_rollout(model, b: Bench) -> np.ndarray:
 
 @torch.no_grad()
 def pinv_rollout(model, b: Bench, probe, ell: int, alpha: float,
-                 space: str = "zspace") -> np.ndarray:
+                 space: str = "zspace", dims: str = "all") -> np.ndarray:
     """PI's rollout at one residual point and step size."""
     as_activations(model, ell)
     h0 = model.flat_state(b.state)
-    h = h0 + alpha * pinv_step(h0, b.tgt, probe, space=space)
+    h = h0 + alpha * pinv_step(h0, b.tgt, probe, space=space, dims=dim_idx(dims))
     return model.rollout_with_edit(b.state, ell, h, K_ROLL).cpu().numpy()
 
 
 @torch.no_grad()
-def nanda_rollout(model, b: Bench, probe, ell: int, alpha: float) -> np.ndarray:
+def nanda_rollout(model, b: Bench, probe, ell: int, alpha: float,
+                  dims: str = "all") -> np.ndarray:
     """ND's rollout at one residual point and step size."""
-    d = probe_direction(probe, b.out_dims)
+    idx = dim_idx(dims)
+    rows = b.out_dims if idx is None else [d for d in b.out_dims if d in set(idx)]
+    d = probe_direction(probe, rows)
     return _roll_hook(model, b.state, addition_hook(ell, d, alpha))
 
 
 def grad_steer_rollout(model, b: Bench, probes: dict, start_layer: int, alpha: float,
-                       n_steps: int = 100, beta: float = 0.2) -> np.ndarray:
+                       n_steps: int = 100, beta: float = 0.2,
+                       dims: str = "all") -> np.ndarray:
     """GS's rollout from ``start_layer`` and every residual point after it."""
     pts = {e: probes[e][0] for e in probes if e >= start_layer}
+    cm = restrict_mask(b.change_mask, dims)
     specs = {}
     for e, pr in pts.items():
         as_activations(model, e)
-        specs[e] = build_edit_spec(pr, model.flat_state(b.state), b.change_mask,
+        specs[e] = build_edit_spec(pr, model.flat_state(b.state), cm,
                                    b.tgt, beta=beta)
     hook = make_intervention_hook(pts, specs, start_layer, alpha=alpha, n_steps=n_steps)
     return _roll_hook(model, b.state, hook)
+
+
+# ── which read-outs an edit drives ───────────────────────────────────────────
+#
+# Discworld fits ONE probe set per basis, on the FULL state, and the editability sweep
+# asks that probe for position alone AND for everything; the better of the two is the
+# reported number (2026-09-01). Nothing was lost in retiring the pos-only probes: for the
+# LINEAR probe the position rows of a full-state least-squares fit are BIT-IDENTICAL to a
+# position-only fit — multi-output lstsq decomposes per output dimension, so fitting
+# velocity alongside cannot perturb the position rows (verified on cached probes,
+# max|W_full[:4] − W_pos| = 0.0 in both bases). "pos" therefore REPRODUCES the retired
+# pos-only probe exactly for PI and ND. The MLP does not decompose — its hidden layer
+# couples the outputs — so for GS the two are genuinely different probes, which is the
+# reason to sweep both rather than assume.
+
+DIM_SETS: dict[str, tuple[int, ...] | None] = {
+    "pos": tuple(range(2 * N_OBJ)),   # every object's position
+    "all": None,                      # every read-out the probe has
+}
+
+
+def dim_idx(dims: str):
+    """Name -> read-out indices (None = all of them)."""
+    if dims not in DIM_SETS:
+        raise KeyError(f"dims must be one of {sorted(DIM_SETS)}, got {dims!r}")
+    return DIM_SETS[dims]
+
+
+def restrict_mask(cm: torch.Tensor, dims: str) -> torch.Tensor:
+    """A change mask keeping only ``dims``. The dropped read-outs do NOT leave the loss:
+    ``build_edit_spec`` holds every unmasked dim at its pre-edit value, so they become
+    hold-the-rest constraints — which is what "edit position only" should mean."""
+    idx = dim_idx(dims)
+    if idx is None:
+        return cm
+    keep = torch.zeros(cm.shape[1], dtype=torch.bool, device=cm.device)
+    keep[list(idx)] = True
+    return cm & keep
 
 
 # ── the three workhorse arms ─────────────────────────────────────────────────
 
 
 @torch.no_grad()
-def nanda_arm(model, b: Bench, probe, ell: int, alphas) -> list[dict]:
+def nanda_arm(model, b: Bench, probe, ell: int, alphas,
+              dims: str = "all") -> list[dict]:
     """ND at one residual point, α swept. Direction = the edited object's read-out rows."""
     recs = []
     for a in alphas:
-        roll = nanda_rollout(model, b, probe, ell, a)
-        recs.append({"editor": "ND", "point": ell, "alpha": float(a),
+        roll = nanda_rollout(model, b, probe, ell, a, dims=dims)
+        recs.append({"editor": "ND", "point": ell, "alpha": float(a), "dims": dims,
                      "write_ratio": float(a), **score(model, b, roll)})
     return recs
 
 
 @torch.no_grad()
-def pinv_arm(model, b: Bench, probes: dict, alphas, space: str = "zspace") -> list[dict]:
+def pinv_arm(model, b: Bench, probes: dict, alphas, space: str = "zspace",
+             dims: str = "all") -> list[dict]:
     """PI at ONE residual point, tried at every point, α swept (α=1 = the exact jump).
 
     Both axes are load-bearing: 2026-08-21 measured 28× across points and ~50× across α.
     """
+    idx = dim_idx(dims)
     recs = []
     for ell, (probe, _) in probes.items():
         as_activations(model, ell)
         h0 = model.flat_state(b.state)
-        step = pinv_step(h0, b.tgt, probe, space=space)
-        err0 = readout_error(h0, b.tgt, probe)
+        step = pinv_step(h0, b.tgt, probe, space=space, dims=idx)
+        # the landing check is scored on the DRIVEN dims — see readout_error's docstring
+        err0 = readout_error(h0, b.tgt, probe, dims=idx)
         for a in alphas:
             h = h0 + a * step
             roll = model.rollout_with_edit(b.state, ell, h, K_ROLL).cpu().numpy()
             recs.append({"editor": f"PI[{space}]", "point": ell, "alpha": float(a),
+                         "dims": dims,
                          "write_ratio": float((a * step).norm(dim=1)
                                               .div(h0.norm(dim=1)).mean()),
                          "readout_err_before": err0,
-                         "readout_err_after": readout_error(h, b.tgt, probe),
+                         "readout_err_after": readout_error(h, b.tgt, probe, dims=idx),
                          **score(model, b, roll)})
     return recs
 
 
 def grad_steer_arm(model, b: Bench, probes: dict, start_layers, alphas,
-                   n_steps: int = 100, beta: float = 0.2) -> list[dict]:
+                   n_steps: int = 100, beta: float = 0.2,
+                   dims: str = "all") -> list[dict]:
     """GS from each start layer and EVERY point after it — Li's sequential schedule."""
     recs = []
+    cm = restrict_mask(b.change_mask, dims)
     for ls in start_layers:
         pts = {e: probes[e][0] for e in probes if e >= ls}
         for a in alphas:
@@ -345,12 +479,13 @@ def grad_steer_arm(model, b: Bench, probes: dict, start_layers, alphas,
             for e, pr in pts.items():
                 as_activations(model, e)
                 specs[e] = build_edit_spec(pr, model.flat_state(b.state),
-                                           b.change_mask, b.tgt, beta=beta)
+                                           cm, b.tgt, beta=beta)
             rec: dict = {}
             hook = make_intervention_hook(pts, specs, ls, alpha=a, n_steps=n_steps,
                                           record=rec)
             roll = _roll_hook(model, b.state, hook)
             recs.append({"editor": f"GS@L{ls}", "point": ls, "alpha": float(a),
+                         "dims": dims,
                          "write_ratio": float(np.mean(
                              [d["delta_norm"] / d["x_norm"] for d in rec.values()
                               if isinstance(d, dict) and d.get("x_norm", 0) > 0]

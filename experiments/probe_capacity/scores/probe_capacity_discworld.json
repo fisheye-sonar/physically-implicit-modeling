@@ -1,0 +1,217 @@
+{
+ "env": "discworld",
+ "run": "L-dw-20m",
+ "arch": "transformer_l",
+ "point": 3,
+ "basis": "frustum",
+ "target": "full",
+ "corpus": "datasets/discworld/dw-pn04/probe_250k/test.h5 n_seq=250000 span=39 basis=frustum target=full",
+ "n_seq": 250000,
+ "split": "80/20 by sequence, seed 0",
+ "epochs": 50,
+ "batch": 4096,
+ "widths": [
+  "LIN",
+  "16",
+  "64",
+  "128",
+  "512",
+  "1024",
+  "2048"
+ ],
+ "refs": {
+  "trained": {
+   "LIN": 0.9835522770881653,
+   "128": 0.996091365814209
+  },
+  "random_init": {
+   "LIN": 0.6698005199432373,
+   "128": 0.9600276947021484
+  },
+  "observation": {
+   "LIN": 0.18005740642547607,
+   "128": 0.6955505609512329
+  }
+ },
+ "refs_label": "30k sequences",
+ "cells": {
+  "trained": {
+   "LIN": {
+    "skill": 0.9834136366844177,
+    "insample_gap": 0.00014322996139526367,
+    "params": 4104,
+    "n_train_rows": 7800000,
+    "minutes": 0.09,
+    "cache": "probes_a88721c4727597f5.pt"
+   },
+   "16": {
+    "skill": 0.9856939315795898,
+    "insample_gap": 0.0001347661018371582,
+    "params": 8344,
+    "n_train_rows": 7800000,
+    "minutes": 2.0,
+    "cache": "probes_404c346b5ea30581.pt"
+   },
+   "64": {
+    "skill": 0.9958080649375916,
+    "insample_gap": 2.8133392333984375e-05,
+    "params": 33352,
+    "n_train_rows": 7800000,
+    "minutes": 1.99,
+    "cache": "probes_0b9d41b1ce58a2d3.pt"
+   },
+   "128": {
+    "skill": 0.9969427585601807,
+    "insample_gap": 1.4185905456542969e-05,
+    "params": 66696,
+    "n_train_rows": 7800000,
+    "minutes": 1.99,
+    "cache": "probes_9e87ea8b781bdf20.pt"
+   },
+   "512": {
+    "skill": 0.9978707432746887,
+    "insample_gap": 2.1576881408691406e-05,
+    "params": 266760,
+    "n_train_rows": 7800000,
+    "minutes": 1.97,
+    "cache": "probes_f35e7f42eccea909.pt"
+   },
+   "1024": {
+    "skill": 0.997820258140564,
+    "insample_gap": 3.0100345611572266e-05,
+    "params": 533512,
+    "n_train_rows": 7800000,
+    "minutes": 1.99,
+    "cache": "probes_a6a82cbbb01a23e0.pt"
+   },
+   "2048": {
+    "skill": 0.9978868365287781,
+    "insample_gap": 3.0934810638427734e-05,
+    "params": 1067016,
+    "n_train_rows": 7800000,
+    "minutes": 2.22,
+    "cache": "probes_8bb7bdbef720db3a.pt"
+   }
+  },
+  "random_init": {
+   "LIN": {
+    "skill": 0.6712924242019653,
+    "insample_gap": -6.556510925292969e-06,
+    "params": 4104,
+    "n_train_rows": 7800000,
+    "minutes": 0.08,
+    "cache": "probes_74be5c7df2f83429.pt"
+   },
+   "16": {
+    "skill": 0.8862726092338562,
+    "insample_gap": 0.0008682608604431152,
+    "params": 8344,
+    "n_train_rows": 7800000,
+    "minutes": 1.99,
+    "cache": "probes_b5a7253be8f4ce72.pt"
+   },
+   "64": {
+    "skill": 0.9422876834869385,
+    "insample_gap": 0.0006530284881591797,
+    "params": 33352,
+    "n_train_rows": 7800000,
+    "minutes": 2.0,
+    "cache": "probes_067ad410ef99b2e0.pt"
+   },
+   "128": {
+    "skill": 0.9566911458969116,
+    "insample_gap": 0.000532984733581543,
+    "params": 66696,
+    "n_train_rows": 7800000,
+    "minutes": 1.99,
+    "cache": "probes_274013f5033d5f53.pt"
+   },
+   "512": {
+    "skill": 0.970115602016449,
+    "insample_gap": 0.00046521425247192383,
+    "params": 266760,
+    "n_train_rows": 7800000,
+    "minutes": 1.98,
+    "cache": "probes_4a191bf8a8612590.pt"
+   },
+   "1024": {
+    "skill": 0.9747363328933716,
+    "insample_gap": 0.00048148632049560547,
+    "params": 533512,
+    "n_train_rows": 7800000,
+    "minutes": 2.0,
+    "cache": "probes_74e86b84598abeb3.pt"
+   },
+   "2048": {
+    "skill": 0.9750034809112549,
+    "insample_gap": 0.0005785226821899414,
+    "params": 1067016,
+    "n_train_rows": 7800000,
+    "minutes": 2.22,
+    "cache": "probes_6756e1cdcfcbf338.pt"
+   }
+  },
+  "observation": {
+   "LIN": {
+    "skill": 0.25077080726623535,
+    "insample_gap": 0.017988622188568115,
+    "params": 39944,
+    "n_train_rows": 7800000,
+    "minutes": 0.17,
+    "cache": "probes_2f864c60e14dd366.pt"
+   },
+   "16": {
+    "skill": 0.689713716506958,
+    "insample_gap": 0.019767284393310547,
+    "params": 80024,
+    "n_train_rows": 7800000,
+    "minutes": 1.07,
+    "cache": "probes_14813c73df851d7d.pt"
+   },
+   "64": {
+    "skill": 0.8438742160797119,
+    "insample_gap": 0.017405450344085693,
+    "params": 320072,
+    "n_train_rows": 7800000,
+    "minutes": 1.11,
+    "cache": "probes_054183b27ac9c820.pt"
+   },
+   "128": {
+    "skill": 0.874567985534668,
+    "insample_gap": 0.022325575351715088,
+    "params": 640136,
+    "n_train_rows": 7800000,
+    "minutes": 1.23,
+    "cache": "probes_06403d0560243ffd.pt"
+   },
+   "512": {
+    "skill": 0.9129825234413147,
+    "insample_gap": 0.027171552181243896,
+    "params": 2560520,
+    "n_train_rows": 7800000,
+    "minutes": 2.07,
+    "cache": "probes_0efcd492e96e5329.pt"
+   },
+   "1024": {
+    "skill": 0.9170453548431396,
+    "insample_gap": 0.02942115068435669,
+    "params": 5121032,
+    "n_train_rows": 7800000,
+    "minutes": 3.35,
+    "cache": "probes_7fc18ed6032a2dc9.pt"
+   },
+   "2048": {
+    "skill": 0.9178876280784607,
+    "insample_gap": 0.029761970043182373,
+    "params": 10242056,
+    "n_train_rows": 7800000,
+    "minutes": 6.03,
+    "cache": "probes_0fde6080b37e10bf.pt"
+   }
+  }
+ },
+ "started": "2026-09-02 13:20:06",
+ "finished": "2026-09-02 14:00:26",
+ "d_out": 8,
+ "note_d_out": "a one-hidden-layer probe with width h < d_out is a rank-h bottleneck on its outputs, not a weaker function class; read the curve from h >= d_out"
+}
