@@ -11,7 +11,7 @@ Five packages, strict roles (index of every canonical object: ``research/REGISTR
 
     environments/   the worlds — discworld (sim, rendering, data, bench) and othello
                     (vendored generator, corpus, bench, arms); an *instance* packages
-                    one configuration with all its splits (instance.json)
+                    one configuration with all its splits (corpus.json + config_json)
     models/         Transformer-S and Transformer-L, each with regression AND token
                     heads; protocol.py documents THE surface everything drives
     probes/         LIN + MLP-128 (+ the nullspace cascade); fits held out by

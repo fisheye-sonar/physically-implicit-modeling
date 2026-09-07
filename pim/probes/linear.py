@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from pim.probes.base import WorldStateProbe, fit_probe
+from pim.probes.base import FIT_BATCH, FIT_EPOCHS, FIT_LR, WorldStateProbe, fit_probe
 
 
 def fit_linear(
@@ -36,9 +36,9 @@ def fit_linear(
     y_te: np.ndarray,
     *,
     n_classes: int | None = None,
-    epochs: int = 200,
-    lr: float = 1e-3,
-    batch: int = 4096,
+    epochs: int = FIT_EPOCHS,
+    lr: float = FIT_LR,
+    batch: int = FIT_BATCH,
     device: str = "cuda",
     seed: int = 0,
 ) -> tuple[WorldStateProbe, dict]:

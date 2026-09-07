@@ -42,13 +42,17 @@ def li_error(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
     return out
 
 
-def uniform_over_legal(legal: list[int]) -> np.ndarray:
-    """(64,) uniform distribution over the legal squares — the Bayes-optimal reference.
+def uniform_over_legal(legal: list[int], n_tiles: int = N_TILES) -> np.ndarray:
+    """(n_tiles,) uniform distribution over the legal squares — the Bayes-optimal reference.
+
+    ``n_tiles`` defaults to the 64 Othello squares; a frames-as-tokens discworld model
+    (2026-09-05) scores the same construction over its frame vocabulary, so the callers
+    below pass ``probs.shape[1]``.
 
     Not an approximation: the synthetic generator draws moves uniformly from the legal
     set, so this IS the true conditional distribution.
     """
-    v = np.zeros(N_TILES, np.float32)
+    v = np.zeros(n_tiles, np.float32)
     if legal:
         v[list(legal)] = 1.0 / len(legal)
     return v
@@ -83,7 +87,7 @@ def edit_index_legal(
         idx = np.array(sorted(s0 | s1 if support == "union" else s0 ^ s1), int)
         if idx.size == 0:
             continue
-        g0, g1 = uniform_over_legal(L0), uniform_over_legal(L1)
+        g0, g1 = uniform_over_legal(L0, probs.shape[1]), uniform_over_legal(L1, probs.shape[1])
         d_un = float(np.sqrt(((probs[i, idx] - g0[idx]) ** 2).mean()))
         d_ed = float(np.sqrt(((probs[i, idx] - g1[idx]) ** 2).mean()))
         if d_un + d_ed == 0:
@@ -136,12 +140,7 @@ def move_rmse(probs: np.ndarray, legal: list[list[int]]) -> float:
     This is the same distance ``edit_index_legal`` compares two worlds with; here it is
     an absolute error against one world.
     """
-    out = []
-    for i, L in enumerate(legal):
-        if not L:
-            continue
-        out.append(float(np.sqrt(((probs[i] - uniform_over_legal(L)) ** 2).mean())))
-    return float(np.mean(out))
+    return float(np.nanmean(move_rmse_per_case(probs, legal)))
 
 
 def move_rmse_per_case(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
@@ -149,7 +148,7 @@ def move_rmse_per_case(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
     out = np.full(len(legal), np.nan)
     for i, L in enumerate(legal):
         if L:
-            out[i] = float(np.sqrt(((probs[i] - uniform_over_legal(L)) ** 2).mean()))
+            out[i] = float(np.sqrt(((probs[i] - uniform_over_legal(L, probs.shape[1])) ** 2).mean()))
     return out
 
 

@@ -2,6 +2,7 @@
 import sys
 from pathlib import Path
 
+from pim.environments.discworld import arms as dwa
 from pim.environments.discworld import bench as dwb
 from pim.environments.othello import arms as oa
 from pim.environments.othello import corpus as oc
@@ -11,7 +12,7 @@ from pim.probes.baselines import random_init_model
 N, CD = 500, Path(sys.argv[1])
 print("--- discworld observation ---", flush=True)
 for fam in ("linear", "mlp"):
-    _, st = dwb.observation_probes(target="full", n_seq=N, family=fam,
+    _, st = dwa.observation_probes(target="full", n_seq=N, family=fam,
                                    basis_name="frustum", span=39,
                                    data_dir="datasets/discworld/dw-pn04/probe",
                                    cache_dir=CD, log=print)
@@ -23,7 +24,7 @@ print("--- discworld random-init ---", flush=True)
 m, info = __import__("pim.models", fromlist=["load_checkpoint"]).load_checkpoint(
     "runs/initial_othello_comparison/L-dw-20m/best_model.pt", device="cpu")
 rnd = random_init_model(info.arch, info.model_config, seed=0, device=dwb.DEV)
-f = dwb.fit_probes(rnd, target="full", n_seq=N, family="linear", basis_name="frustum",
+f = dwa.fit_probes(rnd, target="full", n_seq=N, family="linear", basis_name="frustum",
                    data_dir="datasets/discworld/dw-pn04/probe", cache_dir=CD, log=None)
 print(f"  linear best-point skill {max(v[1]['r2'] for v in f.values()):+.4f}", flush=True)
 

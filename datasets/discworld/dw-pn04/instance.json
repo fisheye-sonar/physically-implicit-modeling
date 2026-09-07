@@ -21,7 +21,7 @@
    "n": 20000000,
    "train_n": 18000000,
    "val_n": 2000000,
-   "seed_law": "shard k covers base seeds 10_000_000 + k*500_000_000 .. +500_000; retries offset by +1M per attempt (max 300), so the 500M stride and 500k shard size make collisions impossible. Verified: 0 duplicate seeds, disjoint from eval and legacy dset17.",
+   "seed_law": "shard k covers base seeds 10_000_000 + k*500_000_000 .. +500_000; a sample whose simulate() gives up retries at seed +1M per attempt (max 10, dataset.py; SimConfig.max_gen_attempts=300 is the in-sim IC loop and never changes the seed), so the 500M stride and 500k shard size make collisions impossible. Verified: 0 duplicate seeds, disjoint from eval and legacy dset17.",
    "notes": "data-scale rungs are strict prefixes of this pool (mask, never regenerate); val = the LAST 2M sequences"
   },
   "probe_train": {

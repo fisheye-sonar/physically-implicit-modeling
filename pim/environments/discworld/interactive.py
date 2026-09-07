@@ -3,7 +3,7 @@
 NEW module — does **not** modify the offline ``simulate()`` path.  The existing
 simulator generates a whole trajectory at once; ``InteractiveWorld`` exposes a
 *stateful* world you step one frame at a time with an action, so the **same**
-world can be driven by a human (keyboard — ``scripts/play.py``) or, later, by a
+world can be driven by a human (keyboard — ``scripts/demos/play.py``) or, later, by a
 world model's action head (``ModelDriver``).  See
 ``research/directions/endogenous-action-interactive-world.md``.
 
@@ -58,18 +58,8 @@ from typing import Any, Literal
 
 import numpy as np
 
-# inlined from the retired actions.py (the only symbol interactive needed from it)
-
-
-def _obj_in_frustum(p, r, cfg) -> bool:
-    """True if a circle of radius ``r`` centred at ``p`` is fully inside the frustum."""
-    x, y = float(p[0]), float(p[1])
-    if not (y - r >= cfg.y_near and y + r <= cfg.y_far):
-        return False
-    x_lim = float(frustum_half_width(y, cfg)) - r
-    return abs(x) <= x_lim
 from .config import SimConfig
-from .sim import OBJECT_COLORS, frustum_half_width
+from .sim import OBJECT_COLORS, frustum_half_width, fully_in_frustum, sample_position
 
 WallMode = Literal["bounce", "clamp"]
 Dynamics = Literal["shift", "force"]
@@ -199,9 +189,7 @@ class InteractiveWorld:
         for _ in range(self.cfg.max_reset_attempts):
             pos = np.zeros((n, 2))
             for i in range(n):
-                y = self._rng.uniform(sim.y_near + r, sim.y_far - r)
-                x_lim = frustum_half_width(y, sim) - r
-                pos[i] = (self._rng.uniform(-x_lim, x_lim), y)
+                pos[i] = sample_position(self._rng, sim, r)      # the simulator's own draw
             ok = all(
                 np.linalg.norm(pos[a] - pos[b]) >= self._spawn_sep
                 for a in range(n)
@@ -321,7 +309,7 @@ class InteractiveWorld:
 
     def _accept(self, cand: np.ndarray, i: int, positions: np.ndarray) -> bool:
         """Shift-mode guard: candidate must stay in-frustum and non-overlapping."""
-        if not _obj_in_frustum(cand, self.sim.radius, self.sim):
+        if not fully_in_frustum(np.asarray(cand)[None, None, :], self.sim.radius, self.sim):
             return False
         for j in range(self.n):
             if j != i and np.linalg.norm(cand - positions[j]) < self._contact:

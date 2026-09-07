@@ -11,8 +11,7 @@ through this one unchanged.
     *offsets* are stable between training and deployment.
   * band_causal_mask — the training-time equivalent of the inference-time sliding
     window: a fixed-size state carrying only the last ``window`` frames.
-  * CausalSelfAttention — multi-head attention taking an arbitrary boolean mask, with
-    an optional ``kv_sink`` exposing the post-RoPE (k, v) a real KV cache would store.
+  * CausalSelfAttention — multi-head attention taking an arbitrary boolean mask.
 """
 
 from __future__ import annotations
@@ -81,7 +80,6 @@ class CausalSelfAttention(nn.Module):
         x: torch.Tensor,
         attn_mask: torch.Tensor,
         rope: tuple[torch.Tensor, torch.Tensor],
-        kv_sink: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
     ) -> torch.Tensor:
         """
         Parameters
@@ -89,7 +87,6 @@ class CausalSelfAttention(nn.Module):
         x         : (B, T, d_model)
         attn_mask : bool, broadcastable to (B, n_heads, T, T); True = attend
         rope      : (cos, sin) tables of shape (T, head_dim // 2)
-        kv_sink   : if given, the post-RoPE (k, v) tensors are appended.
         """
         B, T, _ = x.shape
         q, k, v = self.qkv(x).chunk(3, dim=-1)
@@ -99,8 +96,6 @@ class CausalSelfAttention(nn.Module):
         v = v.view(B, T, self.n_heads, self.head_dim).transpose(1, 2)
         cos, sin = rope
         q, k = apply_rope(q, cos, sin), apply_rope(k, cos, sin)
-        if kv_sink is not None:
-            kv_sink.append((k, v))
         out = F.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask)
         out = out.transpose(1, 2).reshape(B, T, -1)
         return self.proj(out)

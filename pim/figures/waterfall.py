@@ -30,8 +30,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
-DARK_BG = "#0a0a14"
-DARK_TEXT = "#a3adc2"
+from pim.environments.discworld.viz import BG_HEX as DARK_BG, TEXT_COLOR as DARK_TEXT
 # The boundary marker is deliberately NEUTRAL, not warm: an earlier orange (#fa8850) was
 # visually indistinguishable from the vermilion ghost locator (#d55e00) at figure scale, so
 # two different meanings read as one colour. Locators keep the spec's green/red.

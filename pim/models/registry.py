@@ -4,7 +4,8 @@ Replaces the old ``pim/world_models/loader.py`` key-sniffing dispatch. A new-sch
 checkpoint names its architecture explicitly (``ckpt["arch"]``, written by
 ``pim.training``); the two legacy formats still in service — the canonical BIG20M runs
 and the archived S runs — are recognised by the *documented* rules below, not by
-guessing. Anything else (GRU/RSSM/DiT checkpoints) is out of scope: recover the old
+guessing. New-scheme checkpoints cover every registered architecture, Recurrent-L
+included. Pre-cleanup RSSM/DiT/original-GRU checkpoints are out of scope: recover the old
 loader from the ``pre-cleanup-2026-08`` tag if one ever needs to be opened again.
 
 Legacy recognition rules (exact, in order):
@@ -50,7 +51,7 @@ def _build_l(cfg: dict):
 
 def _build_l_tokens(cfg: dict):
     keep = {k: cfg[k] for k in ("vocab", "block_size", "n_layer", "n_head",
-                                "n_embd", "dropout") if k in cfg}
+                                "n_embd", "dropout", "output_kind") if k in cfg}
     return TransformerLTokens(**keep)
 
 

@@ -88,20 +88,11 @@ class DataSource:
 def mse_next_obs(model, x: torch.Tensor) -> torch.Tensor:
     """(B, T, R) observations → MSE on the next frame at every position.
 
-    The two architectures kept their historical forward conventions (both are gated
-    bit-identical against the checkpoints that trained under them), so the alignment
-    is dispatched here, in one visible place, rather than papered over in the models:
-    Transformer-S takes the FULL sequence and slices internally, returning
-    ``(pred, state)`` with pred aligned to ``x[:, 1:]``; Transformer-L predicts at
-    every position of whatever it is given, so it gets ``x[:, :-1]``.
+    ONE alignment rule for every architecture: ``model(frames)`` predicts the next frame
+    at every given position (the protocol's forward convention since 2026-09-07), so the
+    model sees ``x[:, :-1]`` and is scored against ``x[:, 1:]``.
     """
-    from pim.models.transformer_s import TransformerS
-
-    if isinstance(model, TransformerS):
-        pred, _ = model(x)
-    else:
-        pred = model(x[:, :-1])
-    return F.mse_loss(pred, x[:, 1:])
+    return F.mse_loss(model(x[:, :-1]), x[:, 1:])
 
 
 def xy_tokens(tok: torch.Tensor, ln: torch.Tensor, block: int):
@@ -125,6 +116,27 @@ def ce_next_move(model, batch, block: int = 59) -> torch.Tensor:
     x, y = xy_tokens(tok, ln, block)
     lg = model.logits(x)
     return F.cross_entropy(lg.reshape(-1, lg.shape[-1]), y.reshape(-1), ignore_index=IGNORE)
+
+
+def mse_next_move_onehot(model, batch, block: int = 59) -> torch.Tensor:
+    """batch = (tok, ln) → MSE between the head's RAW outputs and the ONE-HOT next move.
+
+    The regression counterpart of ``ce_next_move`` (2026-09-04): identical inputs,
+    targets and masking, the identical 61-way head — but its outputs are read as
+    probability estimates and pulled to the one-hot target by squared error (the Brier
+    score) instead of by −log softmax. Same population minimiser (the conditional
+    next-move distribution), different gradient geometry, and the outputs are NOT
+    constrained to the simplex — the model carries ``output_kind="raw"`` so scoring reads
+    them as they are (`pim.environments.othello.data.move_probs`). Padded positions are
+    dropped exactly as CE's ``ignore_index`` drops them; the loss is the mean over the
+    kept positions x all 61 outputs (the pad output's target is always 0).
+    """
+    tok, ln = batch
+    x, y = xy_tokens(tok, ln, block)
+    out = model.logits(x)                                    # (B, T, 61) raw head outputs
+    keep = y != IGNORE
+    target = F.one_hot(y.clamp_min(0), out.shape[-1]).to(out.dtype)
+    return F.mse_loss(out[keep], target[keep])
 
 
 # ── the loop ─────────────────────────────────────────────────────────────────

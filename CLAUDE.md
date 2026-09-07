@@ -33,6 +33,7 @@ completed its notebook and figures, and never reported. The work was nearly lost
 | touch data, metrics, or an old number | `research/GOTCHAS.md` |
 | write up a result or update the record | `harness/WORKFLOW.md` |
 | spawn a subagent | `harness/ORCHESTRATION.md` |
+| launch anything that outlives a reply (a training run, a corpus build, an overnight chain) | `harness/OVERNIGHT.md` — the checklist: smoke, capped unit, staged driver, two monitors, pings |
 | build the canonical qualitative panel | `research/specs/WATERFALL_SPEC.md` |
 
 **Three hard rules restated here because they are violated most often:**
@@ -90,8 +91,11 @@ bash harness/check.sh
 ## 5. Where things live
 
 - **The registry of canonical objects** → `research/REGISTRY.md` (start here)
-- Environment instances (data + `instance.json` manifest) →
-  `datasets/<class>/<instance>/`; legacy datasets in `datasets/archive/`
+- Environment instances → `datasets/<class>/<instance>/`; legacy datasets in
+  `datasets/archive/`. ⛔ `instance.json` there is a HAND-WRITTEN summary for humans —
+  never read by code, never a source of truth. The machine-written contracts are
+  `train/corpus.json` (written by `bigcorpus.verify()`) and each split's `config_json`
+  HDF5 attribute / `dataset.json` (written by `generate_dataset.py`).
 - Runs → `runs/<topic>/<run>/` (checkpoints, `config.json`, `commit_sha`,
   `metrics.jsonl`, `probes/`, `scores.json`); pre-cleanup runs in `runs/archive/`
 - ⛔ **`runs/` holds TRAINED RUNS AND NOTHING ELSE.** One directory per trained model,
@@ -116,7 +120,7 @@ bash harness/check.sh
 
     environments/  the worlds: discworld (sim + rendering + data + bench) and othello
                    (vendored generator + corpus + bench + arms). Each instance's
-                   instance.json is the data contract.
+                   train/corpus.json + split config_json are the data contracts.
     models/        Transformer-S and Transformer-L, each with a regression AND a token
                    head. protocol.py documents THE surface every model implements —
                    never add isinstance branches downstream of it.

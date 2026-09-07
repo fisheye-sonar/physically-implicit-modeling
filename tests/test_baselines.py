@@ -161,3 +161,30 @@ def test_collect_residuals_points_subset():
     full = collect_residuals(m, obs, batch=4)
     one = collect_residuals(m, obs, batch=4, points=[1])
     assert one.shape == (1, 6, 5, 16) and np.array_equal(one[0], full[1])
+
+
+def test_right_aligned_history_puts_the_present_in_block_zero():
+    """align="right": block 0 = the current frame, block k = k steps back, zero before the start."""
+    import torch
+
+    from pim.probes.baselines import CausalHistory
+
+    src = torch.arange(2 * 5 * 3, dtype=torch.float32).reshape(2, 5, 3)      # (N=2, T=5, R=3)
+    left = CausalHistory(src, kind="dense")
+    right = CausalHistory(src, kind="dense", align="right")
+    seq, frame = torch.tensor([1, 0]), torch.tensor([3, 0])
+    xl, xr = left.build(seq, frame).reshape(2, 5, 3), right.build(seq, frame).reshape(2, 5, 3)
+    # row 0: sequence 1 probed at frame 3 — left keeps frames 0..3 in blocks 0..3
+    assert torch.equal(xl[0, :4], src[1, :4]) and torch.equal(xl[0, 4], torch.zeros(3))
+    # right: block k holds frame 3-k, block 4 (frame -1) is zero
+    for k in range(4):
+        assert torch.equal(xr[0, k], src[1, 3 - k])
+    assert torch.equal(xr[0, 4], torch.zeros(3))
+    # row 1: frame 0 — only block 0 is filled under both layouts, with the same content
+    assert torch.equal(xr[1, 0], src[0, 0]) and torch.equal(xr[1, 1:], torch.zeros(4, 3))
+    assert torch.equal(xl[1, 0], src[0, 0]) and torch.equal(xl[1, 1:], torch.zeros(4, 3))
+    # one-hot: the same, expanded
+    ids = torch.tensor([[1, 2, 0, 2, 1]])
+    oh = CausalHistory(ids, kind="one_hot", vocab=3, align="right").build(torch.tensor([0]), torch.tensor([2]))
+    oh = oh.reshape(5, 3)
+    assert oh[0].argmax() == 0 and oh[1].argmax() == 2 and oh[2].argmax() == 1 and oh[3:].sum() == 0

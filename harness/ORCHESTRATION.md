@@ -81,6 +81,10 @@ If a worker fails to record or report, **reconstruct from the artifacts rather t
 
 ## Long-running jobs — the watcher-heartbeat pattern
 
+> **The operational checklist is `OVERNIGHT.md`** (2026-09-05): capped transient unit, staged
+> driver, a stage watcher plus a periodic heartbeat, pings at key points. This section keeps the
+> reasoning and the failure history behind it.
+
 For anything that outlives a foreground call:
 
 1. **Detach the real job:** `setsid nohup <cmd> > job.log 2>&1 &` so it survives the

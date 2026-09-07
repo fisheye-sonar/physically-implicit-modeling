@@ -1,8 +1,9 @@
 """pim.environments.discworld — the discworld environment: simulation, rendering, data.
 
 One environment *class*; a specific configuration of it (noise levels, object counts,
-seed/index laws for every split) is an environment *instance*, described by an
-``instance.json`` manifest inside its dataset directory.
+seed/index laws for every split) is an environment *instance*. Its machine-written
+contracts are ``train/corpus.json`` and each split's ``config_json`` attribute; the
+``instance.json`` beside them is a hand-written summary that code never reads.
 
 Module map (a file per concern, ordered by how data flows):
 
@@ -13,8 +14,13 @@ Module map (a file per concern, ordered by how data flows):
     dataset.py        HDF5 generation for train/val/test splits
     edits_dataset.py  HDF5 generation for the mid-sequence-teleport edits split
     loading.py        reading dataset directories back: Dataset / EditsData / DatasetBundle
-    dataloader.py     torch Dataset/DataLoader wrappers (lazy HDF5 and in-memory)
-    bench.py          the editability bench: warmed model states + edit zones + targets
+    bench.py          the editability bench: the edit set, warmed model states, zones,
+                      probe targets, DIM_SETS (mirrors othello/bench.py)
+    arms.py           probes over residual points, rollouts, the oracle editors and the
+                      PI / ND / GS arms (mirrors othello/arms.py)
+    bigcorpus.py      the 20M-sequence streaming train corpus (shards -> obs.f32 memmap)
+    tokens.py         frames-as-tokens: an instance's frame vocabulary + token files
+    token_bench.py    the editability bench scored the Othello way, for a token model
 
 Opt-in extensions, OFF by default and pinned bit-identical to the defaults by tests —
 present because the canonical renderer/dataset path gates on them, not because any
@@ -42,7 +48,7 @@ from pim.environments.discworld.loading import (
     DatasetBundle,
     EditsData,
     load_dataset,
-    make_test_loader,
+    load_edits,
 )
 from pim.environments.discworld.renderer import render_frame, render_scene
 from pim.environments.discworld.sim import (
@@ -72,5 +78,5 @@ __all__ = [
     "EditsData",
     "DatasetBundle",
     "load_dataset",
-    "make_test_loader",
+    "load_edits",
 ]

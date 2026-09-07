@@ -24,18 +24,15 @@ from __future__ import annotations
 
 import dataclasses
 import json
-import multiprocessing as mp
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
-import h5py
 import numpy as np
-from tqdm import tqdm
 
 from .config import SimConfig, obs_dim
-from .renderer import render_scene
-from .sim import Scene, compute_visibility, frustum_half_width, simulate
+from .dataset import common_layout, generate_h5, pack_sample, simulate_with_retry
+from .sim import Scene, frustum_half_width, fully_in_frustum
 
 # Operation codes
 OP_SET_POSITION: int = 0
@@ -107,18 +104,7 @@ def _generate_one_edit(
     seed, base_cfg, max_obj, edit_frame, edit_always_in_frustum, max_edit_attempts
     """
     seed, base_cfg, max_obj, edit_frame, edit_always_in_frustum, max_edit_attempts = args
-    cfg = dataclasses.replace(base_cfg, seed=int(seed))
-
-    # ── Generate base scene (same retry pattern as _generate_one) ─────────
-    for attempt in range(10):
-        try:
-            if attempt:
-                cfg = dataclasses.replace(cfg, seed=int(seed) + attempt * 1_000_000)
-            scene = simulate(cfg)
-            break
-        except RuntimeError:
-            if attempt == 9:
-                raise
+    scene, cfg = simulate_with_retry(base_cfg, seed)    # the shared seed law
 
     T = cfg.n_frames
     n = scene.positions.shape[1]
@@ -149,18 +135,12 @@ def _generate_one_edit(
             if not ok:
                 break
 
-            # Optional frustum containment check
-            if edit_always_in_frustum:
-                x, y = float(edited_pos[0]), float(edited_pos[1])
-                r = cfg.radius
-                x_lim = float(frustum_half_width(y, cfg))
-                if not (
-                    y - r >= cfg.y_near
-                    and y + r <= cfg.y_far
-                    and abs(x) + r <= x_lim
-                ):
-                    ok = False
-                    break
+            # Optional frustum containment check — the simulator's own rule
+            if edit_always_in_frustum and not fully_in_frustum(
+                edited_pos[None, None, :], cfg.radius, cfg
+            ):
+                ok = False
+                break
 
         if ok:
             new_pos = candidate
@@ -186,38 +166,9 @@ def _generate_one_edit(
         config=scene.config,
     )
 
-    # ── Render and compute visibility with modified scene ─────────────────
-    obs_depth, obs_id, obs_intensity = render_scene(modified_scene)
-    vis = compute_visibility(modified_scene)
-
-    # ── Pack output (same padding pattern as _generate_one) ───────────────
-    pos_out  = np.zeros((T, max_obj, 2), dtype=np.float32)
-    vel_out  = np.zeros((T, max_obj, 2), dtype=np.float32)
-    col_out  = np.zeros((max_obj, 3),    dtype=np.float32)
-    rad_out  = np.zeros((max_obj,),      dtype=np.float32)
-    refl_out = np.zeros((max_obj,),      dtype=np.float32)
-    vis_out  = np.zeros((T, max_obj),    dtype=bool)
-
-    pos_out[:, :n]  = new_positions.astype(np.float32)
-    vel_out[:, :n]  = modified_scene.velocities.astype(np.float32)
-    col_out[:n]     = modified_scene.colors.astype(np.float32)
-    rad_out[:n]     = modified_scene.radii.astype(np.float32)
-    refl_out[:n]    = modified_scene.reflectivities.astype(np.float32)
-    vis_out[:, :n]  = vis
-
+    # ── Render + pack (the shared packer), then the edit metadata ─────────
     return {
-        "obs_intensity":  obs_intensity.astype(np.float32),
-        "obs_depth":      obs_depth.astype(np.float32),
-        "obs_id":         obs_id.astype(np.int8),
-        "is_visible":     vis_out,
-        "positions":      pos_out,
-        "velocities":     vel_out,
-        "colors":         col_out,
-        "radii":          rad_out,
-        "reflectivities": refl_out,
-        "n_objects":      np.uint8(n),
-        "seed":           np.int64(cfg.seed),
-        # edit metadata
+        **pack_sample(modified_scene, cfg, max_obj),
         "edit_frame":     np.int32(eff_edit_frame),
         "edit_object":    np.int8(obj_idx),
         "edit_op":        np.uint8(OP_SET_POSITION),
@@ -226,51 +177,13 @@ def _generate_one_edit(
     }
 
 
-# ── HDF5 helpers ──────────────────────────────────────────────────────────────
-
-
-def _create_datasets(hf: h5py.File, dcfg: EditDatasetConfig, max_obj: int) -> None:
-    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, obs_dim(dcfg.sim)
-    C = min(dcfg.hdf5_chunk, N)
-    kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
-
-    hf.create_dataset("obs_intensity",  (N, F, R),          dtype="float32", chunks=(C, F, R),          **kw)
-    hf.create_dataset("obs_depth",      (N, F, R),          dtype="float32", chunks=(C, F, R),          **kw)
-    hf.create_dataset("obs_id",         (N, F, R),          dtype="int8",    chunks=(C, F, R),          **kw)
-    hf.create_dataset("is_visible",     (N, F, max_obj),    dtype="bool",    chunks=(C, F, max_obj),    **kw)
-    hf.create_dataset("positions",      (N, F, max_obj, 2), dtype="float32", chunks=(C, F, max_obj, 2), **kw)
-    hf.create_dataset("velocities",     (N, F, max_obj, 2), dtype="float32", chunks=(C, F, max_obj, 2), **kw)
-    hf.create_dataset("colors",         (N, max_obj, 3),    dtype="float32", chunks=(C, max_obj, 3),    **kw)
-    hf.create_dataset("radii",          (N, max_obj),       dtype="float32", chunks=(C, max_obj),       **kw)
-    hf.create_dataset("reflectivities", (N, max_obj),       dtype="float32", chunks=(C, max_obj),       **kw)
-    hf.create_dataset("n_objects",      (N,),               dtype="uint8",   chunks=(min(C * F, N),),   **kw)
-    hf.create_dataset("seeds",          (N,),               dtype="int64",   chunks=(min(C * F, N),),   **kw)
-    # edit metadata
-    hf.create_dataset("edit_frame",     (N,),    dtype="int32",   chunks=(min(C * F, N),), **kw)
-    hf.create_dataset("edit_object",    (N,),    dtype="int8",    chunks=(min(C * F, N),), **kw)
-    hf.create_dataset("edit_op",        (N,),    dtype="uint8",   chunks=(min(C * F, N),), **kw)
-    hf.create_dataset("edit_value",     (N, 2),  dtype="float32", chunks=(min(C * F, N), 2), **kw)
-    hf.create_dataset("n_edits",        (N,),    dtype="uint8",   chunks=(min(C * F, N),), **kw)
-
-
-def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
-    end = start + len(batch)
-    hf["obs_intensity"][start:end]  = np.stack([s["obs_intensity"]  for s in batch])
-    hf["obs_depth"][start:end]      = np.stack([s["obs_depth"]      for s in batch])
-    hf["obs_id"][start:end]         = np.stack([s["obs_id"]         for s in batch])
-    hf["is_visible"][start:end]     = np.stack([s["is_visible"]     for s in batch])
-    hf["positions"][start:end]      = np.stack([s["positions"]      for s in batch])
-    hf["velocities"][start:end]     = np.stack([s["velocities"]     for s in batch])
-    hf["colors"][start:end]         = np.stack([s["colors"]         for s in batch])
-    hf["radii"][start:end]          = np.stack([s["radii"]          for s in batch])
-    hf["reflectivities"][start:end] = np.stack([s["reflectivities"] for s in batch])
-    hf["n_objects"][start:end]      = np.array([s["n_objects"]      for s in batch], dtype=np.uint8)
-    hf["seeds"][start:end]          = np.array([s["seed"]           for s in batch], dtype=np.int64)
-    hf["edit_frame"][start:end]     = np.array([s["edit_frame"]     for s in batch], dtype=np.int32)
-    hf["edit_object"][start:end]    = np.array([s["edit_object"]    for s in batch], dtype=np.int8)
-    hf["edit_op"][start:end]        = np.array([s["edit_op"]        for s in batch], dtype=np.uint8)
-    hf["edit_value"][start:end]     = np.stack([s["edit_value"]     for s in batch])
-    hf["n_edits"][start:end]        = np.array([s["n_edits"]        for s in batch], dtype=np.uint8)
+EDIT_LAYOUT = [                       # the five extra fields, after the common ones
+    ("edit_frame", (), "int32", "scalar"),
+    ("edit_object", (), "int8", "scalar"),
+    ("edit_op", (), "uint8", "scalar"),
+    ("edit_value", (2,), "float32", "scalar"),
+    ("n_edits", (), "uint8", "scalar"),
+]
 
 
 # ── Main entry point ──────────────────────────────────────────────────────────
@@ -292,7 +205,6 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, h5_path: str | Path) -> dict
     meta : dict — the metadata written into the HDF5 attrs
     """
     h5_path = Path(h5_path)
-    h5_path.parent.mkdir(parents=True, exist_ok=True)
     if h5_path.exists():
         raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
@@ -331,61 +243,13 @@ def generate_edits_dataset(dcfg: EditDatasetConfig, h5_path: str | Path) -> dict
             "_clean_obs_note": "Clean (noiseless) obs can be reconstructed via reconstruct_clean_obs(obs_id, reflectivities).",
         },
     }
-    config_json = json.dumps(meta, indent=2)
-
     seeds = dcfg.base_seed + np.arange(dcfg.n_samples, dtype=np.int64)
-    args = [
-        (int(s), dcfg.sim, max_obj, dcfg.edit_frame,
-         dcfg.edit_always_in_frustum, dcfg.max_edit_attempts)
-        for s in seeds
-    ]
-    chunksize = max(1, dcfg.write_batch // max(1, dcfg.n_workers))
-
-    pool = mp.Pool(dcfg.n_workers) if dcfg.n_workers > 0 else None
-    try:
-        iterator = (
-            pool.imap(_generate_one_edit, args, chunksize=chunksize)
-            if pool is not None
-            else map(_generate_one_edit, args)
-        )
-
-        written = 0
-        batch: list[dict] = []
-
-        with h5py.File(h5_path, "w") as hf:
-            hf.attrs["config_json"] = config_json
-            _create_datasets(hf, dcfg, max_obj)
-
-            t0 = time.perf_counter()
-            with tqdm(
-                total=dcfg.n_samples,
-                unit="sample",
-                dynamic_ncols=True,
-                desc=f"generating → {h5_path.name}",
-            ) as pbar:
-                for sample in iterator:
-                    batch.append(sample)
-                    pbar.update(1)
-
-                    if len(batch) >= dcfg.write_batch:
-                        _write_batch(hf, batch, written)
-                        written += len(batch)
-                        batch = []
-
-                if batch:
-                    _write_batch(hf, batch, written)
-                    written += len(batch)
-
-    finally:
-        if pool is not None:
-            pool.close()
-            pool.join()
-
-    elapsed = time.perf_counter() - t0
-    size_mb = h5_path.stat().st_size / 1e6
-    print(
-        f"  {dcfg.n_samples:,} samples  |  "
-        f"{elapsed:.1f}s  ({dcfg.n_samples / elapsed:.0f} samples/s)  |  "
-        f"{size_mb:.1f} MB  →  {h5_path}"
-    )
+    generate_h5(h5_path, n_samples=dcfg.n_samples, n_workers=dcfg.n_workers,
+                write_batch_size=dcfg.write_batch, config_json=json.dumps(meta, indent=2),
+                layout=common_layout(dcfg.sim, max_obj) + EDIT_LAYOUT,
+                n_frames=dcfg.sim.n_frames, chunk=dcfg.hdf5_chunk,
+                compression=dcfg.compression, compression_level=dcfg.compression_level,
+                worker=_generate_one_edit,
+                args=[(int(s), dcfg.sim, max_obj, dcfg.edit_frame,
+                       dcfg.edit_always_in_frustum, dcfg.max_edit_attempts) for s in seeds])
     return meta

@@ -42,9 +42,11 @@ eights = [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]
 
 wanna_use = "othello_synthetic"
 
-def get_ood_game(_):
+def get_ood_game(_, flip=True):
+    # flip=False: the no-flip variant (oth-noflip, 2026-09-06) — same legality, same passes,
+    # same game end; a placed disc never recolours the discs it encloses.
     tbr = []
-    ab = OthelloBoardState()
+    ab = OthelloBoardState(flip=flip)
     possible_next_steps = ab.get_valid_moves()
     while possible_next_steps:
         next_step = random.choice(possible_next_steps)
@@ -56,8 +58,9 @@ def get_ood_game(_):
 
 class OthelloBoardState():
     # 1 is black, -1 is white
-    def __init__(self, board_size = 8):
+    def __init__(self, board_size = 8, flip=True):
         self.board_size = board_size * board_size
+        self.flip = flip   # False = enclosed discs are NOT recoloured (legality is unchanged)
         board = np.zeros((8, 8))
         board[3, 4] = 1
         board[3, 3] = -1
@@ -137,9 +140,10 @@ class OthelloBoardState():
                 assert 0, "Illegal move!"
                 
         self.age += 1
-        for ff in tbf:
-            self.state[ff[0], ff[1]] *= -1
-            self.age[ff[0], ff[1]] = 0
+        if self.flip:
+            for ff in tbf:
+                self.state[ff[0], ff[1]] *= -1
+                self.age[ff[0], ff[1]] = 0
         self.state[r, c] = color
         self.age[r, c] = 0
         self.next_hand_color *= -1

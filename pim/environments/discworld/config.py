@@ -104,7 +104,7 @@ class SimConfig:
 
     # ---- soft / differentiable rendering (OPTIONAL) ----------------------
     # All four default to "off"; with the defaults the renderer is bit-for-bit
-    # the original hard ray-caster.  See `pim/simulator/soft_render.py` for the
+    # the original hard ray-caster.  See `soft_render.py` (this package) for the
     # full rationale.  Summary:
     #   soft_edge          silhouette softness in world units (0 = hard indicator).
     #                      Makes the render CONTINUOUS in position.
@@ -124,7 +124,7 @@ class SimConfig:
 
     # ---- omniscient 2D rendering (OPTIONAL) ------------------------------
     # Off by default; with `omni2d = False` the renderer is bit-for-bit the
-    # original 1D ray-caster.  See `pim/simulator/render2d.py` for the full
+    # original 1D ray-caster.  See `render2d.py` (this package) for the full
     # rationale.  Summary: replaces the 1D perspective scan with a top-down
     # ORTHOGRAPHIC raster of the world rectangle -- no projection, no
     # occlusion, no perspective.  The world state is unchanged; only the

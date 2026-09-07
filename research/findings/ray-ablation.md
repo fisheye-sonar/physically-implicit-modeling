@@ -39,7 +39,7 @@ frustum: 0.73 / 0.54 / 0.84 / 0.69 on L-dw-20m's scale), position barely.
 2. **The canonical α grid is pinned at its edge here, but the index has plateaued.** The
    best arm is the last grid value (α 175) with the index still rising (frustum pt3: α100
    +0.264 → α175 +0.297). Re-running the identical canonical arm with α up to 1500
-   (`experiments/dw8ray_alpha_check/`, cached probes) shows every point saturating at
+   (`experiments/ray_ablation/alpha_check/`, cached probes) shows every point saturating at
    +0.2–0.3: the best anywhere is pt1·α1500 at +0.323 (fid 1.10), the best with fidelity
    ≤ 1 is pt1·α1000 at +0.311. So the reported +0.297 is a lower bound by ~0.02, not a
    qualitatively different number.
@@ -75,3 +75,27 @@ via `_keep` (renderer.py); `--radius`, `--drop-edge-rays` (generate_dataset.py);
 `OBS_RES` and the `dw-8ray` registry entry with fresh seed blocks (bigcorpus.py); the
 waterfall sized by `obs_dim` (viz.py); tiny-split HDF5 chunking (dataset.py).
 `tests/test_drop_edge_rays.py` pins the kept rays to rays 1–8 of the 10-ray render.
+
+## Addendum 2026-09-04 — Recurrent-L on the same instance (`ray_ablation/R-dw-8ray-20m`)
+
+The architecture pair: 4 × 1024 GRU with carried edits, identical data and recipe, 5.1 h of
+training. Best val MSE 0.00595 at step **40k**, drifting to 0.00625 by 780k (the same
+early-peak behaviour as the two 128-ray recurrent runs, without their divergence spikes).
+
+| frustum basis | Recurrent-L 8-ray | Transformer-L 8-ray |
+|---|---|---|
+| Probe Skill LIN / MLP-128 | 0.967 / 0.981 | 0.950 / 0.981 |
+| random-init floor LIN / MLP | 0.975 / 0.977 | 0.955 / 0.975 |
+| unedited Edit Index | −0.886 | −0.888 |
+| PI best | +0.191, fid 1.41 (pos·pt4·α175) | +0.297, fid 1.11 |
+| GS best | −0.608, fid 0.92 | −0.097, fid 0.95 |
+
+Same picture from the other architecture: decodability sits at (LIN below) the random-init
+floor, PI lands a fifth of the way at fidelity 1.4, GS is destructive. Carrying the edited
+state forward instead of recomputing it from the history does not help here either.
+
+⚠ Reading Table 1b for this run: its per-component row is taken at the LIN best *point*,
+which for the recurrent model is point 0 (aggregate 0.967, position-dominated) — a point at
+which no velocity is linearly present (0.00–0.03) although points 1–4 read velocity at
+0.4–0.7 (LIN) / 0.45–0.80 (MLP). The rule "per-component at the aggregate-best point"
+hides that; the per-point profile is in the run's scores.json.

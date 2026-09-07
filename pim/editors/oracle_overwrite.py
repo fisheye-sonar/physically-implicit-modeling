@@ -27,6 +27,8 @@ from __future__ import annotations
 
 import torch
 
+from pim.models.protocol import free_run
+
 
 @torch.no_grad()
 def counterfactual_state(model, cf_frames: torch.Tensor):
@@ -39,8 +41,4 @@ def overwrite_rollout(model, cf_frames: torch.Tensor, steps: int) -> torch.Tenso
     """(B, steps, obs_res) free-run from the counterfactual state, no edit applied."""
     s = counterfactual_state(model, cf_frames)
     pred = model.decode(s)
-    out, s = [pred], model.advance(s, pred)
-    for _ in range(steps - 1):
-        p, s = model.predict_step(s)
-        out.append(p)
-    return torch.stack(out, 1)
+    return free_run(model, pred, model.advance(s, pred), steps)

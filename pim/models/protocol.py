@@ -1,8 +1,8 @@
 """THE model surface — the names probes, editors, and benches call, documented once.
 
-Both canonical architectures (Transformer-S, Transformer-L) implement this surface in
-both task forms, which is what lets one editability suite drive every (architecture,
-environment) cell without an ``isinstance`` anywhere.
+All three canonical architectures (Transformer-S, Transformer-L, Recurrent-L) implement
+this surface — the transformers in both task forms — which is what lets one editability
+suite drive every (architecture, environment) cell without an ``isinstance`` anywhere.
 
 Core surface (every model)
 --------------------------
@@ -65,3 +65,19 @@ class WorldModel(Protocol):
 def n_points(model) -> int:
     """Residual points a model exposes: n_layers + 1."""
     return model.n_layers + 1
+
+
+def free_run(model, pred0: torch.Tensor, state1, steps: int) -> torch.Tensor:
+    """(B, steps, out) — THE free-run loop, defined once (2026-09-07).
+
+    Every rollout in the project is "produce the first prediction somehow, then let the
+    model feed itself": ``pred0`` is that first prediction and ``state1`` the carried
+    state after it (edited, hooked, counterfactual, teacher-forced — the caller's
+    business). From there each step is ``predict_step`` with NO edit applied, so any
+    persistence must travel through what the model carries.
+    """
+    out, s = [pred0], state1
+    for _ in range(steps - 1):
+        p, s = model.predict_step(s)
+        out.append(p)
+    return torch.stack(out, 1)

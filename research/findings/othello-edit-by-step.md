@@ -1,8 +1,8 @@
 # Othello editability by move number (PI, ND; canonical linear probes)
 
-**Date** 2026-09-02 · **Run** L-oth-20m · **Code** `experiments/othello_edit_by_step/` ·
-**Data** `experiments/othello_edit_by_step/scores/` (per-case arrays; see "Saved for later")
-· **Figures** `experiments/othello_edit_by_step/outputs/edit_by_step_{PI,ND}.png`
+**Date** 2026-09-02 · **Run** L-oth-20m · **Code** `experiments/othello_by_step/edit/` ·
+**Data** `experiments/othello_by_step/edit/scores/` (per-case arrays; see "Saved for later")
+· **Figures** `experiments/othello_by_step/edit/outputs/edit_by_step_{PI,ND}.png`
 
 ## Question
 

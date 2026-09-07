@@ -20,12 +20,7 @@ Three kept non-default editors:
 """
 
 from pim.editors.freeze_interpolation import freeze_time_rollout, frozen_frames
-from pim.editors.grad_steer import (
-    EditSpec,
-    build_edit_spec,
-    make_intervention_hook,
-    rollout_with_sequential_intervention,
-)
+from pim.editors.grad_steer import EditSpec, build_edit_spec, make_intervention_hook
 from pim.editors.nanda import addition_delta, addition_hook, probe_direction
 from pim.editors.nullspace import multiprobe_delta
 from pim.editors.oracle_overwrite import counterfactual_state, overwrite_rollout
@@ -54,7 +49,6 @@ __all__ = [
     "EditSpec",
     "build_edit_spec",
     "make_intervention_hook",
-    "rollout_with_sequential_intervention",
     # non-default
     "multiprobe_delta",
     "counterfactual_state",

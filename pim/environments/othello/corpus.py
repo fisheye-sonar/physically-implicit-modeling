@@ -21,13 +21,17 @@ another — anything that moves across the ladder is data diversity, not compute
     vendor/intervention_benchmark.pkl   the 1001 intervention cases (theirs, shipped)
 
 ⛔ Generating an eval split from an index range the training corpus also covers silently
-turns held-out data into training data. ``assert_disjoint`` hashes the actual token rows
-and fails hard rather than trusting the arithmetic.
+turns held-out data into training data. ``verify_splits`` checks the two things that can
+actually go wrong: that the declared ``[lo, lo+n)`` ranges are disjoint, and that games
+REGENERATED at sampled indices are bit-identical to the stored rows (so the recorded
+``lo``/``seed``/``flip`` describe the file and the generator is a pure function of its
+index — the 2026-08-20 pid-seeding bug is exactly what that catches). Row-content identity
+is deliberately NOT the criterion: 9-move games recur by chance, so 6 of the probe split's
+20k games also appear somewhere in the 20M train pool without any index overlap.
 """
 
 from __future__ import annotations
 
-import hashlib
 import multiprocessing
 import sys
 import time
@@ -38,11 +42,24 @@ import numpy as np
 from pim.environments.othello import data as od
 
 SEED = 0
-BLOCK = 59
-MAXLEN = 60
-# The environment instance this corpus belongs to. `datasets/` is resolved against the
-# repo root (= CWD by repo convention, same as every loader here).
-CACHE = Path("datasets/othello/oth-uniform/corpus")
+BLOCK, MAXLEN = od.T_MODEL, od.MAXLEN      # 59 / 60, defined once in data.py
+# The environment instances. `datasets/` is resolved against the repo root (= CWD by repo
+# convention, same as every loader here). `flip` is the ONE rule that differs: oth-noflip
+# (2026-09-06) never recolours enclosed discs — same legality, passes, game end, index law.
+INSTANCES = {
+    "oth-uniform": {"dir": Path("datasets/othello/oth-uniform/corpus"), "flip": True},
+    "oth-noflip": {"dir": Path("datasets/othello/oth-noflip/corpus"), "flip": False},
+}
+CACHE = INSTANCES["oth-uniform"]["dir"]          # the canonical instance, unchanged callers
+
+
+def corpus_dir(instance: str = "oth-uniform") -> Path:
+    return INSTANCES[instance]["dir"]
+
+
+def flip_of(instance: str = "oth-uniform") -> bool:
+    """The rule set of an instance — every replay (labels, legal sets, bench) must use it."""
+    return INSTANCES[instance]["flip"]
 
 TRAIN_LO = 0
 TEST_LO, TEST_N = 90_000_000, 10_000
@@ -57,7 +74,7 @@ LADDER = {"M": 90_000, "L1": 1_000_000, "L2": 5_000_000, "D": 20_000_000}
 
 
 def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = None,
-              log=print) -> tuple[np.ndarray, np.ndarray]:
+              log=print, flip: bool = True) -> tuple[np.ndarray, np.ndarray]:
     """Tokenise as we go, in chunks, straight into a preallocated array.
 
     ⛔ Do not materialise the games first. A Python ``list[list[int]]`` of 20M games is
@@ -72,7 +89,7 @@ def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = Non
     with multiprocessing.Pool(n_workers) as pool:
         for c0 in range(0, n, chunk):
             c1 = min(c0 + chunk, n)
-            args = [(i, SEED) for i in range(lo + c0, lo + c1)]
+            args = [(i, SEED, flip) for i in range(lo + c0, lo + c1)]
             for j, g in enumerate(pool.imap(od._one_game, args, chunksize=256)):
                 m = g[:MAXLEN]
                 ln[c0 + j] = len(m)
@@ -83,48 +100,74 @@ def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = Non
     return tok, ln
 
 
-def _row_hashes(tok: np.ndarray) -> set[bytes]:
-    return {hashlib.blake2b(r.tobytes(), digest_size=8).digest() for r in tok}
+def _regen_row(index: int, seed: int, flip: bool, stoi: dict) -> tuple[np.ndarray, int]:
+    g = od._one_game((index, seed, flip))[:MAXLEN]
+    row = np.zeros(MAXLEN, np.int8)
+    row[: len(g)] = [stoi[s] for s in g]
+    return row, len(g)
 
 
-def assert_disjoint(**splits: np.ndarray) -> None:
-    """Hard-fail if any two named splits share an identical game."""
-    hashes = {k: _row_hashes(v) for k, v in splits.items()}
-    names = list(hashes)
-    for i, a in enumerate(names):
-        for b in names[i + 1 :]:
-            common = hashes[a] & hashes[b]
-            if common:
-                raise AssertionError(
-                    f"{len(common)} identical games shared between {a!r} and {b!r} — "
-                    "the index ranges overlap, or the generator is not index-seeded."
-                )
-    print("  ✓ splits are pairwise disjoint (" + ", ".join(f"{k} {len(v):,}"
-                                                           for k, v in hashes.items()) + ")")
+def verify_splits(paths: dict[str, Path], n_check: int = 8, log=print) -> dict[str, tuple[int, int]]:
+    """THE provenance check for a set of split files (see the module docstring).
+
+    1. The declared index ranges ``[lo, lo + n)`` are pairwise disjoint — the property that
+       makes held-out data held out.
+    2. At ``n_check`` sampled indices per split (always including the first and last row),
+       the game regenerated from the recorded ``lo``/``seed``/``flip`` equals the stored
+       row bit for bit — so the metadata describes the file and the generator is
+       index-seeded. Raises ``AssertionError`` on either failure; returns the ranges.
+    """
+    stoi = od.canonical_vocab()
+    rng = np.random.default_rng(0)
+    ranges: dict[str, tuple[int, int]] = {}
+    for name, p in paths.items():
+        z = np.load(p)
+        tok, ln, lo, seed = z["tokens"], z["lengths"], int(z["lo"]), int(z["seed"])
+        flip = bool(z["flip"]) if "flip" in z.files else True   # pre-2026-09-06 files
+        n = len(tok)
+        ranges[name] = (lo, lo + n)
+        idx = sorted({0, n - 1, *rng.integers(0, n, n_check).tolist()})
+        for j in idx:
+            row, length = _regen_row(lo + j, seed, flip, stoi)
+            assert np.array_equal(row, tok[j]) and int(ln[j]) == length, (
+                f"{name}: stored row {j} is not the game at index {lo + j} (seed {seed}, "
+                f"flip {flip}) — the recorded lo/seed/flip do not describe {p.name}")
+    names = list(ranges)
+    for i, a_ in enumerate(names):
+        for b_ in names[i + 1:]:
+            (a0, a1), (b0, b1) = ranges[a_], ranges[b_]
+            assert a1 <= b0 or b1 <= a0, (
+                f"index ranges overlap: {a_} [{a0:,}, {a1:,}) vs {b_} [{b0:,}, {b1:,}) — "
+                f"held-out data would be training data")
+    if log:
+        log("  ✓ splits verified: " + ", ".join(f"{k} [{lo:,}, {hi:,})" for k, (lo, hi) in ranges.items())
+            + f"; {n_check}+2 regenerated rows per split bit-identical")
+    return ranges
 
 
-def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = None
-          ) -> dict[str, Path]:
+def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = None,
+          instance: str = "oth-uniform") -> dict[str, Path]:
     """Generate (or reuse) the named splits. Returns their paths.
 
     Measured throughput is **~4.7k games/s on 32 cores**, so 20M takes ~70 min.
     Generation is CPU-only, so it can overlap GPU training rather than serialise it.
     """
-    CACHE.mkdir(parents=True, exist_ok=True)
+    cache, flip = corpus_dir(instance), flip_of(instance)
+    cache.mkdir(parents=True, exist_ok=True)
     out = {}
     plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N),
             ("probe_large", PROBE_LARGE_LO, PROBE_LARGE_N)]
     if only is not None:
         plan = [x for x in plan if x[0] in only]
     for name, lo, n in plan:
-        p = CACHE / f"{name}_{n}.npz"
+        p = cache / f"{name}_{n}.npz"
         out[name] = p
         if p.exists():
             log(f"  {name:<6} {n:>10,} games — cached")
             continue
         # A larger pool at the same `lo` already contains this one as a prefix, so reuse
         # it rather than regenerating — that keeps the ladder nested AND cheap.
-        bigger = sorted((q for q in CACHE.glob(f"{name}_*.npz")
+        bigger = sorted((q for q in cache.glob(f"{name}_*.npz")
                          if q.stem.split("_")[-1].isdigit()
                          and int(q.stem.split("_")[-1]) >= n),
                         key=lambda q: int(q.stem.split("_")[-1]))
@@ -133,8 +176,8 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
             log(f"  {name:<6} {n:>10,} games — prefix of {bigger[0].name}")
             continue
         t0 = time.time()
-        tok, ln = _generate(lo, n, log=log)
-        np.savez(p, tokens=tok, lengths=ln, lo=lo, seed=SEED)
+        tok, ln = _generate(lo, n, log=log, flip=flip)
+        np.savez(p, tokens=tok, lengths=ln, lo=lo, seed=SEED, flip=flip, instance=instance)
         log(f"  {name:<6} {n:>10,} games in {time.time() - t0:6.1f}s  "
             f"({n / (time.time() - t0):,.0f}/s, {p.stat().st_size / 1e6:.0f} MB)  "
             f"mean length {ln.mean():.1f}")
@@ -155,20 +198,7 @@ def rung(train_path: Path, name: str) -> tuple[np.ndarray, np.ndarray]:
     return tok[:n], ln[:n]
 
 
-if __name__ == "__main__":
-    n = int(sys.argv[1]) if len(sys.argv) > 1 else LADDER["D"]
-    only = tuple(sys.argv[2].split(",")) if len(sys.argv) > 2 else None
-    print(f"generating corpora (train pool {n:,}"
-          f"{', splits ' + ','.join(only) if only else ''})", flush=True)
-    paths = build(n, only=only)
-    if {"train", "test", "probe"} <= set(paths):
-        tr, _ = load(paths["train"])
-        te, _ = load(paths["test"])
-        pr, _ = load(paths["probe"])
-        assert_disjoint(train=tr[: min(len(tr), 200_000)], test=te, probe=pr)
-
-
-def probe_data(path: Path, n: int | None = None):
+def probe_data(path: Path, n: int | None = None, flip: bool = True):
     """``tokens_and_labels`` for a corpus split, CACHED beside it as ``<stem>_labels.npz``.
 
     Labelling replays every game through the board simulator (~10 min for 170k games), so
@@ -186,6 +216,17 @@ def probe_data(path: Path, n: int | None = None):
         z = np.load(cache)
         return ProbeData(**{k: z[k] for k in z.files})
     itos = {v: k for k, v in canonical_vocab().items()}
-    data = tokens_and_labels([[itos[int(t)] for t in row[:L]] for row, L in zip(tok[:n], ln[:n])])
+    data = tokens_and_labels([[itos[int(t)] for t in row[:L]] for row, L in zip(tok[:n], ln[:n])],
+                             flip=flip)
     np.savez(cache, **{f.name: getattr(data, f.name) for f in dataclasses.fields(data)})
     return data
+
+
+if __name__ == "__main__":
+    n = int(sys.argv[1]) if len(sys.argv) > 1 else LADDER["D"]
+    only = tuple(sys.argv[2].split(",")) if len(sys.argv) > 2 and sys.argv[2] else None
+    instance = sys.argv[3] if len(sys.argv) > 3 else "oth-uniform"
+    print(f"generating corpora for {instance} (train pool {n:,}"
+          f"{', splits ' + ','.join(only) if only else ''})", flush=True)
+    paths = build(n, only=only, instance=instance)
+    verify_splits(paths)

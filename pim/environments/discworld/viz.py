@@ -28,12 +28,12 @@ from matplotlib.patches import Polygon
 from .config import SimConfig, obs_dim
 from .sim import Scene
 
-# ── Aesthetic constants ───────────────────────────────────────────────────────
-_BG = np.array([0.04, 0.04, 0.08])  # very dark navy, normalised RGB
-_BG_HEX = "#0a0a14"
-_FRUSTUM_EDGE = "#5c677f"
-_TICK_COLOR = "#808a9d"
-_TEXT_COLOR = "#a3adc2"
+# ── Aesthetic constants — THE dark simulator palette; pim.figures.waterfall imports it ──
+BG = np.array([0.04, 0.04, 0.08])  # very dark navy, normalised RGB
+BG_HEX = "#0a0a14"
+FRUSTUM_EDGE = "#5c677f"
+TICK_COLOR = "#808a9d"
+TEXT_COLOR = "#a3adc2"
 _TRAIL_LEN = 25  # frames of trajectory trail to show
 _TRAIL_ALPHA = 0.28
 _DEPTH_GAMMA = 0.6  # brightness = 1 − 0.75·norm^γ  (near=1, far=0.25)
@@ -82,7 +82,7 @@ def make_waterfall(
     n_frames, obs_res = obs_depth.shape
 
     img = np.zeros((n_frames, obs_res, 4))
-    img[:, :, :3] = _BG
+    img[:, :, :3] = BG
     img[:, :, 3] = 1.0
 
     if mode == "model":
@@ -135,26 +135,26 @@ def animate_scene(
     )
 
     # ── Figure / axes ─────────────────────────────────────────────────────
-    fig = plt.figure(figsize=(12, 5.5), facecolor=_BG_HEX)
+    fig = plt.figure(figsize=(12, 5.5), facecolor=BG_HEX)
     fig.subplots_adjust(left=0.06, right=0.97, top=0.90, bottom=0.10, wspace=0.12)
     ax_w = fig.add_subplot(1, 2, 1)  # 2D environment
     ax_f = fig.add_subplot(1, 2, 2)  # waterfall
 
     for ax in (ax_w, ax_f):
-        ax.set_facecolor(_BG_HEX)
+        ax.set_facecolor(BG_HEX)
         for spine in ax.spines.values():
-            spine.set_edgecolor(_TICK_COLOR)
-        ax.tick_params(colors=_TICK_COLOR, labelsize=9)
+            spine.set_edgecolor(TICK_COLOR)
+        ax.tick_params(colors=TICK_COLOR, labelsize=9)
 
     # ── World axes ────────────────────────────────────────────────────────
     mx, my = 0.7, 0.7
     ax_w.set_xlim(-cfg.x_far - mx, cfg.x_far + mx)
     ax_w.set_ylim(cfg.y_near - my, cfg.y_far + my)
     ax_w.set_aspect("equal")
-    ax_w.set_xlabel("x", color=_TEXT_COLOR, fontsize=10)
-    ax_w.set_ylabel("depth  y", color=_TEXT_COLOR, fontsize=10)
+    ax_w.set_xlabel("x", color=TEXT_COLOR, fontsize=10)
+    ax_w.set_ylabel("depth  y", color=TEXT_COLOR, fontsize=10)
     ax_w.set_title(
-        "2D environment  (latent state)", color=_TEXT_COLOR, fontsize=11, pad=8
+        "2D environment  (latent state)", color=TEXT_COLOR, fontsize=11, pad=8
     )
 
     # frustum outline
@@ -171,7 +171,7 @@ def animate_scene(
             corners,
             closed=True,
             fill=False,
-            edgecolor=_FRUSTUM_EDGE,
+            edgecolor=FRUSTUM_EDGE,
             linewidth=1.8,
             zorder=1,
         )
@@ -182,7 +182,7 @@ def animate_scene(
         "near",
         ha="center",
         va="top",
-        color=_TEXT_COLOR,
+        color=TEXT_COLOR,
         fontsize=8.5,
         fontfamily="monospace",
     )
@@ -192,7 +192,7 @@ def animate_scene(
         "far",
         ha="center",
         va="bottom",
-        color=_TEXT_COLOR,
+        color=TEXT_COLOR,
         fontsize=8.5,
         fontfamily="monospace",
     )
@@ -245,7 +245,7 @@ def animate_scene(
         -cfg.x_far - mx + 0.2,
         cfg.y_far + my - 0.15,
         "frame   0",
-        color=_TEXT_COLOR,
+        color=TEXT_COLOR,
         fontsize=9,
         fontfamily="monospace",
         va="top",
@@ -256,7 +256,7 @@ def animate_scene(
         "model  (intensity)" if waterfall_mode == "model" else "human  (color+depth)"
     )
     wf_display = np.zeros((n_frames, obs_dim(cfg), 4))
-    wf_display[:, :, :3] = _BG
+    wf_display[:, :, :3] = BG
     wf_display[:, :, 3] = 1.0
 
     wf_img = ax_f.imshow(
@@ -266,10 +266,10 @@ def animate_scene(
         interpolation="nearest",
         extent=[0, obs_dim(cfg), n_frames, 0],
     )
-    ax_f.set_xlabel("scan position", color=_TEXT_COLOR, fontsize=10)
-    ax_f.set_ylabel("frame", color=_TEXT_COLOR, fontsize=10)
+    ax_f.set_xlabel("scan position", color=TEXT_COLOR, fontsize=10)
+    ax_f.set_ylabel("frame", color=TEXT_COLOR, fontsize=10)
     ax_f.set_title(
-        f"1D observation  ({mode_tag})", color=_TEXT_COLOR, fontsize=11, pad=8
+        f"1D observation  ({mode_tag})", color=TEXT_COLOR, fontsize=11, pad=8
     )
     ax_f.set_xlim(0, obs_dim(cfg))
     ax_f.set_ylim(n_frames, 0)
@@ -285,7 +285,7 @@ def animate_scene(
     )
 
     if title:
-        fig.suptitle(title, color=_TEXT_COLOR, fontsize=12, y=0.975)
+        fig.suptitle(title, color=TEXT_COLOR, fontsize=12, y=0.975)
 
     # ── Update function ───────────────────────────────────────────────────
     def update(f: int):

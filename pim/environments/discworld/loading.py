@@ -1,9 +1,10 @@
-"""Loading discworld dataset directories: test/val/edits splits as numpy bundles.
+"""Loading discworld dataset directories: the test and edits splits as numpy bundles.
 
 This is the *data* half of the old ``pim/world_models/loader.py`` (the checkpoint half
 now lives in ``pim.models.registry``). A dataset directory is the on-disk form of one
-**environment instance's** splits: ``dataset.json`` + ``train.h5`` / ``val.h5`` /
-``test.h5`` / ``edits.h5``, all produced by ``scripts/generate_dataset.py``.
+**environment instance's** splits, all produced by ``scripts/generate_dataset.py``. Only
+``test.h5`` and ``edits.h5`` are ever read here (``load_dataset``), or ``edits.h5`` alone
+(``load_edits``) — which is why an instance's probe corpus lives in its ``probe/test.h5``.
 
 The one subtlety worth knowing before touching anything here: ``clean_obs`` is usually
 **reconstructed**, not stored. For the flat renderer the noiseless intensity of a ray
@@ -21,9 +22,7 @@ from pathlib import Path
 
 import h5py
 import numpy as np
-from torch.utils.data import DataLoader
 
-from pim.environments.discworld.dataloader import ObservationDataset
 from pim.environments.discworld.dataset import reconstruct_clean_obs
 
 
@@ -130,7 +129,7 @@ def _load_h5_dataset(h5_path: str | Path, *, n_obj_keep: int | None = None) -> D
     )
 
 
-def _load_edits(h5_path: str | Path, *, n_obj_keep: int | None = None) -> EditsData:
+def load_edits(h5_path: str | Path, *, n_obj_keep: int | None = None) -> EditsData:
     """Load the edits split with its intervention metadata."""
     with h5py.File(h5_path, "r") as f:
         T = f["obs_intensity"].shape[1]
@@ -168,11 +167,11 @@ def load_dataset(
     n_obj_keep: int | None = None,
     require_edits: bool = True,
 ) -> DatasetBundle:
-    """Load a dataset directory: dataset.json + test.h5 + edits.h5.
+    """Load a dataset directory: test.h5 (+ edits.h5). Nothing else in it is opened.
 
     Parameters
     ----------
-    data_dir      : directory containing dataset.json, train.h5, val.h5, test.h5, edits.h5
+    data_dir      : directory containing test.h5 and (normally) edits.h5
     n_obj_keep    : keep only this many objects along the object axis (for probes that
                     assume a fixed n_obj). None keeps max_obj.
     require_edits : if True and edits.h5 is missing, raise.
@@ -188,27 +187,8 @@ def load_dataset(
 
     edits: EditsData | None = None
     if edits_path.exists():
-        edits = _load_edits(edits_path, n_obj_keep=n_obj_keep)
+        edits = load_edits(edits_path, n_obj_keep=n_obj_keep)
     elif require_edits:
         raise FileNotFoundError(f"edits split not found at {edits_path}")
 
     return DatasetBundle(data_dir=d, test=test, edits=edits)
-
-
-def make_test_loader(
-    dataset: Dataset,
-    *,
-    batch_size: int = 512,
-    num_workers: int = 0,
-    keys: tuple[str, ...] = ("obs_intensity", "positions", "is_visible"),
-) -> DataLoader:
-    """Build a DataLoader over the full test set (no shuffling)."""
-    ds = ObservationDataset(dataset.h5_path, np.arange(dataset.n_samples), keys=keys)
-    return DataLoader(
-        ds,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-        pin_memory=(num_workers > 0),
-        persistent_workers=(num_workers > 0),
-    )

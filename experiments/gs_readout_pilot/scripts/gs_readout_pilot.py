@@ -40,6 +40,7 @@ REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook  # noqa: E402
+from pim.environments.discworld import arms as dwa  # noqa: E402
 from pim.environments.discworld import bench as dwb  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 
@@ -114,25 +115,25 @@ def main() -> None:
     for basis in a.bases:
         b = dwb.load_bench(model, n=a.n, target="full", basis_name=basis,
                            data_dir=inst_root / "eval")
-        mlp = dwb.fit_probes(model, target="full", n_seq=30_000, family="mlp",
+        mlp = dwa.fit_probes(model, target="full", n_seq=30_000, family="mlp",
                              basis_name=basis, data_dir=inst_root / "probe",
                              cache_dir=run_dir / "probes", log=print)
-        u = dwb.unsteered(model, b)
+        u = dwa.unsteered(model, b)
         for dims in a.dims:
             cm = dwb.restrict_mask(b.change_mask, dims)
             for ls in a.start_layers:
                 pts = {e: mlp[e][0] for e in mlp if e >= ls}
                 specs = {}
                 for e, pr in pts.items():
-                    dwb.as_activations(model, e)
+                    dwa.as_activations(model, e)
                     specs[e] = build_edit_spec(pr, model.flat_state(b.state), cm, b.tgt,
                                                beta=a.beta)
                 for alpha in a.alphas:
                     for n_steps in a.steps:
                         t1, rec, land = time.time(), {}, {}
                         hook = landing_hook(pts, specs, ls, alpha, n_steps, rec, land)
-                        roll = dwb._roll_hook(model, b.state, hook)
-                        sc = dwb.score(model, b, roll, u)
+                        roll = dwa._roll_hook(model, b.state, hook)
+                        sc = dwa.score(model, b, roll, u)
                         last = max(land)
                         cfg = {"basis": basis, "dims": dims, "start_layer": ls,
                                "alpha": alpha, "n_steps": n_steps,

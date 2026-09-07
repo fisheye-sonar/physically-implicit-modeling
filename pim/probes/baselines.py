@@ -32,11 +32,8 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from pim.probes.base import WorldStateProbe, _r2
-
-# The canonical fit hyper-parameters, imported in spirit from pim.probes.base.fit_probe.
-# They are repeated (not re-derived) because the loop below must own its batching.
-EPOCHS, LR, BATCH = 200, 1e-3, 4096
+from pim.metrics.decodability import r2
+from pim.probes.base import FIT_BATCH, FIT_EPOCHS, FIT_LR, WorldStateProbe
 
 
 class CausalHistory:
@@ -48,10 +45,21 @@ class CausalHistory:
 
     ``dense``   discworld: ``src`` is (N, T, R) float observations.
     ``one_hot`` Othello:   ``src`` is (N, T) int token ids, expanded to R = vocab.
+
+    ``align`` (2026-09-06): ``"left"`` (the original layout) puts frame j in block j and
+    zero-fills after the present, so the CURRENT frame sits in a different block for every
+    row and a LINEAR probe cannot express even a current-frame lookup (measured: a shared
+    lookup alone reads tokenised dw-8ray at R² 0.968, the left-aligned linear floor 0.726).
+    ``"right"`` lays the history out relative to the present — block 0 = the current frame,
+    block k = k steps back, zero-filled before the start — so fixed-lag reads ARE linear.
+    Same information, same rows; only the layout differs. The MLP floor barely moves.
     """
 
-    def __init__(self, src: torch.Tensor, kind: str = "dense", vocab: int | None = None):
-        self.src, self.kind = src, kind
+    def __init__(self, src: torch.Tensor, kind: str = "dense", vocab: int | None = None,
+                 align: str = "left"):
+        if align not in ("left", "right"):
+            raise ValueError(f"align must be left|right, got {align!r}")
+        self.src, self.kind, self.align = src, kind, align
         self.device = src.device
         self.n, self.T = src.shape[0], src.shape[1]
         self.R = int(src.shape[2]) if kind == "dense" else int(vocab)
@@ -60,6 +68,17 @@ class CausalHistory:
 
     def build(self, seq: torch.Tensor, frame: torch.Tensor) -> torch.Tensor:
         """(B, T*R) features for the given (sequence, frame) rows."""
+        if self.align == "right":
+            idx = frame[:, None] - self._ar[None, :]                 # source frame per block
+            valid = idx >= 0
+            g = self.src[seq[:, None].expand_as(idx), idx.clamp_min(0)]
+            if self.kind == "dense":
+                x = g.float()
+            else:
+                x = torch.zeros(len(seq), self.T, self.R, device=self.src.device)
+                x.scatter_(2, g.unsqueeze(-1).long(), 1.0)
+            x = x * valid.unsqueeze(-1).to(x.dtype)
+            return x.reshape(len(seq), self.dim)
         if self.kind == "dense":
             x = self.src[seq]                                   # (B, T, R)
         else:
@@ -134,7 +153,7 @@ def _predict(probe, hist, s, f, chunk: int = 8192, classify: bool = False):
 def fit_probe_stream(hist, y: torch.Tensor, tr_seq, te_seq, *,
                      hidden: int | None, n_classes: int | None = None,
                      row_mask: torch.Tensor | None = None, seed: int = 0,
-                     epochs: int = EPOCHS, batch: int = BATCH, log=None):
+                     epochs: int = FIT_EPOCHS, batch: int = FIT_BATCH, log=None):
     """Fit one probe on a STREAMED row source — ``CausalHistory`` (the observation
     floor) or ``MemmapRows`` (a residual stack too large to hold densely). Mirrors
     ``base.fit_probe``: same probe object, standardisation, loss, optimiser and stats;
@@ -178,12 +197,18 @@ def fit_probe_stream(hist, y: torch.Tensor, tr_seq, te_seq, *,
             w = (y[s_tr[sl], f_tr[sl]].float() - ym) / ys
             ZtZ += (z.T @ z).double()        # matmul in fp32, accumulate in fp64
             Ztw += (z.T @ w).double()
-        W = torch.linalg.lstsq(ZtZ, Ztw).solution.float()
+        # The MINIMUM-NORM solution for a rank-deficient system too: the pseudo-inverse of
+        # the symmetric normal matrix (eigendecomposition on the GPU — seconds at 16k dims).
+        # CUDA's default lstsq driver (gels) assumes full rank and returns NaN / garbage on
+        # a one-hot design, whose columns sum to one per position (2026-09-06, the
+        # tokenised discworld observation floor); CPU gelsd is correct but takes >10 min at
+        # 16k dims. Identical to gels wherever the system is full rank.
+        W = (torch.linalg.pinv(ZtZ, hermitian=True) @ Ztw).float()
         with torch.no_grad():
             probe.net.weight.copy_(W.T)
             probe.net.bias.zero_()
     else:
-        opt = torch.optim.Adam(probe.parameters(), lr=LR)
+        opt = torch.optim.Adam(probe.parameters(), lr=FIT_LR)
         ys_t = probe.y_std.detach()
         bseq = max(1, batch // hist.T)                 # sequences per minibatch
         for ep in range(epochs):
@@ -227,10 +252,10 @@ def fit_probe_stream(hist, y: torch.Tensor, tr_seq, te_seq, *,
     else:
         ymn = ym.cpu().numpy()
         stats = {
-            "r2": _r2(hat_te, g_te, ymn),
-            "r2_insample": _r2(hat_tr, g_tr, ymn),
+            "r2": r2(hat_te, g_te, ymn),
+            "r2_insample": r2(hat_tr, g_tr, ymn),
             "rmse": float(np.sqrt(((hat_te - g_te) ** 2).mean())),
-            "per_dim_r2": [_r2(hat_te[:, [j]], g_te[:, [j]], ymn[[j]])
+            "per_dim_r2": [r2(hat_te[:, [j]], g_te[:, [j]], ymn[[j]])
                            for j in range(d_out)],
         }
     stats.update({"kind": probe.kind, "n_train_rows": int(n),

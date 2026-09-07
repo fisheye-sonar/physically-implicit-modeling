@@ -29,16 +29,17 @@ is an additive offset, which a linear probe absorbs into its bias — it cannot 
 
 Velocity
 --------
-Exact, by differentiating the map:
+Taken by **central differences on the position map along the velocity** (see ``basis``):
+``(f(p + v·h) − f(p − v·h)) / 2h``, one code path for every depth candidate. For the
+lateral coordinate that equals the closed form
 
     u = x / (scale * y)      ->   u̇ = (ẋ * y - x * ẏ) / (scale * y**2)
-    d = y                    ->   ḋ = ẏ
 
-The ``1 / y**2`` weight is the substantive part: the same world motion produces a large ``u̇`` near
-the observer and a small one far away. If the model encodes lateral motion as *image-plane* motion —
-which is what it can see — then ``ẋ`` is the wrong probe target and ``u̇`` is the right one. That is
-the concrete hypothesis for why velocity decodability has been stuck near R² 0.28 in the Cartesian
-basis while position reaches 0.80.
+The ``1 / y**2`` weight is the substantive part: the same world motion produces a large ``u̇``
+near the observer and a small one far away. If the model encodes lateral motion as
+*image-plane* motion — which is what it can see — then ``ẋ`` is the wrong probe target and
+``u̇`` is the right one. That is the concrete hypothesis for why velocity decodability has been
+stuck near R² 0.28 in the Cartesian basis while position reaches 0.80.
 """
 
 from __future__ import annotations
@@ -49,50 +50,6 @@ import numpy as np
 def fov_scale(sim: dict) -> float:
     """tan(half-FOV) — the same quantity `renderer._fov_scale` uses."""
     return float(sim["x_far"]) / float(sim["y_far"])
-
-
-def world_to_frustum(pos: np.ndarray, vel: np.ndarray | None, sim: dict):
-    """(..., 2) world (x, y) [and (ẋ, ẏ)] → frustum (u, d) [and (u̇, ḋ)].
-
-    Parameters
-    ----------
-    pos : (..., 2) float — world positions, last axis (x, y).
-    vel : (..., 2) float or None — world velocities, last axis (ẋ, ẏ).
-    sim : the dataset's `sim` config dict (needs `x_far`, `y_far`).
-
-    Returns
-    -------
-    fpos : (..., 2) — (u, d). `u` is dimensionless in [-1, 1] inside the frustum; `d` is `y`.
-    fvel : (..., 2) or None — (u̇, ḋ).
-    """
-    scale = fov_scale(sim)
-    x, y = pos[..., 0], pos[..., 1]
-    # y is bounded below by y_near (3.0 by default) so no guard is needed in-frustum; the clip is
-    # only for objects placed outside it by a synthetic edit.
-    ys = np.where(np.abs(y) < 1e-6, 1e-6, y)
-    u = x / (scale * ys)
-    fpos = np.stack([u, y], axis=-1)
-    if vel is None:
-        return fpos, None
-    vx, vy = vel[..., 0], vel[..., 1]
-    du = (vx * ys - x * vy) / (scale * ys**2)
-    fvel = np.stack([du, vy], axis=-1)
-    return fpos, fvel
-
-
-def frustum_to_world(fpos: np.ndarray, sim: dict) -> np.ndarray:
-    """Inverse of the position map: (u, d) → (x, y). Needed to express an edit target."""
-    scale = fov_scale(sim)
-    u, d = fpos[..., 0], fpos[..., 1]
-    return np.stack([u * scale * d, d], axis=-1)
-
-
-def ray_index(u: np.ndarray, obs_res: int = 128) -> np.ndarray:
-    """`u` → fractional observation-cell index, purely for interpretation.
-
-    Affine in `u`, so a linear probe cannot tell the two apart; use `u`.
-    """
-    return (u + 1.0) * 0.5 * (obs_res - 1)
 
 
 # ── depth parameterisations ───────────────────────────────────────────────────

@@ -565,7 +565,7 @@ memory cap, because the cap turns a transient into a kill.
 
 * The canonical PI α grid (0.1 … 175) was tuned on 128-ray instances. On `dw-8ray` the best
   PI arm is the LAST grid value with the index still rising; the extended check
-  (`experiments/dw8ray_alpha_check/`) shows the index plateaus at +0.3 by α ≈ 250–1000, so the
+  (`experiments/ray_ablation/alpha_check/`) shows the index plateaus at +0.3 by α ≈ 250–1000, so the
   canonical +0.297 is a lower bound by ~0.02. Read an edge-pinned α as "check the plateau",
   not as a wrong-units bug (the y-affine signature) — the readout errors are sane here.
 * At 8 rays ~15 % of the 192 edit cases have NO differing ray between the edited and unedited
@@ -575,3 +575,148 @@ memory cap, because the cap turns a transient into a kill.
   default `--max-edit-attempts 50` fails ~1 case in 100. dw-8ray is generated with 2000
   (cases that succeed within 50 draws are unchanged); `bigcorpus` carries the flag for the
   shards' throwaway edits splits too.
+
+## 2026-09-04 — The MSE-on-one-hot Othello head is read RAW; `legal_mass` and CE are not distribution-valid on it
+
+`objective_ablation/L-oth-20m-mse` is `L-oth-20m` with one change: the loss is
+`mse_next_move_onehot` (Brier score of the 61 head outputs against the one-hot next move)
+instead of cross-entropy. Its checkpoint carries `output_kind="raw"` (saved in
+`config.json` → `model_config`), and every scorer reads the head through
+`pim.environments.othello.data.move_probs(outputs, kind)`: `"logits"` = the softmax every
+CE run has always used (unchanged), `"raw"` = the 60 move outputs as they are — **no
+softmax, no clipping, no renormalisation**. Nothing else in the pipeline changed.
+
+What that means for the numbers:
+- **Edit Index, `li_error`, fidelity ratio are distribution-free** (argmax / top-k set
+  comparisons and ratios of the same quantity before and after the edit) — they are valid
+  on the raw head and are the quantities the ablation is about.
+- **`legal_mass`** (sum of the estimate over legal moves) and the **gate CE** (−log of the
+  estimate at the played move) *assume a distribution*. On the raw head they are labelled
+  by `gates()["output_kind"] == "raw"` and accompanied by `out_sum_mean` (mean of the 60
+  outputs per position; 1.0 for a distribution) and `out_neg_mass_mean` (mean total
+  negative mass; 0 for a distribution). Quote them only next to those two diagnostics, and
+  never compare them across output kinds as if they were the same metric. CE in
+  particular can be undefined (log of a non-positive estimate) — `gates()` clamps.
+- `"clipnorm"` (clip at 0, renormalise, all-zero rows → uniform) exists so the same scores
+  can be re-read "as a distribution" — `experiments/othello_mse_head/scripts/distribution_check.py`
+  does exactly that for the gates and the run's canonical best arms by flipping the model's
+  `output_kind` attribute in memory. It is not the canonical reading; a canonical re-score
+  under clipnorm would be a separate, labelled entry.
+- Smoke (60-step model, 2026-09-04): the raw head already sums to 1.02 ± 0.03 per position
+  with negative mass 0.006, so raw and clipnorm readings agree to ~0.03 L1 — but a trained
+  head may differ; check the distribution_check summary before quoting `legal_mass`.
+
+## 2026-09-05 — Frames as tokens: three things the token model changes and one it must not
+
+`L-dw-8ray-tok-20m` trains the Othello token model on dw-8ray frames as tokens
+(`pim/environments/discworld/tokens.py`: each 8-ray frame with ray values in {0, 0.4, 0.8}
+is one of 6561 patterns; 421 occur, ids 1..421 in ascending pattern code, id 0 = UNK, the
+vocabulary is built over EVERY split so no eval frame is unseen — `tokens/meta.json`
+records "frames_only_outside_train": 0).
+
+- **The Edit Index is a different CONSTRUCTION, on the same axis.** A token model emits a
+  distribution over next frames, so it is scored the Othello way
+  (`pim/environments/discworld/token_bench.py`): `edit_index_legal` with the "legal sets"
+  = the frame the edited world renders at the edit frame vs the frame the unedited world
+  renders (both singletons in a noiseless world), `move_fidelity_ratio` as the guard,
+  `p_post` = mass on the edited world's frame. scores.json carries
+  `ei_construction: "frame-set"`; the tables mark such rows †. Do not quote it beside a
+  ray-zone Edit Index as the same number. Both are step-0 readings (the discworld
+  `edit_scorecard` also indexes `roll[:, 0]`), so the axis is shared; the formula is not.
+  `zone_edit_index_expected` (the ray-zone index on the probability-weighted expected
+  frame) rides along as the bridge, never as the headline.
+- **Cases whose two worlds render the same frame at EF carry no signal** and are dropped
+  (`TokenBench.keep`; `n_cases_kept` in the block — 30/32 on the smoke bench). The
+  regression bench keeps them (their differing-ray mask is empty and `_index_from` skips
+  them), so the case counts differ slightly by construction.
+- **On a token model EI ≈ 0 with p_post ≈ p_pre ≈ 0.03 is a DESTROYED prediction, not a half-landed
+  edit** (L-dw-8ray-tok-20m, PI α=175: mass left the unedited frame and landed on nothing; the guard
+  reads 0.75 because a wrong answer was removed). Always quote `p_post` and `p_pre` beside a frame-set
+  index. And the write DID land in probe space at α=1 (read-out error 0.409 → 0.000) with zero output
+  change — the discworld signature, on the categorical interface too.
+- **`uniform_over_legal` was 64-wide by assumption.** Every caller in
+  `pim/metrics/othello_moves.py` now passes `probs.shape[1]`; the default stays 64.
+- **Probes on token inputs: pass the encoder, never pre-tokenise the corpus by hand.**
+  `bench.fit_probes(..., encoder=enc, encoder_tag=tag)` (from
+  `token_bench.token_encoder(vocab)`) tokenises the SAME float frames after the same
+  span truncation, so targets align exactly as for the regression models, and the tag
+  enters the cache key. `collect_residuals` feeds integer arrays as `long`, floats as
+  `float`. The random-init floor for the token architecture goes through the same hook
+  (master_eval [5]); Table 1d/1e tells the three same-instance floors apart by span and
+  by the `encoder` field in the cached probe's provenance.
+
+## 2026-09-05 — master_eval scores a run that is STILL TRAINING (fixed)
+
+`best_model.pt` is written at the first validation pass (step 5k), so `scan_runs` saw the
+in-progress `L-dw-8ray-tok-20m` as a run and an ad-hoc notebook execution began fitting
+its random-init floor and would have scored the 5k-step checkpoint — stamping it with the
+current `EVAL_VERSION`, after which the finished model would have been skipped as
+"already scored" by the chain's own stage D. Caught and stopped before anything was
+written (2026-09-05 21:45). `scan_runs` now skips a run whose last `metrics.jsonl` step is
+below `config.train.steps` ("still training"). Never run `master_eval` by hand while a run
+trains without checking that skip line appears.
+
+## 2026-09-06 — Two things the streamed baseline fit gets wrong on ONE-HOT inputs
+
+Found building the one-hot observation floor for tokenised discworld
+(`experiments/dw_tokens/obsfloor/`), where the causal history is 39 × 422 one-hot features.
+
+1. **`fit_probe_stream` standardises inputs by their train std — wrong for one-hots.** A
+   (position, frame) pair that is rare or absent in the train split has std ≈ 0, its
+   standardised value on a held-out row is 10³–10⁶, and both fits blow up (NaN linear
+   solve, MLP skill −10⁷ in the smoke). Residual activations need that affine; one-hots
+   do not. The experiment overrides `baselines._moments` with the identity affine for its
+   fits and records `affine="identity"` in the probe cache key. The canonical function is
+   unchanged; Othello's cached one-hot observation floors were fitted with the affine and
+   stand as they are (their rare pairs are illegal-move positions that never occur in test
+   either).
+2. **The closed-form linear solve used CUDA `lstsq`'s default `gels` driver, which assumes
+   full rank.** A one-hot design is rank-deficient (each position's columns sum to one),
+   and `gels` returns NaN or garbage instead of the minimum-norm solution the docstring
+   promises. Fixed canonically (`pim/probes/baselines.py`): the normal equations are solved
+   with `torch.linalg.pinv(ZtZ, hermitian=True)` — identical wherever the system is full
+   rank (`tests/test_baselines.py` still gates against `np.linalg.lstsq`), seconds at 16k
+   dims on the GPU (CPU `gelsd` was correct but took > 10 min per fit). No canonical number
+   changes; no cache key changes.
+
+## 2026-09-06 — The observation floor's LINEAR row cannot read "the current frame"
+
+`CausalHistory` (the canonical observation floor, `pim/probes/baselines.py`) lays the
+history out LEFT-aligned: block j = frame j, zero-filled after the present. So the current
+frame sits in a different block for every row, and a **linear** model over that layout
+cannot express even a lookup of the current frame — its weights for block j apply to frame
+j in every row where j is visible, present or not. Measured on tokenised dw-8ray
+(`experiments/dw_tokens/obsfloor/`): a plain shared lookup of the current one-hot frame
+reaches R² 0.968 (frustum), the left-aligned one-hot history linear fit 0.726. The MLP
+row is unaffected (it learns the alignment from the padding pattern). The canonical FLOAT
+linear observation floor (0.26–0.28) carries the same handicap, so Table 3's LIN
+observation row understates what a linear read of the input gives; the MLP row is the one
+to read. The experiment adds a RIGHT-aligned layout (block 0 = the present, block k = k
+steps back) for its own floors; changing the canonical layout is a separate decision (it
+would alter the cached float floors' LIN rows and Table 3).
+
+## 2026-09-06 — oth-noflip: the rules travel with the instance, and nobody ever passes
+
+`oth-noflip` (`OthelloBoardState(flip=False)`) changes ONE rule: a placed disc never
+recolours the discs it encloses. Two things follow.
+
+- **Every replay must use the instance's rules.** Games generated without flips are
+  ILLEGAL under flip rules within a few moves — replaying a noflip corpus through the flip
+  board raises `AssertionError: Illegal move!` (seen in the smoke, deliberately). Labels
+  (`tokens_and_labels(flip=)`), legal sets and gates (`legal_sets`/`gates(flip=)`), the
+  intervention bench (`benchmark_from_cases(flip=)`, `load_benchmark(instance)`) and the
+  probe-label cache (`corpus.probe_data(flip=)`) all take the flag; `corpus.flip_of(instance)`
+  is the one source of truth. A run's `config.json` records `data.instance` and `data.flip`.
+- **No passes, ever — so the board state is syntactic.** With no flips both colours keep
+  discs everywhere, a capturing move always exists, and in 5k pilot games (300k positions)
+  no player passed once (oth-uniform: 0.44 passes/game). Hence the colour of a disc is
+  exactly the parity of the offset at which its square was played: mine/theirs equals the
+  parity rule in 100% of positions (64% on oth-uniform). Any probe that can read parity
+  decodes the board perfectly, and a RIGHT-aligned linear observation probe reads it
+  exactly — the left-aligned canonical floor cannot (see the 2026-09-06 alignment entry).
+  Decodability numbers on this instance say nothing about a learned state; editability is
+  the test. Also: Li's shipped 1001 cases are flip-Othello positions and do NOT apply —
+  the instance's cases are synthesised (`scripts/make_othello_edits.py`).
+- **Generation is ~2.8× slower than flip Othello**: 1.7k games/s on 32 cores (flip: 4.7k),
+  so the 20M corpus takes ~3.2 h, not 70 min — denser mixed boards make every legality
+  scan walk longer lines, and no game ends early. Budget for it.

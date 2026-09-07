@@ -40,7 +40,9 @@ from pim.environments.othello.vendor.othello import OthelloBoardState, get_ood_g
 CENTRE = (27, 28, 35, 36)
 N_TILES = 64
 N_CLASSES = 3  # white / blank / black, their `get_state` encoding
-T_MODEL = 59  # the model sees the first 59 moves of a 60-move game
+MAXLEN = N_TILES - len(CENTRE)   # 60: a game can fill every non-centre square
+T_MODEL = MAXLEN - 1             # 59: the model's input block — the first 59 moves
+BLANK, MINE, THEIRS = 0, 1, 2     # the mine/theirs frame (`ProbeData.mine`, the bench targets)
 
 
 # ── vocabulary ────────────────────────────────────────────────────────────────
@@ -57,10 +59,14 @@ def canonical_vocab() -> dict[int, int]:
     return {-100: 0, **{sq: i + 1 for i, sq in enumerate(sorted(squares))}}
 
 
+VOCAB = len(canonical_vocab())   # 61: the 60 playable squares + the pad token 0
+
+
 # ── synthetic games ───────────────────────────────────────────────────────────
 
 
-def synthetic_games(n: int, seed: int = 0, n_workers: int | None = None) -> list[list[int]]:
+def synthetic_games(n: int, seed: int = 0, n_workers: int | None = None,
+                    flip: bool = True) -> list[list[int]]:
     """``n`` games from THEIR generator, uniform over legal moves at every step.
 
     That uniformity is why ``uniform_over_legal`` in ``pim.metrics.othello_moves`` is the
@@ -68,7 +74,7 @@ def synthetic_games(n: int, seed: int = 0, n_workers: int | None = None) -> list
     """
     n_workers = n_workers or multiprocessing.cpu_count()
     with multiprocessing.Pool(n_workers) as pool:
-        return list(pool.imap(_one_game, [(i, seed) for i in range(n)], chunksize=64))
+        return list(pool.imap(_one_game, [(i, seed, flip) for i in range(n)], chunksize=64))
 
 
 def _one_game(args) -> list[int]:
@@ -80,9 +86,10 @@ def _one_game(args) -> list[int]:
     counts across three runs, 2026-08-20) and the probe cache could never hit. Seeding
     per work item fixes reproducibility and the cache together.
     """
-    i, seed = args
+    i, seed, *rest = args
+    flip = rest[0] if rest else True          # (i, seed) keeps the canonical call form
     random.seed(seed * 1_000_003 + i)
-    return get_ood_game(i)
+    return get_ood_game(i, flip=flip)
 
 
 # ── tokens and board-state labels ─────────────────────────────────────────────
@@ -97,8 +104,11 @@ class ProbeData:
     lengths: np.ndarray  # (N,) int
 
 
-def tokens_and_labels(games: list[list[int]]) -> ProbeData:
-    """Tokenise and label, following their loop exactly (see module docstring)."""
+def tokens_and_labels(games: list[list[int]], flip: bool = True) -> ProbeData:
+    """Tokenise and label, following their loop exactly (see module docstring).
+
+    ``flip=False`` replays the no-flip rules (oth-noflip) — the labels must be produced by
+    the same rules that generated the games."""
     stoi = canonical_vocab()
     n, T = len(games), T_MODEL
     tokens = np.zeros((n, T), np.int64)
@@ -112,7 +122,7 @@ def tokens_and_labels(games: list[list[int]]) -> ProbeData:
         lengths[i] = len(moves)
         tokens[i, : len(moves)] = [stoi[s] for s in moves]
         mask[i, : len(moves)] = True
-        board = OthelloBoardState()
+        board = OthelloBoardState(flip=flip)
         for t, mv in enumerate(moves):
             board.umpire(mv)
             st = (board.state + 1).flatten().astype(np.int8)  # white 0 / blank 1 / black 2
@@ -120,7 +130,7 @@ def tokens_and_labels(games: list[list[int]]) -> ProbeData:
             # "mine" = the player about to move at this position; `next_hand_color` is
             # +1 for black, -1 for white, and it is NOT parity because of passes.
             nxt = 2 if board.next_hand_color > 0 else 0
-            mine[i, t] = np.where(st == 1, 0, np.where(st == nxt, 1, 2))
+            mine[i, t] = np.where(st == 1, BLANK, np.where(st == nxt, MINE, THEIRS))
     return ProbeData(tokens, labels, mine, mask, lengths)
 
 
@@ -152,13 +162,36 @@ def harvest_point(model, tokens: np.ndarray, point: int, batch: int = 512) -> np
 # ── logits → board ────────────────────────────────────────────────────────────
 
 
-def board_probs(logits: torch.Tensor) -> np.ndarray:
-    """(B, 61) next-move logits → (B, 64) probability laid out on the board.
+OUTPUT_KINDS = ("logits", "raw", "clipnorm")
 
-    Their mapping: drop the pad logit, softmax over the 60 move tokens, then pad zeros
-    back into the four centre squares.
+
+def move_probs(outputs: torch.Tensor, kind: str = "logits") -> torch.Tensor:
+    """(..., 61) head outputs → (..., 60) next-move "probabilities" over the move tokens.
+
+    ``kind`` says what the head was trained to emit (``TransformerLTokens.output_kind``):
+      logits    — the canonical CE head: drop the pad logit, softmax (Li's mapping)
+      raw       — an MSE-on-one-hot head: the outputs ARE the probability estimates; drop
+                  the pad output and change nothing else (may be negative, need not sum to 1)
+      clipnorm  — the same head made a distribution after the fact: clip at 0 and
+                  renormalise each row (a row of zeros becomes uniform)
     """
-    p = torch.softmax(logits[:, 1:], dim=-1)
+    if kind not in OUTPUT_KINDS:
+        raise ValueError(f"unknown output kind {kind!r}; one of {OUTPUT_KINDS}")
+    m = outputs[..., 1:]
+    if kind == "logits":
+        return torch.softmax(m, dim=-1)
+    if kind == "raw":
+        return m
+    c = m.clamp_min(0.0)
+    s = c.sum(-1, keepdim=True)
+    return torch.where(s > 0, c / s.clamp_min(1e-12), torch.full_like(c, 1.0 / c.shape[-1]))
+
+
+def board_probs(outputs: torch.Tensor, kind: str = "logits") -> np.ndarray:
+    """(B, 61) head outputs → (B, 64) laid out on the board (zeros in the four centre
+    squares), through ``move_probs(kind)``. ``kind="logits"`` is Li's mapping and the
+    default; every canonical CE run resolves to it."""
+    p = move_probs(outputs, kind)
     pad = torch.zeros(len(p), 2, device=p.device, dtype=p.dtype)
     out = torch.cat([p[:, :27], pad, p[:, 27:33], pad, p[:, 33:]], dim=1)
     return out.float().cpu().numpy()

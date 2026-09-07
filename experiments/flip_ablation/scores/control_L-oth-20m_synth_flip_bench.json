@@ -1,0 +1,287 @@
+{
+ "run": "L-oth-20m",
+ "bench": "synthesised flip cases (Li recipe + shipped length mix, seed 0)",
+ "n_cases": 1001,
+ "manifest": {
+  "n_cases": 1001,
+  "seed": 0,
+  "flip": true,
+  "length_quota": {
+   "5": 50,
+   "6": 40,
+   "7": 41,
+   "8": 40,
+   "9": 32,
+   "10": 42,
+   "11": 36,
+   "12": 34,
+   "13": 36,
+   "14": 44,
+   "15": 36,
+   "16": 37,
+   "17": 46,
+   "18": 35,
+   "19": 35,
+   "20": 40,
+   "21": 30,
+   "22": 43,
+   "23": 43,
+   "24": 28,
+   "25": 35,
+   "26": 34,
+   "27": 40,
+   "28": 32,
+   "29": 50,
+   "30": 42
+  },
+  "recipe": "prefix of a held-out game; one uniformly random occupied non-centre square flipped to the opposite colour; rejected if the legal set is unchanged or empty; prefix lengths follow the shipped 1001",
+  "stats": {
+   "5": {
+    "want": 50,
+    "n": 50,
+    "games_tried": 50,
+    "pool": 10000,
+    "rejected_same_legal": 1,
+    "rejected_empty_legal": 0
+   },
+   "6": {
+    "want": 40,
+    "n": 40,
+    "games_tried": 40,
+    "pool": 10000,
+    "rejected_same_legal": 0,
+    "rejected_empty_legal": 0
+   },
+   "7": {
+    "want": 41,
+    "n": 41,
+    "games_tried": 41,
+    "pool": 10000,
+    "rejected_same_legal": 1,
+    "rejected_empty_legal": 0
+   },
+   "8": {
+    "want": 40,
+    "n": 40,
+    "games_tried": 40,
+    "pool": 10000,
+    "rejected_same_legal": 0,
+    "rejected_empty_legal": 0
+   },
+   "9": {
+    "want": 32,
+    "n": 32,
+    "games_tried": 32,
+    "pool": 10000,
+    "rejected_same_legal": 1,
+    "rejected_empty_legal": 0
+   },
+   "10": {
+    "want": 42,
+    "n": 42,
+    "games_tried": 42,
+    "pool": 10000,
+    "rejected_same_legal": 2,
+    "rejected_empty_legal": 0
+   },
+   "11": {
+    "want": 36,
+    "n": 36,
+    "games_tried": 36,
+    "pool": 10000,
+    "rejected_same_legal": 4,
+    "rejected_empty_legal": 0
+   },
+   "12": {
+    "want": 34,
+    "n": 34,
+    "games_tried": 34,
+    "pool": 10000,
+    "rejected_same_legal": 2,
+    "rejected_empty_legal": 0
+   },
+   "13": {
+    "want": 36,
+    "n": 36,
+    "games_tried": 36,
+    "pool": 10000,
+    "rejected_same_legal": 4,
+    "rejected_empty_legal": 0
+   },
+   "14": {
+    "want": 44,
+    "n": 44,
+    "games_tried": 44,
+    "pool": 10000,
+    "rejected_same_legal": 11,
+    "rejected_empty_legal": 0
+   },
+   "15": {
+    "want": 36,
+    "n": 36,
+    "games_tried": 36,
+    "pool": 9997,
+    "rejected_same_legal": 6,
+    "rejected_empty_legal": 0
+   },
+   "16": {
+    "want": 37,
+    "n": 37,
+    "games_tried": 37,
+    "pool": 9996,
+    "rejected_same_legal": 6,
+    "rejected_empty_legal": 0
+   },
+   "17": {
+    "want": 46,
+    "n": 46,
+    "games_tried": 46,
+    "pool": 9996,
+    "rejected_same_legal": 8,
+    "rejected_empty_legal": 0
+   },
+   "18": {
+    "want": 35,
+    "n": 35,
+    "games_tried": 35,
+    "pool": 9996,
+    "rejected_same_legal": 7,
+    "rejected_empty_legal": 0
+   },
+   "19": {
+    "want": 35,
+    "n": 35,
+    "games_tried": 35,
+    "pool": 9994,
+    "rejected_same_legal": 7,
+    "rejected_empty_legal": 0
+   },
+   "20": {
+    "want": 40,
+    "n": 40,
+    "games_tried": 40,
+    "pool": 9994,
+    "rejected_same_legal": 12,
+    "rejected_empty_legal": 0
+   },
+   "21": {
+    "want": 30,
+    "n": 30,
+    "games_tried": 30,
+    "pool": 9993,
+    "rejected_same_legal": 8,
+    "rejected_empty_legal": 0
+   },
+   "22": {
+    "want": 43,
+    "n": 43,
+    "games_tried": 43,
+    "pool": 9993,
+    "rejected_same_legal": 9,
+    "rejected_empty_legal": 0
+   },
+   "23": {
+    "want": 43,
+    "n": 43,
+    "games_tried": 43,
+    "pool": 9993,
+    "rejected_same_legal": 15,
+    "rejected_empty_legal": 0
+   },
+   "24": {
+    "want": 28,
+    "n": 28,
+    "games_tried": 28,
+    "pool": 9993,
+    "rejected_same_legal": 16,
+    "rejected_empty_legal": 0
+   },
+   "25": {
+    "want": 35,
+    "n": 35,
+    "games_tried": 35,
+    "pool": 9993,
+    "rejected_same_legal": 10,
+    "rejected_empty_legal": 0
+   },
+   "26": {
+    "want": 34,
+    "n": 34,
+    "games_tried": 34,
+    "pool": 9993,
+    "rejected_same_legal": 10,
+    "rejected_empty_legal": 0
+   },
+   "27": {
+    "want": 40,
+    "n": 40,
+    "games_tried": 40,
+    "pool": 9992,
+    "rejected_same_legal": 25,
+    "rejected_empty_legal": 0
+   },
+   "28": {
+    "want": 32,
+    "n": 32,
+    "games_tried": 32,
+    "pool": 9992,
+    "rejected_same_legal": 5,
+    "rejected_empty_legal": 0
+   },
+   "29": {
+    "want": 50,
+    "n": 50,
+    "games_tried": 50,
+    "pool": 9992,
+    "rejected_same_legal": 35,
+    "rejected_empty_legal": 0
+   },
+   "30": {
+    "want": 42,
+    "n": 42,
+    "games_tried": 42,
+    "pool": 9992,
+    "rejected_same_legal": 31,
+    "rejected_empty_legal": 0
+   }
+  }
+ },
+ "unedited": {
+  "li_error_vs_post": 2.821178821178821,
+  "li_error_vs_pre": 0.00999000999000999,
+  "edit_index_union": -0.7031288918456063,
+  "edit_index_symdiff": -0.9399374427442577,
+  "legal_mass": 0.9038859009742737,
+  "n_scored": 1001
+ },
+ "best_arms": {
+  "PI": {
+   "arm": "pt4\u00b7\u03b13",
+   "edit_index_union": 0.5960063464901687,
+   "fidelity_ratio": 0.24986909172466318,
+   "li_error_vs_post": 0.11388611388611389,
+   "legal_mass": 0.9905059337615967,
+   "shipped_bench_edit_index_union": 0.6078598033574586,
+   "shipped_bench_fidelity_ratio": 0.24072442108722703
+  },
+  "ND": {
+   "arm": "pt4\u00b7\u03b10.35",
+   "edit_index_union": 0.5433016051793962,
+   "fidelity_ratio": 0.2693606683980205,
+   "li_error_vs_post": 0.12787212787212787,
+   "legal_mass": 0.994115948677063,
+   "shipped_bench_edit_index_union": 0.6218231268206724,
+   "shipped_bench_fidelity_ratio": 0.22800132704201595
+  },
+  "GS": {
+   "arm": "pt0\u00b7\u03b10.05",
+   "edit_index_union": 0.6121183242100113,
+   "fidelity_ratio": 0.2246173374867493,
+   "li_error_vs_post": 0.03996003996003996,
+   "legal_mass": 0.9966435432434082,
+   "shipped_bench_edit_index_union": 0.6469968346137911,
+   "shipped_bench_fidelity_ratio": 0.20955957878030504
+  }
+ },
+ "minutes": 0.8
+}

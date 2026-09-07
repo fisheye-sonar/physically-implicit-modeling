@@ -234,7 +234,7 @@ Extra standards for that tier:
 - Canonical qualitative panel, 1D observations → the fixed specification in
   `../research/specs/WATERFALL_SPEC.md`, implemented once in `pim/figures/waterfall.py`
 - Metric and method registry → `../research/REGISTRY.md`
-- Figure theme in use → `pim/figures/theme.py` (`style_ax`, `style_ax_dark`, `PALETTE`)
+- Figure theme in use → `pim/figures/theme.py` (`style_ax`, `PALETTE`); the dark simulator palette lives in `pim/environments/discworld/viz.py`
 - Run record → `runs/<topic>/<run>/` (config.json + commit_sha + probes/ + scores.json),
   aggregated by `../notebooks/build_full_table.ipynb`. ⛔ That tree holds TRAINED RUNS
   ONLY — driver logs and pilots belong in `logs/`, one-off output in `outputs/`.

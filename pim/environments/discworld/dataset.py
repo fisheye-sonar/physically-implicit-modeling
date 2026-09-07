@@ -39,6 +39,7 @@ from tqdm import tqdm
 from .config import SimConfig, obs_dim
 from .renderer import render_scene
 from .sim import Scene, compute_visibility, simulate
+from .soft_render import soft_enabled
 
 # ── DatasetConfig ─────────────────────────────────────────────────────────────
 
@@ -96,29 +97,30 @@ def load_sample(
 # ── Worker (module-level so multiprocessing can pickle it) ────────────────────
 
 
-def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
-    """Generate one sample.  Runs in worker processes.
-
-    Returns a dict of numpy arrays padded to ``max_obj`` along the object axis.
-    On rare rejection-sampler failures the seed is offset and retried.
-    """
-    seed, base_cfg, max_obj = args
+def simulate_with_retry(base_cfg: SimConfig, seed: int) -> tuple[Scene, SimConfig]:
+    """``simulate`` at ``seed``; if its own 300-attempt IC loop gives up, retry at
+    ``seed + attempt·1_000_000`` (up to 10 attempts). THE seed law every generator shares
+    — the 20M corpus's 500M shard stride is sized to it (``bigcorpus``)."""
     cfg = dataclasses.replace(base_cfg, seed=int(seed))
-
     for attempt in range(10):
         try:
             if attempt:
                 cfg = dataclasses.replace(cfg, seed=int(seed) + attempt * 1_000_000)
-            scene = simulate(cfg)
-            break
+            return simulate(cfg), cfg
         except RuntimeError:
             if attempt == 9:
                 raise
+    raise AssertionError("unreachable")
 
+
+def pack_sample(scene: Scene, cfg: SimConfig, max_obj: int) -> dict:
+    """Render ``scene`` and pack every common field, padded to ``max_obj`` objects.
+
+    Keys are the HDF5 dataset names. ``obs_clean`` is present only under soft rendering:
+    ``reconstruct_clean_obs`` recovers the noiseless render from (obs_id, reflectivities)
+    exactly for the flat renderer, but not under antialiasing / shading / blur.
+    """
     obs_depth, obs_id, obs_intensity = render_scene(scene)
-    # `reconstruct_clean_obs` recovers the noiseless render from (obs_id, reflectivities),
-    # which is exact ONLY for the flat renderer where intensity == reflectivity. Under soft
-    # rendering (antialiasing / shading / blur) it is not recoverable, so store it.
     obs_clean = None
     if soft_enabled(cfg):
         obs_clean = render_scene(
@@ -153,77 +155,102 @@ def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
         "radii": radii_out,
         "reflectivities": refl_out,
         "n_objects": np.uint8(n),
-        "seed": np.int64(cfg.seed),
+        "seeds": np.int64(cfg.seed),
     }
 
 
-# ── HDF5 helpers ──────────────────────────────────────────────────────────────
+def _generate_one(args: tuple[int, SimConfig, int]) -> dict:
+    """Generate one sample.  Runs in worker processes."""
+    seed, base_cfg, max_obj = args
+    scene, cfg = simulate_with_retry(base_cfg, seed)
+    return pack_sample(scene, cfg, max_obj)
 
 
-from pim.environments.discworld.soft_render import soft_enabled  # noqa: E402
+# ── HDF5 helpers (shared with edits_dataset) ─────────────────────────────────
 
 
-def _create_datasets(hf: h5py.File, dcfg: DatasetConfig, max_obj: int) -> None:
-    N, F, R = dcfg.n_samples, dcfg.sim.n_frames, obs_dim(dcfg.sim)
-    C = dcfg.hdf5_chunk
-    kw = dict(compression=dcfg.compression, compression_opts=dcfg.compression_level)
+def common_layout(sim: SimConfig, max_obj: int) -> list[tuple[str, tuple, str, str]]:
+    """``(name, tail shape, dtype, chunk kind)`` for every field ``pack_sample`` emits.
 
-    hf.create_dataset(
-        "obs_intensity", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw
-    )
-    if soft_enabled(dcfg.sim):
-        hf.create_dataset(
-            "obs_clean", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw
-        )
-    hf.create_dataset("obs_depth", (N, F, R), dtype="float32", chunks=(min(C, N), F, R), **kw)
-    hf.create_dataset("obs_id", (N, F, R), dtype="int8", chunks=(min(C, N), F, R), **kw)
-    hf.create_dataset(
-        "is_visible", (N, F, max_obj), dtype="bool", chunks=(min(C, N), F, max_obj), **kw
-    )
-    hf.create_dataset(
-        "positions",
-        (N, F, max_obj, 2),
-        dtype="float32",
-        chunks=(min(C, N), F, max_obj, 2),
-        **kw,
-    )
-    hf.create_dataset(
-        "velocities",
-        (N, F, max_obj, 2),
-        dtype="float32",
-        chunks=(min(C, N), F, max_obj, 2),
-        **kw,
-    )
-    hf.create_dataset(
-        "colors", (N, max_obj, 3), dtype="float32", chunks=(min(C, N), max_obj, 3), **kw
-    )
-    hf.create_dataset(
-        "radii", (N, max_obj), dtype="float32", chunks=(min(C, N), max_obj), **kw
-    )
-    hf.create_dataset(
-        "reflectivities", (N, max_obj), dtype="float32", chunks=(min(C, N), max_obj), **kw
-    )
-    hf.create_dataset("n_objects", (N,), dtype="uint8", chunks=(min(C * F, N),), **kw)
-    hf.create_dataset("seeds", (N,), dtype="int64", chunks=(min(C * F, N),), **kw)
+    Chunk kind: ``"sample"`` = ``min(C, N)`` samples per chunk, ``"scalar"`` =
+    ``min(C·F, N)`` (the per-sample scalars). Order is the on-disk creation order.
+    """
+    F, R = sim.n_frames, obs_dim(sim)
+    rows = [("obs_intensity", (F, R), "float32", "sample")]
+    if soft_enabled(sim):
+        rows.append(("obs_clean", (F, R), "float32", "sample"))
+    rows += [
+        ("obs_depth", (F, R), "float32", "sample"),
+        ("obs_id", (F, R), "int8", "sample"),
+        ("is_visible", (F, max_obj), "bool", "sample"),
+        ("positions", (F, max_obj, 2), "float32", "sample"),
+        ("velocities", (F, max_obj, 2), "float32", "sample"),
+        ("colors", (max_obj, 3), "float32", "sample"),
+        ("radii", (max_obj,), "float32", "sample"),
+        ("reflectivities", (max_obj,), "float32", "sample"),
+        ("n_objects", (), "uint8", "scalar"),
+        ("seeds", (), "int64", "scalar"),
+    ]
+    return rows
 
 
-def _write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
+def create_datasets(hf: h5py.File, layout, n_samples: int, n_frames: int, chunk: int,
+                    compression: str, compression_level: int) -> None:
+    N, F, C = n_samples, n_frames, chunk
+    kw = dict(compression=compression, compression_opts=compression_level)
+    for name, tail, dtype, kind in layout:
+        c0 = min(C, N) if kind == "sample" else min(C * F, N)
+        hf.create_dataset(name, (N, *tail), dtype=dtype, chunks=(c0, *tail), **kw)
+
+
+def write_batch(hf: h5py.File, batch: list[dict], start: int) -> None:
     end = start + len(batch)
-    hf["obs_intensity"][start:end] = np.stack([s["obs_intensity"] for s in batch])
-    if "obs_clean" in batch[0]:
-        hf["obs_clean"][start:end] = np.stack([s["obs_clean"] for s in batch])
-    hf["obs_depth"][start:end] = np.stack([s["obs_depth"] for s in batch])
-    hf["obs_id"][start:end] = np.stack([s["obs_id"] for s in batch])
-    hf["is_visible"][start:end] = np.stack([s["is_visible"] for s in batch])
-    hf["positions"][start:end] = np.stack([s["positions"] for s in batch])
-    hf["velocities"][start:end] = np.stack([s["velocities"] for s in batch])
-    hf["colors"][start:end] = np.stack([s["colors"] for s in batch])
-    hf["radii"][start:end] = np.stack([s["radii"] for s in batch])
-    hf["reflectivities"][start:end] = np.stack([s["reflectivities"] for s in batch])
-    hf["n_objects"][start:end] = np.array(
-        [s["n_objects"] for s in batch], dtype=np.uint8
-    )
-    hf["seeds"][start:end] = np.array([s["seed"] for s in batch], dtype=np.int64)
+    for name in batch[0]:
+        hf[name][start:end] = np.stack([s[name] for s in batch])
+
+
+def generate_h5(h5_path: Path, *, n_samples: int, n_workers: int, write_batch_size: int,
+                config_json: str, layout, n_frames: int, chunk: int, compression: str,
+                compression_level: int, worker, args) -> None:
+    """THE generation loop: a worker pool over ``args``, batched writes into ``h5_path``.
+
+    Refuses to overwrite. Shared by the train/val/test generator and the edits generator,
+    which differ only in ``worker`` and in the extra fields of ``layout``.
+    """
+    if h5_path.exists():
+        raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
+    h5_path.parent.mkdir(parents=True, exist_ok=True)
+    chunksize = max(1, write_batch_size // max(1, n_workers))
+    pool = mp.Pool(n_workers) if n_workers > 0 else None
+    try:
+        iterator = (pool.imap(worker, args, chunksize=chunksize) if pool is not None
+                    else map(worker, args))
+        written = 0
+        batch: list[dict] = []
+        with h5py.File(h5_path, "w") as hf:
+            hf.attrs["config_json"] = config_json
+            create_datasets(hf, layout, n_samples, n_frames, chunk, compression, compression_level)
+            t0 = time.perf_counter()
+            with tqdm(total=n_samples, unit="sample", dynamic_ncols=True,
+                      desc=f"generating → {h5_path.name}") as pbar:
+                for sample in iterator:
+                    batch.append(sample)
+                    pbar.update(1)
+                    if len(batch) >= write_batch_size:
+                        write_batch(hf, batch, written)
+                        written += len(batch)
+                        batch = []
+                if batch:
+                    write_batch(hf, batch, written)
+                    written += len(batch)
+    finally:
+        if pool is not None:
+            pool.close()
+            pool.join()
+    elapsed = time.perf_counter() - t0
+    size_mb = h5_path.stat().st_size / 1e6
+    print(f"  {n_samples:,} samples  |  {elapsed:.1f}s  ({n_samples / elapsed:.0f} samples/s)  |  "
+          f"{size_mb:.1f} MB  →  {h5_path}")
 
 
 # ── Main entry point ──────────────────────────────────────────────────────────
@@ -283,7 +310,6 @@ def generate_dataset(dcfg: DatasetConfig, h5_path: str | Path) -> dict:
     meta : dict — the metadata written into the HDF5 attrs
     """
     h5_path = Path(h5_path)
-    h5_path.parent.mkdir(parents=True, exist_ok=True)
     if h5_path.exists():
         raise FileExistsError(f"{h5_path} already exists — refusing to overwrite.")
 
@@ -321,57 +347,11 @@ def generate_dataset(dcfg: DatasetConfig, h5_path: str | Path) -> dict:
             "_clean_obs_note": "Clean (noiseless) obs can be reconstructed via reconstruct_clean_obs(obs_id, reflectivities) — no extra storage needed.",
         },
     }
-    config_json = json.dumps(meta, indent=2)
-
     seeds = dcfg.base_seed + np.arange(dcfg.n_samples, dtype=np.int64)
-    args = [(int(s), dcfg.sim, max_obj) for s in seeds]
-    chunksize = max(1, dcfg.write_batch // max(1, dcfg.n_workers))
-
-    pool = mp.Pool(dcfg.n_workers) if dcfg.n_workers > 0 else None
-    try:
-        iterator = (
-            pool.imap(_generate_one, args, chunksize=chunksize)
-            if pool is not None
-            else map(_generate_one, args)
-        )
-
-        written = 0
-        batch: list[dict] = []
-
-        with h5py.File(h5_path, "w") as hf:
-            hf.attrs["config_json"] = config_json
-            _create_datasets(hf, dcfg, max_obj)
-
-            t0 = time.perf_counter()
-            with tqdm(
-                total=dcfg.n_samples,
-                unit="sample",
-                dynamic_ncols=True,
-                desc=f"generating → {h5_path.name}",
-            ) as pbar:
-                for sample in iterator:
-                    batch.append(sample)
-                    pbar.update(1)
-
-                    if len(batch) >= dcfg.write_batch:
-                        _write_batch(hf, batch, written)
-                        written += len(batch)
-                        batch = []
-
-                if batch:
-                    _write_batch(hf, batch, written)
-                    written += len(batch)
-
-    finally:
-        if pool is not None:
-            pool.close()
-            pool.join()
-
-    elapsed = time.perf_counter() - t0
-    size_mb = h5_path.stat().st_size / 1e6
-    print(
-        f"  {dcfg.n_samples:,} samples  |  "
-        f"{elapsed:.1f}s  ({dcfg.n_samples / elapsed:.0f} samples/s)  |  "
-        f"{size_mb:.1f} MB  →  {h5_path}"
-    )
+    generate_h5(h5_path, n_samples=dcfg.n_samples, n_workers=dcfg.n_workers,
+                write_batch_size=dcfg.write_batch, config_json=json.dumps(meta, indent=2),
+                layout=common_layout(dcfg.sim, max_obj), n_frames=dcfg.sim.n_frames,
+                chunk=dcfg.hdf5_chunk, compression=dcfg.compression,
+                compression_level=dcfg.compression_level,
+                worker=_generate_one, args=[(int(s), dcfg.sim, max_obj) for s in seeds])
     return meta

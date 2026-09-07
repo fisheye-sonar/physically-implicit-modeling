@@ -23,6 +23,7 @@ import torch
 from pim.environments.discworld.renderer import render_scene
 from pim.environments.discworld.sim import Scene
 from pim.metrics.editability import sim_config_from
+from pim.models.protocol import free_run
 
 
 def frozen_frames(
@@ -69,8 +70,4 @@ def freeze_time_rollout(model, state, frames: torch.Tensor, steps: int) -> torch
     for j in range(frames.shape[1]):
         s = model.advance(s, frames[:, j])
     pred = model.decode(s)
-    out, s = [pred], model.advance(s, pred)
-    for _ in range(steps - 1):
-        p, s = model.predict_step(s)
-        out.append(p)
-    return torch.stack(out, 1)
+    return free_run(model, pred, model.advance(s, pred), steps)

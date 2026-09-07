@@ -13,7 +13,7 @@ PY=$ROOT/.pim/bin/python
 NT=https://ntfy.sh/swirling-tornado-ai691k
 INST=${1:?instance}
 NAME=${2:?run-name}
-TOPIC=architecture_gate
+TOPIC=${TOPIC:-architecture_gate}     # e.g. TOPIC=ray_ablation to sit beside the L run of that instance
 LOGS=$ROOT/logs/recurrent/$NAME
 mkdir -p "$LOGS"
 echo $$ > "$LOGS/driver.pid"

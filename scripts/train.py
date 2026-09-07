@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -34,7 +35,7 @@ if str(_REPO) not in sys.path:
 import torch  # noqa: E402
 
 from pim.models import build as build_model  # noqa: E402
-from pim.training import TrainConfig, discworld_source, othello_source, train  # noqa: E402
+from pim.training import TrainConfig, discworld_source, othello_source, token_source, train  # noqa: E402
 
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -54,8 +55,18 @@ def _parse():
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
                    help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray; "
-                        "othello: oth-uniform). Default: the env's canonical instance.")
+                        "othello: oth-uniform | oth-noflip). Default: the env's canonical instance.")
     # the canonical recipe; override only deliberately
+    p.add_argument("--repr", choices=("frames", "tokens"), default="frames",
+                   help="discworld only. frames = the float observation into the regression head "
+                        "(canonical). tokens = every frame is ONE token of the instance's frame "
+                        "vocabulary (datasets/discworld/<instance>/tokens/, built by "
+                        "scripts/make_discworld_tokens.py) into the Othello token model: embedding "
+                        "in, softmax over frames + cross-entropy out — the interface ablation")
+    p.add_argument("--objective", choices=("ce", "mse_onehot"), default="ce",
+                   help="Othello only: cross-entropy (canonical) or MSE against the one-hot "
+                        "next move — the head then emits raw probability estimates "
+                        "(model output_kind='raw', read as-is by every scorer)")
     p.add_argument("--batch-size", type=int, default=256)
     p.add_argument("--lr", type=float, default=1e-3)
     p.add_argument("--weight-decay", type=float, default=1e-4)
@@ -81,7 +92,31 @@ def main() -> None:
                       lr_schedule=a.lr_schedule, warmup_steps=a.warmup_steps,
                       ckpt_base=a.ckpt_base, val_every=a.val_every, seed=a.seed)
 
-    if a.env == "discworld":
+    if a.env == "discworld" and a.repr == "tokens":
+        if a.arch != "transformer_l":
+            raise SystemExit("--repr tokens is implemented for transformer_l only")
+        from pim.environments.discworld.tokens import load_tokens
+
+        inst = a.instance or "dw-8ray"
+        tdir = _REPO / "datasets" / "discworld" / inst / "tokens"
+        tok, ln, vocab, tmeta = load_tokens(tdir)
+        arch = "transformer_l_tokens"      # the Othello model, unchanged
+        mc = {"vocab": int(vocab.size), "block_size": int(tmeta["n_frames"]) - 1}
+        if a.objective != "ce":
+            mc = {**mc, "output_kind": "raw"}
+        source = token_source(tok, ln, block=mc["block_size"], env="discworld",
+                              batch_size=a.batch_size, seed=a.seed, device=DEV,
+                              limit=a.limit, objective=a.objective,
+                              meta={"instance": inst, "repr": "tokens",
+                                    "corpus": str(tdir / "train.i16"),
+                                    "vocab": str(tdir / "vocab.npz"),
+                                    "vocab_size": int(vocab.size)})
+        run_dir = _REPO / "runs" / a.topic / a.run_name
+        run_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(tdir / "vocab.npz", run_dir / "vocab.npz")   # the run stays self-contained
+    elif a.env == "discworld":
+        if a.objective != "ce":
+            raise SystemExit("--objective applies to Othello; discworld trains with MSE on the next frame")
         from pim.environments.discworld import bigcorpus as bc
 
         bc.use_instance(a.instance or "dw-pn04")
@@ -103,15 +138,25 @@ def main() -> None:
         if a.arch == "recurrent_l":
             raise SystemExit("recurrent_l has no token head yet (discworld only)")
         arch = a.arch + "_tokens"
-        mc = ({"vocab": 61, "block_size": 59}
+        inst = a.instance or "oth-uniform"       # oth-noflip = the same generator, no recolouring
+        paths = oc.build(a.limit or oc.LADDER["D"], only=("train",), instance=inst)
+        tok, ln = oc.load(paths["train"])
+        # vocabulary and block length come from the corpus itself, cross-checked against
+        # the one definition in pim.environments.othello.data (61 tokens, block 59)
+        from pim.environments.othello.data import T_MODEL, VOCAB
+        vocab, block = int(tok.max()) + 1, int(tok.shape[1]) - 1
+        assert (vocab, block) == (VOCAB, T_MODEL), (vocab, block, VOCAB, T_MODEL)
+        mc = ({"vocab": vocab, "block_size": block}
               if a.arch == "transformer_l" else
               {"input_dim": 128, "d_model": 256, "n_layers": 4, "n_heads": 4,
-               "mlp_ratio": 4.0, "window": 16, "vocab": 61})
-        paths = oc.build(a.limit or oc.LADDER["D"], only=("train",))
-        tok, ln = oc.load(paths["train"])
+               "mlp_ratio": 4.0, "window": 16, "vocab": vocab})
+        if a.objective != "ce":
+            if a.arch != "transformer_l":
+                raise SystemExit("--objective mse_onehot is implemented for transformer_l only")
+            mc = {**mc, "output_kind": "raw"}     # the head's outputs ARE the estimates
         source = othello_source(tok, ln, batch_size=a.batch_size, seed=a.seed,
-                                device=DEV, limit=a.limit,
-                                meta={"instance": "oth-uniform",
+                                device=DEV, limit=a.limit, objective=a.objective,
+                                meta={"instance": inst, "flip": oc.flip_of(inst),
                                       "corpus": str(paths["train"])})
 
     model = build_model(arch, mc)

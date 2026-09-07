@@ -8,6 +8,7 @@ aggregate (position outweighs velocity ~1000:1).
 """
 import json, sys, numpy as np
 from pim.models import load_checkpoint
+from pim.environments.discworld import arms as dwa
 from pim.environments.discworld import bench as dwb
 
 RUN = 'runs/initial_othello_comparison/L-dw-20m'
@@ -26,7 +27,7 @@ print(f"{RUN}  val {info.val_loss:.5f}  |  n_seq={N_SEQ:,} "
 
 rows = {}
 for basis in BASES:
-    lin = dwb.fit_probes(m, target="full", n_seq=N_SEQ, family="linear",
+    lin = dwa.fit_probes(m, target="full", n_seq=N_SEQ, family="linear",
                          basis_name=basis, data_dir=f'{INST}/probe',
                          cache_dir=f'{RUN}/probes', log=None)
     # best residual point by POSITION skill and by VELOCITY skill, reported separately

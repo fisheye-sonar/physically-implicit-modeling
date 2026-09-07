@@ -196,6 +196,9 @@ def build_edit_zones(
     from pim.environments.discworld.renderer import render_frame
 
     n = len(pre_pos)
+    # The zone construction (`other` = the one object that is not edited) is written for
+    # exactly two objects, which is every instance in the project.
+    assert n_obj == 2, f"build_edit_zones assumes n_obj == 2 (one edited, one 'other'); got {n_obj}"
     dt = float(sim["dt"])
     cfg = sim_config_from(sim, n_obj)
     refl = np.linspace(sim["refl_min"], sim["refl_max"], n_obj).astype(np.float32)
@@ -221,7 +224,7 @@ def build_edit_zones(
         gt_edited[i], gt_unedited[i] = inte, intu
         id_edited[i], id_pre[i] = ide, idp
 
-    other = 1 - k if n_obj == 2 else None
+    other = 1 - k
     target = id_edited == k[:, None]
     ghost = (id_pre == k[:, None]) & (id_edited != k[:, None])
     collateral = id_edited == other[:, None]
@@ -345,65 +348,6 @@ def edit_scorecard(
     )
 
 
-def direction_report(
-    pred0: np.ndarray,
-    unsteered0: np.ndarray,
-    zones: "EditZones",
-    *,
-    seed: int = 0,
-) -> dict:
-    """Is the change in the RIGHT DIRECTION, and how much of it was made?
-
-    The Edit Index is a ratio of distances, so it reports only how *close* the output got and
-    is blind to whether the change it made pointed the right way. A directionally-correct edit
-    that is 5% complete and a directionally-random one score nearly the same. For a thread whose
-    claim is about whether probe-derived *directions* are wrong, that distinction is the whole
-    question — so it gets its own measurement.
-
-    On the differing rays, with `required = gt_edited − gt_unedited` and
-    `achieved = pred0 − unsteered0`:
-
-    * ``direction_cos``      — cos(required, achieved), per sample then averaged. **Report the
-      angle beside it**: cos 0.44 is 64 degrees, not "mostly aligned" (`harness/ANALYSIS.md` §8).
-    * ``direction_cos_shuffled`` — the same with mismatched pairs. The chance level, which is
-      near zero but not exactly zero, so it must be measured rather than assumed.
-    * ``achieved_fraction`` — the projection of `achieved` onto `required`, as a fraction of
-      `required`. 1.0 = the full change was made; 0.05 = the edit is 5% complete.
-
-    Added 2026-08-18 after a qualitative panel plainly showed intensity appearing at the target
-    and decaying at the ghost while the Edit Index read −0.54. Both were right: the edit was
-    directionally real (cos +0.44 against a +0.05 control) and about 5% complete.
-    """
-    req = zones.gt_edited - zones.gt_unedited
-    got = pred0 - unsteered0
-    n = len(pred0)
-    rng = np.random.default_rng(seed)
-    perm = rng.permutation(n)
-    cos, frac, cos_s = [], [], []
-    for i in range(n):
-        m = zones.differing[i]
-        if not m.any():
-            continue
-        r, g = req[i, m], got[i, m]
-        nr, ng = np.linalg.norm(r), np.linalg.norm(g)
-        if nr > 1e-9 and ng > 1e-9:
-            cos.append(float(r @ g / (nr * ng)))
-            frac.append(float(r @ g / (nr * nr)))
-        rs = req[perm[i], m]
-        nrs = np.linalg.norm(rs)
-        if nrs > 1e-9 and ng > 1e-9:
-            cos_s.append(float(rs @ g / (nrs * ng)))
-    c = float(np.mean(cos)) if cos else float("nan")
-    return {
-        "direction_cos": c,
-        "direction_angle_deg": float(np.degrees(np.arccos(np.clip(c, -1, 1)))),
-        "direction_cos_median": float(np.median(cos)) if cos else float("nan"),
-        "direction_cos_shuffled": float(np.mean(cos_s)) if cos_s else float("nan"),
-        "achieved_fraction": float(np.mean(frac)) if frac else float("nan"),
-        "achieved_fraction_median": float(np.median(frac)) if frac else float("nan"),
-    }
-
-
 def fidelity_ratio(card: dict, unsteered_card: dict) -> float:
     """THE guard, one definition in both environments (2026-09-01):
 
@@ -441,61 +385,6 @@ SCORECARD_COLUMNS = [
     ("collateral_rmse", "Collateral RMSE ↓", "{:.3f}"),
     ("edit_frame_rmse", "Edit-frame RMSE ↓", "{:.3f}"),
 ]
-
-
-def shift_zones(zones: EditZones, k: int, gt_edited_traj: np.ndarray) -> EditZones:
-    """Re-align an `EditZones` to rollout step `k` — for arms that LEAD by k frames.
-
-    `First Obs. TF` consumes the post-edit frame, so its rollout step 0 decodes frame `ef+k`
-    rather than `ef`. Scoring it against the edit-frame references would compare its output to
-    the wrong frame of both ground-truth worlds. `METRICS_AND_EDITORS.md` already says such an
-    arm must be labelled rather than re-aligned to the others; this is how it is *scored*.
-
-    The ray zones (`target` / `ghost` / `collateral`) are defined by the render at the edit frame
-    and are **not** carried forward — they come back empty, so `zone_rmse` returns NaN and the
-    table shows `n/a` rather than a number that quietly means something else. The Edit Index,
-    its by-step curve, and the trajectory RMSEs are all well defined at any step and are kept.
-
-    Parameters
-    ----------
-    zones          : built with `traj_pos=` / `gt_edited_traj=`, so the per-step worlds exist.
-    k              : how many frames the arm leads by.
-    gt_edited_traj : (N, K, R) the sim's clean post-edit observations, `clean_obs[ef:ef+K]`.
-    """
-    if zones.gt_unedited_traj is None or zones.differing_traj is None:
-        raise ValueError(
-            "shift_zones needs the per-step worlds; build_edit_zones(traj_pos=..., "
-            "gt_edited_traj=...) was not used"
-        )
-    empty = np.zeros_like(zones.target)
-    return EditZones(
-        gt_edited=gt_edited_traj[:, k],
-        gt_unedited=zones.gt_unedited_traj[:, k],
-        target=empty,
-        ghost=empty,
-        collateral=empty,
-        differing=zones.differing_traj[:, k],
-        teleport=zones.teleport,
-        gt_unedited_traj=zones.gt_unedited_traj[:, k:],
-        differing_traj=zones.differing_traj[:, k:],
-    )
-
-
-def representative_samples(
-    teleport: np.ndarray, k: int = 4, seed: int = 0
-) -> list[int]:
-    """Sample indices spread across the teleport-size range, one per quantile band.
-
-    Picking the k LARGEST teleports flatters an editor: measured 2026-08-18, the four
-    largest-teleport episodes sat at the **98th percentile** of the Edit Index distribution
-    (+0.07 against a −0.54 mean), because these editors' effect grows with teleport size while
-    the unsteered baseline is flat. A qualitative panel selected that way shows the best case and
-    reads as the typical one.
-    """
-    order = np.argsort(teleport)
-    bands = np.array_split(order, k)
-    rng = np.random.default_rng(seed)
-    return [int(b[len(b) // 2]) if len(b) else int(rng.choice(order)) for b in bands]
 
 
 def random_samples(n: int, k: int = 4, seed: int = 0) -> list[int]:

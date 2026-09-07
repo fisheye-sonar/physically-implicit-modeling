@@ -1,8 +1,12 @@
 # experiments/ — the quarantined workspace
 
-Every experiment is one folder here, and everything it produces stays inside it:
+Every experiment is one folder here, and everything it produces stays inside it. **One
+folder per QUESTION, follow-ups as subfolders** (depth over breadth, 2026-09-06): a bridge, a
+floor or an ablation that serves the same run family lives INSIDE that family's folder,
+e.g. `dw_tokens/{bridge,obsfloor}`, `inlp/8ray`, `othello_by_step/{decode,edit}`.
 
-    experiments/<name>/
+    experiments/<name>/            one per question (named like its runs/<topic>)
+      <follow-up>/                 the same layout one level down, when there is one
       README.md     what the question was, status, where the finding lives
       scripts/      the experiment's Python (pilots, builders, smokes)     [tracked]
       drivers/      its shell orchestration (chains, queues)               [tracked]

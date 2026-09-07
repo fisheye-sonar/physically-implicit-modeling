@@ -25,18 +25,23 @@ import h5py
 import numpy as np
 import torch
 
-from pim.editors.nullspace import multiprobe_delta
-from pim.editors.pinv import pinv_step
-from pim.environments.discworld import bench as dwb
-from pim.models import load_checkpoint
-from pim.probes.base import collect_residuals
-from pim.probes.cache import ProbeCache
-from pim.probes.nullspace import fit_nullspace_cascade
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))   # repo root, as every experiment script
+from pim.editors.nullspace import multiprobe_delta  # noqa: E402
+from pim.editors.pinv import pinv_step  # noqa: E402
+from pim.environments.discworld import arms as dwa  # noqa: E402
+from pim.environments.discworld import bench as dwb  # noqa: E402
+from pim.models import load_checkpoint  # noqa: E402
+from pim.probes.base import collect_residuals  # noqa: E402
+from pim.probes.cache import ProbeCache  # noqa: E402
+from pim.probes.nullspace import fit_nullspace_cascade  # noqa: E402
 
 RUN = Path(sys.argv[1] if len(sys.argv) > 1 else "runs/initial_othello_comparison/L-dw-20m")
 BASIS = sys.argv[2] if len(sys.argv) > 2 else "frustum"
 N_SEQ = int(sys.argv[3]) if len(sys.argv) > 3 else 20_000
 OUT = Path(sys.argv[4]) if len(sys.argv) > 4 else Path(f"experiments/inlp/scores/inlp_{RUN.name}_{BASIS}.json")
+# where the fitted cascades are PERSISTED: the run's own probes/ unless a smoke run passes a
+# scratch directory (argv[5]) — a tiny-N smoke must never write into the canonical cache
+CACHE_DIR = Path(sys.argv[5]) if len(sys.argv) > 5 else RUN / "probes"
 TARGET, MAX_ITER, R2_STOP = "full", 40, 0.02
 KS = (1, 2, 4, 8, 16, 32)
 ALPHAS = (0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 35.0, 60.0,
@@ -50,12 +55,12 @@ print(f"{RUN}  basis={BASIS}  n_seq={N_SEQ}  val {info.val_loss:.5f}  points {NP
 
 # ── bench + the canonical PI reference (cache HIT; loaded BEFORE the big arrays) ─────
 b = dwb.load_bench(model, n=192, target=TARGET, basis_name=BASIS, data_dir=root / "eval")
-u = dwb.unsteered(model, b)
-lin = dwb.fit_probes(model, target=TARGET, n_seq=30_000, family="linear", basis_name=BASIS,
+u = dwa.unsteered(model, b)
+lin = dwa.fit_probes(model, target=TARGET, n_seq=30_000, family="linear", basis_name=BASIS,
                      data_dir=root / "probe", cache_dir=RUN / "probes", log=None)
 ref = {}
 for ell in range(NP):
-    dwb.as_activations(model, ell)
+    dwa.as_activations(model, ell)
     h0 = model.flat_state(b.state)
     ref[ell] = pinv_step(h0, b.tgt, lin[ell][0], space="zspace").cpu().numpy()
 del lin
@@ -72,14 +77,19 @@ obs, y = obs[:, :span], y[:, :span]
 T = obs.shape[1]
 perm = np.random.default_rng(dwb.SEED).permutation(N_SEQ)          # the canonical split
 tr_seq, te_seq = perm[: int(0.8 * N_SEQ)], perm[int(0.8 * N_SEQ):]
-rows = lambda seqs: (seqs[:, None] * T + np.arange(T)[None, :]).ravel()
+def rows(seqs):
+    return (seqs[:, None] * T + np.arange(T)[None, :]).ravel()
+
+
 tr, te = rows(tr_seq), rows(te_seq)
 Y = y.reshape(-1, y.shape[-1]).astype(np.float64)
 mu_y = Y[tr].mean(0)
 
 t0 = time.time()
-STORE = ProbeCache(RUN / "probes")            # ⛔ every fitted cascade is PERSISTED here
-_sdir = Path(".scratch"); _sdir.mkdir(exist_ok=True)
+STORE = ProbeCache(CACHE_DIR)                 # ⛔ every fitted cascade is PERSISTED here
+OUT.parent.mkdir(parents=True, exist_ok=True)
+_sdir = Path(".scratch")
+_sdir.mkdir(exist_ok=True)
 _mm = _sdir / f"inlp_resid_{RUN.name}_{BASIS}.npy"   # nvme, not /tmp (tmpfs)
 R = collect_residuals(model, obs, batch=64, memmap=_mm)             # (NP, N, T, d) f32
 print(f"residuals {R.shape} in {time.time()-t0:.0f}s", flush=True)
@@ -115,9 +125,20 @@ for ell in range(NP):
     print(f"\npoint {ell}: {casc.n_probes} probes, total rank {casc.total_rank}, "
           f"R² profile {[round(r, 3) for r, _ in prof[:8]]}{'…' if len(prof) > 8 else ''}"
           f"  [{time.time()-t0:.0f}s]", flush=True)
+    # ── per-component held-out R² of EVERY probe in the cascade (2026-09-04) ─────────
+    # Each probe reads its own orthogonal slice of the standardised stream; this is the
+    # by-component view of the linear code (R² against the TRAIN mean, repo convention),
+    # computed on the same held-out rows the aggregate profile uses.
+    H_te = R[ell].reshape(-1, R.shape[-1])[te]
+    Z_te = ((H_te - mu) / sd).astype(np.float64)
+    ss_tot = ((Y[te] - mu_y) ** 2).sum(0)
+    perdim = [(1.0 - ((Y[te] - casc.read(k, Z_te)) ** 2).sum(0) / ss_tot).tolist()
+              for k in range(casc.n_probes)]
+    del H_te, Z_te
+    print(f"  probe-1 per-component R² {[round(v, 3) for v in perdim[0]]}", flush=True)
 
     # ── edit through the first K probes ───────────────────────────────────────────
-    dwb.as_activations(model, ell)
+    dwa.as_activations(model, ell)
     h0_t = model.flat_state(b.state)
     h0 = h0_t.cpu().numpy()
     z0 = (h0 - mu) / sd
@@ -134,8 +155,8 @@ for ell in range(NP):
                 roll = model.rollout_with_edit(b.state, ell, h0_t + a * dh_t, dwb.K_ROLL).cpu().numpy()
                 rec = {"K": int(K), "shrink": bool(shrink), "alpha": float(a),
                        "write_ratio": float((a * dh_t).norm(dim=1).div(h0_t.norm(dim=1)).mean()),
-                       **{k: v for k, v in dwb.score(model, b, roll).items() if np.isscalar(v)}}
-                rec["fidelity_ratio"] = dwb.fidelity_ratio(rec, u)
+                       **{k: v for k, v in dwa.score(model, b, roll).items() if np.isscalar(v)}}
+                rec["fidelity_ratio"] = dwa.fidelity_ratio(rec, u)
                 arms.append(rec)
     best = {}
     for K in sorted({r["K"] for r in arms}):
@@ -150,7 +171,7 @@ for ell in range(NP):
     results["points"][str(ell)].update({
         "n_probes": casc.n_probes, "total_rank": casc.total_rank,
         "r2_profile": [r for r, _ in prof], "rank_profile": [k for _, k in prof],
-        "best": best, "arms": arms})
+        "perdim_profile": perdim, "best": best, "arms": arms})
     OUT.write_text(json.dumps(results, indent=1, default=float))     # checkpoint the JSON
     del casc, arms
     gc.collect()

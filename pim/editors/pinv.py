@@ -90,7 +90,10 @@ def pinv_maps(probe: WorldStateProbe) -> dict[str, PinvMap]:
     lin = probe.net
     Az, bz = lin.weight.detach(), lin.bias.detach()  # (D, H), (D)
     xs, xm = probe.x_std, probe.x_mean
-    ys, ym = probe.y_std, probe.y_mean
+    if probe.n_classes is None:
+        ys, ym = probe.y_std, probe.y_mean
+    else:  # a classification probe emits (d_out*n_classes,) logits with NO y-affine
+        ys, ym = torch.ones_like(bz), torch.zeros_like(bz)
 
     # legacy: standardised-y read-out expressed over raw h — the y-affine is DROPPED
     A_leg = Az / xs
@@ -110,7 +113,9 @@ def pinv_step(h0: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
               space: str = "zspace", dims=None) -> torch.Tensor:
     """The α=1 write: Δh such that the probe reads ``target`` at ``h0 + Δh``.
 
-    ``target`` is ALWAYS in the probe's output units (raw sim units for regression) —
+    ``target`` is ALWAYS in the probe's output units (raw sim units for regression; the
+    flattened ``(B, d_out*n_classes)`` logits for a classification probe, which is how
+    the Othello arm asks for a class swap) —
     the space choice changes the solve, never the meaning of the target. Scale the
     returned step by α for a sweep; α=1 is the exact jump and the honest headline.
 
@@ -127,7 +132,10 @@ def pinv_step(h0: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
     idx = None if dims is None else list(dims)
     if m.space == "zspace":
         z0 = (h0 - probe.x_mean) / probe.x_std
-        tgt_net = (target - probe.y_mean) / probe.y_std
+        # a classification probe emits logits with no y-affine, so its target (the
+        # flattened (d_out*n_classes,) logit vector) is already in net units
+        tgt_net = (target if probe.n_classes is not None
+                   else (target - probe.y_mean) / probe.y_std)
         A, b = m.A, m.b
         if idx is not None:
             A, b, tgt_net = A[idx], b[idx], tgt_net[..., idx]

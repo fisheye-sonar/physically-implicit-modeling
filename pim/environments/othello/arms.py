@@ -14,38 +14,44 @@ and the models raise on ``predict_step`` to keep it that way.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 import torch
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
-from pim.editors.pinv import inject_state
+from pim.editors.nanda import addition_delta, probe_direction
+from pim.editors.pinv import pinv_step
 from pim.environments.othello.bench import Benchmark
-from pim.environments.othello.data import N_CLASSES, N_TILES, board_probs, canonical_vocab
+from pim.environments.othello.data import (
+    N_CLASSES, N_TILES, T_MODEL, board_probs, canonical_vocab, flatten_rows, move_probs)
 from pim.environments.othello.vendor.othello import OthelloBoardState
 from pim.metrics.othello_moves import move_scorecard
-from pim.probes.base import fit_probe
+from pim.probes.base import CANONICAL_HIDDEN, FIT_BATCH, FIT_EPOCHS, FIT_LR, fit_probe
 from pim.probes.cache import ProbeCache
-from pim.probes.mlp import CANONICAL_HIDDEN
 
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
-BLOCK = 59
-
-from pathlib import Path
+BLOCK = T_MODEL
 
 _REPO = Path(__file__).resolve().parents[3]
-PROBE_CACHE = ProbeCache(_REPO / "runs" / "probe_cache" / "othello")
+
+
+def _require_cache_dir(cache_dir) -> Path:
+    if cache_dir is None:
+        raise ValueError("cache_dir is required: every fitted probe is persisted in a named "
+                         "directory (the run's probes/ or the experiment's) — no shared pool")
+    return Path(cache_dir)
 
 
 # ── held-out generalisation gates ────────────────────────────────────────────
 
 
-def legal_sets(tokens: np.ndarray, lengths: np.ndarray) -> list[list[list[int]]]:
+def legal_sets(tokens: np.ndarray, lengths: np.ndarray, flip: bool = True) -> list[list[list[int]]]:
     """Per game, per position, the legal moves as BOARD SQUARES, replayed with their rules."""
     itos = {v: k for k, v in canonical_vocab().items()}
     out = []
     for row, L in zip(tokens, lengths):
-        b = OthelloBoardState()
+        b = OthelloBoardState(flip=flip)
         per = []
         for t in range(int(L)):
             b.umpire(itos[int(row[t])])
@@ -56,7 +62,7 @@ def legal_sets(tokens: np.ndarray, lengths: np.ndarray) -> list[list[list[int]]]
 
 @torch.no_grad()
 def gates(model, tokens: np.ndarray, lengths: np.ndarray, batch: int = 512,
-          log=print) -> dict:
+          log=print, flip: bool = True) -> dict:
     """Every held-out number, plus the Bayes ceilings the data itself imposes.
 
     The generator draws uniformly from the legal set, so ``bayes_ce = E[log|legal|]``
@@ -64,12 +70,19 @@ def gates(model, tokens: np.ndarray, lengths: np.ndarray, batch: int = 512,
     the CE EXCESS over bayes_ce, never raw accuracy.
     """
     stoi = canonical_vocab()
-    legal = legal_sets(tokens, lengths)
+    legal = legal_sets(tokens, lengths, flip)
+    # The head's output convention (see `data.move_probs`): the canonical CE runs are
+    # "logits"; an MSE-on-one-hot head is "raw" — its outputs are used as they are, so
+    # `legal_mass` and `ce` below are only distribution-valid for "logits"/"clipnorm";
+    # `out_sum_mean` / `out_neg_mass_mean` say how far from a distribution the raw head is.
+    kind = getattr(model, "output_kind", "logits")
     mass, hit1, acc1, ce, bce, btop1, n = 0.0, 0, 0, 0.0, 0.0, 0.0, 0
+    osum, oneg = 0.0, 0.0
     for i in range(0, len(tokens), batch):
         tk = torch.from_numpy(tokens[i: i + batch]).long().to(DEV)
         lg = model.logits(tk[:, :BLOCK])
-        p = torch.softmax(lg[:, :, 1:], -1).cpu().numpy()  # drop the pad logit
+        pt = move_probs(lg, kind)
+        p = pt.cpu().numpy()                               # (B, T, 60), pad output dropped
         am = p.argmax(-1) + 1                              # back into token space
         for r in range(len(tk)):
             L = int(lengths[i + r])
@@ -84,12 +97,15 @@ def gates(model, tokens: np.ndarray, lengths: np.ndarray, batch: int = 512,
                 ce += -float(np.log(max(p[r, t, int(tokens[i + r, t + 1]) - 1], 1e-12)))
                 bce += float(np.log(len(lm)))
                 btop1 += 1.0 / len(lm)
+                osum += float(p[r, t].sum())
+                oneg += float(-p[r, t][p[r, t] < 0].sum())
                 n += 1
         if log and i % (batch * 4) == 0:
             log(f"    gates {i + len(tk):,}/{len(tokens):,}")
     return {"legal_mass": mass / n, "top1_legal": hit1 / n, "top1_acc": acc1 / n,
             "ce": ce / n, "bayes_ce": bce / n, "bayes_top1": btop1 / n,
-            "n_positions": n, "n_games": len(tokens)}
+            "n_positions": n, "n_games": len(tokens), "output_kind": kind,
+            "out_sum_mean": osum / n, "out_neg_mass_mean": oneg / n}
 
 
 # ── probes over residual points ──────────────────────────────────────────────
@@ -103,18 +119,19 @@ def _split(n_seq: int, seq_of_row: np.ndarray, how: str, holdout: float, seed: i
     n_rows = len(seq_of_row)
     if how == "frame":
         perm = rng.permutation(n_rows)
-        cut = int(round((1 - holdout) * n_rows))
+        cut = int((1 - holdout) * n_rows)
         return perm[:cut], perm[cut:]
     order = rng.permutation(n_seq)
     is_tr = np.zeros(n_seq, bool)
-    is_tr[order[: int(round((1 - holdout) * n_seq))]] = True
+    is_tr[order[: int((1 - holdout) * n_seq)]] = True       # int(), as bench.fit_probes
     tr_mask = is_tr[seq_of_row]
     return np.where(tr_mask)[0], np.where(~tr_mask)[0]
 
 
 def observation_probes(data, family: str = "linear", target: str = "mine",
                        holdout: float = 0.2, seed: int = 0, cache_dir=None,
-                       cache: bool = True, log=print, epochs: int | None = None) -> tuple:
+                       cache: bool = True, log=print, epochs: int | None = None,
+                       align: str = "left") -> tuple:
     """The OBSERVATION floor: the canonical probes fitted to the causal MOVE history
     instead of a model's residual stream. No model is involved.
 
@@ -137,10 +154,12 @@ def observation_probes(data, family: str = "linear", target: str = "mine",
     from pim.probes.baselines import CausalHistory, fit_baseline_probe
     from pim.probes.mlp import CANONICAL_HIDDEN
 
-    store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
+    store = ProbeCache(_require_cache_dir(cache_dir))
     n_seq = int(len(data.tokens))
     vocab = len(canonical_vocab())
-    extra = {} if epochs is None else {"epochs": int(epochs)}   # see discworld.bench
+    extra = {} if epochs is None else {"epochs": int(epochs)}   # see discworld.arms
+    if align != "left":                     # existing (left-aligned) keys stay as they are
+        extra["align"] = align
     fname, prov = store.key(None, kind="othello_observation", target=target,
                             family=family, holdout=holdout, seed=seed, n_seq=n_seq,
                             n_rows=int(data.mask.sum()), vocab=vocab, **extra)
@@ -152,15 +171,16 @@ def observation_probes(data, family: str = "linear", target: str = "mine",
             return hit
     # the same permutation _split draws for "sequence" — identical held-out games
     order = np.random.default_rng(seed).permutation(n_seq)
-    cut = int(round((1 - holdout) * n_seq))
+    cut = int((1 - holdout) * n_seq)
     tr, te = order[:cut], order[cut:]
 
     y = data.mine if target == "mine" else data.labels
-    hist = CausalHistory(_t.from_numpy(data.tokens).to(DEV), kind="one_hot", vocab=vocab)
+    hist = CausalHistory(_t.from_numpy(data.tokens).to(DEV), kind="one_hot", vocab=vocab, align=align)
     out = fit_baseline_probe(
         hist, _t.from_numpy(y.astype("int64")).to(DEV), tr, te,
         hidden=None if family == "linear" else CANONICAL_HIDDEN, n_classes=3,
-        row_mask=_t.from_numpy(data.mask).to(DEV), seed=seed, log=log, **extra)
+        row_mask=_t.from_numpy(data.mask).to(DEV), seed=seed, log=log,
+        **{k: v for k, v in extra.items() if k != "align"})
     if log:
         st = out[1]
         log(f"    obs baseline [{target}/{family}]: err {st['error_rate']:.2f}% "
@@ -178,8 +198,8 @@ class ProbeGrid:
 
 def fit_probe_grid(model, data, *, targets=("mine",),
                    families=("linear", "mlp"), splits=("sequence",),
-                   holdout: float = 0.2, epochs: int = 200, batch: int = 4096,
-                   lr: float = 1e-3, seed: int = 0, log=print,
+                   holdout: float = 0.2, epochs: int = FIT_EPOCHS, batch: int = FIT_BATCH,
+                   lr: float = FIT_LR, seed: int = 0, log=print,
                    cache: bool = True, cache_dir=None) -> ProbeGrid:
     """One probe per (target, family, split, residual point). Cached with the model
     fingerprint in the key. ``family`` "mlp" = the canonical MLP-128 (Li's own shape
@@ -201,9 +221,7 @@ def fit_probe_grid(model, data, *, targets=("mine",),
     """
     from pim.environments.othello.data import harvest_point
 
-    # per-run home when the caller names one (canonical scoring passes the run's own
-    # probes/ dir); the shared pool is only the ad-hoc fallback — see bench.fit_probes.
-    store = ProbeCache(cache_dir) if cache_dir is not None else PROBE_CACHE
+    store = ProbeCache(_require_cache_dir(cache_dir))     # the run's or the experiment's probes/
     n_points = model.n_layers + 1
     fname, prov = store.key(
         model, kind="othello_grid", targets=list(targets), families=list(families),
@@ -217,10 +235,8 @@ def fit_probe_grid(model, data, *, targets=("mine",),
                 log(f"  probe grid cache HIT ({fname})")
             return ProbeGrid(blob["probes"], blob["stats"])
 
-    seq_of_row = np.repeat(np.arange(len(data.tokens))[:, None],
-                           data.tokens.shape[1], 1)[data.mask]
-    ys = {"state": data.labels[data.mask].astype(np.int64),
-          "mine": data.mine[data.mask].astype(np.int64)}
+    seq_of_row, _ = flatten_rows(data)
+    ys = {t: flatten_rows(data, t)[1].astype(np.int64) for t in ("state", "mine")}
     idx = {s: _split(len(data.tokens), seq_of_row, s, holdout, seed) for s in splits}
     hidden = {"linear": None, "mlp": CANONICAL_HIDDEN}
 
@@ -267,7 +283,7 @@ def unsteered_probs(model, bench: Benchmark) -> np.ndarray:
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
     for toks, ids in zip(bench.tokens, bench.case_ids):
         idx = torch.from_numpy(toks).to(DEV)
-        probs[ids] = board_probs(model.decode(idx))
+        probs[ids] = board_probs(model.decode(idx), getattr(model, "output_kind", "logits"))
     return probs
 
 
@@ -279,24 +295,21 @@ def unsteered(model, bench: Benchmark) -> dict:
 @torch.no_grad()
 def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                mode: str, alpha: float, points) -> tuple[np.ndarray, dict]:
-    """ND and PI on the classification probes, exactly as ``linear_intervention.run``.
+    """ND and PI on the classification probes — ``pim.editors.nanda`` / ``pim.editors.pinv``
+    called with the Othello case structure; NOTHING is re-derived here (the inline copies
+    this function carried until 2026-09-07 are pinned equal in
+    ``tests/test_editors_canonical.py``).
 
     mode "add"      ND: the probe weight row for (tile, target class), standardised
-                    (w / x_std — the raw-space gradient), unit-normed, scaled by α·‖x‖.
+                    (w / x_std — the raw-space gradient), unit-normed, scaled by α·‖x‖ —
+                    ``probe_direction(per_sample=True)`` + ``addition_delta``.
     mode "add_sub"  ND target−current: subtract the current class's row first.
-    mode "pinv"     PI: our canonical editor. The probe is linear in its STANDARDISED
-                    input, so the injection is solved in z-space and mapped back —
-                    exactly ``pim.editors.pinv``'s "zspace" (classification probes have
-                    identity y-affine, so there is no affine question here). The target
-                    logits swap the intervened tile's current↔target class scores.
+    mode "pinv"     PI: ``pinv_step`` in z-space (a classification probe has no y-affine,
+                    so there is no affine question here). The target is the probe's own
+                    read-out with the intervened tile's current↔target class scores swapped.
     """
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
     ratios = []
-    pinv_ops = {}
-    if mode == "pinv":
-        for ell, p in probes.items():
-            A = p.net.weight.detach()
-            pinv_ops[ell] = (A, torch.linalg.pinv(A), p.net.bias.detach())
     for toks, ids in zip(bench.tokens, bench.case_ids):
         idx = torch.from_numpy(toks).to(DEV)
         bsz = len(ids)
@@ -311,31 +324,28 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
             p = probes[layer]
             cur = x[:, -1]
             if mode in ("add", "add_sub"):
-                W = p.net.weight.detach().view(N_TILES, N_CLASSES, -1)
-                d = W[sq, td] / p.x_std
-                if mode == "add_sub":
-                    d = d - (W[sq, cd] / p.x_std)
-                d = d / d.norm(dim=1, keepdim=True)
+                # flat probe row of (tile, class) = tile * N_CLASSES + class
+                d = probe_direction(p, sq * N_CLASSES + td, per_sample=True,
+                                    subtract_rows=(sq * N_CLASSES + cd) if mode == "add_sub" else None)
                 # α is a FRACTION OF THE ACTIVATION NORM, so one value means the same
                 # size of write at every residual point (the scale differs ~3×)
-                delta = alpha * cur.norm(dim=1, keepdim=True) * d
+                delta = addition_delta(cur, d, alpha)
             else:
-                A, Ap, bv = pinv_ops[layer]
-                z = (cur - p.x_mean) / p.x_std
-                lg = p.net(z).view(bsz, N_TILES, N_CLASSES).clone()
-                sel = lg[torch.arange(bsz), sq]
+                lg = p(cur).clone()                       # (B, N_TILES, N_CLASSES) logits
+                ar = torch.arange(bsz, device=cur.device)
+                sel = lg[ar, sq]
                 new = sel.clone()
-                new[torch.arange(bsz), td] = sel[torch.arange(bsz), cd]
-                new[torch.arange(bsz), cd] = sel[torch.arange(bsz), td]
-                lg[torch.arange(bsz), sq] = new
-                z_new = inject_state(z, lg.view(bsz, -1), A, Ap, bv)
-                delta = alpha * (z_new - z) * p.x_std
+                new[ar, td] = sel[ar, cd]
+                new[ar, cd] = sel[ar, td]
+                lg[ar, sq] = new
+                delta = alpha * pinv_step(cur, lg.view(bsz, -1), p, space="zspace")
             _rec.append(float((delta.norm(dim=1) / cur.norm(dim=1)).mean()))
             out = x.clone()
             out[:, -1] = cur + delta
             return out
 
-        probs[ids] = board_probs(model.decode(idx, edit=hook))
+        probs[ids] = board_probs(model.decode(idx, edit=hook),
+                                 getattr(model, "output_kind", "logits"))
         ratios.append(np.mean(rec) if rec else 0.0)
     card = move_scorecard(probs, bench.legal_pre, bench.legal_post)
     card["write_ratio"] = float(np.mean(ratios))
@@ -377,6 +387,7 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
         hook = make_intervention_hook(probes, specs, start_layer, alpha=alpha,
                                       n_steps=n_steps, optimizer=optimizer)
         with torch.no_grad():
-            probs[ids] = board_probs(model.decode(idx, edit=hook))
+            probs[ids] = board_probs(model.decode(idx, edit=hook),
+                                 getattr(model, "output_kind", "logits"))
         del rs, x0, specs
     return probs, move_scorecard(probs, bench.legal_pre, bench.legal_post)

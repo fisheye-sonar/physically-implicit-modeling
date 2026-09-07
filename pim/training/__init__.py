@@ -10,7 +10,7 @@ Entry point: ``scripts/train.py``. Every run writes config.json + commit_sha +
 metrics.jsonl + arch-stamped checkpoints into its own ``runs/<topic>/<name>/`` dir.
 """
 
-from pim.training.sources import discworld_source, othello_source
+from pim.training.sources import discworld_source, othello_source, token_source
 from pim.training.stream import BlockStream
 from pim.training.train import (
     DataSource,
@@ -31,4 +31,5 @@ __all__ = [
     "BlockStream",
     "discworld_source",
     "othello_source",
+    "token_source",
 ]

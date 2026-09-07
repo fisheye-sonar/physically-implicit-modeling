@@ -24,12 +24,14 @@ SEEDS — must not overlap dset 4, or the evaluation on dset 4 is worthless
     dset 17     3,000,000 – 3,950,000
     THIS        10,000,000 + k * 500,000,000   for shard k
 
-⛔ Spacing is 500M, not the shard size, because of `pim/simulator/dataset.py:111`:
+⛔ Spacing is 500M, not the shard size, because of `dataset.py::_generate_one`:
 
         cfg = dataclasses.replace(cfg, seed=int(seed) + attempt * 1_000_000)
 
-  A rejected sample RETRIES AT A DIFFERENT SEED, up to `max_gen_attempts=300` attempts, i.e. up
-  to +299,000,000. Two consequences, both handled here:
+  A sample whose `simulate` gives up RETRIES AT A DIFFERENT SEED, up to 10 attempts, i.e. up to
+  +9,000,000. (Do not confuse this with `SimConfig.max_gen_attempts=300`: that is the IN-SIM
+  initial-condition rejection loop inside one `simulate` call, and it never changes the seed.)
+  Two consequences, both handled here:
     1. shard stride (500M) exceeds the max retry offset, so shards cannot collide;
     2. shard size (500k) is BELOW the 1M retry quantum, so within a shard a retry can never land
        on another sample's base seed. A 1M+ shard would silently duplicate sequences.
@@ -89,6 +91,10 @@ INSTANCES = {
         "obs_dim": 128,
         "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.04", "--obs-noise-std", "0.2"],
         "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
                       (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
                       (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large")] + _NEW_RANGES,
     },
@@ -271,8 +277,12 @@ if __name__ == "__main__":
             fut.result()
             strip_shard(k)
     info = verify()
+    # corpus.json is THE machine-written contract for the train corpus (instance.json is a
+    # hand-written summary and is never read by code). n_frames / obs_dim / instance were
+    # added 2026-09-07 so readers (tokens.py) need not parse sim_flags.
     (OUT / "corpus.json").write_text(json.dumps(
         {**info, "shard_n": SHARD_N, "n_shards": N_SHARDS, "base_seed": BASE_SEED,
          "seed_stride": SEED_STRIDE, "sim_flags": SIM_FLAGS,
-         "train_n": TRAIN_N, "val_n": VAL_N}, indent=1))
+         "train_n": TRAIN_N, "val_n": VAL_N,
+         "instance": INSTANCE, "n_frames": FRAMES, "obs_dim": OBS_RES}, indent=1))
     print("corpus complete", flush=True)

@@ -8,7 +8,10 @@ Code paths are the definitions; this file is the index, not a re-derivation. Cre
 ## Environment instances
 
 An **instance** = one environment class at one fixed generation config, packaged with the
-data for every split it defines (`instance.json` in its directory is the contract).
+data for every split it defines. Its `instance.json` is a hand-written summary for
+humans (2026-09-07: never read by code, never a source of truth); the machine-written
+contracts are `train/corpus.json` (`bigcorpus.verify()`) and each split's `config_json`
+HDF5 attribute / `dataset.json` (`generate_dataset.py`).
 Data-scale comparisons mask one instance's train pool; changed generation params = a new
 instance (the dset-17 lesson: it silently used position noise 0.0 and every result on it
 was uninterpretable against the canonical eval).
@@ -18,7 +21,9 @@ was uninterpretable against the canonical eval).
 | `dw-pn04` | discworld | `datasets/discworld/dw-pn04/instance.json` | train 20M (memmap) · probe 120k · eval 10k+10k · edits 10k (EF=20) |
 | `dw-noiseless` | discworld | `datasets/discworld/dw-noiseless/instance.json` | identical to `dw-pn04` in every field **except** `obs_noise_std = 0.0` AND `position_noise_std = 0.0` — the noise ablation at mass scale (2026-08-31). Same split sizes; seeds are a FRESH block (base 30e9) |
 | `dw-8ray` | discworld | `datasets/discworld/dw-8ray/instance.json` | `dw-noiseless` with the disc radius **doubled (1.0)** and the observation cut to **8 usable rays** — 10 cast with the unchanged caster geometry, the two frustum-wall rays dropped (`SimConfig.drop_edge_rays`, `obs_dim = obs_res − 2`) — the ray-count ablation (2026-09-03). Same split sizes and recipe; seeds a FRESH block (train 60e9, eval 85e9, probe 980e9, probe_large 990e9); edits generated with `--max-edit-attempts 2000` (radius-1 teleports need more draws). At 8 rays ~15 % of edit cases have no differing ray, i.e. no Edit-Index support |
+| `dw-8ray` · **tokens** | discworld, frames as tokens | `datasets/discworld/dw-8ray/tokens/` (`meta.json`, `vocab.npz`; built by `scripts/make_discworld_tokens.py`, `pim/environments/discworld/tokens.py`) | NOT a new instance — a representation of `dw-8ray` (2026-09-05): the same splits with every frame one token of a 422-token vocabulary (421 realisable 8-ray patterns over ray values {0, 0.4, 0.8} + UNK = id 0; ids in ascending pattern code; built over every split, so no eval frame is unseen — `frames_only_outside_train: 0`). `train.i16` (20M, 40) int16, `probe/val/test/edits.npy`. Consumed by `scripts/train.py --repr tokens` and `token_bench`. |
 | `oth-uniform` | othello | `datasets/othello/oth-uniform/instance.json` | train [0,20M) · test [90M,+10k) · probe [91M,+20k) · edits = Li's 1001 cases |
+| `oth-noflip` | othello | `datasets/othello/oth-noflip/instance.json` | The flip ablation (2026-09-06): `oth-uniform` with ONE rule changed — a placed disc never recolours the discs it encloses (`OthelloBoardState(flip=False)`); legality (enclosure), passes, game end, uniform-over-legal sampling and the index law are unchanged. Pilot (5k games): every game 60 moves, no passes ever, so mine/theirs == parity of the offset at which the square was played (100%; 64% on oth-uniform); mean legal set 5.8 (8.5), Bayes CE 1.672 (1.999). Splits as oth-uniform; edits = 1001 cases synthesised by `scripts/make_othello_edits.py` (Li's recipe and prefix-length mix; `bench.synthesise_cases`) since the shipped pkl is flip-Othello. |
 
 ⛔ **Seeds are never shared across discworld instances**, even to "pair" worlds:
 `always_in_frustum` accepts initial conditions by simulating forward, and the noise
@@ -40,18 +45,30 @@ invariant `pim/models/` exists to protect. Surface: `pim/models/protocol.py`.
 
 ## Training setup
 
-ONE loop (`pim/training/train.py`), two objectives, fed by per-environment
+ONE loop (`pim/training/train.py`), three objectives — `mse_next_obs` (discworld, next
+frame), `ce_next_move` (Othello, canonical), and `mse_next_move_onehot` (Othello, MSE of the
+61 head outputs against the one-hot next move, 2026-09-04; `scripts/train.py --objective
+mse_onehot`, the model then carries `output_kind="raw"` and every scorer reads its head
+as-is through `othello.data.move_probs` — GOTCHAS 2026-09-04) — fed by per-environment
 `DataSource`s (`pim/training/sources.py`). The canonical recipe (the matched-BIG20M
 hyperparameters) IS the `TrainConfig` defaults: AdamW 1e-3 / wd 1e-4 / clip 1.0 /
 batch 256 / 2k-step warmup then **constant** LR / seed 0. Entry: `scripts/train.py`.
 Every run writes `config.json` + `commit_sha` + `metrics.jsonl` + arch-stamped
 checkpoints into `runs/<topic>/<name>/`.
 
+`--limit N` trains on the first N sequences of the pool AND validates on the last 10%
+*of that prefix*, so the training-time `val_loss` is a different set at every data-scale
+rung and is not comparable across rungs. Every canonical score (probe fits, the
+editability bench, the Othello gates) uses the instance's fixed eval/probe/edits
+splits, which do not depend on `--limit` and are comparable across rungs.
+
 ## Probes
 
 Always held out **by sequence**, never by frame (Othello's frame split is kept only as
 Li's replication anchor and always labelled). Cached with the model fingerprint in the
-key (`pim/probes/cache.py`).
+key (`pim/probes/cache.py`). A token model is probed on TOKEN inputs through
+`bench.fit_probes(encoder=…, encoder_tag=…)` — the same frames, same span truncation, same
+targets; the tag joins the cache key (2026-09-05).
 
 | shorthand | definition | fit |
 |---|---|---|
@@ -88,7 +105,7 @@ table.
 
 | shorthand | definition | what it rules out |
 |---|---|---|
-| **observation** | `pim/probes/baselines.py::CausalHistory` + `fit_baseline_probe`; entry points `discworld.bench.observation_probes` / `othello.arms.observation_probes` | that the state is simply sitting in the input in probe-readable form. The feature at frame *t* is the zero-left-padded history `obs[0..t]` — exactly what the model has consumed when probed at *t* |
+| **observation** | `pim/probes/baselines.py::CausalHistory` + `fit_baseline_probe`; entry points `discworld.arms.observation_probes` / `othello.arms.observation_probes` | that the state is simply sitting in the input in probe-readable form. The feature at frame *t* is the zero-left-padded history `obs[0..t]` — exactly what the model has consumed when probed at *t* |
 | **random-init** | `pim/probes/baselines.py::random_init_model` + the ORDINARY `fit_probes` path | that the skill comes from random features of the right shape rather than from training. A different MODEL, never a different measurement |
 
 Matched to the model probes in everything else: same families, same `n_seq`, the same
@@ -123,6 +140,17 @@ floor is decodable in principle; a low number means "a shallow readout cannot co
 flip rules", never "the information is absent". Discworld's observation is genuinely lossy
 (noisy, and depth is never directly observed — see `research/GOTCHAS.md`).
 
+**Two history layouts for the observation floor (b4, 2026-09-06).** The observation probe
+reads the causal input history as a fixed-width vector; `CausalHistory(align="left")` (the
+original) puts frame j in block j and zero-fills after the present, so the CURRENT frame sits
+in a different block for every row and a LINEAR probe cannot express even a current-frame
+lookup (tokenised dw-8ray: left-aligned one-hot LIN 0.726, the lookup alone 0.968).
+`align="right"` lays the history out relative to the present (block 0 = now, block k = k
+steps back). `baselines.json` carries `observation` / `observation_large` (left) and
+`observation_right` / `observation_right_large` (right); Table 3 shows both. Read the
+right-aligned LIN cell as the linear floor; the MLP barely differs. Cache keys of the left
+fits are unchanged (`align` enters the key only when "right").
+
 ## Editors
 
 | shorthand | definition | what it writes |
@@ -131,11 +159,16 @@ flip rules", never "the information is absent". Discworld's observation is genui
 | **ND** | `pim/editors/nanda.py` — Nanda direction addition | α·‖x‖·d̂ along the probe weight rows, standardised. Canonical form is the **target−current contrast** (`subtract_rows`, formerly reported as "ND-sub"): it beat the plain target-row form on every arm (+0.622 vs +0.447, fid 0.23 vs 0.34) and is the more principled direction. ⛔ **Not applicable on discworld** — one fixed direction with a swept scalar is coherent only when the target is CATEGORICAL (flip a tile: same change every case); for a continuous per-case target no single magnitude can serve 192 teleports of differing distance and direction. Discworld ND arms are still computed into `scores.json` but are omitted from the tables (2026-09-01) |
 | **GS** | `pim/editors/grad_steer.py` — Li §4.1 MLP gradient steering | descent on the activation through the frozen MLP-128 probe, sequentially from L_s across every later point. ⛔ `target_labels` MUST share a coordinate frame with the probe being steered — a mismatch converges onto a well-formed but WRONG class and looks like a failed editor (the 2026-08-31 GS-mine bug, worth 0.70 Edit Index; `scores.json::probe_sources` records the pairing) |
 | nullspace (non-default) | `pim/editors/nullspace.py` | Σₖ Aₖ⁺(tₖ − pₖ(h)) over the whole cascade — the row-space objection's answer |
-| oracle: overwrite | `pim/editors/oracle_overwrite.py` | the state the model would have on the post-edit history (ceiling) |
-| oracle: freeze-interp | `pim/editors/freeze_interpolation.py` | N rendered frozen frames teacher-forced through the observation channel |
+| oracle: overwrite | `pim/editors/oracle_overwrite.py` · bench wiring `discworld/arms.py::overwrite_oracle_rollout` | the state the model would carry had it SEEN the edited world for the whole window — `counterfactual_history` renders frames 0..EF−1 with the edited object displaced by its teleport vector (noise-matched), then a free-run aligned with every other arm. ⛔ A ONE-frame overwrite (the post-edit frame appended to the pre-edit window) is not accepted by a window model: EI +0.04 on L-dw-20m (2026-09-07) |
+| oracle: freeze-interp | `pim/editors/freeze_interpolation.py` · `discworld/arms.py::freeze_oracle_rollout` | N rendered frozen frames (the edited object glides pre → target, time frozen) teacher-forced through the observation channel, then a free-run |
 
 The two oracle editors exist to defend the Edit Index: they score well on discworld, so
 a workhorse editor at the unedited floor is a fact about the model, not the measure.
+Measured 2026-09-07 on the full 192-case bench (`arms.oracle_arm`): L-dw-noiseless-20m
+overwrite **+0.907**, freeze[N=16] **+0.746** (unedited −0.924); L-dw-20m +0.688 / +0.678 at
+N=16 (+0.704 at N=32), against the ~+0.82 effective ceiling of clean-render scoring.
+`tests/test_oracle_editors.py` pins both ≥ +0.7 on the noiseless run. They are wired
+but NOT part of `master_eval`'s default loop.
 
 ## Metrics
 
@@ -150,6 +183,7 @@ call site.
 | zone RMSEs, scorecard | `editability.py` — target / ghost / collateral / edit-frame | absolute, in intensity units |
 | **fidelity ratio** (THE guard) | `editability.py::fidelity_ratio` (discworld) · `othello_moves.py::move_fidelity_ratio` (Othello) | ONE definition and polarity in both environments since 2026-09-01: `RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)`, **at the edit step only**. **>1 = the edit degraded the model rather than steering it**; no success claim survives that. It is the ABSOLUTE counterpart to the Edit Index, which is *relative* and so scores a wrecked output mildly positive when it lands marginally nearer the edited world. Discworld: whole frame. Othello: all 64 squares (never the union support — the guard must see collateral damage outside the edit's own zone) |
 | **Edit Index (legal)** (othello) | `othello_moves.py::edit_index_legal` | same formula, uniform-over-legal reference worlds (exact — the generator IS uniform); union support headline, symdiff alongside |
+| **Edit Index (frame-set)** (discworld token models) | `othello_moves.py::edit_index_legal` on next-FRAME distributions, wired by `environments/discworld/token_bench.py` | Othello's legal-set construction with the frames the EDITED and the UNEDITED world render at the edit frame as the two (singleton) sets: +1 = the edited world's frame, −1 = the unedited one. Same axis and step-0 reading as the ray-zone index, NOT the same formula — never quoted as the same number; † in the tables, `ei_construction: "frame-set"` in scores.json. Guard `move_fidelity_ratio`; `p_post` = mass on the edited frame; cases whose two worlds render the same frame are dropped (`n_cases_kept`). `zone_edit_index_expected` (ray-zone index on the expected frame) is the bridge, never the headline (2026-09-05). |
 | Li error / legal mass | `othello_moves.py` | their §4.2 metric, kept under their name — the anchor to Li et al.'s published numbers (null 2.68 → 0.12), never structural. ⚠ `li_error_vs_pre` is a DIAGNOSTIC, not the guard: it is one half of the pair the Edit Index is already built from, and "higher is better" only holds up to the pre→post separation (2.763 on `L-oth-20m`) — beyond that means drifting away from BOTH worlds |
 | gates | `environments/othello/arms.py::gates` | legal mass, top-1, CE with the **exact** Bayes floors (bayes_ce = E[log‖legal‖]) |
 
@@ -178,9 +212,13 @@ output); one-off experiment artifacts go to `outputs/`.
 | `initial_othello_comparison/L-oth-20m` | Transformer-L (tokens) | oth-uniform | 780k steps, best val 2.02798 (excess over Bayes +0.019) |
 | `initial_othello_comparison/L-dw-20m` | Transformer-L (regression) | dw-pn04 | 780k steps, best val 0.022873 (3.16% over the state oracle) |
 | `noise_ablation/L-dw-noiseless-20m` | Transformer-L (regression) | dw-noiseless | 780k steps, matched recipe — the noise ablation (2026-08-31) |
-| `ray_ablation/L-dw-8ray-20m` | Transformer-L (regression) | dw-8ray | 780k steps, matched recipe — the ray-count ablation (2026-09-04); the same 8 × 512 stack with `Linear(8, 512)` in/out (25.25M params). Best val MSE 0.00575. Driver `scripts/drivers/dw_8ray.sh`; findings `findings/ray-ablation.md` |
+| `ray_ablation/L-dw-8ray-20m` | Transformer-L (regression) | dw-8ray | 780k steps, matched recipe — the ray-count ablation (2026-09-04); the same 8 × 512 stack with `Linear(8, 512)` in/out (25.25M params). Best val MSE 0.00575. Driver `scripts/drivers/dw_8ray.sh`; findings `findings/ray-ablation.md`. Its `probes/` also holds the 18 INLP cascades of `experiments/inlp/8ray` (`findings/inlp-8ray.md`) |
+| `ray_ablation/R-dw-8ray-20m` | Recurrent-L (regression) | dw-8ray | 780k steps, identical recipe (2026-09-04), the architecture pair of `L-dw-8ray-20m`. Best val 0.00595 at step **40k**, drifting to 0.00625 by the end (no divergence spike this time). Scored: PI +0.191 / fid 1.41, GS −0.61; decodability at the random-init floor. Driver `experiments/recurrent/drivers/recurrent.sh` with `TOPIC=ray_ablation` |
 | `architecture_gate/R-dw-20m` | Recurrent-L (regression) | dw-pn04 | 780k steps, matched recipe — the recomputation test (2026-09-02). Best val 0.02302 at step **50k**; val drifted up afterwards and spiked at 525k (constant lr 1e-3 is the transformer's recipe, kept deliberately). Scored: same editability signature as Transformer-L — see `findings/recurrent-l.md` |
 | `architecture_gate/R-dw-noiseless-20m` | Recurrent-L (regression) | dw-noiseless | 780k steps, identical recipe (2026-09-02). Best val 0.001112 at step **205k**, unstable afterwards. Scored: PI +0.093 / fid 2.27 — the carried write edits no better than the transformer's; see `findings/recurrent-l.md` |
+| `objective_ablation/L-oth-20m-mse` | Transformer-L (tokens, raw head) | oth-uniform | 780k steps, identical to `L-oth-20m` except the objective: `mse_next_move_onehot` (`--objective mse_onehot`, `output_kind="raw"`) — the objective ablation (2026-09-05). Best val Brier 0.013662 at step 770k (19.8 h). The raw head IS a distribution to 4 decimals (mean sum 1.0001, mean negative mass 0.04): legal mass 0.989, top-1 legal 0.998, CE 2.048 vs Bayes 2.011. Scored: skill LIN 0.961 / MLP 0.960 (best point 6; CE model 0.975); PI +0.68 / ND +0.74 / GS +0.73 (CE model +0.61 / +0.62 / +0.65) — as editable as the cross-entropy model. Driver `scripts/drivers/oth_mse.sh`; under a clip-and-renormalise reading every EI is 0.04–0.07 lower (PI +0.63 / ND +0.69 / GS +0.66) and legal mass 0.951 — the negatives cancel illegal-move noise (`experiments/othello_mse_head/`); `findings/othello-mse-head.md`. |
+| `interface_ablation/L-dw-8ray-tok-20m` | Transformer-L (tokens) | dw-8ray (frames as tokens) | 780k steps, the interface ablation (2026-09-06): the SAME instance and 20M sequences as `L-dw-8ray-20m`, every frame one token of the 422-token frame vocabulary (`datasets/discworld/dw-8ray/tokens/`), the Othello token model (embedding in, softmax + CE over frames out; `scripts/train.py --repr tokens`). Best val CE 0.4638 at 780k (12.1 h; frame n-gram floors 0.737 → 0.654 for orders 1–6, persistence top-1 0.840 vs the model's 0.860). Scored the Othello way (`token_bench`, frame-set Edit Index †): skill LIN 0.968 (pt 0 = the frame lookup; floor 0.968) / MLP 0.980 (floor 0.968) frustum; unedited −0.755; **PI +0.004 / GS −0.097** — NOT editable: PI lands the probe read-out exactly at α=1 with zero output change, and only 60–175× writes move the output, off the unedited frame and onto nothing (p_post ≤ 0.05). With `L-oth-20m-mse`, neither objective nor interface explains Othello's editability. `findings/interface-ablation.md`; `experiments/dw_tokens/`. |
+| `flip_ablation/L-oth-noflip-20m` | Transformer-L (tokens) | oth-noflip | 780k steps, identical to `L-oth-20m` except the instance (the flip ablation, launched 2026-09-06; driver `scripts/drivers/oth_noflip.sh`, unit `oth_noflip`). Scored on the instance's synthesised 1001 cases — NOT Li's; a same-recipe flip bench for `L-oth-20m` lives in `experiments/flip_ablation/` for the like-for-like comparison. Results pending. |
 | _planned_: S-oth / S-dw | Transformer-S | both | fresh trainings under the new scheme (W16 and the old S rungs failed the rule and are archived) |
 
 ## Evaluation

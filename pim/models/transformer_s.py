@@ -53,8 +53,8 @@ a transformer has **two** objects where the GRU has one, and they come apart:
     step, never carried, so a write to it does not survive to the next step
     unless the window itself is changed.
 
-In a GRU these coincide.  Here they do not, and that is the point.  Three views
-are exposed via `model.state_view` (a runtime toggle, like the RSSM's `sample`):
+In a GRU these coincide.  Here they do not, and that is the point.  Two views
+are exposed via `model.state_view` (a runtime toggle):
 
   * `"obs_window"` (default) — the raw W-frame buffer, flattened (W·R dims).
     Invertible, so `state_from_flat` works and every editor runs unchanged.
@@ -62,8 +62,6 @@ are exposed via `model.state_view` (a runtime toggle, like the RSSM's `sample`):
     (d_model dims).  The GRU-`h` analogue.  Read-only for `state_from_flat`;
     edited through `decode_with_edit` / `rollout_with_edit`, which is where the
     *transient vs persistent* distinction is measured.
-  * `"kv_cache"` — post-RoPE K/V for every layer over the window.  Large
-    (`n_layers·2·W·d_model`); for targeted probing, not the full suite.
 
 `probe_layer` indexes **residual points**, of which there are `n_layers + 1`:
 0 = the encoder output (i.e. the *encoder port*, matching the GRU's `x`), and
@@ -90,6 +88,7 @@ from pim.models.blocks import (
     RotaryEmbedding,
     band_causal_mask,
 )
+from pim.models.protocol import free_run
 
 # ── State ─────────────────────────────────────────────────────────────────────
 
@@ -132,8 +131,8 @@ class Block(nn.Module):
             nn.Linear(d_model, hidden), nn.GELU(), nn.Linear(hidden, d_model)
         )
 
-    def forward(self, x, attn_mask, rope, kv_sink=None):
-        x = x + self.attn(self.norm1(x), attn_mask, rope, kv_sink)
+    def forward(self, x, attn_mask, rope):
+        x = x + self.attn(self.norm1(x), attn_mask, rope)
         x = x + self.mlp(self.norm2(x))
         return x
 
@@ -144,7 +143,7 @@ class Block(nn.Module):
 class TransformerS(nn.Module):
     """Transformer-S: our causal transformer world model (regression head)."""
 
-    STATE_VIEWS = ("obs_window", "activations", "kv_cache")
+    STATE_VIEWS = ("obs_window", "activations")
 
     def __init__(self, cfg: ModelConfig) -> None:
         super().__init__()
@@ -183,7 +182,7 @@ class TransformerS(nn.Module):
         """The encoder port — identical in form to the GRU's `relu(Linear(obs))`."""
         return F.relu(self.encoder(obs))
 
-    def _run(self, tokens, attn_mask, edit=None, want_resid=False, kv_sink=None):
+    def _run(self, tokens, attn_mask, edit=None, want_resid=False):
         """Run the block stack over pre-embedded tokens.
 
         edit : optional, one of
@@ -214,7 +213,7 @@ class TransformerS(nn.Module):
                 x[:, -1] = edit[1]
                 if want_resid:
                     resids[i] = x
-            x = blk(x, attn_mask, (cos, sin), kv_sink)
+            x = blk(x, attn_mask, (cos, sin))
             if want_resid:
                 resids.append(x)
         if hook is not None:
@@ -243,41 +242,17 @@ class TransformerS(nn.Module):
 
     # ── training / teacher forcing ────────────────────────────────────────────
 
-    def forward(self, obs: torch.Tensor, h0=None):
-        """Teacher forcing over a whole sequence in ONE pass (banded causal mask).
+    def forward(self, obs: torch.Tensor) -> torch.Tensor:
+        """(B, T, R) -> (B, T, R): the predicted NEXT observation at every position.
 
-        Equivalent to running the sliding window at every position — the band mask
-        *is* the sliding window — but O(T) cheaper than unfolding, which matters
-        because it is the training path.  Returns (pred (B,T-1,R), final state).
+        Teacher forcing over a whole sequence in ONE pass (banded causal mask) —
+        equivalent to running the sliding window at every position, the band mask *is*
+        the window, but O(T) cheaper than unfolding. The SAME convention as Transformer-L
+        and Recurrent-L (2026-09-07): the trainer's ``model(x[:, :-1])`` vs ``x[:, 1:]``
+        alignment is one rule for every architecture, with no per-architecture branch.
         """
-        x = self.embed(obs[:, :-1, :])
-        h, _ = self._run(x, self._seq_mask(x.shape[1], obs.device))
-        pred = self.decoder(self.norm_out(h))
-        return pred, self.state_from_obs(obs[:, :-1, :])
-
-    @torch.no_grad()
-    def get_hidden_states(self, obs: torch.Tensor) -> torch.Tensor:
-        """Per-timestep flat state, aligned so index t follows obs[:, t]."""
-        return self.observe_sequence(obs)[1]
-
-    @torch.no_grad()
-    def observe_sequence(self, obs: torch.Tensor):
-        x = self.embed(obs[:, :-1, :])
-        h, resids = self._run(
-            x, self._seq_mask(x.shape[1], obs.device), want_resid=True
-        )
-        pred = self.decoder(self.norm_out(h))
-        if self.state_view == "activations":
-            flat = resids[self.probe_layer]
-        elif self.state_view == "obs_window":
-            B, T, R = obs[:, :-1, :].shape
-            W = self.state_span
-            pad = obs.new_zeros(B, W - 1, R)
-            padded = torch.cat([pad, obs[:, :-1, :]], dim=1)
-            flat = padded.unfold(1, W, 1).permute(0, 1, 3, 2).reshape(B, T, W * R)
-        else:
-            raise ValueError(f"observe_sequence unsupported for {self.state_view!r}")
-        return pred, flat
+        h, _ = self._run(self.embed(obs), self._seq_mask(obs.shape[1], obs.device))
+        return self.decoder(self.norm_out(h))
 
     # ── state plumbing ────────────────────────────────────────────────────────
 
@@ -287,8 +262,6 @@ class TransformerS(nn.Module):
             return self.state_span * self.cfg.input_dim
         if self.state_view == "activations":
             return self.cfg.d_model
-        if self.state_view == "kv_cache":
-            return self.cfg.n_layers * 2 * self.state_span * self.cfg.d_model
         raise ValueError(f"unknown state_view: {self.state_view!r}")
 
     def _pad_window(self, frames: torch.Tensor) -> torch.Tensor:
@@ -317,8 +290,6 @@ class TransformerS(nn.Module):
             return state.obs_buffer.reshape(state.obs_buffer.shape[0], -1)
         if self.state_view == "activations":
             return self._activations(state)
-        if self.state_view == "kv_cache":
-            return self._kv_cache(state)
         raise ValueError(f"unknown state_view: {self.state_view!r}")
 
     def state_from_flat(self, flat: torch.Tensor) -> TransformerState:
@@ -368,12 +339,6 @@ class TransformerS(nn.Module):
         )
         return torch.stack(resids, 0)
 
-    def _kv_cache(self, state) -> torch.Tensor:
-        tokens = self.embed(state.obs_buffer)
-        sink: list = []
-        self._run(tokens, self._win_mask(state.length, tokens.device), kv_sink=sink)
-        return torch.cat([torch.cat([k, v], -1).flatten(1) for k, v in sink], dim=-1)
-
     # ── prediction ────────────────────────────────────────────────────────────
 
     def decode(self, state: TransformerState, edit=None) -> torch.Tensor:
@@ -417,12 +382,7 @@ class TransformerS(nn.Module):
         is exactly the property under test.
         """
         pred = self.decode_with_edit(state, layer, resid)
-        out = [pred]
-        s = self.advance(state, pred)
-        for _ in range(steps - 1):
-            p, s = self.predict_step(s)
-            out.append(p)
-        return torch.stack(out, 1)
+        return free_run(self, pred, self.advance(state, pred), steps)
 
 
 # ── The Othello (token) head ──────────────────────────────────────────────────

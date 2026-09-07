@@ -15,6 +15,7 @@ import json, sys
 import numpy as np
 import torch
 from pim.models import load_checkpoint
+from pim.environments.discworld import arms as dwa
 from pim.environments.discworld import bench as dwb
 
 RUN = sys.argv[1] if len(sys.argv) > 1 else "runs/initial_othello_comparison/L-dw-20m"
@@ -34,23 +35,23 @@ for tgt in ("pos", "full"):
     benches[tgt] = dwb.load_bench(m, n=192, target=tgt, basis_name=BASIS,
                                   data_dir=f"{root}/eval")
     probes[tgt] = {
-        fam: dwb.fit_probes(m, target=tgt, n_seq=N_SEQ, family=fam, basis_name=BASIS,
+        fam: dwa.fit_probes(m, target=tgt, n_seq=N_SEQ, family=fam, basis_name=BASIS,
                             data_dir=f"{root}/probe", cache_dir=f"{RUN}/probes", log=None)
         for fam in ("linear", "mlp")}
-u = dwb.unsteered(m, benches["pos"])
+u = dwa.unsteered(m, benches["pos"])
 POS_DIMS = list(range(4))          # the 4 position read-outs inside the 8-dim full target
 
 def best(recs):
     b = max(recs, key=lambda r: r["edit_index"])
-    return b["edit_index"], dwb.fidelity_ratio(b, u), b["point"], b["alpha"]
+    return b["edit_index"], dwa.fidelity_ratio(b, u), b["point"], b["alpha"]
 
 rows = {}
 # --- PI ---------------------------------------------------------------------
-recs = dwb.pinv_arm(m, benches["pos"], probes["pos"]["linear"], A_PI)
+recs = dwa.pinv_arm(m, benches["pos"], probes["pos"]["linear"], A_PI)
 rows["PI  pos-probe"] = best(recs)
 recs = []
 for ell, (pr, _) in probes["full"]["linear"].items():
-    dwb.as_activations(m, ell)
+    dwa.as_activations(m, ell)
     h0 = m.flat_state(benches["full"].state)
     from pim.editors.pinv import pinv_step
     step = pinv_step(h0, benches["full"].tgt, pr, space="zspace", dims=POS_DIMS)
@@ -58,12 +59,12 @@ for ell, (pr, _) in probes["full"]["linear"].items():
         roll = m.rollout_with_edit(benches["full"].state, ell, h0 + a * step,
                                    dwb.K_ROLL).cpu().numpy()
         recs.append({"editor": "PI", "point": ell, "alpha": a,
-                     **dwb.score(m, benches["pos"], roll)})   # scored on the SAME bench
+                     **dwa.score(m, benches["pos"], roll)})   # scored on the SAME bench
 rows["PI  full-probe[pos dims]"] = best(recs)
-rows["PI  full-probe[all dims]"] = best(dwb.pinv_arm(m, benches["full"],
+rows["PI  full-probe[all dims]"] = best(dwa.pinv_arm(m, benches["full"],
                                                      probes["full"]["linear"], A_PI))
 # --- GS ---------------------------------------------------------------------
-rows["GS  pos-probe"] = best(dwb.grad_steer_arm(m, benches["pos"], probes["pos"]["mlp"],
+rows["GS  pos-probe"] = best(dwa.grad_steer_arm(m, benches["pos"], probes["pos"]["mlp"],
                                                 range(NP), A_GS))
 bf = benches["full"]
 cm_pos = bf.change_mask.clone(); cm_pos[:, 4:] = False     # velocity -> hold-the-rest
@@ -72,8 +73,8 @@ cm_pos = bf.change_mask.clone(); cm_pos[:, 4:] = False     # velocity -> hold-th
 bench_fp = dwb.Bench(bf.obs, bf.gt_roll, bf.zones, bf.tgt, cm_pos, bf.out_dims,
                      bf.state, bf.n)
 rows["GS  full-probe[pos dims]"] = best(
-    dwb.grad_steer_arm(m, bench_fp, probes["full"]["mlp"], range(NP), A_GS))
-rows["GS  full-probe[all dims]"] = best(dwb.grad_steer_arm(m, bf, probes["full"]["mlp"],
+    dwa.grad_steer_arm(m, bench_fp, probes["full"]["mlp"], range(NP), A_GS))
+rows["GS  full-probe[all dims]"] = best(dwa.grad_steer_arm(m, bf, probes["full"]["mlp"],
                                                            range(NP), A_GS))
 
 print(f"unedited EI {u['edit_index']:+.4f}\n")

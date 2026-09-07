@@ -47,6 +47,7 @@ import torch
 import torch.nn as nn
 
 from pim.environments.othello.vendor.mingpt_model import GPT, GPTConfig
+from pim.models.protocol import free_run
 
 
 class ArchState(NamedTuple):
@@ -60,7 +61,9 @@ class _MinGPTCore(nn.Module):
 
     Subclasses supply ``embed`` (residual point 0) and ``decoder``; everything an editor
     or probe calls — ``_run``'s edit hook, ``residual_stack``, ``norm_out`` — lives here
-    exactly once.
+    once for both minGPT heads. (Transformer-S and Recurrent-L carry their own ``_run``
+    with the same edit contract; the three are deliberately separate block stacks that
+    share a protocol, not code — see ``pim/models/protocol.py``.)
     """
 
     def __init__(self, vocab_size: int, block_size: int, n_layer: int = 8,
@@ -87,7 +90,7 @@ class _MinGPTCore(nn.Module):
     def _win_mask(self, lengths, device) -> None:
         return None
 
-    def _run(self, tokens, attn_mask=None, edit=None, want_resid=False, kv_sink=None):
+    def _run(self, tokens, attn_mask=None, edit=None, want_resid=False):
         """Block stack with the same ``edit`` semantics as ``TransformerS._run``.
 
         edit : ``(layer, vector)`` forces the stream at that residual point at the
@@ -95,8 +98,6 @@ class _MinGPTCore(nn.Module):
                **every** residual point 0…n_layers. ``None`` leaves the pass
                bit-identical to ``GPT.forward``.
         """
-        if kv_sink is not None:
-            raise NotImplementedError("kv_sink has no minGPT analogue")
         x = tokens
         hook = edit if callable(edit) else None
         resids = [x] if want_resid else None
@@ -203,22 +204,23 @@ class TransformerL(_MinGPTCore):
         the observations.
         """
         pred = self.decode_with_edit(state, layer, resid)
-        out = [pred]
-        s = self.advance(state, pred)
-        for _ in range(steps - 1):
-            p, s = self.predict_step(s)
-            out.append(p)
-        return torch.stack(out, 1)
+        return free_run(self, pred, self.advance(state, pred), steps)
 
 
 class TransformerLTokens(_MinGPTCore):
     """Their ``GPT``, untouched, behind the shared surface (Othello)."""
 
     def __init__(self, vocab: int = 61, block_size: int = 59, n_layer: int = 8,
-                 n_head: int = 8, n_embd: int = 512, dropout: float = 0.1) -> None:
+                 n_head: int = 8, n_embd: int = 512, dropout: float = 0.1,
+                 output_kind: str = "logits") -> None:
         super().__init__(vocab_size=vocab, block_size=block_size, n_layer=n_layer,
                          n_head=n_head, n_embd=n_embd, dropout=dropout)
         self.vocab = vocab
+        # What the head was trained to emit — "logits" (CE, every canonical run) or "raw"
+        # (MSE on the one-hot next move, 2026-09-04: the outputs are probability estimates
+        # and are read as they are). Saved in model_config so load_checkpoint restores it;
+        # `data.move_probs` dispatches on it. The architecture is identical either way.
+        self.output_kind = output_kind
 
     @property
     def decoder(self) -> nn.Module:

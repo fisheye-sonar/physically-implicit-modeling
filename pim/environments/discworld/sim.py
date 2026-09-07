@@ -84,8 +84,12 @@ def compute_visibility(scene: "Scene") -> np.ndarray:
 # ── Frustum containment ───────────────────────────────────────────────────────
 
 
-def _fully_in_frustum(positions: np.ndarray, radius: float, cfg: SimConfig) -> bool:
+def fully_in_frustum(positions: np.ndarray, radius: float, cfg: SimConfig) -> bool:
     """Return True if every object circle is fully inside the frustum at every frame.
+
+    THE containment test: ``simulate``'s acceptance rule, the edits generator's post-edit
+    check and the interactive world's move guard all call this (2026-09-07); pass a
+    single point as ``p[None, None, :]``.
 
     Unlike ``compute_visibility``, which tests for partial overlap, this requires
     the entire circle to be contained: centre is at least ``radius`` away from
@@ -102,6 +106,18 @@ def _fully_in_frustum(positions: np.ndarray, radius: float, cfg: SimConfig) -> b
     in_x = np.abs(x) <= x_lim
 
     return bool((in_y & in_x).all())
+
+
+def sample_position(rng: np.random.Generator, cfg: SimConfig, radius: float) -> tuple[float, float]:
+    """One (x, y) with the disc fully inside the frustum: depth first, then x at that depth.
+
+    THE draw order every generator uses (``simulate``, the interactive world). Factoring it
+    here changes no dataset: two ``rng.uniform`` calls in the same order as before.
+    """
+    y = rng.uniform(cfg.y_near + radius, cfg.y_far - radius)
+    x_lim = frustum_half_width(y, cfg) - radius
+    x = rng.uniform(-x_lim, x_lim)
+    return x, y
 
 
 # ── Reflectivity sampling ─────────────────────────────────────────────────────
@@ -167,10 +183,7 @@ def simulate(cfg: SimConfig) -> Scene:
 
         # ── Initial conditions ────────────────────────────────────────────
         for i in range(n):
-            y = rng.uniform(cfg.y_near + cfg.radius, cfg.y_far - cfg.radius)
-            x_lim = frustum_half_width(y, cfg) - cfg.radius
-            x = rng.uniform(-x_lim, x_lim)
-            positions[0, i] = [x, y]
+            positions[0, i] = sample_position(rng, cfg, cfg.radius)
 
             speed = rng.uniform(cfg.speed_min, cfg.speed_max)
             angle = rng.uniform(0.0, 2.0 * np.pi)
@@ -255,7 +268,7 @@ def simulate(cfg: SimConfig) -> Scene:
                 break
 
         if not collision and (
-            not cfg.always_in_frustum or _fully_in_frustum(positions, cfg.radius, cfg)
+            not cfg.always_in_frustum or fully_in_frustum(positions, cfg.radius, cfg)
         ):
             return Scene(
                 positions=positions,

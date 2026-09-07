@@ -35,8 +35,8 @@ centres are at ``y_near + (i + 0.5)·dy`` and ``-x_far + (j + 0.5)·dx``.
 Flattening
 ----------
 Frames are returned **flattened row-major** (``index = row·W + col``), so the entire
-downstream stack — HDF5 schema, dataloaders, the `HiddenStateModel` protocol, every
-`pim/eval` metric — continues to see an ``(N, T, R)`` observation with ``R = H·W``
+downstream stack — HDF5 schema, dataloaders, the model protocol, every
+``pim.metrics`` metric — continues to see an ``(N, T, R)`` observation with ``R = H·W``
 and needs no changes. Only code that *draws* an observation has to know the frame is
 2D; use `unflatten` for that.
 

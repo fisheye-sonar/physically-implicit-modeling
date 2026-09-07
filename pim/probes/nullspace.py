@@ -23,6 +23,8 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from pim.metrics.decodability import r2
+
 
 def fit_lstsq_probe(X: np.ndarray, Y: np.ndarray, tr, te) -> dict:
     """Min-norm least-squares probe on X[tr] → Y[tr], scored on X[te].
@@ -34,10 +36,8 @@ def fit_lstsq_probe(X: np.ndarray, Y: np.ndarray, tr, te) -> dict:
     sol, *_ = np.linalg.lstsq(Aug, Y[tr], rcond=None)
     W, b = sol[:-1], sol[-1]  # W: (D, d_out)
     pred = X[te] @ W + b
-    ss_res = ((pred - Y[te]) ** 2).sum()
-    ss_tot = ((Y[te] - Y[tr].mean(0)) ** 2).sum()
     return dict(A=W.T, b=b,
-                r2=float(1 - ss_res / ss_tot),
+                r2=r2(pred, Y[te], Y[tr].mean(0)),
                 rmse=float(np.sqrt(((pred - Y[te]) ** 2).sum(1).mean())))
 
 

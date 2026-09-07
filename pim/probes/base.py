@@ -22,6 +22,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from pim.metrics.decodability import r2
+
+# THE probe-fit recipe, defined once. ``pim.probes.baselines`` and the Othello grid read these.
+CANONICAL_HIDDEN = 128            # MLP-128, Li et al.'s §3.2 width (canonical since 2026-08-31)
+FIT_EPOCHS, FIT_LR, FIT_BATCH = 200, 1e-3, 4096
+
 # ── Probes ────────────────────────────────────────────────────────────────────
 
 
@@ -49,7 +55,7 @@ class WorldStateProbe(nn.Module):
         self,
         d_in: int,
         d_out: int,
-        hidden: int | None = 512,
+        hidden: int | None = CANONICAL_HIDDEN,
         *,
         x_mean=None,
         x_std=None,
@@ -130,7 +136,10 @@ def collect_residuals(model, obs: np.ndarray, batch: int = 128,
     # which was OOM-killed mid-score (2026-09-02). Peak is now one copy.
     out: np.ndarray | None = None
     for i in range(0, len(obs), batch):
-        o = torch.from_numpy(obs[i : i + batch]).float().to(dev)
+        o = torch.from_numpy(obs[i : i + batch]).to(dev)
+        # float frames for the regression models; integer ids for a token model
+        # (discworld frames-as-tokens, 2026-09-05) — the embed decides what it wants
+        o = o.float() if np.issubdtype(obs.dtype, np.floating) else o.long()
         tokens = model.embed(o)
         _, resids = model._run(
             tokens, model._seq_mask(o.shape[1], dev), want_resid=True
@@ -153,23 +162,16 @@ def collect_residuals(model, obs: np.ndarray, batch: int = 128,
 # ── Fitting ───────────────────────────────────────────────────────────────────
 
 
-def _r2(pred: np.ndarray, gt: np.ndarray, train_mean: np.ndarray) -> float:
-    """R² against the TRAIN mean (repo convention), pooled over output dims."""
-    ss_res = ((pred - gt) ** 2).sum()
-    ss_tot = ((gt - train_mean) ** 2).sum()
-    return float(1.0 - ss_res / ss_tot)
-
-
 def fit_probe(
     x_tr: np.ndarray,
     y_tr: np.ndarray,
     x_te: np.ndarray,
     y_te: np.ndarray,
     *,
-    hidden: int | None = 512,
-    epochs: int = 200,
-    lr: float = 1e-3,
-    batch: int = 4096,
+    hidden: int | None = CANONICAL_HIDDEN,
+    epochs: int = FIT_EPOCHS,
+    lr: float = FIT_LR,
+    batch: int = FIT_BATCH,
     device: str = "cuda",
     seed: int = 0,
     n_classes: int | None = None,
@@ -310,16 +312,13 @@ def fit_probe(
             probe(torch.tensor(x_tr, dtype=torch.float32, device=device)).cpu().numpy()
         )
     stats = {
-        "r2": _r2(pr_te, y_te, ym),
-        "r2_insample": _r2(pr_tr, y_tr, ym),
+        "r2": r2(pr_te, y_te, ym),
+        "r2_insample": r2(pr_tr, y_tr, ym),
         "rmse": float(np.sqrt(((pr_te - y_te) ** 2).mean())),
         "per_dim_r2": [
-            _r2(pr_te[:, [j]], y_te[:, [j]], ym[[j]]) for j in range(y_te.shape[1])
+            r2(pr_te[:, [j]], y_te[:, [j]], ym[[j]]) for j in range(y_te.shape[1])
         ],
         "kind": probe.kind,
     }
     return probe, stats
-
-
-# ── Paper §4.1 intervention ───────────────────────────────────────────────────
 

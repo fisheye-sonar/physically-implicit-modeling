@@ -29,9 +29,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from pim.probes.base import WorldStateProbe, fit_probe
-
-CANONICAL_HIDDEN = 128
+from pim.probes.base import (  # noqa: F401 — CANONICAL_HIDDEN is re-exported from here
+    CANONICAL_HIDDEN, FIT_BATCH, FIT_EPOCHS, FIT_LR, WorldStateProbe, fit_probe)
 
 
 def fit_mlp(
@@ -42,9 +41,9 @@ def fit_mlp(
     *,
     hidden: int = CANONICAL_HIDDEN,
     n_classes: int | None = None,
-    epochs: int = 200,
-    lr: float = 1e-3,
-    batch: int = 4096,
+    epochs: int = FIT_EPOCHS,
+    lr: float = FIT_LR,
+    batch: int = FIT_BATCH,
     device: str = "cuda",
     seed: int = 0,
 ) -> tuple[WorldStateProbe, dict]:

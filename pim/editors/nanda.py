@@ -31,17 +31,28 @@ from pim.probes.base import WorldStateProbe
 
 
 def probe_direction(probe: WorldStateProbe, rows, *, subtract_rows=None,
-                    standardised: bool = True) -> torch.Tensor:
-    """(d_in,) unit direction implied by the LINEAR probe for the selected read-out rows.
+                    standardised: bool = True, per_sample: bool = False) -> torch.Tensor:
+    """Unit direction implied by the LINEAR probe for the selected read-out rows.
 
-    rows          : indices into the probe's output dims — summed (the edited object's
-                    read-out rows on discworld; a single (tile,class) row on Othello).
-    subtract_rows : optional rows to subtract first (the target−current variant).
+    rows          : indices into the probe's flat output rows (``d_out``, or
+                    ``d_out*n_classes`` for a classification probe, row ``tile*C + class``).
+                    Default: a list, SUMMED into one (d_in,) direction — the edited
+                    object's read-out rows on discworld.
+                    ``per_sample=True``: a (B,) long tensor, ONE row per batch element,
+                    giving a (B, d_in) direction — the Othello form, where every case
+                    intervenes on its own (tile, class).
+    subtract_rows : optional rows to subtract first (the target−current variant), in the
+                    same form as ``rows``.
     standardised  : divide by ``x_std`` (the raw-space gradient — canonical);
                     False = the bare weight row (``add_raw`` comparison arm).
     """
     W = probe.net.weight.detach()
     scale = probe.x_std if standardised else torch.ones_like(probe.x_std)
+    if per_sample:
+        d = W[rows] / scale
+        if subtract_rows is not None:
+            d = d - W[subtract_rows] / scale
+        return d / d.norm(dim=-1, keepdim=True)
     # divide-then-sum, matching the original implementation's float op order exactly
     d = (W[list(rows)] / scale).sum(0)
     if subtract_rows is not None:
@@ -50,7 +61,8 @@ def probe_direction(probe: WorldStateProbe, rows, *, subtract_rows=None,
 
 
 def addition_delta(x_last: torch.Tensor, d_hat: torch.Tensor, alpha: float) -> torch.Tensor:
-    """The write: ``α · ‖x‖ · d̂`` per row of ``x_last`` (B, d_in)."""
+    """The write: ``α · ‖x‖ · d̂`` per row of ``x_last`` (B, d_in); ``d_hat`` is one shared
+    (d_in,) direction or a per-sample (B, d_in) one."""
     return alpha * x_last.norm(dim=-1, keepdim=True) * d_hat
 
 

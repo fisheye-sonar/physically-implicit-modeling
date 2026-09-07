@@ -65,6 +65,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from pim.models.protocol import free_run
+
 
 class RecurrentState(NamedTuple):
     """h_prev : (n_layers, B, d) hiddens after the PREVIOUS frame — THE hidden state.
@@ -251,11 +253,7 @@ class RecurrentL(nn.Module):
         pred, h_t, _ = self._step(state, edit=edit)
         if not self.carry_edits:                    # transformer-style: carry nothing
             _, h_t, _ = self._step(state)
-        out, s = [pred], RecurrentState(h_t, pred, state.length + 1)
-        for _ in range(steps - 1):
-            p, s = self.predict_step(s)
-            out.append(p)
-        return torch.stack(out, 1)
+        return free_run(self, pred, RecurrentState(h_t, pred, state.length + 1), steps)
 
     def rollout_with_edit(self, state, layer: int, resid: torch.Tensor, steps: int):
         """Free-run whose first step is produced under a single-site edit, which is then

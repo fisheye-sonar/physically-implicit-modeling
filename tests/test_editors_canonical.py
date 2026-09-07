@@ -244,3 +244,66 @@ def test_readout_error_scores_only_the_driven_dims(probe):
     h1 = h0 + pinv_step(h0, tgt, probe, dims=[0, 1])
     assert readout_error(h1, tgt, probe, dims=[0, 1]) < 1e-3
     assert readout_error(h1, tgt, probe) > 1.0
+
+
+# ── the Othello (classification-probe) forms, reproduced from the inline originals ──
+#
+# `pim.environments.othello.arms.linear_arm` used to carry its own copies of the PI and
+# ND writes (2026-08-31 .. 2026-09-07). These pin that the canonical editors, called with
+# the per-case (tile, class) rows and the class-swapped logit target, produce EXACTLY
+# what those copies produced — so nothing in scores.json moved when they were deleted.
+
+N_T, N_C = 8, 3   # a small board: 8 tiles x 3 classes
+
+
+@pytest.fixture()
+def cls_probe():
+    torch.manual_seed(3)
+    p = WorldStateProbe(H, N_T, None, x_mean=torch.randn(H) * 0.3,
+                        x_std=torch.rand(H) * 2 + 0.1, n_classes=N_C)
+    with torch.no_grad():
+        p.net.weight.copy_(torch.randn(N_T * N_C, H) * 0.2)
+        p.net.bias.copy_(torch.randn(N_T * N_C) * 0.1)
+    return p.eval()
+
+
+def test_per_sample_nanda_direction_matches_the_inline_othello_form(cls_probe):
+    p = cls_probe
+    torch.manual_seed(4)
+    cur = torch.randn(B, H)
+    sq = torch.randint(0, N_T, (B,))
+    td = torch.randint(0, N_C, (B,))
+    cd = (td + 1) % N_C
+    # the original arms.py computation, verbatim
+    W = p.net.weight.detach().view(N_T, N_C, -1)
+    d_old = W[sq, td] / p.x_std - W[sq, cd] / p.x_std
+    d_old = d_old / d_old.norm(dim=1, keepdim=True)
+    delta_old = 0.3 * cur.norm(dim=1, keepdim=True) * d_old
+    d_new = probe_direction(p, sq * N_C + td, subtract_rows=sq * N_C + cd, per_sample=True)
+    assert torch.equal(addition_delta(cur, d_new, 0.3), delta_old)
+
+
+def test_pinv_step_on_a_classification_probe_matches_the_inline_othello_form(cls_probe):
+    p = cls_probe
+    torch.manual_seed(5)
+    cur = torch.randn(B, H)
+    sq = torch.randint(0, N_T, (B,))
+    td = torch.randint(0, N_C, (B,))
+    cd = (td + 1) % N_C
+    ar = torch.arange(B)
+    lg = p(cur).clone()                       # (B, N_T, N_C) logits
+    sel = lg[ar, sq]
+    new = sel.clone()
+    new[ar, td] = sel[ar, cd]
+    new[ar, cd] = sel[ar, td]
+    lg[ar, sq] = new
+    target = lg.view(B, -1)
+    # the original arms.py computation, verbatim
+    A = p.net.weight.detach()
+    z = (cur - p.x_mean) / p.x_std
+    z_new = inject_state(z, target, A, torch.linalg.pinv(A), p.net.bias.detach())
+    delta_old = 0.5 * (z_new - z) * p.x_std
+    delta_new = 0.5 * pinv_step(cur, target, p, space="zspace")
+    assert torch.allclose(delta_new, delta_old, atol=1e-6)
+    # and it LANDS: the probe reads the swapped logits at the alpha=1 write
+    assert torch.allclose(p(cur + pinv_step(cur, target, p)).reshape(B, -1), target, atol=1e-3)
