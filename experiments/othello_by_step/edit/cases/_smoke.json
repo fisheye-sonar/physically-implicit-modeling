@@ -1,0 +1,39 @@
+{
+ "name": "_smoke",
+ "seed": 0,
+ "per_step": 4,
+ "steps": [
+  5,
+  7
+ ],
+ "n_cases": 12,
+ "source": "oth-uniform corpus TEST split (oc.build(LADDER['D'])['test'], 10000 games)",
+ "recipe": "length-t prefix of a held-out game; one uniformly random occupied non-centre square flipped to the opposite colour; rejected if the legal set is unchanged or empty",
+ "stats": {
+  "5": {
+   "n": 4,
+   "games_tried": 4,
+   "pool": 10000,
+   "rejected_same_legal": 0,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "6": {
+   "n": 4,
+   "games_tried": 4,
+   "pool": 10000,
+   "rejected_same_legal": 0,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  },
+  "7": {
+   "n": 4,
+   "games_tried": 4,
+   "pool": 10000,
+   "rejected_same_legal": 0,
+   "rejected_empty_legal": 0,
+   "rejected_no_legal_pre": 0
+  }
+ },
+ "minutes": 0.0
+}

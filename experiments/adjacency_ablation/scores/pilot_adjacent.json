@@ -1,0 +1,54 @@
+{
+ "instance": "oth-adjacent",
+ "rules": {
+  "flip": false,
+  "placement": "adjacent"
+ },
+ "n_games": 20000,
+ "length": {
+  "mean": 60.0,
+  "min": 60,
+  "max": 60,
+  "frac_60": 1.0
+ },
+ "passes_per_game": 1.1288,
+ "distinct_terminal_boards": 19999,
+ "most_common_terminal_share": 0.0001,
+ "colour_eq_parity_frac": 0.450359375,
+ "black_frac_by_square": {
+  "min": 0.0,
+  "max": 1.0,
+  "std": 0.15173543374250903
+ },
+ "legal_size_by_move": {
+  "0": 10.0,
+  "5": 13.2886,
+  "10": 17.58275,
+  "15": 18.20145,
+  "20": 19.35015,
+  "25": 18.2786,
+  "30": 17.53855,
+  "35": 15.3047,
+  "40": 13.2634,
+  "45": 10.1744,
+  "50": 7.1594,
+  "55": 3.647
+ },
+ "bayes_ce": 2.43052911530427,
+ "recolour": {
+  "n": 4000,
+  "frac_changed": 0.67925,
+  "frac_emptied": 0.0,
+  "diff_size_hist": {
+   "1": 887,
+   "2": 590,
+   "3": 687,
+   "4": 344,
+   "5": 159,
+   "6": 39,
+   "7": 11
+  },
+  "diff_size_mean": 2.43283032756717
+ },
+ "minutes": 0.8516628940900167
+}

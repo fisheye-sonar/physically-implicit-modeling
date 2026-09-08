@@ -1,0 +1,43 @@
+{
+  "arch": "transformer_l",
+  "model": {
+    "obs_res": 128,
+    "block_size": 39,
+    "n_layer": 8,
+    "n_head": 8,
+    "n_embd": 512,
+    "dropout": 0.1
+  },
+  "train": {
+    "steps": 780000,
+    "batch_size": 256,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "grad_clip": 1.0,
+    "dropout": 0.1,
+    "n_layer": 8,
+    "n_head": 8,
+    "n_embd": 512,
+    "lr_schedule": "constant",
+    "warmup_steps": 2000,
+    "ckpt_base": 1000,
+    "val_every": 5000,
+    "val_batches": 64,
+    "block": 2048,
+    "seed": 0,
+    "run_name": "BIG20M_discworld_L",
+    "run_dir": "/home/sevan/research/PIM/physically-implicit-modeling/runs/discworld_scale",
+    "limit": null
+  },
+  "data": {
+    "env": "discworld",
+    "instance": "dw-pn04",
+    "objective": "mse",
+    "n_total": 20000000,
+    "n_train": 18000000,
+    "n_val": 2000000
+  },
+  "n_params": 25371776,
+  "commit_sha": "785e32b (best-effort; run predates SHA stamping \u2014 see commit_sha file)",
+  "note": "reconstructed 2026-08-31 from best_model.pt train_config; the original trainer (discworld_scale/train.py) wrote no config.json"
+}

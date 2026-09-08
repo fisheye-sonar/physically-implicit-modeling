@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import torch
 
-from pim.world_models.transformer import ModelConfig, TransformerModel
+from pim.models.transformer_s import ModelConfig, TransformerS as TransformerModel
 
 
 def _model(**kw):
@@ -23,14 +23,14 @@ def _model(**kw):
 def test_shapes_and_protocol():
     m = _model(window=4, n_layers=3)
     obs = torch.randn(2, 12, 32)
-    pred, state = m(obs)
+    pred = m(obs[:, :-1])                 # next frame at every given position
+    state = m.state_from_obs(obs[:, :-1])
     assert pred.shape == (2, 11, 32)
     assert state.obs_buffer.shape == (2, m.state_span, 32)
     assert m.state_span == 3 * (4 - 1) + 1
     for view, dim in [
         ("obs_window", m.state_span * 32),
         ("activations", 64),
-        ("kv_cache", 3 * 2 * m.state_span * 64),
     ]:
         m.state_view = view
         assert m.hidden_size == dim
@@ -42,7 +42,7 @@ def test_buffer_rollout_matches_full_sequence():
     for window in (2, 3, 4, 8):
         m = _model(window=window, n_layers=3)
         obs = torch.randn(2, 20, 32)
-        seq, _ = m(obs)
+        seq = m(obs[:, :-1])
         state, steps = None, []
         for t in range(obs.shape[1] - 1):
             p, state = m.step(obs[:, t], state)
@@ -57,7 +57,7 @@ def test_state_from_flat_roundtrips_obs_window():
     m = _model(window=3, n_layers=2)
     m.state_view = "obs_window"
     obs = torch.randn(2, 10, 32)
-    _, state = m(obs)
+    state = m.state_from_obs(obs[:, :-1])
     flat = m.flat_state(state)
     rebuilt = m.state_from_flat(flat)
     assert torch.allclose(rebuilt.obs_buffer, state.obs_buffer)
@@ -69,7 +69,7 @@ def test_activation_view_is_read_only():
     m = _model(window=3, n_layers=2)
     m.state_view = "activations"
     obs = torch.randn(2, 10, 32)
-    _, state = m(obs)
+    state = m.state_from_obs(obs[:, :-1])
     assert m.flat_state(state).shape == (2, 64)
     try:
         m.state_from_flat(torch.zeros(2, 64))
@@ -83,7 +83,7 @@ def test_activation_edit_changes_prediction_at_every_layer():
     """An edit at any residual point must move the current prediction."""
     m = _model(window=4, n_layers=3)
     obs = torch.randn(2, 12, 32)
-    _, state = m(obs)
+    state = m.state_from_obs(obs[:, :-1])
     base = m.decode(state)
     for layer in range(m.cfg.n_layers + 1):
         m.probe_layer = layer
@@ -99,7 +99,7 @@ def test_probe_layer_zero_is_the_encoder_port():
     m.state_view = "activations"
     m.probe_layer = 0
     obs = torch.randn(2, 9, 32)
-    _, state = m(obs)
+    state = m.state_from_obs(obs[:, :-1])
     assert torch.allclose(
         m.flat_state(state), m.embed(state.obs_buffer[:, -1]), atol=1e-5
     )

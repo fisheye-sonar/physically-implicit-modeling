@@ -28,12 +28,22 @@ Output
 import argparse
 import dataclasses
 import json
+import sys
 import time
 from pathlib import Path
 
-from pim.simulator.config import SimConfig
-from pim.simulator.dataset import DatasetConfig, generate_dataset
-from pim.simulator.edits_dataset import EditDatasetConfig, generate_edits_dataset
+# self-locating, like every other entry point in scripts/ — this script used to depend
+# on an ambient PYTHONPATH set by its caller, which broke it when run directly.
+_REPO = Path(__file__).resolve().parents[1]
+if str(_REPO) not in sys.path:
+    sys.path.insert(0, str(_REPO))
+
+from pim.environments.discworld.config import SimConfig  # noqa: E402
+from pim.environments.discworld.dataset import DatasetConfig, generate_dataset  # noqa: E402
+from pim.environments.discworld.edits_dataset import (  # noqa: E402
+    EditDatasetConfig,
+    generate_edits_dataset,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -58,6 +68,10 @@ def parse_args() -> argparse.Namespace:
     g.add_argument("--n-objects",  type=int,   default=2)
     g.add_argument("--frames",     type=int,   default=40)
     g.add_argument("--obs-res",    type=int,   default=128)
+    g.add_argument("--drop-edge-rays", action="store_true", default=False,
+                   help="cast obs-res rays but drop the first and last (the frustum-wall "
+                        "rays); the observation is then obs-res - 2 wide")
+    g.add_argument("--radius",     type=float, default=0.5, help="disc radius, world units")
     g.add_argument("--boundary",   choices=["bounce", "open", "wrap"], default="open")
     g.add_argument("--direction-noise", type=float, default=0.0,
                    help="Velocity angle noise per step (radians)")
@@ -82,6 +96,15 @@ def parse_args() -> argparse.Namespace:
                         "(0 = hard nearest-hit; >0 makes the renderer differentiable)")
     g.add_argument("--always-in-frustum",    action="store_true", default=False,
                    help="Reject trajectories where any object touches a frustum edge")
+    g.add_argument("--blink-prob", type=float, default=0.0, metavar="P",
+                   help="blink (dw-blink): per-object per-frame probability of starting a "
+                        "blackout; 0 = off. See pim/environments/discworld/blink.py")
+    g.add_argument("--blink-mean", type=float, default=6.0, metavar="FRAMES",
+                   help="mean blackout length (Geometric(1/mean) frames)")
+    g.add_argument("--blink-max", type=int, default=12, metavar="FRAMES",
+                   help="blackout length cap")
+    g.add_argument("--blink-warmup", type=int, default=3, metavar="FRAMES",
+                   help="no blackout can begin before this frame index")
     g.add_argument("--omni2d", action="store_true", default=False,
                    help="OPTIONAL omniscient observation: replace the 1D perspective scan "
                         "with a top-down ORTHOGRAPHIC raster of the world rectangle — no "
@@ -144,6 +167,8 @@ def main() -> None:
         n_objects=args.n_objects,
         n_frames=args.frames,
         obs_res=obs_res,
+        drop_edge_rays=args.drop_edge_rays,
+        radius=args.radius,
         boundary=args.boundary,
         direction_noise_std=args.direction_noise,
         speed_noise_std=args.speed_noise,
@@ -151,6 +176,10 @@ def main() -> None:
         obs_noise_std=args.obs_noise_std,
         fixed_reflectivities=args.fixed_reflectivities,
         always_in_frustum=args.always_in_frustum,
+        blink_prob=args.blink_prob,
+        blink_mean=args.blink_mean,
+        blink_max=args.blink_max,
+        blink_warmup=args.blink_warmup,
         soft_edge=args.soft_edge,
         soft_shading=args.soft_shading,
         soft_psf_sigma=args.soft_psf_sigma,

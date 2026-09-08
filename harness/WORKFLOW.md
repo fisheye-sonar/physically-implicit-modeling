@@ -145,6 +145,17 @@ absolute dates when writing.
 
 ---
 
+## One directory per line of work
+
+A follow-up to an experiment is a SUBDIRECTORY of that experiment, not a sibling. The bridge
+that rescores a run another way, the floor that contextualises its decodability, the
+ablation that varies one knob of it — they share the question, so they share the folder:
+`experiments/<question>/<follow-up>/`. Three top-level folders for one question is the
+failure mode (it happened 2026-09-06 and was consolidated). Depth is easier to read than
+breadth: a reviewer opening `experiments/` should see one entry per question, and inside it
+the pieces in the order they were asked. Name the folder after the question or the run
+family it serves (the same word as the `runs/<topic>`), never after the technique.
+
 ## Local instantiations (this project — not portable)
 
 - Vision → `../RESEARCH.md`

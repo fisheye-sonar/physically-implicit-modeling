@@ -1,0 +1,65 @@
+{
+ "n_test": 3000,
+ "hidden_fraction_per_object": [
+  0.1669,
+  0.161
+ ],
+ "frac_sequences_with_blackout": 0.979,
+ "warmup_violations": 0,
+ "both_hidden_frames": 0,
+ "blackouts_per_sequence": 2.4863333333333335,
+ "blackout_length_mean": 5.276578629843143,
+ "blackout_length_hist": {
+  "1": 1201,
+  "2": 1044,
+  "3": 872,
+  "4": 799,
+  "5": 597,
+  "6": 505,
+  "7": 433,
+  "8": 341,
+  "9": 296,
+  "10": 216,
+  "11": 201,
+  "12": 954
+ },
+ "blackouts_running_to_end": 1144,
+ "markers_ok": true,
+ "n_markers": 13774,
+ "hidden_object_leaks": 0,
+ "edits": {
+  "n": 6000,
+  "reappearance_at_EF": 190,
+  "reappearance_k_hist": {
+   "1": 32,
+   "2": 22,
+   "3": 22,
+   "4": 25,
+   "5": 21,
+   "6": 7,
+   "7": 10,
+   "8": 9,
+   "9": 4,
+   "10": 6,
+   "11": 6,
+   "12": 26
+  },
+  "reappearance_k_ge3": 136,
+  "mid_blackout_at_EF": 1135,
+  "visible_at_EF-1_and_EF": 4675,
+  "other_object_hidden_at_EF": 1110,
+  "frac_reappearance": 0.03166666666666667,
+  "frac_mid": 0.18916666666666668,
+  "frac_visible": 0.7791666666666667
+ },
+ "zones": {
+  "n": 2000,
+  "gt_edit_index_step0": 0.9997830057140615,
+  "gt_edit_index_by_step_min": 1.0,
+  "unscoreable_at_step0": 349,
+  "mid_blackout_in_subset": 345,
+  "unscoreable_iff_hidden": true,
+  "unscoreable_and_visible": 4,
+  "scoreable_and_hidden": 0
+ }
+}

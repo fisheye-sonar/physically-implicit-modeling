@@ -1,5 +1,17 @@
 # directions/ — Candidate Experiments Backlog (index)
 
+> **⚠ Housecleaning epoch (2026-08-31).** The project narrowed to editability as its
+> centre, and the code every pre-existing brief points at (the
+> `notebooks/experiments/editability/` threads, the old `pim` subpackages, most of
+> `scripts/`) was deleted — recoverable from the `pre-cleanup-2026-08` git tag. Briefs
+> dated before 2026-08-31 therefore describe work against the ARCHIVED tree: their
+> *questions* may still be live, but their Bootstrap sections are not runnable as
+> written. Before activating one, re-ground it on the canonical core
+> (`research/REGISTRY.md`): environments/instances, Transformer-S/L, LIN + MLP-128,
+> the PI/ND/GS editors, `master_eval.ipynb`. The still-active line of work is
+> `editability-scaling-sweep.md`; `othello-architecture-on-discworld.md` was in
+> substance EXECUTED by the BIG20M runs (see PROGRESS 2026-08-25).
+
 Open questions and candidate experiments. Each direction is a self-contained brief a fresh
 session can be pointed at: "read `directions/<x>.md` and execute."
 

@@ -1,0 +1,452 @@
+"""The discworld editor arms — probes over residual points, rollouts, oracles, and the
+three workhorse arms (PI / ND / GS) — the counterpart of ``pim.environments.othello.arms``.
+
+Built ONLY from the canonical parts: probes from ``pim.probes``, editors from
+``pim.editors``, metrics from ``pim.metrics``; the edit set itself is ``bench.py``.
+Nothing here re-derives a formula; this module is the *wiring* plus the sweep loops the
+master notebook calls. (``bench.py`` held all of this until 2026-09-07.)
+
+Editors follow the 2026-08-22 spec (single-point PI with an α sweep — both axes matter,
+28× and ~50× respectively — Nanda addition per point, Li grad steering from every start
+layer), with one change: **PI solves in z-space with the y-affine included**
+(``pim.editors.pinv``, canonical since the 2026-08-31 affine fix). The pre-fix behaviour
+is reproducible via ``space="legacy"``.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import tempfile
+from pathlib import Path
+
+import h5py
+import numpy as np
+import torch
+
+from pim.editors.freeze_interpolation import freeze_time_rollout, frozen_frames
+from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
+from pim.editors.nanda import addition_hook, probe_direction
+from pim.editors.oracle_overwrite import overwrite_rollout
+from pim.editors.pinv import pinv_step, readout_error
+from pim.environments.discworld.bench import (
+    DATA, DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
+from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
+from pim.models.protocol import free_run
+from pim.probes.base import collect_residuals
+from pim.probes.cache import ProbeCache
+from pim.probes.linear import fit_linear
+from pim.probes.mlp import CANONICAL_HIDDEN, fit_mlp
+
+__all__ = ["fit_probes", "observation_probes", "as_activations", "score", "unsteered",
+           "free_rollout", "unsteered_rollout", "pinv_rollout", "nanda_rollout",
+           "grad_steer_rollout", "counterfactual_history", "overwrite_oracle_rollout",
+           "freeze_oracle_rollout", "oracle_arm", "nanda_arm", "pinv_arm", "grad_steer_arm",
+           "fidelity_ratio", "Bench", "DEV", "EF", "K_ROLL", "N_OBJ", "SEED"]
+
+
+def _require_cache_dir(cache_dir) -> Path:
+    if cache_dir is None:
+        raise ValueError("cache_dir is required: every fitted probe is persisted in a named "
+                         "directory (the run's probes/ for canonical scoring, the experiment's "
+                         "probes/ otherwise) — there is no shared pool")
+    return Path(cache_dir)
+
+
+# ── probes over residual points, cached ──────────────────────────────────────
+
+
+def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "test",
+               family: str = "linear", log=print, basis_name: str = "cartesian",
+               cache: bool = True, data_dir: Path | None = None,
+               cache_dir: Path | None = None, encoder=None, encoder_tag: str | None = None) -> dict:
+    """One probe per residual point, held out BY SEQUENCE. ``family`` linear|mlp.
+
+    ``encoder`` (2026-09-05): maps the float frames (N, T, R) to what the model consumes —
+    token ids for a frames-as-tokens model. Applied after the span truncation, so the
+    targets align exactly as for the regression models. ``encoder_tag`` names it in
+    the cache key (omitted entirely when no encoder is used, so existing keys stand).
+
+    ``data_dir`` supplies a LARGER corpus for probe fitting only — the bench stays the
+    canonical edit set regardless. Cached with full provenance (``pim.probes.cache``).
+
+    ``cache_dir`` is where the fitted probes LIVE and is REQUIRED (2026-09-07): canonical
+    scoring passes the run's own ``runs/<topic>/<run>/probes/`` so every run dir is
+    self-contained; an experiment passes its own ``experiments/<name>/probes/``. There is
+    no shared pool — every fit is persisted somewhere named. The model fingerprint is in
+    every key, so a copied or overwritten checkpoint can never be served another
+    model's probes.
+    """
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    # .resolve(): the cache key must not depend on how the path was SPELLED. A
+    # relative data_dir (a pilot run from the repo root) and an absolute one
+    # (master_eval, which resolves REPO) hashed to DIFFERENT keys, so every probe
+    # was fitted and stored twice — and a 4-probe refit is a ~24 GB job that once
+    # OOM-killed the desktop (2026-09-01).
+    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
+    extra = {} if encoder is None else {"encoder": encoder_tag or "custom"}
+    fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=split,
+                            family=family, basis=basis_name, seed=SEED,
+                            data=str(dd), **extra)
+    if cache:
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            if log:
+                log(f"    probe cache HIT  {fname}  ({target}/{family}/{basis_name}/"
+                    f"n={n_seq:,})")
+            return hit
+    with h5py.File(dd / f"{split}.h5", "r") as f:
+        obs = f["obs_intensity"][:n_seq].astype(np.float32)
+        pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+    sim = json.load(open(dd / "dataset.json"))["sim"]
+    bp, bv = _to_basis(pos, vel, sim, basis_name)
+    y = bp.reshape(n_seq, bp.shape[1], -1)
+    if target == "full":
+        y = np.concatenate([y, bv.reshape(n_seq, bv.shape[1], -1)], axis=-1)
+    # Transformer-L has a fixed block_size (39, learned absolute positions) and cannot
+    # take a 40-frame episode; truncating here keeps both architectures on one path.
+    span = getattr(model, "state_span", obs.shape[1])
+    obs = obs[:, : min(obs.shape[1], span)]
+    if encoder is not None:
+        obs = encoder(obs)                      # e.g. (N, T) token ids
+    # Disk-backed: the stack alone is 21.6-24.6 GB and the fits' temporaries must fit
+    # beside it under the memory cap (see collect_residuals). Deleted after the fits.
+    # ⛔ NOT the system tempdir: /tmp is tmpfs (RAM) on the lab box, which is how the
+    # first "disk-backed" attempt filled 24.6 GB of RAM and hit a quota (2026-09-02).
+    # The repo lives on nvme with terabytes free; .scratch/ is gitignored.
+    _sdir = Path(__file__).resolve().parents[3] / ".scratch"
+    _sdir.mkdir(exist_ok=True)
+    _tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=_sdir)
+    _tmp.close()
+    try:
+        R = collect_residuals(model, obs, batch=64, memmap=_tmp.name)  # (NP, N, T, d)
+        y = y[:, : R.shape[2]]
+        rng = np.random.default_rng(SEED)
+        perm = rng.permutation(n_seq)
+        tr, te = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
+        fit = fit_linear if family == "linear" else fit_mlp
+        out = {}
+        for ell in range(R.shape[0]):
+            X = R[ell]
+            p, s = fit(X[tr].reshape(-1, X.shape[-1]), y[tr].reshape(-1, y.shape[-1]),
+                       X[te].reshape(-1, X.shape[-1]), y[te].reshape(-1, y.shape[-1]),
+                       device=DEV, seed=SEED)
+            out[ell] = (p, s)
+            if log:
+                log(f"    point {ell}: R2 {s['r2']:+.4f}  rmse {s['rmse']:.4f}")
+        del R
+    finally:
+        os.unlink(_tmp.name)          # a failed fit must not leave 20+ GB on the nvme
+    if cache:
+        store.store(fname, prov, out)
+        if log:
+            log(f"    probe cache WROTE {fname}")
+    return out
+
+
+def observation_probes(target: str = "full", n_seq: int = 30_000, split: str = "test",
+                       family: str = "linear", basis_name: str = "cartesian",
+                       span: int = 39, data_dir=None, cache_dir=None,
+                       cache: bool = True, log=print, epochs: int | None = None,
+                       align: str = "left") -> tuple:
+    """The OBSERVATION floor: the canonical probes fitted to the causal observation
+    history instead of a model's residual stream. No model is involved at all.
+
+    Matched to ``fit_probes`` in every other respect — same corpus, same ``n_seq``, same
+    SEEDed 80/20 split by sequence (identical permutation, so the held-out episodes are
+    literally the same ones), same targets, same basis, same probe families — so the
+    only difference between this row of Table 3 and a model row is the features.
+
+    ``span`` matches the model's ``state_span`` so frames align one-for-one; the feature
+    at frame t is obs[0..t] zero-padded to span, i.e. exactly what the model has consumed
+    when its residual stream is read at t. Returns ``(probe, stats)`` — ONE probe, since
+    there is no residual point to sweep.
+    """
+    from pim.probes.baselines import CausalHistory, fit_baseline_probe
+
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
+    # `epochs` enters the key only when set: the canonical fit (200 epochs on 30k) keeps its
+    # existing keys; the 5x-corpus floor runs 50 epochs (>= 2x the canonical step count).
+    extra = {} if epochs is None else {"epochs": int(epochs)}
+    if align != "left":                     # existing (left-aligned) keys stay as they are
+        extra["align"] = align
+    fname, prov = store.key(None, kind="observation", target=target, n_seq=int(n_seq),
+                            split=split, family=family, basis=basis_name, seed=SEED,
+                            span=int(span), data=str(dd), **extra)
+    if cache:
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            if log:
+                log(f"    obs-baseline cache HIT  {fname}")
+            return hit
+    with h5py.File(dd / f"{split}.h5", "r") as f:
+        obs = f["obs_intensity"][:n_seq].astype(np.float32)
+        pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+    sim = json.load(open(dd / "dataset.json"))["sim"]
+    bp, bv = _to_basis(pos, vel, sim, basis_name)
+    y = bp.reshape(n_seq, bp.shape[1], -1)
+    if target == "full":
+        y = np.concatenate([y, bv.reshape(n_seq, bv.shape[1], -1)], axis=-1)
+    obs, y = obs[:, :span], y[:, :span]
+    # THE SAME permutation fit_probes draws — the two floors and the model are compared
+    # on identical held-out episodes, not merely on splits of the same size.
+    perm = np.random.default_rng(SEED).permutation(n_seq)
+    tr, te = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
+    hist = CausalHistory(torch.from_numpy(obs).to(DEV), align=align)
+    out = fit_baseline_probe(hist, torch.from_numpy(y).float().to(DEV), tr, te,
+                             hidden=None if family == "linear" else CANONICAL_HIDDEN,
+                             seed=SEED, log=log, **{k: v for k, v in extra.items() if k != "align"})
+    if log:
+        log(f"    obs baseline [{basis_name}/{family}]: R2 {out[1]['r2']:+.4f} "
+            f"(in-sample {out[1]['r2_insample']:+.4f}, d_in {out[1]['d_in']})")
+    if cache:
+        store.store(fname, prov, out)
+    return out
+
+
+# ── scoring plumbing ─────────────────────────────────────────────────────────
+
+
+def as_activations(model, ell: int):
+    """Point a model's ``flat_state`` at residual point ``ell``."""
+    if hasattr(model, "state_view"):
+        model.state_view = "activations"
+    model.probe_layer = ell
+    return model
+
+
+@torch.no_grad()
+def score(model, b: Bench, roll: np.ndarray, uns_card: dict | None = None) -> dict:
+    c = edit_scorecard(roll, b.zones, b.gt_roll)
+    if uns_card is not None:
+        c["fidelity_ratio"] = fidelity_ratio(c, uns_card)
+    return c
+
+
+@torch.no_grad()
+def _roll_hook(model, state, hook, steps: int = K_ROLL):
+    """Free-run whose FIRST step is produced under a callable edit hook.
+
+    A recurrent model carries its edited hiddens forward (``rollout_with_hook``); the
+    transformers carry only the observation window, so for them the hook shapes one
+    prediction and the rest of the rollout is recomputed unedited."""
+    if hasattr(model, "rollout_with_hook"):
+        return model.rollout_with_hook(state, hook, steps).cpu().numpy()
+    pred = model.decode(state, edit=hook)
+    return free_run(model, pred, model.advance(state, pred), steps).cpu().numpy()
+
+
+@torch.no_grad()
+def unsteered(model, b: Bench) -> dict:
+    """No intervention, through the IDENTICAL rollout path (state written back unchanged)."""
+    roll = unsteered_rollout(model, b)
+    c = score(model, b, roll)
+    c["fidelity_ratio"] = 1.0
+    return c
+
+
+# ── rollouts (the editors' writes, without the scoring) ──────────────────────
+#
+# The *_arm functions score; these return the rollout itself, for qualitative panels
+# (`notebooks/make_waterfalls.ipynb`). Each arm below is defined in terms of these, so
+# an editor's write exists exactly once and a picture can never disagree with a score.
+
+
+@torch.no_grad()
+def free_rollout(model, obs: np.ndarray, teacher_force: int, steps: int) -> np.ndarray:
+    """Teacher-force ``obs[:, :teacher_force]``, then free-run ``steps`` frames.
+
+    No edit anywhere. Step 0 of the returned rollout is the model's prediction OF frame
+    ``teacher_force`` — i.e. it aligns with ``clean_obs[:, teacher_force : +steps]``.
+    """
+    x = torch.from_numpy(np.asarray(obs)[:, :teacher_force]).float().to(DEV)
+    s = model.state_from_obs(x)
+    pred = model.decode(s)
+    return free_run(model, pred, model.advance(s, pred), steps).cpu().numpy()
+
+
+@torch.no_grad()
+def unsteered_rollout(model, b: Bench) -> np.ndarray:
+    """The no-intervention rollout, through the IDENTICAL path an edit takes."""
+    ell = model.n_layers
+    as_activations(model, ell)
+    return model.rollout_with_edit(b.state, ell, model.flat_state(b.state),
+                                   K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def pinv_rollout(model, b: Bench, probe, ell: int, alpha: float,
+                 space: str = "zspace", dims: str = "all") -> np.ndarray:
+    """PI's rollout at one residual point and step size."""
+    as_activations(model, ell)
+    h0 = model.flat_state(b.state)
+    h = h0 + alpha * pinv_step(h0, b.tgt, probe, space=space, dims=dim_idx(dims))
+    return model.rollout_with_edit(b.state, ell, h, K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def nanda_rollout(model, b: Bench, probe, ell: int, alpha: float,
+                  dims: str = "all") -> np.ndarray:
+    """ND's rollout at one residual point and step size."""
+    idx = dim_idx(dims)
+    rows = b.out_dims if idx is None else [d for d in b.out_dims if d in set(idx)]
+    d = probe_direction(probe, rows)
+    return _roll_hook(model, b.state, addition_hook(ell, d, alpha))
+
+
+def grad_steer_rollout(model, b: Bench, probes: dict, start_layer: int, alpha: float,
+                       n_steps: int = 100, beta: float = 0.2,
+                       dims: str = "all", record: dict | None = None) -> np.ndarray:
+    """GS's rollout from ``start_layer`` and every residual point after it.
+
+    ``record`` (optional dict) receives the hook's per-point diagnostics (the arm reads
+    ``delta_norm``/``x_norm`` from it for ``write_ratio``)."""
+    pts = {e: probes[e][0] for e in probes if e >= start_layer}
+    cm = restrict_mask(b.change_mask, dims)
+    specs = {}
+    for e, pr in pts.items():
+        as_activations(model, e)
+        specs[e] = build_edit_spec(pr, model.flat_state(b.state), cm,
+                                   b.tgt, beta=beta)
+    hook = make_intervention_hook(pts, specs, start_layer, alpha=alpha, n_steps=n_steps,
+                                  record=record)
+    return _roll_hook(model, b.state, hook)
+
+
+# ── the two ORACLE editors on the bench (kept in the back pocket, 2026-09-07) ─
+
+
+def counterfactual_history(b: Bench, noise_matched: bool = True, seed: int = 0) -> np.ndarray:
+    """(N, EF, R) the frames 0..EF-1 the model would have SEEN had the edited world held
+    all along: the edited object displaced by its teleport vector throughout the window,
+    the other object on its true trajectory. Rendered through the instance's own renderer
+    config, with its observation noise when ``noise_matched``."""
+    from pim.environments.discworld.renderer import render_frame
+    from pim.metrics.zone_editability import sim_config_from
+
+    assert b.pos is not None and b.vel is not None and b.sim is not None, "load_bench() fills these"
+    cfg = sim_config_from(b.sim, N_OBJ)
+    if noise_matched:
+        cfg = type(cfg)(**{**cfg.__dict__, "obs_noise_std": float(b.sim["obs_noise_std"])})
+    rad, refl = object_constants(b.sim, N_OBJ)
+    idx, k = np.arange(b.n), b.edit_object.astype(int)
+    dt = float(b.sim["dt"])
+    # teleport vector = post-edit position at EF minus where the object would have been
+    delta = b.pos[idx, EF, k] - (b.pos[idx, EF - 1, k] + b.vel[idx, EF - 1, k] * dt)
+    hist = b.pos[:, :EF].copy()
+    hist[idx, :, k] += delta[:, None, :]
+    rng = np.random.default_rng(seed)
+    out = np.zeros((b.n, EF, b.obs.shape[-1]), np.float32)
+    for i in range(b.n):
+        for t in range(EF):
+            out[i, t] = render_frame(hist[i, t], rad, refl, cfg, rng=rng)[2]
+    return out
+
+
+@torch.no_grad()
+def overwrite_oracle_rollout(model, b: Bench, noise_matched: bool = True) -> np.ndarray:
+    """ORACLE 1: the state the model would carry had it SEEN the edited world for the
+    whole window (``counterfactual_history``), then a free-run. Step 0 predicts frame EF,
+    aligned with every other arm — it writes every dimension of the carried state, which
+    is what makes it the ceiling on "the dynamics can carry the edited world at all".
+    (A one-frame overwrite — the post-edit frame appended to the pre-edit window — is NOT
+    accepted by a window model: EI +0.04 on L-dw-20m, 2026-09-07.)"""
+    cf = torch.from_numpy(counterfactual_history(b, noise_matched)).float().to(DEV)
+    return overwrite_rollout(model, cf, K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def freeze_oracle_rollout(model, b: Bench, n_frames: int = 8,
+                          noise_matched: bool = True) -> np.ndarray:
+    """ORACLE 2: teacher-force ``n_frames`` rendered frames in which the edited object
+    glides pre -> target with time frozen (the other object holds at its frame-EF
+    position), then free-run. Step 0 predicts frame EF, aligned with every other arm.
+    ``noise_matched`` renders the frozen frames with the instance's observation noise."""
+    assert b.pos is not None and b.sim is not None, "load_bench() builds the oracle fields"
+    _, refl = object_constants(b.sim, N_OBJ)
+    noise = float(b.sim["obs_noise_std"]) if noise_matched else 0.0
+    frames = np.stack([
+        frozen_frames(b.sim, b.pos[i, EF - 1], b.pos[i, EF], int(b.edit_object[i]), n_frames,
+                      reflectivities=refl, obs_noise_std=noise, seed=i)
+        for i in range(b.n)])
+    return freeze_time_rollout(model, b.state,
+                               torch.from_numpy(frames).float().to(DEV), K_ROLL).cpu().numpy()
+
+
+@torch.no_grad()
+def oracle_arm(model, b: Bench, n_freeze: int = 8) -> list[dict]:
+    """Both oracle editors, scored like any arm. They exist to defend the Edit Index: if
+    the measure can score well under a write that provably carries the edited world, a
+    workhorse editor at the unedited floor is a fact about the model, not the measure."""
+    u = unsteered(model, b)
+    ov = score(model, b, overwrite_oracle_rollout(model, b), u)
+    fz = score(model, b, freeze_oracle_rollout(model, b, n_freeze), u)
+    return [{"editor": "ORACLE-overwrite", **{k: v for k, v in ov.items() if np.isscalar(v)}},
+            {"editor": f"ORACLE-freeze[N={n_freeze}]", "n_freeze": n_freeze,
+             **{k: v for k, v in fz.items() if np.isscalar(v)}}]
+
+
+# ── the three workhorse arms ─────────────────────────────────────────────────
+
+
+@torch.no_grad()
+def nanda_arm(model, b: Bench, probe, ell: int, alphas,
+              dims: str = "all") -> list[dict]:
+    """ND at one residual point, α swept. Direction = the edited object's read-out rows."""
+    recs = []
+    for a in alphas:
+        roll = nanda_rollout(model, b, probe, ell, a, dims=dims)
+        recs.append({"editor": "ND", "point": ell, "alpha": float(a), "dims": dims,
+                     "write_ratio": float(a), **score(model, b, roll)})
+    return recs
+
+
+@torch.no_grad()
+def pinv_arm(model, b: Bench, probes: dict, alphas, space: str = "zspace",
+             dims: str = "all") -> list[dict]:
+    """PI at ONE residual point, tried at every point, α swept (α=1 = the exact jump).
+
+    Both axes are load-bearing: 2026-08-21 measured 28× across points and ~50× across α.
+    """
+    idx = dim_idx(dims)
+    recs = []
+    for ell, (probe, _) in probes.items():
+        as_activations(model, ell)
+        h0 = model.flat_state(b.state)
+        step = pinv_step(h0, b.tgt, probe, space=space, dims=idx)
+        # the landing check is scored on the DRIVEN dims — see readout_error's docstring
+        err0 = readout_error(h0, b.tgt, probe, dims=idx)
+        for a in alphas:
+            h = h0 + a * step
+            roll = pinv_rollout(model, b, probe, ell, a, space=space, dims=dims)  # THE write
+            recs.append({"editor": f"PI[{space}]", "point": ell, "alpha": float(a),
+                         "dims": dims,
+                         "write_ratio": float((a * step).norm(dim=1)
+                                              .div(h0.norm(dim=1)).mean()),
+                         "readout_err_before": err0,
+                         "readout_err_after": readout_error(h, b.tgt, probe, dims=idx),
+                         **score(model, b, roll)})
+    return recs
+
+
+def grad_steer_arm(model, b: Bench, probes: dict, start_layers, alphas,
+                   n_steps: int = 100, beta: float = 0.2,
+                   dims: str = "all") -> list[dict]:
+    """GS from each start layer and EVERY point after it — Li's sequential schedule."""
+    recs = []
+    for ls in start_layers:
+        for a in alphas:
+            rec: dict = {}
+            roll = grad_steer_rollout(model, b, probes, ls, a, n_steps=n_steps, beta=beta,
+                                      dims=dims, record=rec)                  # THE write
+            recs.append({"editor": f"GS@L{ls}", "point": ls, "alpha": float(a),
+                         "dims": dims,
+                         "write_ratio": float(np.mean(
+                             [d["delta_norm"] / d["x_norm"] for d in rec.values()
+                              if isinstance(d, dict) and d.get("x_norm", 0) > 0]
+                             or [np.nan])),
+                         **score(model, b, roll)})
+    return recs

@@ -1,11 +1,11 @@
-"""Tests for pim.simulator.interactive.InteractiveWorld."""
+"""Tests for pim.environments.discworld.interactive.InteractiveWorld."""
 
 import numpy as np
 import pytest
 
-from pim.simulator.config import SimConfig
-from pim.simulator.interactive import InteractiveWorld, InteractiveConfig
-from pim.simulator.sim import frustum_half_width
+from pim.environments.discworld.config import SimConfig
+from pim.environments.discworld.interactive import InteractiveWorld, InteractiveConfig
+from pim.environments.discworld.sim import frustum_half_width
 
 
 def make_sim(n=2, **kw):

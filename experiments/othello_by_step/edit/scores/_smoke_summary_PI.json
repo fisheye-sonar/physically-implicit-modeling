@@ -1,0 +1,83 @@
+{
+ "label": "_smoke",
+ "editor": "PI",
+ "global_arm": {
+  "editor": "PI",
+  "point": 5,
+  "alpha": 2.0,
+  "write_ratio": 0.5255057613054911,
+  "edit_index_union": 0.7914557127091274,
+  "fidelity_ratio": 0.11608583309368435,
+  "li_error_vs_post": 0.0,
+  "index": 39,
+  "pooled_ei": 0.7914556860923767
+ },
+ "by_move": [
+  {
+   "move": 5,
+   "n": 4,
+   "unedited_ei": -0.85043865442276,
+   "best": {
+    "editor": "PI",
+    "point": 3,
+    "alpha": 3.0,
+    "write_ratio": 0.8491944074630737,
+    "edit_index_union": 0.698772300191726,
+    "fidelity_ratio": 0.2092635230112918,
+    "li_error_vs_post": 0.3333333333333333,
+    "index": 26,
+    "ei": 0.8559927940368652,
+    "fid": 0.07569866627454758
+   },
+   "global": {
+    "index": 39,
+    "ei": 0.8233026266098022,
+    "fid": 0.09981010109186172
+   }
+  },
+  {
+   "move": 6,
+   "n": 4,
+   "unedited_ei": -0.8241320848464966,
+   "best": {
+    "editor": "PI",
+    "point": 5,
+    "alpha": 1.5,
+    "write_ratio": 0.39412933588027954,
+    "edit_index_union": 0.7801186797068719,
+    "fidelity_ratio": 0.10841163713278018,
+    "li_error_vs_post": 0.0,
+    "index": 38,
+    "ei": 0.7708691954612732,
+    "fid": 0.1318884640932083
+   },
+   "global": {
+    "index": 39,
+    "ei": 0.7680475115776062,
+    "fid": 0.1345696747303009
+   }
+  },
+  {
+   "move": 7,
+   "n": 4,
+   "unedited_ei": -0.7869822978973389,
+   "best": {
+    "editor": "PI",
+    "point": 4,
+    "alpha": 3.0,
+    "write_ratio": 1.078517735004425,
+    "edit_index_union": 0.6108466637367768,
+    "fidelity_ratio": 0.2388043582318287,
+    "li_error_vs_post": 0.0,
+    "index": 33,
+    "ei": 0.8348796963691711,
+    "fid": 0.08934193104505539
+   },
+   "global": {
+    "index": 39,
+    "ei": 0.7830170392990112,
+    "fid": 0.12094555795192719
+   }
+  }
+ ]
+}

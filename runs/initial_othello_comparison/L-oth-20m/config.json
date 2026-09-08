@@ -1,0 +1,53 @@
+{
+  "train": {
+    "rung": "D",
+    "window": 16,
+    "arch": "theirs",
+    "epochs": null,
+    "limit": null,
+    "run_name": "BIG20M_othello_L",
+    "val_fraction": 0.1,
+    "batch_size": 256,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "warmup_frac": 0.05,
+    "grad_clip": 1.0,
+    "d_model": 256,
+    "n_layers": 4,
+    "n_heads": 4,
+    "mlp_ratio": 4.0,
+    "seed": 0,
+    "steps": 780000,
+    "val_every": 5000,
+    "lr_schedule": "constant",
+    "warmup_steps": 2000,
+    "ckpt_base": 1000,
+    "run_dir": "/home/sevan/research/PIM/physically-implicit-modeling/runs/scaling"
+  },
+  "model": {
+    "vocab_size": 61,
+    "block_size": 59,
+    "n_layer": 8,
+    "n_head": 8,
+    "n_embd": 512,
+    "embd_pdrop": 0.1,
+    "resid_pdrop": 0.1,
+    "attn_pdrop": 0.1
+  },
+  "arch": "transformer_l_tokens",
+  "rung": "D",
+  "unique_games": 20000000,
+  "train_games": 18000000,
+  "val_games": 2000000,
+  "total_steps": 780000,
+  "warmup_steps": 2000,
+  "n_params": 25312768,
+  "state_span": 59,
+  "w16_reference_steps": 95100,
+  "epochs_over_pool": 11.093333333333334,
+  "data": {
+    "env": "othello",
+    "instance": "oth-uniform",
+    "objective": "ce"
+  }
+}

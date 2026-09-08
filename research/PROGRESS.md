@@ -3,7 +3,149 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-08-31 (recording the 08-24/25 discworld-at-scale work; see the 08-25 section first)_
+_Last updated: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
+
+_2026-09-01 (later) — **The guard is now one metric everywhere** (EVAL_VERSION 2026-09-01.1,
+all five runs rescored):_
+
+    fidelity = RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)
+               evaluated at the EDIT STEP ONLY.   > 1 = degraded, not steered.
+
+Three changes, all Sevan's calls:
+
+1. **Step 0, not the rollout.** An activation edit touches step 0 alone; later steps are
+   recomputed from a window holding the *unedited* history plus one edited frame, so
+   averaging 15 of them dilutes exactly what the guard is for. Measured: the step-0 form
+   flags discworld PI at **1.63 / 1.69** where the rollout form managed 1.11 / 1.16, and
+   ND at **2.23 / 2.82** against 1.14 / 1.12. `gt_traj_rmse` stays in the scorecard, so
+   the rollout ratio — *can an edited frame survive re-entry into unedited context?* — is
+   one division away under its own name, never as this guard.
+2. **Othello gets one at last** (`move_fidelity_ratio`), RMSE over **all 64 squares**
+   against uniform-over-legal-post. RMSE not Li error: Li error is a top-N *set* mismatch,
+   integer-valued, blind to probability magnitude and compressive at the good end (it
+   renders GS-mine vs PI as 0.013 vs 0.041 — a 3× spread on a handful of misordered
+   squares — where RMSE gives the honest 0.207 vs 0.243). All-64 not union-support,
+   because a guard restricted to the edit's own zone cannot see collateral damage.
+   RMSE is also the distance `edit_index_legal` is already built from, so the two
+   environments now share one construction rather than a shared name.
+3. **`li_error_vs_pre` is retired from the guard column** — it is a DIAGNOSTIC (one half
+   of the pair the Edit Index already uses) and its "higher is better" holds only up to
+   the pre→post separation, 2.763. It stays in `scores.json` as the anchor to Li et al.'s
+   published units.
+
+**The table now reads on one axis** (EI / fid, ↓ good):
+
+| run | env | unedited | PI | ND | GS | GS-mine |
+|---|---|---|---|---|---|---|
+| L-oth-20m | othello | −0.713 | +0.610 · **0.24** | +0.447 · **0.34** | +0.471 · **0.38** | +0.646 · **0.21** |
+| L-dw-20m | discworld | −0.700 | +0.175 · **1.63** | −0.038 · **2.23** | −0.195 · 0.94 | — |
+| L-dw-noiseless-20m | discworld | −0.924 | +0.218 · **1.69** | −0.037 · **2.82** | −0.114 · 0.97 | — |
+
+Every Othello editor moves the prediction 3–5× CLOSER to the post-edit world than doing
+nothing; every positive-EI discworld editor moves it 1.6–2.8× FURTHER. That contrast is
+the finding, and it is now a single number rather than two metrics with opposite
+polarity sharing a column.
+
+⚠ **Never quote an Edit Index without the guard.** The index is *relative* (which world
+is the output nearer) so a wrecked output still scores mildly positive — discworld PI,
+EI +0.22 at fidelity 1.69. The guard is *absolute* and is the only thing that says so.
+
+_Previous update: 2026-09-01 (early) — noise ablation done: removing ALL noise does NOT make discworld editable_
+
+_2026-09-01 — **Two results, both from the new canonical pipeline, both overnight.**_
+
+**1. GS-mine: a wrong negative retired.** Li-style gradient steering "failing" through
+mine/theirs probes on Othello (EI −0.0014, on record since 08-24) was a **target-frame
+bug** — the arm fed mine/theirs probes the benchmark's *absolute-colour* labels. Isolated
+at identical point/α, varying only the frame and the probe set: mine targets **+0.6451**,
+absolute **−0.0534**, and the OLD and NEW probes agree to four decimals in both frames
+(probe quality was never involved; the old sweep did include α 0.05 at all nine points,
+so not a grid artefact either). **GS-mine +0.6459 is now the strongest Othello editor**,
+Li error **0.036** — below Li et al.'s published best intervention of 0.12 — guards clean.
+All four best Othello arms now read mine/theirs probes: Nanda's frame wins for editing as
+well as decoding. `grad_steer_arm` takes an explicit `target_labels`, and every
+`scores.json` records `probe_sources`. → `scratch/2026-08-31-gs-mine-frame-mismatch.md`
+
+**2. Noise ablation — the headline, and it is negative.**
+`noise_ablation/L-dw-noiseless-20m` = dw-pn04 with `obs_noise_std` AND
+`position_noise_std` both **0.0**, everything else byte-identical (Transformer-L
+25,371,776 params, 20M sequences, 780k steps, matched recipe; 8.03 h vs 8.04 h).
+
+| | dw-pn04 | dw-noiseless | L-oth-20m |
+|---|---|---|---|
+| best val | 0.022873 | **0.001063** (21.5× better) | 2.02798 |
+| unedited EI | −0.700 | **−0.924** | −0.713 |
+| PI | +0.175 · fid 1.11 | **+0.218 · fid 1.16** | **+0.610** ✓ |
+| ND | −0.038 | −0.037 | +0.447 / +0.622 ✓ |
+| GS | −0.195 | −0.114 | +0.471 / **+0.646** ✓ |
+
+Every editor lands where it did with noise; PI's +0.218 is again **destructive**
+(fidelity 1.16, collateral 0.513 vs 0.118 unedited = 4.3×), not an edit. **A model 21.5×
+better at its own objective is no more editable** — prediction quality is not the gate.
+
+Two side findings worth more than the headline: (a) the unedited EI floor moves −0.700 →
+**−0.924**, confirming the ±0.82 compression noted 08-25 was an artefact of scoring a
+noise-trained model against clean renders — the editors now have MORE headroom and still
+do not use it; (b) **noise was making the code more linear**: LIN skill 0.944 → 0.872
+while MLP *rises* 0.977 → 0.979 (velocity worst: o1·vy LIN 0.526 → 0.173, MLP 0.651 →
+0.542) — same information, less linearly accessible without noise.
+
+**Where this leaves the paper.** Three "artefact" explanations for the discworld negative
+are now closed: not data scale (20M), not architecture (Li et al.'s own minGPT), not
+noise (both channels off). The live structural differences vs Othello are **continuous vs
+discrete state**, **regression vs classification**, and **the observation being a
+projection** (occlusion, perspective) rather than full information.
+→ `scratch/2026-09-01-noise-ablation.md`
+
+**Open:** the floor for a noiseless world is not zero (a 128-ray quantised render limits
+how precisely the initial state is inferable), so part of the 0.00106 is irreducible —
+cheap CPU work, not yet run. Also pending: whether to drop `state` probes from the Othello
+grid now that no editor needs them (72 → ~29 fits), and Sevan's call on committing to
+sequence-split only.
+
+_Previous update: 2026-08-31 (evening) — THE HOUSECLEANING: canonical core built, old tree deleted, both canonical runs scored_
+
+_2026-08-31 — **The housecleaning.** The project re-centred on editability and the repo was
+rebuilt around a small canonical core so every number is reviewable line by line. Everything
+pre-existing is recoverable at the git tag **`pre-cleanup-2026-08`**; nothing was deleted from
+`runs/`, `logs/`, `outputs/`, or `datasets/` (moves only, ledgered in each tree's `MOVES.md`)._
+
+- **The canonical core is `pim/`** — environments (discworld + vendored othello, each instance
+  packaged with its data + `instance.json`), models (Transformer-S/L × regression/token heads —
+  the four old minGPT bridges collapsed to one), probes (LIN + **MLP-128** canonical + nullspace
+  cascade, fingerprint-keyed caches), editors (**PI z-space+y-affine** / ND / GS workhorses +
+  nullspace + two oracle editors), metrics (Probe Skill; the two Edit Index constructions get
+  distinct names), training (ONE loop, two objectives; defaults = the matched BIG20M recipe).
+  Index: **`research/REGISTRY.md`** (replaces METRICS_AND_EDITORS.md). Every port was
+  equivalence-gated on the real canonical checkpoints before the old copy was deleted —
+  bit-identical forwards, bit-identical probe fits, editor arms reproducing stored numbers to
+  full precision (PI +0.6104 to 4 decimals; ND −0.0380; GS −0.0014; gates .9925/.9980).
+- **The y-affine bug** (see `scratch/2026-08-31-pi-y-affine-bug.md`): every pre-08-31 discworld
+  PI number solved standardised-y read-outs against raw-unit targets (Othello was structurally
+  immune). Fixing it ~tripled the best EI (+0.05→+0.18) **and sharpened the negative**: the α=1
+  write that provably lands the read-out leaves the generation at the unedited floor. Canonical
+  PI is `"zspace"`; `"legacy"` reproduces old numbers and is never quoted as PI. The landing
+  check now goes through `probe.forward` itself, so the bug class is unrepresentable.
+- **Canonical scoring**: `notebooks/master_eval.ipynb` scans `runs/**` (excluding `archive/` and
+  `_`-topics), scores every run identically — no metric math in notebooks — and writes
+  `scores.json` + the fitted probes into **the run's own dir** (`probes/`; re-tests never
+  refit). `build_full_table.ipynb` renders Table 1 decodability (FIRST, deliberately),
+  Table 1b discworld per-component decodability, Table 2 editability with guards.
+- **First master table** (`initial_othello_comparison`, the only two runs passing the
+  canonical-runs rule): decodability ≈ **0.94–0.98 on both sides**, tripwire clean — so
+  decodability is NOT what separates the environments. Editability: **Othello editable by every
+  workhorse editor** (PI **+0.610**, ND **+0.622** single-point / +0.447 plain, GS **+0.471**
+  through state probes = Li §4.1 verbatim; li-vs-pre guards all ≥1.8) vs **discworld by none**
+  (best PI +0.175 with fidelity 1.11 = destructive; ND/GS negative). Two documented method
+  deltas vs old records: ND is now swept per-point (beats the every-layer form +0.62 vs +0.37),
+  and GS steers through *state* probes (works, +0.47) where the old mine-target arm failed.
+- **Runs**: `runs/<topic>/<run>/` with config.json + commit_sha + probes/ + scores.json;
+  W16, the S rungs and the L90 pair are archived (non-canonical data/recipes). Fresh canonical
+  Transformer-S runs on both instances are the first post-cleanup trainings to schedule.
+- **Pending** (unchanged, now cheaper on the clean base): canonical S runs, the fixed-noise 900k
+  DW rung, frustum baselines + the depth-coordinate question, optional Othello LR anneal.
+
+_Previous update: 2026-08-31 (recording the 08-24/25 discworld-at-scale work; see the 08-25 section first)_
 
 _2026-08-22 (evening) — **the environment is what flips editability, and it
 replicates.** Li et al.'s architecture, ~900k sequences, same optimiser, at both 4 and 14 epochs:
