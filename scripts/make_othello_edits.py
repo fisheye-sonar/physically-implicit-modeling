@@ -34,7 +34,7 @@ def main() -> None:
     itos = {v: k for k, v in canonical_vocab().items()}
     hist = [[int(itos[int(t)]) for t in row[:L]] for row, L in zip(tok, ln)]
     cases, manifest = synthesise_cases(hist, a.n, shipped_length_distribution(), seed=a.seed,
-                                       flip=oc.flip_of(a.instance))
+                                       **oc.rules_of(a.instance))
     out = _REPO / "datasets" / "othello" / a.instance / "edits"
     out.mkdir(parents=True, exist_ok=True)
     with open(out / f"cases_{a.n}.pkl", "wb") as f:

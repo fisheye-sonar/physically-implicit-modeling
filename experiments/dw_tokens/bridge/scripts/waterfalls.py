@@ -28,7 +28,7 @@ from pim.environments.discworld import arms as dwa  # noqa: E402
 from pim.environments.discworld import bench as dwb  # noqa: E402
 from pim.environments.discworld.tokens import FrameVocab  # noqa: E402
 from pim.figures.waterfall import waterfall_grid  # noqa: E402
-from pim.metrics.editability import random_samples  # noqa: E402
+from pim.metrics.zone_editability import random_samples  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 
 

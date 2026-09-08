@@ -63,7 +63,7 @@ upper bound on any history-conditioned predictor. It should be the same object a
 registry's "state oracle" MSE floor (0.022171 vs the obs-noise-only floor 0.018866) — verify
 that derivation in `research/GOTCHAS.md` / the Bayes-floor notes before citing them together.
 
-## Implementation (all in `pim/metrics/editability.py` + one setting)
+## Implementation (all in `pim/metrics/zone_editability.py` + one setting)
 
 1. `clipped_normal_mean(c, sigma)` — vectorised closed form; `sigma == 0` returns `c`
    unchanged (exact, not approximately).

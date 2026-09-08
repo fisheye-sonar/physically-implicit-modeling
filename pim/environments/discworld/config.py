@@ -61,6 +61,17 @@ class SimConfig:
     speed_noise_std: float = 0.0
     position_noise_std: float = 0.0
 
+    # ---- blink (dw-blink, 2026-09-07; see blink.py) ------------------------
+    # An object is removed from the OBSERVATION (physics untouched) for a run of frames,
+    # with a 0.5 marker on its edge ray the frame before and the last hidden frame.
+    #   blink_prob:   per-object, per-frame probability of starting a blackout (0 = off)
+    #   blink_mean:   mean blackout length, Geometric(1/mean) frames, capped at blink_max
+    #   blink_warmup: no blackout can begin before this frame index
+    blink_prob: float = 0.0
+    blink_mean: float = 6.0
+    blink_max: int = 12
+    blink_warmup: int = 3
+
     # ---- 1D observation -------------------------------------------------
     obs_res: int = 128
     # Cast ``obs_res`` rays but DROP the first and last — the two that run exactly along

@@ -11,13 +11,13 @@ frame — in a noiseless world each is ONE token — so the machinery transfers 
 * the editors are the discworld ones — PI (``pim.editors.pinv``, z-space + y-affine) and
   GS (``pim.editors.grad_steer``) on regression probes — writing the residual at the last
   context position through the model's ``decode(idx, edit=hook)``, as Othello's arms do;
-* the numbers are ``pim.metrics.othello_moves``: ``edit_index_legal`` (reported here as
+* the numbers are ``pim.metrics.set_editability``: ``edit_index_legal`` (reported here as
   ``edit_index`` — the frame-set construction, +1 = the edited world's frame, −1 = the
   unedited one), ``li_error``, the mass on the post-edit frame (``p_post``), and
   ``move_fidelity_ratio`` as the guard.
 
 Also carried, never quoted as the headline: ``zone_edit_index_expected`` — the canonical
-ray-zone Edit Index (``pim.metrics.editability.edit_index``) evaluated on the EXPECTED
+ray-zone Edit Index (``pim.metrics.zone_editability.edit_index``) evaluated on the EXPECTED
 frame Σ p_k·frame_k, the bridge to the regression model's construction.
 
 Cases whose two worlds render the SAME frame at the edit frame carry no signal and are
@@ -36,8 +36,8 @@ from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
-from pim.metrics.editability import edit_index as zone_edit_index
-from pim.metrics.othello_moves import move_fidelity_ratio, move_scorecard
+from pim.metrics.zone_editability import edit_index as zone_edit_index
+from pim.metrics.set_editability import move_fidelity_ratio, move_scorecard
 
 DEV, EF = dwb.DEV, dwb.EF
 

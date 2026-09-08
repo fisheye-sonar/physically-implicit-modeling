@@ -90,5 +90,5 @@ file per set; `plot_by_step.py` then draws the GS figure beside these.
 ## Canonical changes
 
 `bench.benchmark_from_cases` (the body of `load_benchmark`, callable on any case list;
-`case_targets` now served from the Benchmark), `othello_moves.move_fidelity_ratio_per_case`
+`case_targets` now served from the Benchmark), `set_editability.move_fidelity_ratio_per_case` (then `othello_moves`)
 (the guard before its mean). Behaviour-preserving, pinned by `tests/test_othello_bench.py`.

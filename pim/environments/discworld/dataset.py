@@ -37,6 +37,7 @@ import numpy as np
 from tqdm import tqdm
 
 from .config import SimConfig, obs_dim
+from .blink import MARK_VALUE, blink_enabled, blink_schedule
 from .renderer import render_scene
 from .sim import Scene, compute_visibility, simulate
 from .soft_render import soft_enabled
@@ -120,11 +121,13 @@ def pack_sample(scene: Scene, cfg: SimConfig, max_obj: int) -> dict:
     ``reconstruct_clean_obs`` recovers the noiseless render from (obs_id, reflectivities)
     exactly for the flat renderer, but not under antialiasing / shading / blur.
     """
-    obs_depth, obs_id, obs_intensity = render_scene(scene)
+    bvis = blink_schedule(cfg, scene.positions.shape[1])   # None unless blinking
+    obs_depth, obs_id, obs_intensity = render_scene(scene, visible=bvis)
     obs_clean = None
     if soft_enabled(cfg):
         obs_clean = render_scene(
-            dataclasses.replace(scene, config=dataclasses.replace(cfg, obs_noise_std=0.0))
+            dataclasses.replace(scene, config=dataclasses.replace(cfg, obs_noise_std=0.0)),
+            visible=bvis,
         )[2].astype(np.float32)
     vis = compute_visibility(scene)  # (n_frames, n)
     n = scene.positions.shape[1]
@@ -142,6 +145,10 @@ def pack_sample(scene: Scene, cfg: SimConfig, max_obj: int) -> dict:
     radii_out[:n] = scene.radii.astype(np.float32)
     refl_out[:n] = scene.reflectivities.astype(np.float32)
     vis_out[:, :n] = vis
+    blink_out = None
+    if bvis is not None:                      # padded like is_visible; padding = visible
+        blink_out = np.ones((cfg.n_frames, max_obj), dtype=bool)
+        blink_out[:, :n] = bvis
 
     return {
         "obs_intensity": obs_intensity.astype(np.float32),
@@ -149,6 +156,7 @@ def pack_sample(scene: Scene, cfg: SimConfig, max_obj: int) -> dict:
         "obs_depth": obs_depth.astype(np.float32),
         "obs_id": obs_id.astype(np.int8),
         "is_visible": vis_out,
+        **({"blink_visible": blink_out} if blink_out is not None else {}),
         "positions": pos_out,
         "velocities": vel_out,
         "colors": col_out,
@@ -183,6 +191,7 @@ def common_layout(sim: SimConfig, max_obj: int) -> list[tuple[str, tuple, str, s
         ("obs_depth", (F, R), "float32", "sample"),
         ("obs_id", (F, R), "int8", "sample"),
         ("is_visible", (F, max_obj), "bool", "sample"),
+        *([("blink_visible", (F, max_obj), "bool", "sample")] if blink_enabled(sim) else []),
         ("positions", (F, max_obj, 2), "float32", "sample"),
         ("velocities", (F, max_obj, 2), "float32", "sample"),
         ("colors", (max_obj, 3), "float32", "sample"),
@@ -267,7 +276,8 @@ def reconstruct_clean_obs(
     are already stored in every HDF5 file, this requires zero extra storage.
 
     Formula: ``clean[..., t, r] = reflectivities[..., obs_id[..., t, r]]``
-    if ``obs_id[..., t, r] >= 0`` (object hit), else ``0.0`` (background/miss).
+    if ``obs_id[..., t, r] >= 0`` (object hit), else ``0.0`` (background/miss);
+    a blink marker ray (``obs_id <= -2``, see ``blink.py``) is ``MARK_VALUE``.
 
     Parameters
     ----------
@@ -287,6 +297,7 @@ def reconstruct_clean_obs(
             np.arange(obs_id.shape[0], dtype=np.intp)[:, None, None], obs_id.shape
         )
         clean[hit] = reflectivities[n_idx[hit], obs_id[hit].astype(np.intp)]
+    clean[obs_id <= -2] = MARK_VALUE
     return clean
 
 

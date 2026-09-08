@@ -41,7 +41,7 @@ from pim.environments.othello import corpus as oc  # noqa: E402
 from pim.environments.othello.bench import (  # noqa: E402
     benchmark_from_cases, case_targets, load_benchmark)
 from pim.environments.othello.data import canonical_vocab, tokens_and_labels  # noqa: E402
-from pim.metrics.othello_moves import (  # noqa: E402
+from pim.metrics.set_editability import (  # noqa: E402
     move_fidelity_ratio, move_fidelity_ratio_per_case, move_scorecard)
 from pim.models import load_checkpoint, n_points  # noqa: E402
 from pim.probes.cache import ProbeCache  # noqa: E402

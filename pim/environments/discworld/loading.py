@@ -56,6 +56,7 @@ class Dataset:
     h5_path: str
     T_frames: int
     obs_res: int
+    blink_visible: np.ndarray | None = None  # (N, T, max_obj) bool, blink instances only
 
     @property
     def n_samples(self) -> int:
@@ -77,6 +78,7 @@ class EditsData:
     h5_path: str
     T_frames: int
     obs_res: int
+    blink_visible: np.ndarray | None = None  # (N, T, n_obj) bool, blink instances only
 
     @property
     def n_samples(self) -> int:
@@ -90,6 +92,13 @@ class DatasetBundle:
     data_dir: Path
     test: Dataset
     edits: EditsData | None
+
+
+def _blink_visible(f, n_obj):
+    """The blink schedule of a blink instance's split (None elsewhere)."""
+    if "blink_visible" in f:
+        return f["blink_visible"][:, :, :n_obj].astype(bool)
+    return None
 
 
 def _clean_obs(f, obs_id, reflectivities):
@@ -109,11 +118,13 @@ def _load_h5_dataset(h5_path: str | Path, *, n_obj_keep: int | None = None) -> D
         n_obj = n_obj_keep if n_obj_keep is not None else max_obj
         positions = f["positions"][:, :, :n_obj, :].astype(np.float32)
         is_visible = f["is_visible"][:, :, :n_obj].astype(bool)
+        blink = _blink_visible(f, n_obj)
         obs_id = f["obs_id"][:].astype(np.int8)
         reflectivities = f["reflectivities"][:].astype(np.float32)
         config = json.loads(f.attrs["config_json"])
         clean_obs = _clean_obs(f, obs_id, reflectivities)
     return Dataset(
+        blink_visible=blink,
         obs=obs,
         clean_obs=clean_obs,
         positions=positions,
@@ -146,7 +157,9 @@ def load_edits(h5_path: str | Path, *, n_obj_keep: int | None = None) -> EditsDa
         edit_op = f["edit_op"][:]
         edit_value = f["edit_value"][:]
         clean_obs = _clean_obs(f, obs_id, reflectivities)
+        blink = _blink_visible(f, n_obj)
     return EditsData(
+        blink_visible=blink,
         obs=obs,
         clean_obs=clean_obs,
         positions=positions,

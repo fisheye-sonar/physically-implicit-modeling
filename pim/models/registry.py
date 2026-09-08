@@ -124,7 +124,9 @@ def load_checkpoint(path: str | Path, device: str = "cpu"):
         p.requires_grad_(False)
     return model, CheckpointInfo(
         arch=arch,
-        val_loss=float(ckpt.get("val_loss", float("nan"))),
+        # intermediate checkpoints (ckpt/step_*.pt) carry val_loss=None before the first
+        # validation pass; best_model.pt always has one
+        val_loss=float(ckpt["val_loss"]) if ckpt.get("val_loss") is not None else float("nan"),
         model_config=mc,
         train_config=ckpt.get("train_config", {}),
         run_dir=path.parent,

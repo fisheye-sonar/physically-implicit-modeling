@@ -1,4 +1,9 @@
-"""Canonical editability metrics for discworld: zone RMSEs, the Edit Index, fidelity.
+"""Editability of a predicted FRAME against ray zones — discworld's construction.
+
+(``editability.py`` until 2026-09-07; renamed beside ``set_editability.py`` so the two
+constructions read as the pair they are. The Edit Index and fidelity FORMULAS live once in
+``edit_index.py``; this module supplies the ingredients: the two clean renders and the
+ray masks.)
 
 **One implementation** (moved here 2026-08-31 from ``scripts/editability_metrics.py``,
 where it lived under the same no-re-derivation rule). The registry row for each metric is
@@ -6,9 +11,9 @@ in ``research/REGISTRY.md``; this file is the code those rows refer to. Do not r
 these formulas in a notebook — the master notebook calls in here, and that is what makes
 its numbers reviewable.
 
-The Othello analogue (legal-move mass instead of ray zones) is
-``pim/metrics/othello_moves.py`` — deliberately a separate module with distinct names,
-because the two Edit Index constructions share an axis but not a formula.
+The Othello / token-model analogue (uniform-over-set references instead of ray zones)
+is ``pim/metrics/set_editability.py`` — a separate module with distinct names, because
+the two constructions share the FORMULA (``edit_index.py``) but not the ingredients.
 
 Replaces (2026-07-30) the old ratio-style `reach % of swap` / `collateral % of swap` /
 `selectivity` / `ghost ratio`. Those measured **change away from the unsteered rollout**,
@@ -76,6 +81,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
+
+from pim.metrics.edit_index import edit_index_per_case, fidelity_ratio_from
 
 DIFF_EPS = (
     1e-3  # intensity difference that counts as "the two worlds differ on this ray"
@@ -177,6 +184,7 @@ def build_edit_zones(
     n_obj: int = 2,
     traj_pos: np.ndarray | None = None,
     gt_edited_traj: np.ndarray | None = None,
+    blink_visible: np.ndarray | None = None,
 ) -> EditZones:
     """Render both ground-truth worlds at the edit frame and derive the ray zones.
 
@@ -191,9 +199,24 @@ def build_edit_zones(
                   Supplying it (with `gt_edited_traj`) also renders the counterfactual world
                   forward so the Edit Index can be evaluated at every rollout step.
     gt_edited_traj : (N, K, R) the sim's clean post-edit observations, `clean_obs[ef:ef+K]`.
+    blink_visible : (N, K+2, n_obj) bool, blink instances only — the schedule over frames
+                  `ef-1 .. ef+K` (`blink_visible[:, 0]` is frame `ef-1`). The reference
+                  worlds are rendered with the SAME blackouts and markers as the sim, so a
+                  hidden edited object leaves NO differing rays (the case is unscoreable —
+                  NaN — at that step, and scoreable again the frame it reappears).
     """
+    from pim.environments.discworld.blink import paint_markers
     from pim.environments.discworld.config import obs_dim
-    from pim.environments.discworld.renderer import render_frame
+    from pim.environments.discworld.renderer import render_frame as _render_frame
+
+    def render_frame(p, rad_, refl_, cfg_, *, case=0, frame=0):
+        """`renderer.render_frame` with case `case`'s blink state at schedule index `frame`."""
+        if blink_visible is None:
+            return _render_frame(p, rad_, refl_, cfg_)
+        v = blink_visible[case]
+        d, ids, inten = _render_frame(p, rad_, refl_, cfg_, visible=v[frame])
+        paint_markers(ids, inten, v[frame], v[frame + 1] if frame + 1 < v.shape[0] else None)
+        return d, ids, inten
 
     n = len(pre_pos)
     # The zone construction (`other` = the one object that is not edited) is written for
@@ -218,9 +241,9 @@ def build_edit_zones(
     id_edited = np.full((n, R), -1, np.int64)
     id_pre = np.full((n, R), -1, np.int64)
     for i in range(n):
-        _, ide, inte = render_frame(tgt_pos[i].astype(np.float32), rad, refl, cfg)
-        _, _, intu = render_frame(uned_pos[i].astype(np.float32), rad, refl, cfg)
-        _, idp, _ = render_frame(pre_pos[i].astype(np.float32), rad, refl, cfg)
+        _, ide, inte = render_frame(tgt_pos[i].astype(np.float32), rad, refl, cfg, case=i, frame=1)
+        _, _, intu = render_frame(uned_pos[i].astype(np.float32), rad, refl, cfg, case=i, frame=1)
+        _, idp, _ = render_frame(pre_pos[i].astype(np.float32), rad, refl, cfg, case=i, frame=0)
         gt_edited[i], gt_unedited[i] = inte, intu
         id_edited[i], id_pre[i] = ide, idp
 
@@ -241,7 +264,7 @@ def build_edit_zones(
             step_pos[idx, k] = pre_pos[idx, k] + pre_vel[idx, k] * dt * (s_ + 1)
             for i in range(n):
                 _, _, inten = render_frame(
-                    step_pos[i].astype(np.float32), rad, refl, cfg
+                    step_pos[i].astype(np.float32), rad, refl, cfg, case=i, frame=1 + s_
                 )
                 uned_traj[i, s_] = inten
         diff_traj = np.abs(gt_edited_traj - uned_traj) > DIFF_EPS
@@ -260,17 +283,9 @@ def build_edit_zones(
 
 
 def _index_from(pred, gt_edit, gt_uned, mask) -> float:
-    """Mean per-sample Edit Index for one frame, given both references and a ray mask."""
-    out = np.full(len(pred), np.nan)
-    for i in range(len(pred)):
-        m = mask[i]
-        if not m.any():
-            continue
-        d_e = np.sqrt(((pred[i, m] - gt_edit[i, m]) ** 2).mean())
-        d_u = np.sqrt(((pred[i, m] - gt_uned[i, m]) ** 2).mean())
-        if d_u + d_e > 1e-12:
-            out[i] = (d_u - d_e) / (d_u + d_e)
-    return float(np.nanmean(out))
+    """Mean per-sample Edit Index for one frame — THE formula (``edit_index.py``) with
+    the two clean renders as references and the differing rays as support."""
+    return float(np.nanmean(edit_index_per_case(pred, gt_edit, gt_uned, mask)))
 
 
 def edit_index_by_step(
@@ -356,7 +371,7 @@ def fidelity_ratio(card: dict, unsteered_card: dict) -> float:
     evaluated on the **edit step only** (`edit_frame_rmse`, over the whole frame).
     **> 1 means the edit left the model FURTHER from the true post-edit world than doing
     nothing** — degraded, not steered. < 1 is a real improvement. The Othello counterpart
-    is `pim.metrics.othello_moves.move_fidelity_ratio`, same formula and polarity.
+    is `pim.metrics.set_editability.move_fidelity_ratio`, same formula and polarity.
 
     Why step 0 and not the rollout (changed 2026-09-01; it used to be `gt_traj_rmse`):
     an activation edit touches step 0 alone — every later step is recomputed from a
@@ -373,7 +388,7 @@ def fidelity_ratio(card: dict, unsteered_card: dict) -> float:
     world is the output nearer?) so a wrecked output can still score mildly positive —
     discworld PI reads +0.26 at fidelity 1.16. This is **absolute** and catches that.
     """
-    return card["edit_frame_rmse"] / max(unsteered_card["edit_frame_rmse"], 1e-9)
+    return fidelity_ratio_from(card["edit_frame_rmse"], unsteered_card["edit_frame_rmse"])
 
 
 # Column order used by every editability table, so the notebooks agree.

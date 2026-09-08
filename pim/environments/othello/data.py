@@ -66,15 +66,15 @@ VOCAB = len(canonical_vocab())   # 61: the 60 playable squares + the pad token 0
 
 
 def synthetic_games(n: int, seed: int = 0, n_workers: int | None = None,
-                    flip: bool = True) -> list[list[int]]:
+                    flip: bool = True, placement: str = "enclosure") -> list[list[int]]:
     """``n`` games from THEIR generator, uniform over legal moves at every step.
 
-    That uniformity is why ``uniform_over_legal`` in ``pim.metrics.othello_moves`` is the
+    That uniformity is why ``uniform_over_legal`` in ``pim.metrics.set_editability`` is the
     *true* conditional distribution of this data rather than an approximation of it.
     """
     n_workers = n_workers or multiprocessing.cpu_count()
     with multiprocessing.Pool(n_workers) as pool:
-        return list(pool.imap(_one_game, [(i, seed, flip) for i in range(n)], chunksize=64))
+        return list(pool.imap(_one_game, [(i, seed, flip, placement) for i in range(n)], chunksize=64))
 
 
 def _one_game(args) -> list[int]:
@@ -88,8 +88,9 @@ def _one_game(args) -> list[int]:
     """
     i, seed, *rest = args
     flip = rest[0] if rest else True          # (i, seed) keeps the canonical call form
+    placement = rest[1] if len(rest) > 1 else "enclosure"
     random.seed(seed * 1_000_003 + i)
-    return get_ood_game(i, flip=flip)
+    return get_ood_game(i, flip=flip, placement=placement)
 
 
 # ── tokens and board-state labels ─────────────────────────────────────────────
@@ -104,11 +105,13 @@ class ProbeData:
     lengths: np.ndarray  # (N,) int
 
 
-def tokens_and_labels(games: list[list[int]], flip: bool = True) -> ProbeData:
+def tokens_and_labels(games: list[list[int]], flip: bool = True,
+                      placement: str = "enclosure") -> ProbeData:
     """Tokenise and label, following their loop exactly (see module docstring).
 
-    ``flip=False`` replays the no-flip rules (oth-noflip) — the labels must be produced by
-    the same rules that generated the games."""
+    ``flip=False`` replays the no-flip rules (oth-noflip), ``placement="adjacent"`` the
+    adjacency rule (oth-adjacent) — the labels must be produced by the same rules that
+    generated the games (``corpus.rules_of(instance)``)."""
     stoi = canonical_vocab()
     n, T = len(games), T_MODEL
     tokens = np.zeros((n, T), np.int64)
@@ -122,7 +125,7 @@ def tokens_and_labels(games: list[list[int]], flip: bool = True) -> ProbeData:
         lengths[i] = len(moves)
         tokens[i, : len(moves)] = [stoi[s] for s in moves]
         mask[i, : len(moves)] = True
-        board = OthelloBoardState(flip=flip)
+        board = OthelloBoardState(flip=flip, placement=placement)
         for t, mv in enumerate(moves):
             board.umpire(mv)
             st = (board.state + 1).flatten().astype(np.int8)  # white 0 / blank 1 / black 2

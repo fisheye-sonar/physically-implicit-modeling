@@ -30,7 +30,7 @@ synthesised cases built with the same recipe.
 **Canonical changes this needed** (2026-09-02, behaviour-preserving, pinned by
 `tests/test_othello_bench.py`): `bench.benchmark_from_cases` (the body of
 `load_benchmark`, now callable on any case list) with `case_targets` served from the
-Benchmark itself; `othello_moves.move_fidelity_ratio_per_case` (the guard before its mean).
+Benchmark itself; `set_editability.move_fidelity_ratio_per_case` (then `othello_moves`) (the guard before its mean).
 
 **Result (2026-09-02)** — 14,848 cases, moves 1–58 (move 59 has no valid case: with one
 empty square the next move is forced whatever the colours, so no flip changes the legal

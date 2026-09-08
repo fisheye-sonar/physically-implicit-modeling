@@ -42,11 +42,13 @@ eights = [[-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1]]
 
 wanna_use = "othello_synthetic"
 
-def get_ood_game(_, flip=True):
+def get_ood_game(_, flip=True, placement="enclosure"):
     # flip=False: the no-flip variant (oth-noflip, 2026-09-06) — same legality, same passes,
     # same game end; a placed disc never recolours the discs it encloses.
+    # placement="adjacent": oth-adjacent (2026-09-08) — a move is legal iff the square touches
+    # one of the mover's own discs (8-neighbourhood); nothing is ever recoloured.
     tbr = []
-    ab = OthelloBoardState(flip=flip)
+    ab = OthelloBoardState(flip=flip, placement=placement)
     possible_next_steps = ab.get_valid_moves()
     while possible_next_steps:
         next_step = random.choice(possible_next_steps)
@@ -58,9 +60,17 @@ def get_ood_game(_, flip=True):
 
 class OthelloBoardState():
     # 1 is black, -1 is white
-    def __init__(self, board_size = 8, flip=True):
+    def __init__(self, board_size = 8, flip=True, placement="enclosure"):
         self.board_size = board_size * board_size
         self.flip = flip   # False = enclosed discs are NOT recoloured (legality is unchanged)
+        # placement (2026-09-08): "enclosure" is Othello's rule — the move must enclose at
+        # least one opponent disc along a line; "adjacent" (oth-adjacent) — the move must
+        # touch one of the mover's own discs in the 8-neighbourhood, and nothing is
+        # recoloured (its games are generated with flip=False). Passes and game end follow
+        # the same forfeit logic under either rule.
+        if placement not in ("enclosure", "adjacent"):
+            raise ValueError(f"placement must be enclosure|adjacent, got {placement!r}")
+        self.placement = placement
         board = np.zeros((8, 8))
         board[3, 4] = 1
         board[3, 3] = -1
@@ -94,11 +104,9 @@ class OthelloBoardState():
             if prt:
                 self.__print__()
 
-    def umpire(self, move):
-        r, c = move // 8, move % 8
-        assert self.state[r, c] == 0, f"{r}-{c} is already occupied!"
-        occupied = np.sum(self.state != 0)
-        color = self.next_hand_color
+    def _captures(self, r, c, color):
+        """The discs a `color` disc at (r, c) would recolour under the ENCLOSURE rule —
+        the original scan, verbatim. The move is legal under that rule iff non-empty."""
         tbf = []
         for direction in eights:
             buffer = []
@@ -114,31 +122,36 @@ class OthelloBoardState():
                     break
                 else:
                     buffer.append([cur_r, cur_c])
-        if len(tbf) == 0:  # means one hand is forfeited
+        return tbf
+
+    def _legal(self, r, c, color):
+        """(legal, discs to recolour) for `color` placing on the empty square (r, c)."""
+        if self.placement == "adjacent":
+            for direction in eights:
+                rr, cc = r + direction[0], c + direction[1]
+                if 0 <= rr < 8 and 0 <= cc < 8 and self.state[rr, cc] == color:
+                    return True, []
+            return False, []
+        tbf = self._captures(r, c, color)
+        return len(tbf) > 0, tbf
+
+    def umpire(self, move):
+        r, c = move // 8, move % 8
+        assert self.state[r, c] == 0, f"{r}-{c} is already occupied!"
+        color = self.next_hand_color
+        ok, tbf = self._legal(r, c, color)
+        if not ok:  # means one hand is forfeited
             # print(f"One {color} move forfeited")
             color *= -1
             self.next_hand_color *= -1
-            for direction in eights:
-                buffer = []
-                cur_r, cur_c = r, c
-                while 1:
-                    cur_r, cur_c = cur_r + direction[0], cur_c + direction[1]
-                    if cur_r < 0  or cur_r > 7 or cur_c < 0 or cur_c > 7:
-                        break
-                    if self.state[cur_r, cur_c] == 0:
-                        break
-                    elif self.state[cur_r, cur_c] == color:
-                        tbf.extend(buffer)
-                        break
-                    else:
-                        buffer.append([cur_r, cur_c])
-        if len(tbf) == 0:
+            ok, tbf = self._legal(r, c, color)
+        if not ok:
             valids = self.get_valid_moves()
             if len(valids) == 0:
                 assert 0, "Both color cannot put piece, game should have ended!"
             else:
                 assert 0, "Illegal move!"
-                
+
         self.age += 1
         if self.flip:
             for ff in tbf:
@@ -148,7 +161,7 @@ class OthelloBoardState():
         self.age[r, c] = 0
         self.next_hand_color *= -1
         self.history.append(move)
-        
+
     def __print__(self, ):
         print("-"*20)
         print([permit_reverse(_) for _ in self.history])
@@ -180,48 +193,14 @@ class OthelloBoardState():
         r, c = move // 8, move % 8
         if not self.state[r, c] == 0:
             return 0
-        occupied = np.sum(self.state != 0)
         color = self.next_hand_color
-        tbf = []
-        for direction in eights:
-            buffer = []
-            cur_r, cur_c = r, c
-            while 1:
-                cur_r, cur_c = cur_r + direction[0], cur_c + direction[1]
-                if cur_r < 0  or cur_r > 7 or cur_c < 0 or cur_c > 7:
-                    break
-                if self.state[cur_r, cur_c] == 0:
-                    break
-                elif self.state[cur_r, cur_c] == color:
-                    tbf.extend(buffer)
-                    break
-                else:
-                    buffer.append([cur_r, cur_c])
-        if len(tbf) != 0:
+        if self._legal(r, c, color)[0]:
             return 1
-        else:  # means one hand is forfeited
-            # print(f"One {color} move forfeited")
-            color *= -1
-            # self.next_hand_color *= -1
-            for direction in eights:
-                buffer = []
-                cur_r, cur_c = r, c
-                while 1:
-                    cur_r, cur_c = cur_r + direction[0], cur_c + direction[1]
-                    if cur_r < 0  or cur_r > 7 or cur_c < 0 or cur_c > 7:
-                        break
-                    if self.state[cur_r, cur_c] == 0:
-                        break
-                    elif self.state[cur_r, cur_c] == color:
-                        tbf.extend(buffer)
-                        break
-                    else:
-                        buffer.append([cur_r, cur_c])
-            if len(tbf) == 0:
-                return 0
-            else:
-                return 2
-        
+        # means one hand is forfeited
+        if self._legal(r, c, -color)[0]:
+            return 2
+        return 0
+
     def get_valid_moves(self, ):
         regular_moves = []
         forfeit_moves = []

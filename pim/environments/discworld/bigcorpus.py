@@ -73,10 +73,16 @@ _RAYS_128 = ["--obs-res", "128"]
 # dw-8ray (2026-09-03): 10 rays CAST, the two wall-aligned ones dropped -> 8 kept; radius 1.0
 _RAYS_8 = ["--obs-res", "10", "--drop-edge-rays", "--radius", "1.0",
            "--max-edit-attempts", "2000"]   # radius-1 teleports need more tries (shards make 100 edits)
+# dw-blink (2026-09-07): dw-noiseless + object blackouts with edge-ray markers (blink.py)
+_BLINK = ["--blink-prob", "0.05", "--blink-mean", "7", "--blink-max", "12", "--blink-warmup", "3"]
+_BLINK_RANGES = [(110_000_000_000, 130_000_000_000, "dw-blink train"),
+                 (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                 (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                 (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")]
 _NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
                (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
                (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
-               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")]
+               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES
 
 # ── the instance registry ─────────────────────────────────────────────────────
 # One entry per environment instance that owns a 20M streaming corpus. `forbidden`
@@ -124,7 +130,28 @@ INSTANCES = {
                       (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
                       (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
                       (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
-                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")],
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES,
+    },
+    "dw-blink": {  # dw-noiseless + blackouts (prob 0.05/obj/frame, draw mean 7 -> realised ~5.3 after cap 12 + sequence end, warm-up 3)
+        "base_seed": 110_000_000_000,
+        "obs_dim": 128,
+        "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"]
+                     + _BLINK,
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (60_000_000_000, 80_000_000_000, "dw-8ray train"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
+                      (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")],
     },
 }
 

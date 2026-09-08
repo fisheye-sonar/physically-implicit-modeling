@@ -39,7 +39,7 @@ class Benchmark:
         return len(self.pos_int)
 
 
-def benchmark_from_cases(cases: list[dict], flip: bool = True) -> Benchmark:
+def benchmark_from_cases(cases: list[dict], flip: bool = True, placement: str = "enclosure") -> Benchmark:
     """A Benchmark from ``{history, pos_int, ori_color}`` cases — the pkl's own format.
 
     ``load_benchmark`` is this applied to the shipped 1001; a synthesised case set
@@ -57,7 +57,7 @@ def benchmark_from_cases(cases: list[dict], flip: bool = True) -> Benchmark:
     legal_pre, legal_post = [], []
     cur = np.zeros(len(cases), np.int64)
     for i, (c, sq, new) in enumerate(zip(cases, pos_int, new_class)):
-        pre = OthelloBoardState(flip=flip)
+        pre = OthelloBoardState(flip=flip, placement=placement)
         pre.update(c["history"], prt=False)
         legal_pre.append(sorted(pre.get_valid_moves()))
         # The benchmark flips absolute colour. The player to move does not change, so
@@ -65,7 +65,7 @@ def benchmark_from_cases(cases: list[dict], flip: bool = True) -> Benchmark:
         # and the flip is exactly MINE<->THEIRS.
         nxt = 2 if pre.next_hand_color > 0 else 0
         cur[i] = MINE if c["ori_color"] == nxt else THEIRS
-        post = OthelloBoardState(flip=flip)
+        post = OthelloBoardState(flip=flip, placement=placement)
         post.update(c["history"], prt=False)
         post.state[sq // 8, sq % 8] = new - 1
         legal_post.append(sorted(post.get_valid_moves()))
@@ -95,10 +95,10 @@ def load_benchmark(instance: str = "oth-uniform") -> Benchmark:
     """The instance's 1001 intervention cases, grouped into equal-length buckets: Li et
     al.'s shipped set for oth-uniform, the synthesised set for any other instance, both
     replayed with the instance's rules."""
-    from pim.environments.othello.corpus import flip_of
+    from pim.environments.othello.corpus import rules_of
 
     with open(cases_path(instance), "rb") as f:
-        return benchmark_from_cases(pickle.load(f), flip=flip_of(instance))
+        return benchmark_from_cases(pickle.load(f), **rules_of(instance))
 
 
 def shipped_length_distribution() -> dict[int, int]:
@@ -115,7 +115,8 @@ def shipped_length_distribution() -> dict[int, int]:
 
 
 def synthesise_cases(histories: list[list[int]], n: int, length_counts: dict[int, int],
-                     seed: int = 0, flip: bool = True, log=print) -> tuple[list[dict], dict]:
+                     seed: int = 0, flip: bool = True, placement: str = "enclosure",
+                     log=print) -> tuple[list[dict], dict]:
     """Li-style intervention cases from held-out games, matching a prefix-length distribution.
 
     The recipe measured on the shipped 1001 (2026-09-02) and used by
@@ -137,7 +138,7 @@ def synthesise_cases(histories: list[list[int]], n: int, length_counts: dict[int
                 break
             tried += 1
             h = list(histories[g][:L])
-            board = OthelloBoardState(flip=flip)
+            board = OthelloBoardState(flip=flip, placement=placement)
             board.update(h, prt=False)
             pre = sorted(board.get_valid_moves())
             if not pre:
@@ -146,7 +147,7 @@ def synthesise_cases(histories: list[list[int]], n: int, length_counts: dict[int
             for sq in rng.permutation(occ):
                 sq = int(sq)
                 ori = 0.0 if board.state[sq // 8, sq % 8] < 0 else 2.0
-                post = OthelloBoardState(flip=flip)
+                post = OthelloBoardState(flip=flip, placement=placement)
                 post.update(h, prt=False)
                 post.state[sq // 8, sq % 8] = int(2 - ori) - 1
                 legal_post = sorted(post.get_valid_moves())
@@ -164,7 +165,8 @@ def synthesise_cases(histories: list[list[int]], n: int, length_counts: dict[int
         if log:
             log(f"  prefix {L:2d}: {got}/{want} cases from {tried} games "
                 f"(rejected same-legal {rej_same}, empty {rej_empty})", flush=True)
-    manifest = {"n_cases": len(cases), "seed": seed, "flip": flip, "length_quota": quota,
+    manifest = {"n_cases": len(cases), "seed": seed, "flip": flip, "placement": placement,
+                "length_quota": quota,
                 "recipe": "prefix of a held-out game; one uniformly random occupied non-centre "
                           "square flipped to the opposite colour; rejected if the legal set is "
                           "unchanged or empty; prefix lengths follow the shipped 1001",

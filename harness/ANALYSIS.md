@@ -198,7 +198,7 @@ the words strictly.
 
 ## Local instantiations (this project — not portable)
 
-- Shared metric implementations → `pim/metrics/` (`editability.py`, `othello_moves.py`,
+- Shared metric implementations → `pim/metrics/` (`zone_editability.py`, `set_editability.py`,
   `decodability.py`) — arrays in, numbers out; never re-derive at a call site
 - Standard held-out read-out estimators → `pim.probes` (`fit_linear`, `fit_mlp` — MLP-128,
   held out by sequence, `check_probe_sanity` tripwire)

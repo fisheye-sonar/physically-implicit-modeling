@@ -22,7 +22,7 @@ import torch
 
 from pim.environments.discworld.renderer import render_scene
 from pim.environments.discworld.sim import Scene
-from pim.metrics.editability import sim_config_from
+from pim.metrics.zone_editability import sim_config_from
 from pim.models.protocol import free_run
 
 

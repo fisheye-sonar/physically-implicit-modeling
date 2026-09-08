@@ -1,17 +1,25 @@
-"""Canonical editability metrics for Othello: Li error, legal mass, the legal-set Edit Index.
+"""Editability of a predicted DISTRIBUTION against SETS of acceptable outcomes.
 
-The Othello counterpart of ``pim/metrics/editability.py`` (moved here 2026-08-31 from
-``othello_transfer/othello_data.py``). Every function takes plain arrays/lists — the
-1001-case benchmark object that supplies ``legal_pre``/``legal_post`` lives in
-``pim.environments.othello.bench``, and the vocab-specific logits→board mapping in
-``pim.environments.othello.data``.
+The set-valued construction (``othello_moves.py`` until 2026-09-07 — renamed because it
+is not Othello-specific): the model emits a distribution over a vocabulary, each world is
+a SET of acceptable tokens, and the reference for a world is the uniform distribution
+over its set. Two clients:
+
+* Othello — the vocabulary is the 64 squares, the sets are the legal moves before and
+  after the board flip (uniform-over-legal is EXACT there: the generator is uniform);
+* a discworld frames-as-tokens model — the vocabulary is the instance's frame tokens and
+  each world's set is the ONE frame it renders at the edit frame (``token_bench``).
+
+Every function takes plain arrays/lists; the benchmark objects that supply the sets live
+in the environments. The Edit Index and fidelity FORMULAS live once in ``edit_index.py``;
+this module supplies the ingredients — the uniform references and the support.
 
 Two deliberate naming choices:
 
-* ``edit_index_legal``, not ``edit_index`` — the discworld Edit Index (ray-zone RMSE) and
-  this one (distance to uniform-over-legal distributions) share the formula
-  ``(d_uned − d_edit)/(d_uned + d_edit)`` and the axis, but not the ingredients. The old
-  tree gave both the same name and left ``sys.path`` order to pick one; never again.
+* ``edit_index_legal``, not ``edit_index`` — the frame-valued Edit Index (ray-zone RMSE,
+  ``zone_editability``) and this one share the formula and the axis, but not the
+  ingredients. The old tree gave both the same name and left ``sys.path`` order to pick
+  one; never again.
 * ``li_error`` keeps Li et al.'s name because it is their §4.2 metric, ported exactly:
   their null-intervention baseline is 2.68 and their best intervention 0.12, and those
   anchors only mean something if the metric is theirs.
@@ -20,6 +28,8 @@ Two deliberate naming choices:
 from __future__ import annotations
 
 import numpy as np
+
+from pim.metrics.edit_index import edit_index_per_case, fidelity_ratio_from, masked_rmse_per_case
 
 N_TILES = 64  # 8x8 board; probability vectors over squares are laid out row-major
 
@@ -81,19 +91,14 @@ def edit_index_legal(
     RMSE per square from its reference against a 0.0193 separation — a 12× margin, so
     the floors are sharp.)
     """
-    out = np.full(len(probs), np.nan)
+    n, V = probs.shape
+    ref_uned = np.stack([uniform_over_legal(L, V) for L in legal_pre])     # the two worlds
+    ref_edit = np.stack([uniform_over_legal(L, V) for L in legal_post])
+    supp = np.zeros((n, V), bool)                                          # where they differ
     for i, (L0, L1) in enumerate(zip(legal_pre, legal_post)):
         s0, s1 = set(L0), set(L1)
-        idx = np.array(sorted(s0 | s1 if support == "union" else s0 ^ s1), int)
-        if idx.size == 0:
-            continue
-        g0, g1 = uniform_over_legal(L0, probs.shape[1]), uniform_over_legal(L1, probs.shape[1])
-        d_un = float(np.sqrt(((probs[i, idx] - g0[idx]) ** 2).mean()))
-        d_ed = float(np.sqrt(((probs[i, idx] - g1[idx]) ** 2).mean()))
-        if d_un + d_ed == 0:
-            continue
-        out[i] = (d_un - d_ed) / (d_un + d_ed)
-    return out
+        supp[i, list(s0 | s1 if support == "union" else s0 ^ s1)] = True
+    return edit_index_per_case(probs, ref_edit, ref_uned, supp)            # THE formula
 
 
 def move_scorecard(
@@ -145,11 +150,9 @@ def move_rmse(probs: np.ndarray, legal: list[list[int]]) -> float:
 
 def move_rmse_per_case(probs: np.ndarray, legal: list[list[int]]) -> np.ndarray:
     """(n_cases,) the distances ``move_rmse`` averages; NaN where the legal set is empty."""
-    out = np.full(len(legal), np.nan)
-    for i, L in enumerate(legal):
-        if L:
-            out[i] = float(np.sqrt(((probs[i] - uniform_over_legal(L, probs.shape[1])) ** 2).mean()))
-    return out
+    ref = np.stack([uniform_over_legal(L, probs.shape[1]) for L in legal])
+    mask = np.array([[bool(L)] * probs.shape[1] for L in legal])   # all V squares, or none
+    return masked_rmse_per_case(probs, ref, mask)
 
 
 def move_fidelity_ratio_per_case(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
@@ -177,5 +180,5 @@ def move_fidelity_ratio(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
     on a handful of misordered squares, where RMSE gives the honest 0.207 vs 0.243).
     `li_error` keeps its own role as the anchor to Li et al.'s published numbers.
     """
-    d0 = move_rmse(probs_unsteered, legal_post)
-    return move_rmse(probs_edited, legal_post) / max(d0, 1e-12)
+    return fidelity_ratio_from(move_rmse(probs_edited, legal_post),
+                               move_rmse(probs_unsteered, legal_post))

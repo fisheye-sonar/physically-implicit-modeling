@@ -635,7 +635,7 @@ records "frames_only_outside_train": 0).
   index. And the write DID land in probe space at α=1 (read-out error 0.409 → 0.000) with zero output
   change — the discworld signature, on the categorical interface too.
 - **`uniform_over_legal` was 64-wide by assumption.** Every caller in
-  `pim/metrics/othello_moves.py` now passes `probs.shape[1]`; the default stays 64.
+  `pim/metrics/set_editability.py` now passes `probs.shape[1]`; the default stays 64.
 - **Probes on token inputs: pass the encoder, never pre-tokenise the corpus by hand.**
   `bench.fit_probes(..., encoder=enc, encoder_tag=tag)` (from
   `token_bench.token_encoder(vocab)`) tokenises the SAME float frames after the same
@@ -720,3 +720,86 @@ recolours the discs it encloses. Two things follow.
 - **Generation is ~2.8× slower than flip Othello**: 1.7k games/s on 32 cores (flip: 4.7k),
   so the 20M corpus takes ~3.2 h, not 70 min — denser mixed boards make every legality
   scan walk longer lines, and no game ends early. Budget for it.
+
+## 2026-09-07 — Probe Skill 1.000 everywhere, including at random init, is a statement about the INPUT
+
+On `oth-noflip` the linear probe reads mine/theirs at 1.000 from residual point 1 onward — for
+the trained model, for the random-init model, and for a right-aligned linear read of the one-hot
+move history alike. It says the board is a syntactic function of the tokens (colour = parity of
+the move offset, no passes), not that the model learned or uses a board representation; the
+same model is not editable at all. Read every decodability cell against its floors before
+calling it a representation: when trained, random-init and observation coincide, decodability
+carries no information about the model. (Table 3 has both floors and both history layouts.)
+
+## 2026-09-07 — Two corpus facts: oth-uniform has 3,386 duplicate games; the first logged val is at step 5k
+
+- `datasets/othello/oth-uniform/corpus/corpus.json` says `duplicates: 0`, but an exact-row
+  check over all 20M games finds 19,996,614 distinct → 3,386 duplicate rows (0.017%), all
+  short early-ending games (max multiplicity 60). Harmless for training, but the manifest's
+  field was computed on a prefix. `oth-noflip` has 0 duplicates in 20M (every game is 60
+  moves; 9.4M distinct 10-move prefixes, all 20M distinct by move 20).
+- `metrics.jsonl` starts at step 5,000 (`val_every`), so a training curve read from it can
+  hide the whole learning phase: on `oth-noflip` 99.4% of the random-init CE excess is gone
+  by step 5k (4.20 → 1.695 vs a 1.680 floor). Read early learning from the log-spaced
+  checkpoints (`ckpt/step_*.pt`, from step 1k; `load_checkpoint` now accepts their missing
+  val loss) or the `runs/training_curve/` dirs.
+
+## 2026-09-07 — oth-noflip is a colour-free game: every game ends in the same checkerboard
+
+From the standard 2 × 2 checkerboard opening, the enclosure rule without flips keeps colour ==
+parity of (row + column) forever (rows/columns alternate parity, so a run of two opponent discs
+is impossible; diagonals share parity, so no diagonal sandwich exists). Verified: 60,000/60,000
+positions, 0 diagonal sandwiches, all 3,000 test games end in the identical full board. The
+legal set equals "empty square in the mover's parity class with two occupied squares in some
+row/column direction" — colour never enters the dynamics. So (a) mine/theirs decodability is
+occupancy × a fixed pattern (1.000 for anything), (b) a colour edit steers a variable the output
+provably does not depend on, and non-editability is a property of the WORLD, not evidence about
+the model's representation, (c) the pilot's "mine/theirs == parity of move offset, 100%" was
+true and hid this — it also equals parity of SQUARE. Before generating 20M games for a rules
+variant, CHECK that the state variable to be edited is causally relevant (legal set ≠ a
+colour-free rule) on a pilot. A no-flip world where colour matters needs a non-checkerboard
+opening (`findings/flip-ablation.md` §4).
+
+## 2026-09-07 — dw-blink: what a blackout does and does not change in the pipeline
+
+An object in a blackout is REMOVED FROM THE CAST (it neither reflects nor occludes — the ray
+sees whatever is behind it), physics untouched; the schedule is `blink_schedule(cfg, n)` from
+`cfg.seed + 7`, so any re-render of the same seed (the edits split, the zone construction)
+hides the same frames. Consequences worth knowing before reading numbers:
+(a) `is_visible` still means frustum visibility (all True here); the blackout schedule is the
+    separate `blink_visible` field, stored in every split and loaded on `Dataset`/`EditsData`.
+(b) Markers live in `obs_id` as −2−j and `reconstruct_clean_obs` paints them back as 0.5, so
+    `clean_obs` contains the markers — they are part of the observation, not noise.
+(c) `build_edit_zones` must receive `blink_visible` (frames ef−1..ef+K); `bench_arrays` does
+    this itself from the edits split. Without it the reference worlds would show the hidden
+    object and every zone would be wrong. With it, a case whose edited object is hidden at
+    the edit frame has NO differing rays → Edit Index NaN at step 0 (nanmean drops it), and is
+    scored at the step it reappears (`experiments/blink_ablation/scripts/subset_editability.py`,
+    `ei_at_reappearance`). "Mean of empty slice" warnings from `edit_index_by_step` on such a
+    subset are expected, not a bug.
+(d) The DRAW mean (7) is not the REALISED mean (~5.3): the cap (12) and the sequence end
+    truncate the geometric. Quote the realised statistics from `pilot/stats.json`.
+(e) Markers are the same "toggle next frame" signal at both ends of a blackout; with ≥ 1
+    visible frame enforced between blackouts of one object they are unambiguous.
+
+## 2026-09-08 — A categorical (grid) target puts discworld decodability on a HARSHER axis, not a lower one
+
+Re-expressing the discworld state as 128 cells × {empty, obj0, obj1} and fitting 3-way
+probes (experiments/grid_target_control) gives Probe Skill 0.71 (MLP) / 0.43 (LIN) where the
+regression probes report 0.996 / 0.96. That is not a worse read of the state: the regression
+probes' own predictions, mapped onto the same cells, score 0.31–0.45 and put a disc in its
+correct cell 66–72% of the time, against 84–86% for the direct grid probes. A depth bin is two
+rays of apparent width, finer than the model's positional precision, so bin edges dominate the
+error. Skill = 1 − err/err(majority) with majority = "empty" (98.4%) is a different formula
+from R² and the two must never share a column without saying so. Related: on a categorical
+target ND and GS have well-scaled writes (fidelity < 1) where the regression editors were
+destructive — the first sweep pinned BOTH at their α edge (ND 2.0, GS 0.5); extend before
+quoting (memory rule: an edge-pinned α means the units are wrong).
+
+## 2026-09-08 — Never edit a driver script while bash is executing it
+
+bash reads a script by byte offset as it runs; inserting a line above the current command
+moves every later offset and the next command resumes mid-line. The grid-control driver was
+patched in place during stage A (2026-09-08 10:40) and had to be restored byte-for-byte
+(verified against the process's fd offset, 1422) before stage B. Write changes to a
+`.new` file and swap it in after the chain completes.

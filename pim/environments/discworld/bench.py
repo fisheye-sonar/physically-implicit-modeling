@@ -3,7 +3,7 @@
 The counterpart of ``pim.environments.othello.bench`` (split out of ``arms.py`` 2026-09-07
 so the two environments read the same way): this module is the EDIT SET — the same 192
 mid-sequence teleports from the instance's ``eval/edits.h5``, warmed into a model state,
-with probe targets in the requested basis and ``pim.metrics.editability``'s ray zones.
+with probe targets in the requested basis and ``pim.metrics.zone_editability``'s ray zones.
 Probes, rollouts and editor arms live in ``arms.py``. That constancy is what makes every
 Edit Index in the project comparable, across models, bases, and probe corpora.
 """
@@ -18,7 +18,7 @@ import h5py
 import numpy as np
 import torch
 
-from pim.metrics.editability import build_edit_zones
+from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
@@ -61,13 +61,19 @@ def _to_basis(pos, vel, sim, basis_name):
 
 
 def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
-                 data_dir: Path | None = None) -> dict:
+                 data_dir: Path | None = None, select: np.ndarray | None = None) -> dict:
     """The edit set's arrays and zones, model-free (factored out of ``load_bench``,
     2026-09-05, so a token model — ``token_bench`` — scores the SAME cases, targets
     and zones without a frame-space state).
 
+    ``select`` (case indices into the edits split) replaces "the first ``n`` cases" —
+    for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
+    canonical bench is always ``select=None``.
+
     Uses ``pim.environments.discworld.loading``: ``clean_obs`` is RECONSTRUCTED from
     stored ids/reflectivities, not stored — reading the h5 directly gets a KeyError.
+    On a blink instance the split's ``blink_visible`` schedule is handed to the zone
+    construction so the reference worlds carry the same blackouts and markers.
     """
     from pim.environments.discworld.loading import load_edits
 
@@ -75,18 +81,23 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     # the edits split alone — its own config_json carries the sim config, so the 188 MB
     # test split is never decompressed just to read a dict (2026-09-07)
     b = load_edits(dd / "edits.h5", n_obj_keep=N_OBJ)
-    obs = b.obs[:n].astype(np.float32)
-    pos = b.positions[:n, :, :N_OBJ, :].astype(np.float32)
-    eobj = b.edit_object[:n].astype(int)
-    clean = b.clean_obs[:n].astype(np.float32)
+    sl = slice(None, n) if select is None else np.asarray(select, dtype=int)
+    obs = b.obs[sl].astype(np.float32)
+    pos = b.positions[sl, :, :N_OBJ, :].astype(np.float32)
+    eobj = b.edit_object[sl].astype(int)
+    clean = b.clean_obs[sl].astype(np.float32)
+    n = obs.shape[0]
     with h5py.File(b.h5_path, "r") as f:
-        vel = f["velocities"][:n, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:, :, :N_OBJ, :].astype(np.float32)[sl]
         sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
+    blink = None if b.blink_visible is None else b.blink_visible[sl]
     gt_roll = clean[:, EF: EF + K_ROLL, :]
     zones = build_edit_zones(pre_pos=pos[:, EF - 1], tgt_pos=pos[:, EF],
                              pre_vel=vel[:, EF - 1], edit_object=eobj, sim=sim,
                              n_obj=N_OBJ, traj_pos=pos[:, EF: EF + K_ROLL],
-                             gt_edited_traj=gt_roll)
+                             gt_edited_traj=gt_roll,
+                             blink_visible=None if blink is None
+                             else blink[:, EF - 1: EF + K_ROLL + 1])
     # ⛔ The ZONES stay in world space — they are ray masks over the observation and do
     # not depend on how the state is coordinatised. Only the PROBE TARGET changes basis,
     # so the Edit Index remains directly comparable across bases.
@@ -107,13 +118,15 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     ef = int(getattr(b, "edit_frame", EF))
     assert ef == EF, f"edits split has edit_frame {ef}, every thread number assumes {EF}"
     return dict(obs=obs, pos=pos, vel=vel, edit_object=eobj, clean=clean, sim=sim,
-                gt_roll=gt_roll, zones=zones, y=y, change_mask=cm, out_dims=out_dims, n=n)
+                gt_roll=gt_roll, zones=zones, y=y, change_mask=cm, out_dims=out_dims, n=n,
+                blink_visible=blink)
 
 
 def load_bench(model, n: int = 192, target: str = "pos",
-               basis_name: str = "cartesian", data_dir: Path | None = None) -> Bench:
+               basis_name: str = "cartesian", data_dir: Path | None = None,
+               select: np.ndarray | None = None) -> Bench:
     """Warm ``model`` on the edits split and build the ground-truth zones (``bench_arrays``)."""
-    a = bench_arrays(n, target, basis_name, data_dir)
+    a = bench_arrays(n, target, basis_name, data_dir, select=select)
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
     return Bench(a["obs"], a["gt_roll"], a["zones"], torch.from_numpy(a["y"]).float().to(DEV),
                  torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], state, a["n"],

@@ -46,9 +46,13 @@ BLOCK, MAXLEN = od.T_MODEL, od.MAXLEN      # 59 / 60, defined once in data.py
 # The environment instances. `datasets/` is resolved against the repo root (= CWD by repo
 # convention, same as every loader here). `flip` is the ONE rule that differs: oth-noflip
 # (2026-09-06) never recolours enclosed discs — same legality, passes, game end, index law.
+# `placement` (2026-09-08) is the second rule: "enclosure" = Othello's; "adjacent" =
+# oth-adjacent, a move must touch one of the mover's own discs (8-neighbourhood), nothing is
+# recoloured — colour is causally relevant WITHOUT the enclosure geometry.
 INSTANCES = {
-    "oth-uniform": {"dir": Path("datasets/othello/oth-uniform/corpus"), "flip": True},
-    "oth-noflip": {"dir": Path("datasets/othello/oth-noflip/corpus"), "flip": False},
+    "oth-uniform": {"dir": Path("datasets/othello/oth-uniform/corpus"), "flip": True, "placement": "enclosure"},
+    "oth-noflip": {"dir": Path("datasets/othello/oth-noflip/corpus"), "flip": False, "placement": "enclosure"},
+    "oth-adjacent": {"dir": Path("datasets/othello/oth-adjacent/corpus"), "flip": False, "placement": "adjacent"},
 }
 CACHE = INSTANCES["oth-uniform"]["dir"]          # the canonical instance, unchanged callers
 
@@ -58,8 +62,19 @@ def corpus_dir(instance: str = "oth-uniform") -> Path:
 
 
 def flip_of(instance: str = "oth-uniform") -> bool:
-    """The rule set of an instance — every replay (labels, legal sets, bench) must use it."""
+    """The recolouring rule of an instance — every replay (labels, legal sets, bench) must use it."""
     return INSTANCES[instance]["flip"]
+
+
+def placement_of(instance: str = "oth-uniform") -> str:
+    """The placement rule of an instance: "enclosure" | "adjacent"."""
+    return INSTANCES[instance].get("placement", "enclosure")
+
+
+def rules_of(instance: str = "oth-uniform") -> dict:
+    """Both rules as keyword arguments — ``OthelloBoardState(**rules_of(inst))`` and every
+    replaying helper (``tokens_and_labels``, ``legal_sets``, ``synthesise_cases``, …)."""
+    return {"flip": flip_of(instance), "placement": placement_of(instance)}
 
 TRAIN_LO = 0
 TEST_LO, TEST_N = 90_000_000, 10_000
@@ -74,7 +89,7 @@ LADDER = {"M": 90_000, "L1": 1_000_000, "L2": 5_000_000, "D": 20_000_000}
 
 
 def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = None,
-              log=print, flip: bool = True) -> tuple[np.ndarray, np.ndarray]:
+              log=print, flip: bool = True, placement: str = "enclosure") -> tuple[np.ndarray, np.ndarray]:
     """Tokenise as we go, in chunks, straight into a preallocated array.
 
     ⛔ Do not materialise the games first. A Python ``list[list[int]]`` of 20M games is
@@ -89,7 +104,7 @@ def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = Non
     with multiprocessing.Pool(n_workers) as pool:
         for c0 in range(0, n, chunk):
             c1 = min(c0 + chunk, n)
-            args = [(i, SEED, flip) for i in range(lo + c0, lo + c1)]
+            args = [(i, SEED, flip, placement) for i in range(lo + c0, lo + c1)]
             for j, g in enumerate(pool.imap(od._one_game, args, chunksize=256)):
                 m = g[:MAXLEN]
                 ln[c0 + j] = len(m)
@@ -100,8 +115,9 @@ def _generate(lo: int, n: int, chunk: int = 500_000, n_workers: int | None = Non
     return tok, ln
 
 
-def _regen_row(index: int, seed: int, flip: bool, stoi: dict) -> tuple[np.ndarray, int]:
-    g = od._one_game((index, seed, flip))[:MAXLEN]
+def _regen_row(index: int, seed: int, flip: bool, stoi: dict,
+               placement: str = "enclosure") -> tuple[np.ndarray, int]:
+    g = od._one_game((index, seed, flip, placement))[:MAXLEN]
     row = np.zeros(MAXLEN, np.int8)
     row[: len(g)] = [stoi[s] for s in g]
     return row, len(g)
@@ -124,11 +140,12 @@ def verify_splits(paths: dict[str, Path], n_check: int = 8, log=print) -> dict[s
         z = np.load(p)
         tok, ln, lo, seed = z["tokens"], z["lengths"], int(z["lo"]), int(z["seed"])
         flip = bool(z["flip"]) if "flip" in z.files else True   # pre-2026-09-06 files
+        placement = str(z["placement"]) if "placement" in z.files else "enclosure"   # pre-2026-09-08
         n = len(tok)
         ranges[name] = (lo, lo + n)
         idx = sorted({0, n - 1, *rng.integers(0, n, n_check).tolist()})
         for j in idx:
-            row, length = _regen_row(lo + j, seed, flip, stoi)
+            row, length = _regen_row(lo + j, seed, flip, stoi, placement)
             assert np.array_equal(row, tok[j]) and int(ln[j]) == length, (
                 f"{name}: stored row {j} is not the game at index {lo + j} (seed {seed}, "
                 f"flip {flip}) — the recorded lo/seed/flip do not describe {p.name}")
@@ -152,7 +169,7 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
     Measured throughput is **~4.7k games/s on 32 cores**, so 20M takes ~70 min.
     Generation is CPU-only, so it can overlap GPU training rather than serialise it.
     """
-    cache, flip = corpus_dir(instance), flip_of(instance)
+    cache, flip, placement = corpus_dir(instance), flip_of(instance), placement_of(instance)
     cache.mkdir(parents=True, exist_ok=True)
     out = {}
     plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N),
@@ -176,8 +193,9 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
             log(f"  {name:<6} {n:>10,} games — prefix of {bigger[0].name}")
             continue
         t0 = time.time()
-        tok, ln = _generate(lo, n, log=log, flip=flip)
-        np.savez(p, tokens=tok, lengths=ln, lo=lo, seed=SEED, flip=flip, instance=instance)
+        tok, ln = _generate(lo, n, log=log, flip=flip, placement=placement)
+        np.savez(p, tokens=tok, lengths=ln, lo=lo, seed=SEED, flip=flip, placement=placement,
+                 instance=instance)
         log(f"  {name:<6} {n:>10,} games in {time.time() - t0:6.1f}s  "
             f"({n / (time.time() - t0):,.0f}/s, {p.stat().st_size / 1e6:.0f} MB)  "
             f"mean length {ln.mean():.1f}")
@@ -198,7 +216,7 @@ def rung(train_path: Path, name: str) -> tuple[np.ndarray, np.ndarray]:
     return tok[:n], ln[:n]
 
 
-def probe_data(path: Path, n: int | None = None, flip: bool = True):
+def probe_data(path: Path, n: int | None = None, flip: bool = True, placement: str = "enclosure"):
     """``tokens_and_labels`` for a corpus split, CACHED beside it as ``<stem>_labels.npz``.
 
     Labelling replays every game through the board simulator (~10 min for 170k games), so
@@ -217,7 +235,7 @@ def probe_data(path: Path, n: int | None = None, flip: bool = True):
         return ProbeData(**{k: z[k] for k in z.files})
     itos = {v: k for k, v in canonical_vocab().items()}
     data = tokens_and_labels([[itos[int(t)] for t in row[:L]] for row, L in zip(tok[:n], ln[:n])],
-                             flip=flip)
+                             flip=flip, placement=placement)
     np.savez(cache, **{f.name: getattr(data, f.name) for f in dataclasses.fields(data)})
     return data
 

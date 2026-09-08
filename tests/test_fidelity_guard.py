@@ -15,8 +15,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pim.metrics.editability import fidelity_ratio
-from pim.metrics.othello_moves import move_fidelity_ratio, move_rmse, uniform_over_legal
+from pim.metrics.zone_editability import fidelity_ratio
+from pim.metrics.set_editability import move_fidelity_ratio, move_rmse, uniform_over_legal
 
 
 # ── discworld ────────────────────────────────────────────────────────────────

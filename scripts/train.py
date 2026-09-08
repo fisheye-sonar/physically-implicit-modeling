@@ -54,8 +54,8 @@ def _parse():
     p.add_argument("--limit", type=int, default=None,
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
-                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray; "
-                        "othello: oth-uniform | oth-noflip). Default: the env's canonical instance.")
+                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink; "
+                        "othello: oth-uniform | oth-noflip | oth-adjacent). Default: the env's canonical instance.")
     # the canonical recipe; override only deliberately
     p.add_argument("--repr", choices=("frames", "tokens"), default="frames",
                    help="discworld only. frames = the float observation into the regression head "
@@ -156,7 +156,7 @@ def main() -> None:
             mc = {**mc, "output_kind": "raw"}     # the head's outputs ARE the estimates
         source = othello_source(tok, ln, batch_size=a.batch_size, seed=a.seed,
                                 device=DEV, limit=a.limit, objective=a.objective,
-                                meta={"instance": inst, "flip": oc.flip_of(inst),
+                                meta={"instance": inst, **oc.rules_of(inst),
                                       "corpus": str(paths["train"])})
 
     model = build_model(arch, mc)

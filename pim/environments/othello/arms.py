@@ -3,7 +3,7 @@
 Ported 2026-08-31 from ``ours_on_othello/evaluate.py`` (gates), ``othello_transfer/
 transfer_pipeline.py`` (probe grid, GS arm) and ``othello_transfer/linear_intervention.py``
 (ND + PI arms), rebuilt on the canonical parts: probes from ``pim.probes``, editors from
-``pim.editors``, scoring from ``pim.metrics.othello_moves``. One deliberate upgrade over
+``pim.editors``, scoring from ``pim.metrics.set_editability``. One deliberate upgrade over
 the originals: the probe-grid cache now keys on the MODEL FINGERPRINT (``pim.probes.cache``),
 closing the same 2026-08-21 hole here that ``othello_arch`` had already closed on its side.
 
@@ -26,7 +26,7 @@ from pim.environments.othello.bench import Benchmark
 from pim.environments.othello.data import (
     N_CLASSES, N_TILES, T_MODEL, board_probs, canonical_vocab, flatten_rows, move_probs)
 from pim.environments.othello.vendor.othello import OthelloBoardState
-from pim.metrics.othello_moves import move_scorecard
+from pim.metrics.set_editability import move_scorecard
 from pim.probes.base import CANONICAL_HIDDEN, FIT_BATCH, FIT_EPOCHS, FIT_LR, fit_probe
 from pim.probes.cache import ProbeCache
 
@@ -46,12 +46,13 @@ def _require_cache_dir(cache_dir) -> Path:
 # ── held-out generalisation gates ────────────────────────────────────────────
 
 
-def legal_sets(tokens: np.ndarray, lengths: np.ndarray, flip: bool = True) -> list[list[list[int]]]:
+def legal_sets(tokens: np.ndarray, lengths: np.ndarray, flip: bool = True,
+               placement: str = "enclosure") -> list[list[list[int]]]:
     """Per game, per position, the legal moves as BOARD SQUARES, replayed with their rules."""
     itos = {v: k for k, v in canonical_vocab().items()}
     out = []
     for row, L in zip(tokens, lengths):
-        b = OthelloBoardState(flip=flip)
+        b = OthelloBoardState(flip=flip, placement=placement)
         per = []
         for t in range(int(L)):
             b.umpire(itos[int(row[t])])
@@ -62,7 +63,7 @@ def legal_sets(tokens: np.ndarray, lengths: np.ndarray, flip: bool = True) -> li
 
 @torch.no_grad()
 def gates(model, tokens: np.ndarray, lengths: np.ndarray, batch: int = 512,
-          log=print, flip: bool = True) -> dict:
+          log=print, flip: bool = True, placement: str = "enclosure") -> dict:
     """Every held-out number, plus the Bayes ceilings the data itself imposes.
 
     The generator draws uniformly from the legal set, so ``bayes_ce = E[log|legal|]``
@@ -70,7 +71,7 @@ def gates(model, tokens: np.ndarray, lengths: np.ndarray, batch: int = 512,
     the CE EXCESS over bayes_ce, never raw accuracy.
     """
     stoi = canonical_vocab()
-    legal = legal_sets(tokens, lengths, flip)
+    legal = legal_sets(tokens, lengths, flip, placement)
     # The head's output convention (see `data.move_probs`): the canonical CE runs are
     # "logits"; an MSE-on-one-hot head is "raw" — its outputs are used as they are, so
     # `legal_mass` and `ce` below are only distribution-valid for "logits"/"clipnorm";

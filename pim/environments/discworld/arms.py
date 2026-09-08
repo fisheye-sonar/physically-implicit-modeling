@@ -31,7 +31,7 @@ from pim.editors.oracle_overwrite import overwrite_rollout
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld.bench import (
     DATA, DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
-from pim.metrics.editability import edit_scorecard, fidelity_ratio, object_constants
+from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
 from pim.models.protocol import free_run
 from pim.probes.base import collect_residuals
 from pim.probes.cache import ProbeCache
@@ -325,7 +325,7 @@ def counterfactual_history(b: Bench, noise_matched: bool = True, seed: int = 0) 
     the other object on its true trajectory. Rendered through the instance's own renderer
     config, with its observation noise when ``noise_matched``."""
     from pim.environments.discworld.renderer import render_frame
-    from pim.metrics.editability import sim_config_from
+    from pim.metrics.zone_editability import sim_config_from
 
     assert b.pos is not None and b.vel is not None and b.sim is not None, "load_bench() fills these"
     cfg = sim_config_from(b.sim, N_OBJ)

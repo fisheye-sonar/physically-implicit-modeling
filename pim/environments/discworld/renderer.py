@@ -39,8 +39,12 @@ def render_frame(
     reflectivities: np.ndarray,  # (n_objects,)
     cfg: SimConfig,
     rng: np.random.Generator | None = None,
+    visible: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Cast rays and return the 1D observation for one frame.
+
+    ``visible`` (n_objects,) bool, blink only: hidden objects are removed from the cast
+    (they neither reflect nor occlude); ``hit_id`` keeps the ORIGINAL object indices.
 
     Uses vectorised ray–circle intersection: for each of the ``obs_res`` rays,
     finds the closest circle hit and records its depth, identity, and intensity.
@@ -55,6 +59,15 @@ def render_frame(
         Reflectivity of the first-hit object in [0, 1], plus optional additive
         Gaussian noise clipped to [0, 1].  0 where no circle is hit.
     """
+    if visible is not None and not bool(np.all(visible)):
+        keep = np.flatnonzero(np.asarray(visible, dtype=bool))
+        d, ids, inten = render_frame(positions[keep], radii[keep], reflectivities[keep],
+                                     cfg, rng=rng)
+        ids = ids.copy()
+        hit = ids >= 0
+        ids[hit] = keep[ids[hit]]
+        return d, ids, inten
+
     # Optional alternative observation channels. Both default to off, in which
     # case neither branch is taken and the hard ray-caster below runs unchanged.
     # They are mutually exclusive (enforced by `render2d.validate`).
@@ -133,8 +146,12 @@ def render_frame(
     return _keep(hit_depth, hit_id, obs_intensity, cfg)
 
 
-def render_scene(scene: Scene) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def render_scene(scene: Scene, visible: np.ndarray | None = None
+                 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Render the full 1D observation sequence for a scene.
+
+    ``visible`` (n_frames, n_objects) bool = a blink schedule (``blink.blink_schedule``):
+    hidden objects are left out of the cast and the toggle markers are painted.
 
     Returns
     -------
@@ -154,7 +171,12 @@ def render_scene(scene: Scene) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
 
     for f in range(cfg.n_frames):
         obs_depth[f], obs_id[f], obs_intensity[f] = render_frame(
-            scene.positions[f], scene.radii, scene.reflectivities, cfg, rng=rng
+            scene.positions[f], scene.radii, scene.reflectivities, cfg, rng=rng,
+            visible=None if visible is None else visible[f],
         )
+        if visible is not None:
+            from .blink import paint_markers
+            paint_markers(obs_id[f], obs_intensity[f], visible[f],
+                          visible[f + 1] if f + 1 < cfg.n_frames else None)
 
     return obs_depth, obs_id, obs_intensity
