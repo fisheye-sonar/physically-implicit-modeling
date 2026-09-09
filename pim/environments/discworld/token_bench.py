@@ -26,6 +26,8 @@ construction — the vocabulary is built over every split).
 """
 from __future__ import annotations
 
+import json
+
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -64,10 +66,24 @@ class TokenBench:
         return [[int(t)] if k else [] for t, k in zip(self.post_tok, self.keep)]
 
 
+selection_path = dwb.selection_path        # ONE selection per instance — see bench.py
+
+
 def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
-                     basis_name: str = "cartesian", data_dir: Path | None = None) -> TokenBench:
-    """The canonical edit set as tokens: context, the two worlds' frames at EF, targets."""
-    a = dwb.bench_arrays(n, target, basis_name, data_dir)
+                     basis_name: str = "cartesian", data_dir: Path | None = None,
+                     select: "np.ndarray | None" = None, use_selection: bool = True) -> TokenBench:
+    """The canonical edit set as tokens: context, the two worlds' frames at EF, targets.
+
+    ⛔ CASE SELECTION (2026-09-08). Taking the first ``n`` cases wastes a large share of them:
+    on dw-8ray 17% of teleports leave the rendered frame IDENTICAL (mean teleport 0.92 world
+    units against 2.42 for the rest) and another 22% move a single ray of eight, so the frame
+    edit is unscoreable or marginal. When the instance carries an ``edits_selection.json``
+    (the first ``n`` cases whose two worlds differ on >= 2 rays, both frames in the vocabulary)
+    it is used by default: same generator, same seeds, same split — only which cases are
+    scored. Pass ``select=`` to override, or ``use_selection=False`` for the old first-n bench.
+    """
+    a = dwb.bench_arrays(n, target, basis_name, data_dir, select=select,
+                         use_selection=use_selection)
     tokens = encode(a["obs"][:, :EF], vocab).astype(np.int64)
     post = encode(a["clean"][:, EF], vocab).astype(np.int64)
     pre = encode(a["zones"].gt_unedited, vocab).astype(np.int64)

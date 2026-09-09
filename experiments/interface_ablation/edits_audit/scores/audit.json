@@ -1,0 +1,41 @@
+{
+ "n": 4000,
+ "identical_target_frame": 693,
+ "unk": 0,
+ "scoreable": 3307,
+ "frac_scoreable": 0.82675,
+ "first192_scoreable": 163,
+ "rays_changed_hist": {
+  "0": 693,
+  "1": 893,
+  "2": 981,
+  "3": 525,
+  "4": 378,
+  "5": 278,
+  "6": 186,
+  "7": 60,
+  "8": 6
+ },
+ "rays_changed_hist_scoreable": {
+  "1": 893,
+  "2": 981,
+  "3": 525,
+  "4": 378,
+  "5": 278,
+  "6": 186,
+  "7": 60,
+  "8": 6
+ },
+ "teleport_mean_all": 2.1571762561798096,
+ "teleport_mean_scoreable": 2.4164154529571533,
+ "teleport_mean_identical": 0.9200856685638428,
+ "maxdiff_quantiles_scoreable": [
+  0.4000000059604645,
+  0.4000000059604645,
+  0.4000000059604645,
+  0.800000011920929,
+  0.800000011920929
+ ],
+ "n_with_ge2_rays": 2414,
+ "n_with_ge3_rays": 1433
+}

@@ -44,3 +44,5 @@
   provenance hashes, directory-independent — every future lookup hits in place)
 - smoke-run probe fits moved from probe_cache pools into runs/pipeline_smoke/*/probes/ (same relocation rule as the canonical runs)
 - `runs/pipeline_smoke/` → `runs/_pipeline_smoke/` (underscore prefix = skipped by the master scan; these were 600-step pipeline tests, 0.077% of a canonical run, never interpretable as results)
+
+- 2026-09-09  runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m,ray_ablation/_R-dw-8ray-20m}/scores.json -> scores.pre-selection-2026-09-09.json  (rescored on the filtered dw-8ray edit-case selection; old numbers kept for comparison)
