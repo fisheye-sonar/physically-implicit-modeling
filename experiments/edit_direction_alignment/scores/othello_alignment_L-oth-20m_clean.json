@@ -1,0 +1,180 @@
+{
+ "run": "runs/initial_othello_comparison/L-oth-20m",
+ "instance": "oth-uniform",
+ "n_cases": 18,
+ "construction": "substitution-only, exact board, model legal mass >= 0.99",
+ "cf_legal_mass": 0.9991063740518358,
+ "layers": {
+  "0": {
+   "rows_changed_tiles": [
+    0.0001629299917517023,
+    0.0005183206433081027
+   ],
+   "rows_tile_s": [
+    0.0001629299917517023,
+    0.0005183206433081027
+   ],
+   "haufe_changed_tiles": [
+    0.0008711281698197126,
+    0.002610032077299183
+   ],
+   "pca16_changed_tiles": 0.0011908599278993076,
+   "generic_rows_changed_tiles": 0.0017098716262909067,
+   "generic_haufe": 0.013262094603204686,
+   "delta_norm_over_h_norm": 0.1401119828224182,
+   "n_rows_mean": 3.0
+  },
+  "1": {
+   "rows_changed_tiles": [
+    0.032916582978537515,
+    0.03885353993172472
+   ],
+   "rows_tile_s": [
+    0.032916582978537515,
+    0.03885353993172472
+   ],
+   "haufe_changed_tiles": [
+    0.031909967733857535,
+    0.046887855062744704
+   ],
+   "pca16_changed_tiles": 0.010496939897873543,
+   "generic_rows_changed_tiles": 0.002049549288737277,
+   "generic_haufe": 0.005943778087384999,
+   "delta_norm_over_h_norm": 0.22590552270412445,
+   "n_rows_mean": 3.0
+  },
+  "2": {
+   "rows_changed_tiles": [
+    0.06362498562925288,
+    0.06867053017042885
+   ],
+   "rows_tile_s": [
+    0.06362498562925288,
+    0.06867053017042885
+   ],
+   "haufe_changed_tiles": [
+    0.05353728093258622,
+    0.05302081277687521
+   ],
+   "pca16_changed_tiles": 0.016320883386975363,
+   "generic_rows_changed_tiles": 0.0032433764976708013,
+   "generic_haufe": 0.0070407494462819565,
+   "delta_norm_over_h_norm": 0.2987443208694458,
+   "n_rows_mean": 3.0
+  },
+  "3": {
+   "rows_changed_tiles": [
+    0.09604699767401649,
+    0.0669594510001719
+   ],
+   "rows_tile_s": [
+    0.09604699767401649,
+    0.0669594510001719
+   ],
+   "haufe_changed_tiles": [
+    0.07972197195825477,
+    0.06558307081608493
+   ],
+   "pca16_changed_tiles": 0.019013502990775224,
+   "generic_rows_changed_tiles": 0.004001422552391887,
+   "generic_haufe": 0.005203708224548286,
+   "delta_norm_over_h_norm": 0.3318514823913574,
+   "n_rows_mean": 3.0
+  },
+  "4": {
+   "rows_changed_tiles": [
+    0.16725240709880987,
+    0.09617786672259598
+   ],
+   "rows_tile_s": [
+    0.16725240709880987,
+    0.09617786672259598
+   ],
+   "haufe_changed_tiles": [
+    0.14569115659428966,
+    0.08562036637152377
+   ],
+   "pca16_changed_tiles": 0.04047623146066649,
+   "generic_rows_changed_tiles": 0.005816324529910667,
+   "generic_haufe": 0.006915143885028859,
+   "delta_norm_over_h_norm": 0.3567301332950592,
+   "n_rows_mean": 3.0
+  },
+  "5": {
+   "rows_changed_tiles": [
+    0.1884816772200995,
+    0.09052475807945173
+   ],
+   "rows_tile_s": [
+    0.1884816772200995,
+    0.09052475807945173
+   ],
+   "haufe_changed_tiles": [
+    0.2377874662892686,
+    0.11764757445736077
+   ],
+   "pca16_changed_tiles": 0.06404603821121985,
+   "generic_rows_changed_tiles": 0.007337507816070381,
+   "generic_haufe": 0.008587557230688011,
+   "delta_norm_over_h_norm": 0.3772069215774536,
+   "n_rows_mean": 3.0
+  },
+  "6": {
+   "rows_changed_tiles": [
+    0.1124895845229427,
+    0.03654884244422237
+   ],
+   "rows_tile_s": [
+    0.1124895845229427,
+    0.03654884244422237
+   ],
+   "haufe_changed_tiles": [
+    0.19544713971360275,
+    0.08708424873549615
+   ],
+   "pca16_changed_tiles": 0.05262179812416434,
+   "generic_rows_changed_tiles": 0.004971259839496472,
+   "generic_haufe": 0.00856758249250965,
+   "delta_norm_over_h_norm": 0.43006816506385803,
+   "n_rows_mean": 3.0
+  },
+  "7": {
+   "rows_changed_tiles": [
+    0.06743957042797571,
+    0.02112279979759512
+   ],
+   "rows_tile_s": [
+    0.06743957042797571,
+    0.02112279979759512
+   ],
+   "haufe_changed_tiles": [
+    0.18648780111430419,
+    0.11323595305986915
+   ],
+   "pca16_changed_tiles": 0.09188222339273328,
+   "generic_rows_changed_tiles": 0.003493248991112018,
+   "generic_haufe": 0.014001761123331057,
+   "delta_norm_over_h_norm": 0.4694042205810547,
+   "n_rows_mean": 3.0
+  },
+  "8": {
+   "rows_changed_tiles": [
+    0.061278632441018194,
+    0.02193434020604627
+   ],
+   "rows_tile_s": [
+    0.061278632441018194,
+    0.02193434020604627
+   ],
+   "haufe_changed_tiles": [
+    0.14494136423389944,
+    0.0916011778762059
+   ],
+   "pca16_changed_tiles": 0.09758989095765476,
+   "generic_rows_changed_tiles": 0.0028379426835777443,
+   "generic_haufe": 0.011805908081846105,
+   "delta_norm_over_h_norm": 0.4673224687576294,
+   "n_rows_mean": 3.0
+  }
+ }
+}

@@ -803,3 +803,45 @@ moves every later offset and the next command resumes mid-line. The grid-control
 patched in place during stage A (2026-09-08 10:40) and had to be restored byte-for-byte
 (verified against the process's fd offset, 1422) before stage B. Write changes to a
 `.new` file and swap it in after the chain completes.
+
+## 2026-09-09 — A write can LAND on the probe and change nothing: report landing beside the index
+
+On oth-adjacent (colour causally relevant, model Bayes-optimal) ND and PI edits make the
+linear probe read the target colour at the tile in 99–100% of cases from point 1 on, and the
+model's legal-move distribution does not move (Edit Index ≈ 0 at fidelity 1, then pure
+destruction). The probe's direction is a copy of colour the output does not consume (in a
+no-flip game colour = placing-move parity, an input lookup; trained skill 0.988 = the
+observation floor). So (a) never infer "the edit failed to reach the representation" from a
+zero index — check landing; (b) never infer "the representation is editable" from landing;
+(c) when a probe's skill equals the observation floor, expect the probe to have found the
+input's copy, and expect writes to it to be inert. `experiments/adjacency_ablation/scripts/extended_alpha.py`.
+
+## 2026-09-09 — Validate an Othello counterfactual history before using it: move SWAPS fool the model
+
+Building "the same board with one disc flipped" by searching over move substitutions and swaps
+produces LEGAL histories, but swapped ones are handled badly by the model: legal mass 0.845 on
+swapped histories vs 0.994 on single-substitution ones and 0.998 on ordinary held-out prefixes.
+Their residuals are therefore not clean representations of the counterfactual board, and an
+unfiltered set gives a nonsense ceiling (+0.14, below what the editors achieve) and understates
+the alignment of the editable model by ~3×. ALWAYS filter counterfactual histories on the
+model's legal mass (≥ 0.99) before measuring anything with them, and report the ceiling (the
+counterfactual's own Edit Index) beside any patch or interpolation result. With the filter:
+ceiling +0.65, ND +0.59, PI +0.44 — the editors approach but never exceed the true
+counterfactual. Substitutions alone never reach the flipped board exactly (0/900), so swaps
+cannot simply be banned. `experiments/edit_direction_alignment/scripts/sanity_ceiling.py`.
+
+## 2026-09-09 — Othello counterfactual histories have a LOW Edit-Index ceiling; check it before interpreting
+
+Splicing the residual of a counterfactual history into the original context is a valid
+operation (at the final residual point it reproduces that history's output exactly), but the
+number it can reach is capped by the counterfactual itself. On the shipped 1001 the model run
+on a true counterfactual scores only +0.14 (union index), +0.17…+0.40 even when its legal set
+equals the target exactly. Two reasons: a one-disc flip usually yields an UNREACHABLE board
+(without flips, disc counts are locked by move parity, so oth-adjacent has an exact
+counterfactual in 43/137 cases), and with |legal| ≈ 10 and a symmetric difference of 1–2 the
+uniform references differ by ~1/10 − 1/11, comparable to the model's own deviation from
+uniform. ALWAYS measure the ceiling (score the counterfactual history on its own) before
+reading an interpolation or patch experiment, and never compare it across environments whose
+ceilings differ (discworld's is +0.94). RESOLVED the same day: the low ceiling and the
+"editor beats the real thing" paradox were both caused by unvalidated swap-based
+counterfactuals — see the entry above.

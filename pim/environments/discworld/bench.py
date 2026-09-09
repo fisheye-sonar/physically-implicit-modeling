@@ -60,8 +60,26 @@ def _to_basis(pos, vel, sim, basis_name):
     return fb(pos, vel, sim, depth=basis_name)
 
 
+def selection_path(data_dir: Path | None = None) -> Path:
+    """An instance's FILTERED edit-case list, if it has one (``edits_selection.json``).
+
+    Written by ``experiments/interface_ablation/edits_audit/scripts/make_selection.py``.
+    It exists for dw-8ray only (2026-09-08): with 8 rays a teleport renders an IDENTICAL
+    frame in 20% of cases and moves a single ray in another 22%, so a first-n bench scores
+    ~160 of 192 cases and many of the rest are one-ray marginals. The 128-ray instances do
+    not need it (0.5% degenerate, mean 27 rays differing). ⛔ dw-blink's 19% zero-differing
+    cases are the MID-BLACKOUT population — real cases scored at reappearance by
+    experiments/blink_ablation — and must never be filtered away here.
+    The SAME file serves the ray-zone and the frames-as-tokens bench, so the interface
+    ablation stays paired case for case.
+    """
+    d = Path(data_dir) if data_dir is not None else DATA
+    return Path(d).parent / "edits_selection.json"
+
+
 def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
-                 data_dir: Path | None = None, select: np.ndarray | None = None) -> dict:
+                 data_dir: Path | None = None, select: np.ndarray | None = None,
+                 use_selection: bool = True) -> dict:
     """The edit set's arrays and zones, model-free (factored out of ``load_bench``,
     2026-09-05, so a token model — ``token_bench`` — scores the SAME cases, targets
     and zones without a frame-space state).
@@ -78,6 +96,10 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     from pim.environments.discworld.loading import load_edits
 
     dd = Path(data_dir) if data_dir is not None else DATA
+    if select is None and use_selection:                 # the instance's filtered case list
+        _sp = selection_path(dd)
+        if _sp.exists():
+            select = np.asarray(json.loads(_sp.read_text())["select"], dtype=int)[:n]
     # the edits split alone — its own config_json carries the sim config, so the 188 MB
     # test split is never decompressed just to read a dict (2026-09-07)
     b = load_edits(dd / "edits.h5", n_obj_keep=N_OBJ)
@@ -124,9 +146,9 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
 
 def load_bench(model, n: int = 192, target: str = "pos",
                basis_name: str = "cartesian", data_dir: Path | None = None,
-               select: np.ndarray | None = None) -> Bench:
+               select: np.ndarray | None = None, use_selection: bool = True) -> Bench:
     """Warm ``model`` on the edits split and build the ground-truth zones (``bench_arrays``)."""
-    a = bench_arrays(n, target, basis_name, data_dir, select=select)
+    a = bench_arrays(n, target, basis_name, data_dir, select=select, use_selection=use_selection)
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
     return Bench(a["obs"], a["gt_roll"], a["zones"], torch.from_numpy(a["y"]).float().to(DEV),
                  torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], state, a["n"],

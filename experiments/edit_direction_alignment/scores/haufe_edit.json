@@ -1,0 +1,3725 @@
+{
+ "dw-noiseless": {
+  "unedited": -0.9237221536038677,
+  "arms": [
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9237221583142904,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.9237221580161568,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.9237221592384004,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.9237221611999072,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": -0.9237221757556215,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": -0.9237222024440878,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": -0.9237223068479767,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": -0.9238707029511327,
+    "fidelity_ratio": 1.0000646910917033
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": -0.8431077265699751,
+    "fidelity_ratio": 1.0196648418084047
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": -0.48191634688882184,
+    "fidelity_ratio": 1.2498754357924247
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.3343900287207206,
+    "fidelity_ratio": 1.3761948449846226
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": -0.27212772139159064,
+    "fidelity_ratio": 1.477606412939385
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.9237221468960556,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.9237221453049083,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.9237221082400546,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.9237220431908532,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": -0.9237218912319726,
+    "fidelity_ratio": 1.0
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": -0.9237213891166373,
+    "fidelity_ratio": 0.9999998958275496
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": -0.9237199207231637,
+    "fidelity_ratio": 0.9999997916550992
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": -0.9235904767693568,
+    "fidelity_ratio": 0.9999720817832907
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": -0.8780807299540824,
+    "fidelity_ratio": 0.9934165094791201
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": -0.5263409065523534,
+    "fidelity_ratio": 1.0613705948465681
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.2832842568756771,
+    "fidelity_ratio": 1.203242430022417
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": -0.15266937600175695,
+    "fidelity_ratio": 1.2987248146173116
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9236520076123096,
+    "fidelity_ratio": 0.999957601812684
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.9214240153748957,
+    "fidelity_ratio": 0.9984507473175334
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.7830564800579277,
+    "fidelity_ratio": 0.9274533679838682
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.3502368303218737,
+    "fidelity_ratio": 0.8944366390342298
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.05031102453427117,
+    "fidelity_ratio": 1.0460849545084119
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.2588481136557131,
+    "fidelity_ratio": 1.393347047289188
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.23493544662381338,
+    "fidelity_ratio": 2.314831021347331
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": -0.7668418902013356,
+    "fidelity_ratio": 0.9510124885058723
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.14747479583553516,
+    "fidelity_ratio": 1.157608646396722
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.26603746251709987,
+    "fidelity_ratio": 1.3191242805459928
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.2771749776144083,
+    "fidelity_ratio": 1.5909865620664148
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.24025970411644418,
+    "fidelity_ratio": 2.252925500967918
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.9237803737682818,
+    "fidelity_ratio": 0.9999639563321588
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.9222783195462193,
+    "fidelity_ratio": 0.9988553531149177
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.762691183713625,
+    "fidelity_ratio": 0.925980057017749
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.3053858349646715,
+    "fidelity_ratio": 0.8952285580022308
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.08956970690059766,
+    "fidelity_ratio": 1.0606544092500136
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.25518017599248505,
+    "fidelity_ratio": 1.397727707173742
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.22984218363432607,
+    "fidelity_ratio": 2.303713320749996
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": -0.8345638289901559,
+    "fidelity_ratio": 0.97134465903159
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.08818734295037753,
+    "fidelity_ratio": 1.088409179384647
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.24751822682395752,
+    "fidelity_ratio": 1.2460463690327808
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.2696462937886506,
+    "fidelity_ratio": 1.4610323677345836
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.24229783376964892,
+    "fidelity_ratio": 1.985228763221958
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9235294657956467,
+    "fidelity_ratio": 0.9999098908303972
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.9066504030106161,
+    "fidelity_ratio": 0.9847344649447725
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.694617638794652,
+    "fidelity_ratio": 0.8911085375885973
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.2603649524531931,
+    "fidelity_ratio": 0.8895780359472042
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.1058776492767408,
+    "fidelity_ratio": 1.0643013825663445
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.25197499330162043,
+    "fidelity_ratio": 1.4833304807443997
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.20450452556330564,
+    "fidelity_ratio": 2.709760031468414
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": -0.07240655220838725,
+    "fidelity_ratio": 0.9706334737126551
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.2732344973506996,
+    "fidelity_ratio": 1.2998685239503402
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.25181580971451034,
+    "fidelity_ratio": 1.7712614669126943
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.18170590713466916,
+    "fidelity_ratio": 2.70393658314571
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.1220920529514124,
+    "fidelity_ratio": 4.368482125101321
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.9235299681132239,
+    "fidelity_ratio": 0.9999142660733142
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.908076724746658,
+    "fidelity_ratio": 0.9868530200687184
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.698525116375481,
+    "fidelity_ratio": 0.8931168782600117
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.2574082239914013,
+    "fidelity_ratio": 0.876709508975863
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.12253951323059868,
+    "fidelity_ratio": 1.051348788427524
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.2570968634256812,
+    "fidelity_ratio": 1.4648002852658382
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.20608716438012825,
+    "fidelity_ratio": 2.6745043240421578
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": -0.2715167977637583,
+    "fidelity_ratio": 0.9038624748644899
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.24782685748928202,
+    "fidelity_ratio": 1.2066130338278156
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.2693957075311639,
+    "fidelity_ratio": 1.553778142057262
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.20712436247081545,
+    "fidelity_ratio": 2.257674097947313
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.14561327123744702,
+    "fidelity_ratio": 3.4960216020326964
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9228773724133439,
+    "fidelity_ratio": 0.9998260320078187
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.87273335488713,
+    "fidelity_ratio": 0.9619245526861022
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.5363574708120753,
+    "fidelity_ratio": 0.8561315435534077
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.10350546496831209,
+    "fidelity_ratio": 0.9030546175115765
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.1846869394914619,
+    "fidelity_ratio": 1.1084295617662938
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.24137001074676367,
+    "fidelity_ratio": 1.6889085612774126
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.18209951369889987,
+    "fidelity_ratio": 3.3223877950723724
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.19550425171557637,
+    "fidelity_ratio": 1.158527759926671
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.2458961087817361,
+    "fidelity_ratio": 1.745878182611597
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.15549199130034208,
+    "fidelity_ratio": 3.12830160257856
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.10596727895081541,
+    "fidelity_ratio": 4.93058708363704
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.08944998265712556,
+    "fidelity_ratio": 6.024231553689387
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.9230198353537975,
+    "fidelity_ratio": 0.9998316573201408
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.8760561803960837,
+    "fidelity_ratio": 0.9643664590961144
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.5427615460983,
+    "fidelity_ratio": 0.8546881821667807
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.10540483177751821,
+    "fidelity_ratio": 0.8858500164644558
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.18582076677152695,
+    "fidelity_ratio": 1.0909627586614965
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.24260262252011963,
+    "fidelity_ratio": 1.6691872580008869
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.17773345347240563,
+    "fidelity_ratio": 3.2711476585106234
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.11075399430457158,
+    "fidelity_ratio": 1.070988941365182
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.25682194695506033,
+    "fidelity_ratio": 1.5288050888658713
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.17950128849774397,
+    "fidelity_ratio": 2.5883587078324246
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.13049471800215318,
+    "fidelity_ratio": 3.88361395481645
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.1130661449398041,
+    "fidelity_ratio": 4.638234601983631
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9212789769005382,
+    "fidelity_ratio": 0.9990636980157336
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.8349917750304768,
+    "fidelity_ratio": 0.9388762938608988
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.42841716603379804,
+    "fidelity_ratio": 0.8449702467855768
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.03787977677282856,
+    "fidelity_ratio": 0.9234814807947149
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.21905872331171744,
+    "fidelity_ratio": 1.156713596702817
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.23072089993811568,
+    "fidelity_ratio": 2.026426883909284
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.16483420555200815,
+    "fidelity_ratio": 4.012270264588649
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.2718247906216073,
+    "fidelity_ratio": 1.275415291286485
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.18335760333118997,
+    "fidelity_ratio": 2.6879373615222595
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.11093839568699546,
+    "fidelity_ratio": 4.992218422126978
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.09551677655599632,
+    "fidelity_ratio": 5.957206582407127
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.09141218940454635,
+    "fidelity_ratio": 6.2647311564277475
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.921384468059832,
+    "fidelity_ratio": 0.9991047419611943
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.8380841428941758,
+    "fidelity_ratio": 0.9408851553945652
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.43238741233073896,
+    "fidelity_ratio": 0.8433597407022703
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.041838940723323864,
+    "fidelity_ratio": 0.9149268391672163
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.21282598050682403,
+    "fidelity_ratio": 1.1478020602602208
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.22094073222989663,
+    "fidelity_ratio": 2.0090221675849294
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.15994349960591486,
+    "fidelity_ratio": 3.904883052361136
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.25018707430747145,
+    "fidelity_ratio": 1.1850368358993264
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.20945641921241412,
+    "fidelity_ratio": 2.2787206831379283
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.13586281238978118,
+    "fidelity_ratio": 3.984426635353817
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.11699471306563775,
+    "fidelity_ratio": 4.70570626473324
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.11043428124554303,
+    "fidelity_ratio": 4.9936039157174035
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9182663933910532,
+    "fidelity_ratio": 0.9951456679834412
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.7940268701062154,
+    "fidelity_ratio": 0.9180361784669919
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.3859843180083004,
+    "fidelity_ratio": 0.8408068385463484
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": 0.028482447211899447,
+    "fidelity_ratio": 0.9600854922466008
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.21476687627380653,
+    "fidelity_ratio": 1.2973525509280879
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.20301595894951266,
+    "fidelity_ratio": 2.5527252711009893
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.14728674638077485,
+    "fidelity_ratio": 4.648961030857234
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.23634133318105163,
+    "fidelity_ratio": 1.9245910215640099
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.11796371701166607,
+    "fidelity_ratio": 5.131367397794065
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.10214142305930393,
+    "fidelity_ratio": 6.022232276021159
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.10009247467217347,
+    "fidelity_ratio": 6.15070274214183
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.099436433732627,
+    "fidelity_ratio": 6.190468699980947
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.918358401377261,
+    "fidelity_ratio": 0.9953508877107448
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.7961930545788309,
+    "fidelity_ratio": 0.9191457192362867
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.38621423253868487,
+    "fidelity_ratio": 0.8390326254572259
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": 0.022861227829558954,
+    "fidelity_ratio": 0.9541346410170481
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.204960733603797,
+    "fidelity_ratio": 1.2860096294929708
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.1950623547818378,
+    "fidelity_ratio": 2.5344621737852737
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.1445756520259944,
+    "fidelity_ratio": 4.5178833366477535
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.23952358961426348,
+    "fidelity_ratio": 1.714570819400702
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.13838652975795418,
+    "fidelity_ratio": 4.265450154680463
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.12098615013920494,
+    "fidelity_ratio": 5.024762729014017
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.11797270350676942,
+    "fidelity_ratio": 5.18166935726744
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.11679694636965819,
+    "fidelity_ratio": 5.244052404159523
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.9097266897316939,
+    "fidelity_ratio": 0.9872032478469899
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.743881201543733,
+    "fidelity_ratio": 0.8978455783013786
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.3318407055450097,
+    "fidelity_ratio": 0.8429364359500376
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": 0.026248774697786456,
+    "fidelity_ratio": 0.9902851897923083
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.18606472528351872,
+    "fidelity_ratio": 1.4688506143101487
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.1766055898478209,
+    "fidelity_ratio": 3.189977110187472
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.13624551795365486,
+    "fidelity_ratio": 5.233064294090495
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.16371218759501519,
+    "fidelity_ratio": 2.8839699120794937
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.09717012393505382,
+    "fidelity_ratio": 5.96947017995895
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.09177316987491453,
+    "fidelity_ratio": 6.4724722737210305
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.09085727398827172,
+    "fidelity_ratio": 6.57853857927737
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.09053890380265064,
+    "fidelity_ratio": 6.6201900584688715
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.910047724216017,
+    "fidelity_ratio": 0.9876682736656108
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.746705050022508,
+    "fidelity_ratio": 0.8994456671396444
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.33238982593654737,
+    "fidelity_ratio": 0.8418901278581404
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": 0.02660893668960331,
+    "fidelity_ratio": 0.9869462544118335
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.18394925456829997,
+    "fidelity_ratio": 1.4629136180165003
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.17337810080102783,
+    "fidelity_ratio": 3.16826486303875
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.13569130697215212,
+    "fidelity_ratio": 5.048175278898297
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.1786430275606731,
+    "fidelity_ratio": 2.513263496817063
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.11195691196971674,
+    "fidelity_ratio": 5.128898094029595
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.1055493869815578,
+    "fidelity_ratio": 5.602381465554285
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.1042354968839853,
+    "fidelity_ratio": 5.717512441055321
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.10370994806031654,
+    "fidelity_ratio": 5.766926434561419
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.8970802123979825,
+    "fidelity_ratio": 0.9781522244932974
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.7133950672783822,
+    "fidelity_ratio": 0.8910477008775591
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.32409731099453787,
+    "fidelity_ratio": 0.8594112568958255
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.0031746852600723287,
+    "fidelity_ratio": 1.068365983236361
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.1252999348561514,
+    "fidelity_ratio": 1.8847821446753241
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.13825023335484657,
+    "fidelity_ratio": 4.02057280888616
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.12051948367733531,
+    "fidelity_ratio": 5.716387795280717
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.13162491428596382,
+    "fidelity_ratio": 4.015073336884225
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.09285830760596685,
+    "fidelity_ratio": 6.2023314419436
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.08977611059324715,
+    "fidelity_ratio": 6.466808209247451
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.08907857691234383,
+    "fidelity_ratio": 6.530790094908395
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.08878860875425254,
+    "fidelity_ratio": 6.558252452974733
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.8973161522755425,
+    "fidelity_ratio": 0.978596728339188
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.7145784254547148,
+    "fidelity_ratio": 0.8920034831100518
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.3226156559670636,
+    "fidelity_ratio": 0.8578325754961187
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": 9.027573668524164e-05,
+    "fidelity_ratio": 1.0659066800271306
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.12925734722055884,
+    "fidelity_ratio": 1.8816498874364587
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.13782372503541487,
+    "fidelity_ratio": 3.9586452039472606
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.1199593140828535,
+    "fidelity_ratio": 5.4611527910872555
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.15101346070829813,
+    "fidelity_ratio": 3.45282628712615
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.10692838814841467,
+    "fidelity_ratio": 5.42970729520712
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.10244470884488793,
+    "fidelity_ratio": 5.697643421244117
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.10132032056215376,
+    "fidelity_ratio": 5.766905600071337
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.10082411371630115,
+    "fidelity_ratio": 5.797741895461487
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.25,
+    "dims": "pos",
+    "edit_index": -0.8697342013203625,
+    "fidelity_ratio": 0.9665093905734558
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": -0.6715077686055215,
+    "fidelity_ratio": 0.9164471319084695
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 3.0,
+    "dims": "pos",
+    "edit_index": -0.2885626854810705,
+    "fidelity_ratio": 1.1541926234029452
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 8.0,
+    "dims": "pos",
+    "edit_index": -0.06236872019026377,
+    "fidelity_ratio": 2.3902137483258183
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 20.0,
+    "dims": "pos",
+    "edit_index": 0.055282143219551466,
+    "fidelity_ratio": 4.189871375150307
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.09768906553545903,
+    "fidelity_ratio": 5.809036689224516
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 175.0,
+    "dims": "pos",
+    "edit_index": 0.10566708524504174,
+    "fidelity_ratio": 6.465341877835509
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.05,
+    "dims": "pos",
+    "edit_index": 0.08680228551052595,
+    "fidelity_ratio": 6.029753110250809
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.2,
+    "dims": "pos",
+    "edit_index": 0.08404316846204228,
+    "fidelity_ratio": 6.453644561724104
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.5,
+    "dims": "pos",
+    "edit_index": 0.08430593414145698,
+    "fidelity_ratio": 6.489013608776404
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.08445784379423851,
+    "fidelity_ratio": 6.496688201542857
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "dims": "pos",
+    "edit_index": 0.08454589493926774,
+    "fidelity_ratio": 6.499744204548024
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.25,
+    "dims": "all",
+    "edit_index": -0.8697474763136653,
+    "fidelity_ratio": 0.966840658965753
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": -0.6716420802201399,
+    "fidelity_ratio": 0.9169153870730531
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 3.0,
+    "dims": "all",
+    "edit_index": -0.28593729489268616,
+    "fidelity_ratio": 1.1484941820207308
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 8.0,
+    "dims": "all",
+    "edit_index": -0.056607164524106524,
+    "fidelity_ratio": 2.3607666967343084
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.053235227571603295,
+    "fidelity_ratio": 4.090462939244439
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 60.0,
+    "dims": "all",
+    "edit_index": 0.09925279704806496,
+    "fidelity_ratio": 5.535885273630297
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 175.0,
+    "dims": "all",
+    "edit_index": 0.10680462115926051,
+    "fidelity_ratio": 6.007904813881854
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.09653881998833704,
+    "fidelity_ratio": 5.2717081062938185
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.2,
+    "dims": "all",
+    "edit_index": 0.09241702371389725,
+    "fidelity_ratio": 5.699676034096476
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.5,
+    "dims": "all",
+    "edit_index": 0.09253524758311035,
+    "fidelity_ratio": 5.73821525715959
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "dims": "all",
+    "edit_index": 0.09265383642803471,
+    "fidelity_ratio": 5.747052831162397
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "dims": "all",
+    "edit_index": 0.0927282190419308,
+    "fidelity_ratio": 5.75070803410231
+   }
+  ],
+  "PI-haufe": {
+   "best": {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 60.0,
+    "dims": "pos",
+    "edit_index": 0.2588481136557131,
+    "fidelity_ratio": 1.393347047289188
+   },
+   "guarded": {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 20.0,
+    "dims": "all",
+    "edit_index": 0.18582076677152695,
+    "fidelity_ratio": 1.0909627586614965
+   }
+  },
+  "ND-haufe": {
+   "best": {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "dims": "pos",
+    "edit_index": 0.2771749776144083,
+    "fidelity_ratio": 1.5909865620664148
+   },
+   "guarded": {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.05,
+    "dims": "all",
+    "edit_index": 0.11075399430457158,
+    "fidelity_ratio": 1.070988941365182
+   }
+  }
+ },
+ "oth-adjacent": {
+  "unedited": -0.6804365219778493,
+  "arms": [
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.25,
+    "edit_index_union": -0.6444981528094836,
+    "fidelity_ratio": 1.0654707043917644,
+    "li_error_vs_post": 4.673326673326673
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.5,
+    "edit_index_union": -0.6283622520448715,
+    "fidelity_ratio": 1.1077140598261637,
+    "li_error_vs_post": 4.891108891108891
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "edit_index_union": -0.5920120847944053,
+    "fidelity_ratio": 1.166466151427379,
+    "li_error_vs_post": 5.142857142857143
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "edit_index_union": -0.512994488117305,
+    "fidelity_ratio": 1.3745608201437243,
+    "li_error_vs_post": 5.8441558441558445
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 3.0,
+    "edit_index_union": -0.45118380858237417,
+    "fidelity_ratio": 1.5360332874941842,
+    "li_error_vs_post": 6.551448551448551
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 5.0,
+    "edit_index_union": -0.38596226732403494,
+    "fidelity_ratio": 1.7451009633251529,
+    "li_error_vs_post": 7.6223776223776225
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 8.0,
+    "edit_index_union": -0.32269179058091624,
+    "fidelity_ratio": 2.008965187305144,
+    "li_error_vs_post": 8.577422577422578
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.25,
+    "edit_index_union": -0.6800141593311628,
+    "fidelity_ratio": 0.9995766562810032,
+    "li_error_vs_post": 4.291708291708292
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.5,
+    "edit_index_union": -0.6645370918735275,
+    "fidelity_ratio": 0.9880167342685096,
+    "li_error_vs_post": 3.884115884115884
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "edit_index_union": -0.5694157705335717,
+    "fidelity_ratio": 0.9289219636158027,
+    "li_error_vs_post": 2.8591408591408594
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "edit_index_union": -0.16132070046607755,
+    "fidelity_ratio": 0.7222914189699331,
+    "li_error_vs_post": 1.7822177822177823
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 3.0,
+    "edit_index_union": 0.07805319748907733,
+    "fidelity_ratio": 0.7109107021504008,
+    "li_error_vs_post": 2.051948051948052
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 5.0,
+    "edit_index_union": 0.18285769613177288,
+    "fidelity_ratio": 1.0044129108052917,
+    "li_error_vs_post": 3.802197802197802
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 8.0,
+    "edit_index_union": 0.12506106995678196,
+    "fidelity_ratio": 1.6654597067453076,
+    "li_error_vs_post": 7.050949050949051
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.25,
+    "edit_index_union": -0.6803220416239641,
+    "fidelity_ratio": 0.9998530957968967,
+    "li_error_vs_post": 4.2617382617382615
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.5,
+    "edit_index_union": -0.6768888282654595,
+    "fidelity_ratio": 0.9967761051842124,
+    "li_error_vs_post": 3.5404595404595405
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": -0.5141118120012882,
+    "fidelity_ratio": 0.8903938007155898,
+    "li_error_vs_post": 2.10989010989011
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "edit_index_union": 0.07739271617257633,
+    "fidelity_ratio": 0.5808075766429064,
+    "li_error_vs_post": 1.0829170829170829
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "edit_index_union": 0.2699848128424943,
+    "fidelity_ratio": 0.6016438924323585,
+    "li_error_vs_post": 1.3406593406593406
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 5.0,
+    "edit_index_union": 0.23468148859830373,
+    "fidelity_ratio": 1.027699123198501,
+    "li_error_vs_post": 3.416583416583417
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 8.0,
+    "edit_index_union": 0.13058387233332427,
+    "fidelity_ratio": 1.7260744809240924,
+    "li_error_vs_post": 6.9250749250749255
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.25,
+    "edit_index_union": -0.6804119472330642,
+    "fidelity_ratio": 0.9997498707507508,
+    "li_error_vs_post": 4.213786213786213
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.5,
+    "edit_index_union": -0.6794177315606477,
+    "fidelity_ratio": 0.9987634133533856,
+    "li_error_vs_post": 3.7202797202797204
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "edit_index_union": -0.5928530243317653,
+    "fidelity_ratio": 0.9474244380776733,
+    "li_error_vs_post": 2.5714285714285716
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "edit_index_union": -0.2134751080505526,
+    "fidelity_ratio": 0.7578025460186515,
+    "li_error_vs_post": 1.190809190809191
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 3.0,
+    "edit_index_union": 0.00823259062561881,
+    "fidelity_ratio": 0.7542725190896187,
+    "li_error_vs_post": 1.1608391608391608
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 5.0,
+    "edit_index_union": 0.11924748626326959,
+    "fidelity_ratio": 1.0469638138315671,
+    "li_error_vs_post": 2.6833166833166833
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 8.0,
+    "edit_index_union": 0.09994238486241726,
+    "fidelity_ratio": 1.664053241716327,
+    "li_error_vs_post": 5.852147852147852
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.25,
+    "edit_index_union": -0.6798975689470643,
+    "fidelity_ratio": 0.9989151643198945,
+    "li_error_vs_post": 4.1218781218781215
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.5,
+    "edit_index_union": -0.6744900996051112,
+    "fidelity_ratio": 0.9956176671010321,
+    "li_error_vs_post": 3.5764235764235766
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "edit_index_union": -0.6044163155210794,
+    "fidelity_ratio": 0.9625831553875692,
+    "li_error_vs_post": 2.5954045954045952
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "edit_index_union": -0.3920245574373828,
+    "fidelity_ratio": 0.8993340299749363,
+    "li_error_vs_post": 1.806193806193806
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 3.0,
+    "edit_index_union": -0.19754565606003113,
+    "fidelity_ratio": 0.9023298221182771,
+    "li_error_vs_post": 1.6743256743256743
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 5.0,
+    "edit_index_union": 0.023268132234661686,
+    "fidelity_ratio": 1.0761630461438096,
+    "li_error_vs_post": 2.3536463536463534
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 8.0,
+    "edit_index_union": 0.10086237474204966,
+    "fidelity_ratio": 1.5356876752058228,
+    "li_error_vs_post": 4.737262737262737
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.25,
+    "edit_index_union": -0.6702191333120114,
+    "fidelity_ratio": 0.9912198538737483,
+    "li_error_vs_post": 4.131868131868132
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.5,
+    "edit_index_union": -0.6099643212894333,
+    "fidelity_ratio": 0.9655670178778647,
+    "li_error_vs_post": 3.5284715284715285
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "edit_index_union": -0.43927578431967007,
+    "fidelity_ratio": 0.941704937080594,
+    "li_error_vs_post": 2.6573426573426575
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": -0.23552979620464393,
+    "fidelity_ratio": 1.0452041821698075,
+    "li_error_vs_post": 1.982017982017982
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 3.0,
+    "edit_index_union": -0.13276948342832365,
+    "fidelity_ratio": 1.2098251777543867,
+    "li_error_vs_post": 1.8481518481518482
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 5.0,
+    "edit_index_union": -0.02943820783046543,
+    "fidelity_ratio": 1.5530735843160202,
+    "li_error_vs_post": 2.305694305694306
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 8.0,
+    "edit_index_union": 0.024054465377154388,
+    "fidelity_ratio": 2.208688475020057,
+    "li_error_vs_post": 4.125874125874126
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.25,
+    "edit_index_union": -0.5889420187043981,
+    "fidelity_ratio": 0.9696703209489729,
+    "li_error_vs_post": 3.758241758241758
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.5,
+    "edit_index_union": -0.4463002140753485,
+    "fidelity_ratio": 0.9598999286441011,
+    "li_error_vs_post": 3.294705294705295
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "edit_index_union": -0.2527856550476812,
+    "fidelity_ratio": 1.0623751520123923,
+    "li_error_vs_post": 2.5754245754245755
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "edit_index_union": -0.10622473384261694,
+    "fidelity_ratio": 1.5493906567552553,
+    "li_error_vs_post": 2.033966033966034
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 3.0,
+    "edit_index_union": -0.05592584604546251,
+    "fidelity_ratio": 2.115105626579699,
+    "li_error_vs_post": 1.872127872127872
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 5.0,
+    "edit_index_union": -0.01102063840265305,
+    "fidelity_ratio": 3.1392137530919766,
+    "li_error_vs_post": 2.2517482517482517
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 8.0,
+    "edit_index_union": 0.012979488391079866,
+    "fidelity_ratio": 4.548568541216288,
+    "li_error_vs_post": 3.868131868131868
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.25,
+    "edit_index_union": -0.5173931351246469,
+    "fidelity_ratio": 0.9605243826155584,
+    "li_error_vs_post": 3.5484515484515486
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.5,
+    "edit_index_union": -0.33990737647878877,
+    "fidelity_ratio": 0.9872519930895812,
+    "li_error_vs_post": 3.1188811188811187
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "edit_index_union": -0.16189393601337232,
+    "fidelity_ratio": 1.2163636187046782,
+    "li_error_vs_post": 2.5034965034965033
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "edit_index_union": -0.05969443415454301,
+    "fidelity_ratio": 1.9808859783724775,
+    "li_error_vs_post": 2.005994005994006
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 3.0,
+    "edit_index_union": -0.03026187353030766,
+    "fidelity_ratio": 2.792487765072111,
+    "li_error_vs_post": 1.8341658341658342
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 5.0,
+    "edit_index_union": -0.007385265094868902,
+    "fidelity_ratio": 4.164372963142295,
+    "li_error_vs_post": 2.21978021978022
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 8.0,
+    "edit_index_union": 0.0065035192480281875,
+    "fidelity_ratio": 5.678882403682735,
+    "li_error_vs_post": 3.838161838161838
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.25,
+    "edit_index_union": -0.4640547633851353,
+    "fidelity_ratio": 0.9602802083409463,
+    "li_error_vs_post": 3.4665334665334666
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.5,
+    "edit_index_union": -0.2747250937307051,
+    "fidelity_ratio": 1.022903683734286,
+    "li_error_vs_post": 3.114885114885115
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "edit_index_union": -0.11390588940740817,
+    "fidelity_ratio": 1.3572309498550306,
+    "li_error_vs_post": 2.5094905094905093
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "edit_index_union": -0.03591078263997052,
+    "fidelity_ratio": 2.383980141304911,
+    "li_error_vs_post": 1.998001998001998
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 3.0,
+    "edit_index_union": -0.017017702334498737,
+    "fidelity_ratio": 3.4498398808536823,
+    "li_error_vs_post": 1.8941058941058941
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 5.0,
+    "edit_index_union": -0.004112735761105476,
+    "fidelity_ratio": 5.173988957125256,
+    "li_error_vs_post": 2.2357642357642358
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 8.0,
+    "edit_index_union": 0.004489498198371735,
+    "fidelity_ratio": 6.921288151500061,
+    "li_error_vs_post": 3.792207792207792
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.05,
+    "edit_index_union": -0.6804390899610657,
+    "fidelity_ratio": 0.9999975848040944,
+    "li_error_vs_post": 4.425574425574426
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.2,
+    "edit_index_union": -0.6804550437410911,
+    "fidelity_ratio": 0.9999861344166205,
+    "li_error_vs_post": 4.42957042957043
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.35,
+    "edit_index_union": -0.6804738873486615,
+    "fidelity_ratio": 0.9999717662424331,
+    "li_error_vs_post": 4.42957042957043
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.7,
+    "edit_index_union": -0.6804829814530114,
+    "fidelity_ratio": 0.9999401607506951,
+    "li_error_vs_post": 4.4235764235764234
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "edit_index_union": -0.6803983335544295,
+    "fidelity_ratio": 0.9999071916165656,
+    "li_error_vs_post": 4.415584415584416
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "edit_index_union": -0.6608757074734707,
+    "fidelity_ratio": 1.0059430152730244,
+    "li_error_vs_post": 4.381618381618382
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.05,
+    "edit_index_union": -0.6803851598211392,
+    "fidelity_ratio": 0.9999607887454661,
+    "li_error_vs_post": 4.391608391608392
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.2,
+    "edit_index_union": -0.6798965409950012,
+    "fidelity_ratio": 0.9991666967262214,
+    "li_error_vs_post": 3.7062937062937062
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.35,
+    "edit_index_union": -0.5701520404550214,
+    "fidelity_ratio": 0.9319766444595291,
+    "li_error_vs_post": 2.11988011988012
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.7,
+    "edit_index_union": 0.04297482234715817,
+    "fidelity_ratio": 0.5853285356967968,
+    "li_error_vs_post": 1.3946053946053947
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "edit_index_union": 0.22380248776650374,
+    "fidelity_ratio": 0.5799677648085231,
+    "li_error_vs_post": 1.5864135864135864
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "edit_index_union": 0.1331922461496934,
+    "fidelity_ratio": 1.3512976279481015,
+    "li_error_vs_post": 5.924075924075924
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.05,
+    "edit_index_union": -0.6803598357235655,
+    "fidelity_ratio": 0.9999269174593366,
+    "li_error_vs_post": 4.341658341658341
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.2,
+    "edit_index_union": -0.6719004533607627,
+    "fidelity_ratio": 0.9926025048220968,
+    "li_error_vs_post": 2.7592407592407593
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.35,
+    "edit_index_union": -0.376961915171824,
+    "fidelity_ratio": 0.8291188594855522,
+    "li_error_vs_post": 1.6343656343656343
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.7,
+    "edit_index_union": 0.3514164610876921,
+    "fidelity_ratio": 0.4514258990202223,
+    "li_error_vs_post": 0.7592407592407593
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": 0.37535852515330426,
+    "fidelity_ratio": 0.5964654341042522,
+    "li_error_vs_post": 1.4265734265734267
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "edit_index_union": 0.13079270017714534,
+    "fidelity_ratio": 1.5648122756117,
+    "li_error_vs_post": 6.4935064935064934
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.05,
+    "edit_index_union": -0.6804444967224332,
+    "fidelity_ratio": 0.9997945499035568,
+    "li_error_vs_post": 4.27972027972028
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.2,
+    "edit_index_union": -0.6662069124671609,
+    "fidelity_ratio": 0.9912392764348744,
+    "li_error_vs_post": 3.020979020979021
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.35,
+    "edit_index_union": -0.45035787716633147,
+    "fidelity_ratio": 0.8851447974975383,
+    "li_error_vs_post": 1.6423576423576423
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.7,
+    "edit_index_union": 0.08313096347537627,
+    "fidelity_ratio": 0.6862280884319882,
+    "li_error_vs_post": 0.8671328671328671
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "edit_index_union": 0.1777341244516797,
+    "fidelity_ratio": 0.8537312682013926,
+    "li_error_vs_post": 1.6563436563436564
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "edit_index_union": 0.09938509096804143,
+    "fidelity_ratio": 1.8060844888982337,
+    "li_error_vs_post": 6.8431568431568435
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.05,
+    "edit_index_union": -0.6795749746897607,
+    "fidelity_ratio": 0.9987650860846238,
+    "li_error_vs_post": 4.113886113886114
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.2,
+    "edit_index_union": -0.6019748753357488,
+    "fidelity_ratio": 0.9639147754758823,
+    "li_error_vs_post": 2.5274725274725274
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.35,
+    "edit_index_union": -0.41913593370016206,
+    "fidelity_ratio": 0.9101482390049166,
+    "li_error_vs_post": 1.8601398601398602
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.7,
+    "edit_index_union": -0.060762496085207625,
+    "fidelity_ratio": 0.9490902158775459,
+    "li_error_vs_post": 1.7642357642357642
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "edit_index_union": 0.0883696638748531,
+    "fidelity_ratio": 1.1293469040452673,
+    "li_error_vs_post": 2.5074925074925076
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "edit_index_union": 0.10119807518375437,
+    "fidelity_ratio": 2.017551049930264,
+    "li_error_vs_post": 7.2967032967032965
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.05,
+    "edit_index_union": -0.6646214900490459,
+    "fidelity_ratio": 0.9885961393119849,
+    "li_error_vs_post": 4.061938061938062
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.2,
+    "edit_index_union": -0.3556304654987913,
+    "fidelity_ratio": 0.9542476795750227,
+    "li_error_vs_post": 2.3796203796203796
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.35,
+    "edit_index_union": -0.1910200365151397,
+    "fidelity_ratio": 1.0902580494233742,
+    "li_error_vs_post": 1.942057942057942
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.7,
+    "edit_index_union": -0.03861186564608344,
+    "fidelity_ratio": 1.4906303985784177,
+    "li_error_vs_post": 1.954045954045954
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "edit_index_union": 0.01902471404870287,
+    "fidelity_ratio": 1.8458243883253578,
+    "li_error_vs_post": 2.885114885114885
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": 0.0411512564072354,
+    "fidelity_ratio": 3.6879055573717743,
+    "li_error_vs_post": 8.247752247752247
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.05,
+    "edit_index_union": -0.5452489725829756,
+    "fidelity_ratio": 0.9664769126350112,
+    "li_error_vs_post": 3.6223776223776225
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.2,
+    "edit_index_union": -0.16563099686389637,
+    "fidelity_ratio": 1.186883566971439,
+    "li_error_vs_post": 2.3136863136863135
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.35,
+    "edit_index_union": -0.0704377968169726,
+    "fidelity_ratio": 1.7320784016036557,
+    "li_error_vs_post": 1.914085914085914
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.7,
+    "edit_index_union": -0.012419880450940885,
+    "fidelity_ratio": 3.079903137044617,
+    "li_error_vs_post": 1.966033966033966
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "edit_index_union": 0.010425527803154847,
+    "fidelity_ratio": 4.087355743231049,
+    "li_error_vs_post": 2.833166833166833
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "edit_index_union": 0.025200824095010056,
+    "fidelity_ratio": 6.396183409937475,
+    "li_error_vs_post": 7.96003996003996
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.05,
+    "edit_index_union": -0.45659302249301686,
+    "fidelity_ratio": 0.9655541906478656,
+    "li_error_vs_post": 3.4445554445554447
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.2,
+    "edit_index_union": -0.10052989064613446,
+    "fidelity_ratio": 1.4247021961500872,
+    "li_error_vs_post": 2.28971028971029
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.35,
+    "edit_index_union": -0.03879730702441199,
+    "fidelity_ratio": 2.2332306981317367,
+    "li_error_vs_post": 1.898101898101898
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.7,
+    "edit_index_union": -0.007446894866000141,
+    "fidelity_ratio": 3.980488544030348,
+    "li_error_vs_post": 1.896103896103896
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "edit_index_union": 0.0036713622237924937,
+    "fidelity_ratio": 5.094025439068701,
+    "li_error_vs_post": 2.7032967032967035
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "edit_index_union": 0.017868976972819375,
+    "fidelity_ratio": 7.441574371257359,
+    "li_error_vs_post": 7.6343656343656345
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.05,
+    "edit_index_union": -0.39611361002306117,
+    "fidelity_ratio": 0.9718970077370132,
+    "li_error_vs_post": 3.3846153846153846
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.2,
+    "edit_index_union": -0.06513726975973086,
+    "fidelity_ratio": 1.6201885474288555,
+    "li_error_vs_post": 2.3036963036963036
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.35,
+    "edit_index_union": -0.02118982325265673,
+    "fidelity_ratio": 2.6850113190969287,
+    "li_error_vs_post": 1.916083916083916
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.7,
+    "edit_index_union": -0.004079839728096542,
+    "fidelity_ratio": 4.938607909714844,
+    "li_error_vs_post": 1.922077922077922
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "edit_index_union": 0.0023907306258817585,
+    "fidelity_ratio": 6.26056009721894,
+    "li_error_vs_post": 2.659340659340659
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "edit_index_union": 0.013091792694881777,
+    "fidelity_ratio": 8.78081085293111,
+    "li_error_vs_post": 7.312687312687313
+   }
+  ],
+  "PI-haufe": {
+   "best": {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "edit_index_union": 0.2699848128424943,
+    "fidelity_ratio": 0.6016438924323585,
+    "li_error_vs_post": 1.3406593406593406
+   },
+   "guarded": {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "edit_index_union": 0.2699848128424943,
+    "fidelity_ratio": 0.6016438924323585,
+    "li_error_vs_post": 1.3406593406593406
+   }
+  },
+  "ND-haufe": {
+   "best": {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": 0.37535852515330426,
+    "fidelity_ratio": 0.5964654341042522,
+    "li_error_vs_post": 1.4265734265734267
+   },
+   "guarded": {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": 0.37535852515330426,
+    "fidelity_ratio": 0.5964654341042522,
+    "li_error_vs_post": 1.4265734265734267
+   }
+  }
+ },
+ "oth-uniform": {
+  "unedited": -0.7126225560675079,
+  "arms": [
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.25,
+    "edit_index_union": -0.6626675971075707,
+    "fidelity_ratio": 1.0421146573188302,
+    "li_error_vs_post": 3.064935064935065
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 0.5,
+    "edit_index_union": -0.6493906293716598,
+    "fidelity_ratio": 1.0693675031954162,
+    "li_error_vs_post": 3.260739260739261
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "edit_index_union": -0.6276675790594443,
+    "fidelity_ratio": 1.097540004653492,
+    "li_error_vs_post": 3.4325674325674327
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "edit_index_union": -0.5674840379315321,
+    "fidelity_ratio": 1.1873734775726335,
+    "li_error_vs_post": 3.97002997002997
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 3.0,
+    "edit_index_union": -0.5106079576187407,
+    "fidelity_ratio": 1.2764424596809352,
+    "li_error_vs_post": 4.547452547452547
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 5.0,
+    "edit_index_union": -0.429710598248368,
+    "fidelity_ratio": 1.4186837085390969,
+    "li_error_vs_post": 5.508491508491509
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 0,
+    "alpha": 8.0,
+    "edit_index_union": -0.34246167533395355,
+    "fidelity_ratio": 1.5625464700997225,
+    "li_error_vs_post": 6.615384615384615
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.25,
+    "edit_index_union": -0.7125756914667813,
+    "fidelity_ratio": 1.0000262724836433,
+    "li_error_vs_post": 2.7672327672327675
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 0.5,
+    "edit_index_union": -0.7125357606136176,
+    "fidelity_ratio": 1.000056418283997,
+    "li_error_vs_post": 2.773226773226773
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "edit_index_union": -0.7068305052450713,
+    "fidelity_ratio": 0.9972795727532265,
+    "li_error_vs_post": 2.757242757242757
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "edit_index_union": -0.6413577894503577,
+    "fidelity_ratio": 0.9982777911055896,
+    "li_error_vs_post": 2.7952047952047954
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 3.0,
+    "edit_index_union": -0.5612623591948737,
+    "fidelity_ratio": 1.0317650202988704,
+    "li_error_vs_post": 3.024975024975025
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 5.0,
+    "edit_index_union": -0.3943886288717993,
+    "fidelity_ratio": 1.104731490545223,
+    "li_error_vs_post": 3.6683316683316685
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 1,
+    "alpha": 8.0,
+    "edit_index_union": -0.255698450171467,
+    "fidelity_ratio": 1.2491736455051827,
+    "li_error_vs_post": 4.581418581418581
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.25,
+    "edit_index_union": -0.7125452540713381,
+    "fidelity_ratio": 0.999964277278727,
+    "li_error_vs_post": 2.7652347652347653
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 0.5,
+    "edit_index_union": -0.7123304723370523,
+    "fidelity_ratio": 0.9998686702615982,
+    "li_error_vs_post": 2.763236763236763
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": -0.690570462786903,
+    "fidelity_ratio": 0.9874635621601898,
+    "li_error_vs_post": 2.653346653346653
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "edit_index_union": -0.4152546104783684,
+    "fidelity_ratio": 0.8644478282371341,
+    "li_error_vs_post": 2.18981018981019
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 3.0,
+    "edit_index_union": -0.15308661898919454,
+    "fidelity_ratio": 0.7941517633091073,
+    "li_error_vs_post": 2.075924075924076
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 5.0,
+    "edit_index_union": 0.07652206637694887,
+    "fidelity_ratio": 0.8778366628911591,
+    "li_error_vs_post": 2.8291708291708293
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 2,
+    "alpha": 8.0,
+    "edit_index_union": 0.13758959805293214,
+    "fidelity_ratio": 1.0914593771094263,
+    "li_error_vs_post": 3.8761238761238763
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.25,
+    "edit_index_union": -0.7124765172645925,
+    "fidelity_ratio": 0.9998630911334678,
+    "li_error_vs_post": 2.7532467532467533
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 0.5,
+    "edit_index_union": -0.7105544815536116,
+    "fidelity_ratio": 0.998316714223747,
+    "li_error_vs_post": 2.699300699300699
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "edit_index_union": -0.5936769757027974,
+    "fidelity_ratio": 0.931208287356857,
+    "li_error_vs_post": 2.3316683316683315
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "edit_index_union": 0.1440696907223639,
+    "fidelity_ratio": 0.5005863126587076,
+    "li_error_vs_post": 0.8911088911088911
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 3.0,
+    "edit_index_union": 0.3912962906017123,
+    "fidelity_ratio": 0.4268657891542061,
+    "li_error_vs_post": 0.7952047952047953
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 5.0,
+    "edit_index_union": 0.38683064908586295,
+    "fidelity_ratio": 0.6693149657564451,
+    "li_error_vs_post": 1.91008991008991
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 3,
+    "alpha": 8.0,
+    "edit_index_union": 0.2566576411971405,
+    "fidelity_ratio": 1.090023481750589,
+    "li_error_vs_post": 3.6803196803196805
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.25,
+    "edit_index_union": -0.7121774132195119,
+    "fidelity_ratio": 0.9993452399550391,
+    "li_error_vs_post": 2.7072927072927073
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 0.5,
+    "edit_index_union": -0.692343156984943,
+    "fidelity_ratio": 0.9877524502917265,
+    "li_error_vs_post": 2.5234765234765235
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "edit_index_union": -0.05290257842348042,
+    "fidelity_ratio": 0.6030829355569932,
+    "li_error_vs_post": 1.126873126873127
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "edit_index_union": 0.5933400381228644,
+    "fidelity_ratio": 0.22991761121631593,
+    "li_error_vs_post": 0.14785214785214784
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 3.0,
+    "edit_index_union": 0.5766183040206391,
+    "fidelity_ratio": 0.30639744378494305,
+    "li_error_vs_post": 0.3596403596403596
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 5.0,
+    "edit_index_union": 0.37126374420038,
+    "fidelity_ratio": 0.732357259431754,
+    "li_error_vs_post": 1.6883116883116882
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 4,
+    "alpha": 8.0,
+    "edit_index_union": 0.18849337944243574,
+    "fidelity_ratio": 1.279312506172194,
+    "li_error_vs_post": 3.7782217782217784
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.25,
+    "edit_index_union": -0.710043433282012,
+    "fidelity_ratio": 0.9979373328623875,
+    "li_error_vs_post": 2.6493506493506493
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 0.5,
+    "edit_index_union": -0.5513252074796361,
+    "fidelity_ratio": 0.9139284650651266,
+    "li_error_vs_post": 2.127872127872128
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "edit_index_union": 0.44715963554459676,
+    "fidelity_ratio": 0.31846082604460285,
+    "li_error_vs_post": 0.25374625374625376
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": 0.6348828597032635,
+    "fidelity_ratio": 0.22758886082415178,
+    "li_error_vs_post": 0.12387612387612387
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 3.0,
+    "edit_index_union": 0.47697423068778855,
+    "fidelity_ratio": 0.4986502995664493,
+    "li_error_vs_post": 0.7192807192807192
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 5.0,
+    "edit_index_union": 0.19514859025012324,
+    "fidelity_ratio": 1.2192816235776998,
+    "li_error_vs_post": 2.941058941058941
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 8.0,
+    "edit_index_union": 0.07751250585278868,
+    "fidelity_ratio": 2.110176329816676,
+    "li_error_vs_post": 5.7502497502497505
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.25,
+    "edit_index_union": -0.7116936450215151,
+    "fidelity_ratio": 0.9994667847866552,
+    "li_error_vs_post": 2.6773226773226773
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 0.5,
+    "edit_index_union": -0.6632213056053291,
+    "fidelity_ratio": 0.9729237332045068,
+    "li_error_vs_post": 2.387612387612388
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "edit_index_union": -0.2967856881002021,
+    "fidelity_ratio": 0.8001838036239658,
+    "li_error_vs_post": 1.7422577422577423
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "edit_index_union": 0.06079948885684684,
+    "fidelity_ratio": 0.6503431838812819,
+    "li_error_vs_post": 1.054945054945055
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 3.0,
+    "edit_index_union": 0.148343423101725,
+    "fidelity_ratio": 0.7232682532117762,
+    "li_error_vs_post": 1.2227772227772227
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 5.0,
+    "edit_index_union": 0.09863741060668486,
+    "fidelity_ratio": 1.19507553323716,
+    "li_error_vs_post": 2.4875124875124874
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 6,
+    "alpha": 8.0,
+    "edit_index_union": 0.043609073716265385,
+    "fidelity_ratio": 2.127520703525774,
+    "li_error_vs_post": 4.801198801198801
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.25,
+    "edit_index_union": -0.689520862917509,
+    "fidelity_ratio": 0.9911940313916286,
+    "li_error_vs_post": 2.6153846153846154
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 0.5,
+    "edit_index_union": -0.5959560846807128,
+    "fidelity_ratio": 0.9589175104776813,
+    "li_error_vs_post": 2.3716283716283715
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "edit_index_union": -0.35375758509531396,
+    "fidelity_ratio": 0.9112924995547674,
+    "li_error_vs_post": 2.033966033966034
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "edit_index_union": -0.1419207941984243,
+    "fidelity_ratio": 1.0109618709212214,
+    "li_error_vs_post": 1.8741258741258742
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 3.0,
+    "edit_index_union": -0.05664165639159121,
+    "fidelity_ratio": 1.191775781734475,
+    "li_error_vs_post": 1.908091908091908
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 5.0,
+    "edit_index_union": 0.007510030314277035,
+    "fidelity_ratio": 1.614989701074665,
+    "li_error_vs_post": 2.4535464535464535
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 7,
+    "alpha": 8.0,
+    "edit_index_union": 0.024437889473796895,
+    "fidelity_ratio": 2.3742720354164044,
+    "li_error_vs_post": 4.21978021978022
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.25,
+    "edit_index_union": -0.40507951410229015,
+    "fidelity_ratio": 0.9016624103472258,
+    "li_error_vs_post": 1.976023976023976
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 0.5,
+    "edit_index_union": -0.1996823366486127,
+    "fidelity_ratio": 0.9351648718745162,
+    "li_error_vs_post": 1.928071928071928
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "edit_index_union": -0.05964084031359543,
+    "fidelity_ratio": 1.2023007509039303,
+    "li_error_vs_post": 1.8541458541458542
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "edit_index_union": -0.007233342373028636,
+    "fidelity_ratio": 1.927614659901056,
+    "li_error_vs_post": 1.8141858141858143
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 3.0,
+    "edit_index_union": 0.002754798335062221,
+    "fidelity_ratio": 2.582738498691804,
+    "li_error_vs_post": 1.89010989010989
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 5.0,
+    "edit_index_union": 0.009622133594083796,
+    "fidelity_ratio": 3.5554769880562653,
+    "li_error_vs_post": 2.5014985014985016
+   },
+   {
+    "editor": "PI-haufe",
+    "point": 8,
+    "alpha": 8.0,
+    "edit_index_union": 0.011143175111500203,
+    "fidelity_ratio": 4.392745183204975,
+    "li_error_vs_post": 4.247752247752247
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.05,
+    "edit_index_union": -0.7126139647160572,
+    "fidelity_ratio": 1.0000075475263028,
+    "li_error_vs_post": 2.763236763236763
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.2,
+    "edit_index_union": -0.7125907012318271,
+    "fidelity_ratio": 1.0000321637566663,
+    "li_error_vs_post": 2.7672327672327675
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.35,
+    "edit_index_union": -0.7125749127629553,
+    "fidelity_ratio": 1.0000584202900848,
+    "li_error_vs_post": 2.769230769230769
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 0.7,
+    "edit_index_union": -0.7125596094956779,
+    "fidelity_ratio": 1.0001221001326615,
+    "li_error_vs_post": 2.7712287712287713
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 1.0,
+    "edit_index_union": -0.712481268493247,
+    "fidelity_ratio": 1.0001824669391852,
+    "li_error_vs_post": 2.7712287712287713
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 0,
+    "alpha": 2.0,
+    "edit_index_union": -0.6924315354076528,
+    "fidelity_ratio": 1.0336185781540537,
+    "li_error_vs_post": 3.018981018981019
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.05,
+    "edit_index_union": -0.7125667607176263,
+    "fidelity_ratio": 0.9999754946537448,
+    "li_error_vs_post": 2.7672327672327675
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.2,
+    "edit_index_union": -0.712285896801727,
+    "fidelity_ratio": 0.9998323931852278,
+    "li_error_vs_post": 2.7672327672327675
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.35,
+    "edit_index_union": -0.7117041224864441,
+    "fidelity_ratio": 0.9996122166181489,
+    "li_error_vs_post": 2.769230769230769
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 0.7,
+    "edit_index_union": -0.6863460765789994,
+    "fidelity_ratio": 0.9953484220567242,
+    "li_error_vs_post": 2.7552447552447554
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 1.0,
+    "edit_index_union": -0.5846828322662075,
+    "fidelity_ratio": 1.014090302068345,
+    "li_error_vs_post": 2.925074925074925
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 1,
+    "alpha": 2.0,
+    "edit_index_union": -0.09352196256811801,
+    "fidelity_ratio": 1.1833517234875577,
+    "li_error_vs_post": 4.665334665334665
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.05,
+    "edit_index_union": -0.7124237774909964,
+    "fidelity_ratio": 0.9998668451893756,
+    "li_error_vs_post": 2.7672327672327675
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.2,
+    "edit_index_union": -0.7109765285310965,
+    "fidelity_ratio": 0.9991387955560092,
+    "li_error_vs_post": 2.7432567432567434
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.35,
+    "edit_index_union": -0.6941101847946367,
+    "fidelity_ratio": 0.9902736763680823,
+    "li_error_vs_post": 2.647352647352647
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 0.7,
+    "edit_index_union": -0.2803841389198816,
+    "fidelity_ratio": 0.7924913453127583,
+    "li_error_vs_post": 1.7562437562437563
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 1.0,
+    "edit_index_union": 0.10890835478084837,
+    "fidelity_ratio": 0.6981805417733331,
+    "li_error_vs_post": 1.8341658341658342
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 2,
+    "alpha": 2.0,
+    "edit_index_union": 0.32969287419310506,
+    "fidelity_ratio": 0.9397927114923353,
+    "li_error_vs_post": 3.5464535464535465
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.05,
+    "edit_index_union": -0.7122429660328458,
+    "fidelity_ratio": 0.9997226606940351,
+    "li_error_vs_post": 2.7552447552447554
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.2,
+    "edit_index_union": -0.6926964629511105,
+    "fidelity_ratio": 0.9905002946188582,
+    "li_error_vs_post": 2.6213786213786214
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.35,
+    "edit_index_union": -0.4775339193973695,
+    "fidelity_ratio": 0.8785123309920134,
+    "li_error_vs_post": 1.972027972027972
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 0.7,
+    "edit_index_union": 0.4658830928521031,
+    "fidelity_ratio": 0.3413977223073589,
+    "li_error_vs_post": 0.4095904095904096
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 1.0,
+    "edit_index_union": 0.5263675109328774,
+    "fidelity_ratio": 0.39437168305971515,
+    "li_error_vs_post": 0.7712287712287712
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 3,
+    "alpha": 2.0,
+    "edit_index_union": 0.3196554746983849,
+    "fidelity_ratio": 0.9509311999929363,
+    "li_error_vs_post": 3.340659340659341
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.05,
+    "edit_index_union": -0.7118557865525251,
+    "fidelity_ratio": 0.9992788742099864,
+    "li_error_vs_post": 2.7412587412587412
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.2,
+    "edit_index_union": -0.5894078712581352,
+    "fidelity_ratio": 0.9389923019586698,
+    "li_error_vs_post": 2.185814185814186
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.35,
+    "edit_index_union": 0.2335948996573112,
+    "fidelity_ratio": 0.47082024944998935,
+    "li_error_vs_post": 0.6193806193806194
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.7,
+    "edit_index_union": 0.6311319806945924,
+    "fidelity_ratio": 0.2282090235710795,
+    "li_error_vs_post": 0.16383616383616384
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 1.0,
+    "edit_index_union": 0.5719363634703026,
+    "fidelity_ratio": 0.34114465341053224,
+    "li_error_vs_post": 0.5354645354645354
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 2.0,
+    "edit_index_union": 0.23882568312209992,
+    "fidelity_ratio": 1.0374305930209762,
+    "li_error_vs_post": 2.971028971028971
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.05,
+    "edit_index_union": -0.710120947553053,
+    "fidelity_ratio": 0.9983265217916318,
+    "li_error_vs_post": 2.711288711288711
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.2,
+    "edit_index_union": -0.18940297468790843,
+    "fidelity_ratio": 0.7391825842177867,
+    "li_error_vs_post": 1.3926073926073925
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.35,
+    "edit_index_union": 0.5562156375787702,
+    "fidelity_ratio": 0.26531999619211416,
+    "li_error_vs_post": 0.10589410589410589
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 0.7,
+    "edit_index_union": 0.6166886790858117,
+    "fidelity_ratio": 0.25184024932891863,
+    "li_error_vs_post": 0.17782217782217782
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 1.0,
+    "edit_index_union": 0.4366312139619906,
+    "fidelity_ratio": 0.5621413929942716,
+    "li_error_vs_post": 0.9790209790209791
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": 0.1020396981627447,
+    "fidelity_ratio": 1.7249583242827657,
+    "li_error_vs_post": 4.707292707292707
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.05,
+    "edit_index_union": -0.711480119855936,
+    "fidelity_ratio": 0.9992371513484145,
+    "li_error_vs_post": 2.721278721278721
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.2,
+    "edit_index_union": -0.5008965486190388,
+    "fidelity_ratio": 0.8973484936344923,
+    "li_error_vs_post": 1.994005994005994
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.35,
+    "edit_index_union": -0.1354915050045261,
+    "fidelity_ratio": 0.730935137910259,
+    "li_error_vs_post": 1.4985014985014986
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 0.7,
+    "edit_index_union": 0.1616697396140441,
+    "fidelity_ratio": 0.6591470546163769,
+    "li_error_vs_post": 0.993006993006993
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 1.0,
+    "edit_index_union": 0.1514068735481153,
+    "fidelity_ratio": 0.8434905076522088,
+    "li_error_vs_post": 1.5624375624375624
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 6,
+    "alpha": 2.0,
+    "edit_index_union": 0.050493578866171396,
+    "fidelity_ratio": 2.034149129150327,
+    "li_error_vs_post": 4.5414585414585416
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.05,
+    "edit_index_union": -0.6957055314701049,
+    "fidelity_ratio": 0.9928965253557619,
+    "li_error_vs_post": 2.6553446553446554
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.2,
+    "edit_index_union": -0.4030533557196872,
+    "fidelity_ratio": 0.9162967024967394,
+    "li_error_vs_post": 2.051948051948052
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.35,
+    "edit_index_union": -0.19262771680628327,
+    "fidelity_ratio": 0.9446368215974162,
+    "li_error_vs_post": 1.902097902097902
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 0.7,
+    "edit_index_union": -0.0320620696073936,
+    "fidelity_ratio": 1.2293823466600837,
+    "li_error_vs_post": 1.8861138861138862
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 1.0,
+    "edit_index_union": 0.009585320043512362,
+    "fidelity_ratio": 1.5248678127033424,
+    "li_error_vs_post": 2.265734265734266
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 7,
+    "alpha": 2.0,
+    "edit_index_union": 0.02511315823042426,
+    "fidelity_ratio": 2.7507824665255463,
+    "li_error_vs_post": 4.949050949050949
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.05,
+    "edit_index_union": -0.43121421551077216,
+    "fidelity_ratio": 0.9077767614562181,
+    "li_error_vs_post": 1.992007992007992
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.2,
+    "edit_index_union": -0.06254761951589932,
+    "fidelity_ratio": 1.1592292699040019,
+    "li_error_vs_post": 1.8681318681318682
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.35,
+    "edit_index_union": -0.011821619907087992,
+    "fidelity_ratio": 1.6713323647335512,
+    "li_error_vs_post": 1.8201798201798203
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 0.7,
+    "edit_index_union": 0.005684990951095313,
+    "fidelity_ratio": 2.758874416296554,
+    "li_error_vs_post": 1.9060939060939062
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 1.0,
+    "edit_index_union": 0.009176642720854127,
+    "fidelity_ratio": 3.4436769170390322,
+    "li_error_vs_post": 2.3716283716283715
+   },
+   {
+    "editor": "ND-haufe",
+    "point": 8,
+    "alpha": 2.0,
+    "edit_index_union": 0.010580520235150059,
+    "fidelity_ratio": 4.685687951467992,
+    "li_error_vs_post": 5.060939060939061
+   }
+  ],
+  "PI-haufe": {
+   "best": {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": 0.6348828597032635,
+    "fidelity_ratio": 0.22758886082415178,
+    "li_error_vs_post": 0.12387612387612387
+   },
+   "guarded": {
+    "editor": "PI-haufe",
+    "point": 5,
+    "alpha": 2.0,
+    "edit_index_union": 0.6348828597032635,
+    "fidelity_ratio": 0.22758886082415178,
+    "li_error_vs_post": 0.12387612387612387
+   }
+  },
+  "ND-haufe": {
+   "best": {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.7,
+    "edit_index_union": 0.6311319806945924,
+    "fidelity_ratio": 0.2282090235710795,
+    "li_error_vs_post": 0.16383616383616384
+   },
+   "guarded": {
+    "editor": "ND-haufe",
+    "point": 4,
+    "alpha": 0.7,
+    "edit_index_union": 0.6311319806945924,
+    "fidelity_ratio": 0.2282090235710795,
+    "li_error_vs_post": 0.16383616383616384
+   }
+  }
+ }
+}

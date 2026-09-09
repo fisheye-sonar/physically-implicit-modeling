@@ -5,6 +5,8 @@ token model, so it checks the wiring — cases, hooks, scorecards — not any nu
 """
 from pathlib import Path
 
+import json
+
 import numpy as np
 import pytest
 import torch
@@ -32,9 +34,19 @@ def test_token_bench_cases_and_arms(tmp_path):
     tb = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
                               data_dir=inst / "eval")
     assert tb.tokens.shape == (16, 20) and tb.tgt.shape == (16, 8)
-    # the context tokens are the stored edits tokens; post frames decode to the clean frame
-    stored = np.load(TOK / "edits.npy")[:16, :20]
+    # the context tokens are the stored edits tokens for THE CASES THE BENCH SELECTED
+    # (dw-8ray carries edits_selection.json since 2026-09-08 — 20% of its teleports render
+    # an identical frame, so the bench is a filtered case list, not the first n).
+    sp = inst / "edits_selection.json"
+    sel = (json.loads(sp.read_text())["select"][:16] if sp.exists() else list(range(16)))
+    stored = np.load(TOK / "edits.npy")[sel][:, :20]
     assert np.array_equal(tb.tokens, stored)
+    # every selected case is scoreable, which is the point of the selection
+    assert bool(tb.keep.all()), f"{int(tb.keep.sum())}/16 scoreable on the selected cases"
+    # and the unfiltered bench is still reachable, and still equals the first n
+    tb0 = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
+                               data_dir=inst / "eval", use_selection=False)
+    assert np.array_equal(tb0.tokens, np.load(TOK / "edits.npy")[:16, :20])
     a = dwb.bench_arrays(16, "full", "cartesian", inst / "eval")
     assert np.array_equal(decode(tb.post_tok, vocab), a["clean"][:, 20])
     assert np.array_equal(decode(tb.pre_tok, vocab), a["zones"].gt_unedited)

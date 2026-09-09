@@ -60,6 +60,35 @@ Editability is one of the sharper and less explored axes here, so emphasis may b
   guard against — hence the findings-promotion gate (see `research/README.md`).
 - **Breadth without losing depth:** multiple directions may run in parallel sessions, but each must connect back to the core questions above. Don't hyperfixate on a single experiment's mechanics at the expense of the larger structural question it serves.
 
+### ⛔ The independent variable is the ENVIRONMENT, not the editor (2026-09-09)
+
+**The design is: vary the training environment, hold the analysis pipeline FIXED, and ask what
+a model trained there learns and uses.** The probes, editors, α grids, benches, Edit Index and
+fidelity guard are the instrument. They are held constant precisely so that a difference
+between two rows of the master table is attributable to the world, not to us.
+
+The failure mode this guards against is **drifting into editor design**. Any analysis that
+improves an editor (better-aligned write directions, corrected probe geometry, a smarter
+target parameterisation) is measuring the instrument, not the environment. Such work is
+legitimate and can be genuinely informative — the Haufe-corrected edit directions
+(`findings/edit-direction-alignment.md`) raised oth-adjacent from +0.12 to +0.375 — but it
+does not answer this project's question, and a paper that accumulates editor improvements has
+changed subject. We are late-stage; that drift is expensive.
+
+**How to keep such a result in scope: turn it back into a statement about the world.** Not
+"Haufe directions edit better", but "the environment determines how far the true edit
+direction sits from what a linear probe reads, and *that* varies with the world" — a property
+of the environment measured through a fixed instrument. Concretely, the questions worth
+inheriting from that analysis are all environment questions: what makes a counterfactual
+displacement low-dimensional and read-out-aligned in one world and high-rank in another; why
+oth-adjacent needs the correction when standard Othello does not; why discworld barely
+benefits from it. The alignment number becomes a per-environment measurement to put beside
+decodability and editability, not a new knob to tune.
+
+**Practical rule:** if an experiment's output is "a better way to edit", it belongs in an
+appendix or an experiment directory, and the canonical table keeps the fixed pipeline. If its
+output is "environments differ in X, measured identically everywhere", it is on-thesis.
+
 ## What would count as answers
 
 - Geometry: a characterization of the visited-state manifold (intrinsic dim,
