@@ -259,8 +259,13 @@ result on this run so far (+0.51 / 0.79 vs +0.37 / 0.91 on `grid-16x8`, +0.34 on
 in the direction of Sevan's prediction that the 128-ray model wants a finer,
 observation-aligned partition; GS does not follow (+0.30, guard failing on every categorical
 target here). The bench under `appearance-lat` drops only 2 same-cell teleports (21 under
-`grid-8x4`).
+`grid-8x4`). (iii) With `grid-32x16` in, the product grids on noiseless are FLAT from 32 to
+512 cells — ND +0.34 / +0.37 / +0.34, GS +0.27 / +0.29 / +0.29 — exactly the 8-ray pattern,
+while decodability at 512 cells holds up far better here (MLP 0.44 vs 0.04): the finer
+frame carries the finer grid, but a finer PRODUCT grid still does not edit better. The one
+lift so far is the observation-aligned `appearance-lat` (ND +0.51). Bench drops 1 same-cell
+teleport at 32x16.
 
 Provenance: `runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m}/scores.json["bases"]`,
 `logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3,_4,_5}.sh`.
-Pending: `grid-32x16` and `grid-64x32` on `L-dw-noiseless-20m` (chain 5).
+Pending: `grid-64x32` on `L-dw-noiseless-20m` (chain 5, started 13:20 PT).
