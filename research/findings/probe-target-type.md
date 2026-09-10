@@ -197,6 +197,11 @@ skill 0.95 / 0.98, PI +0.28 / 0.90, ND n/a, GS −0.06 / 0.82):
 | appearance-d3 | 90 | 0.48 / 0.52 | +0.11 / 0.65 | +0.24 / 0.54 | +0.54 / 0.32 |
 | grid-16x8 | 128 | 0.17 / 0.23 | +0.01 / 0.75 | +0.11 / 0.66 | +0.23 / 0.54 |
 
+**Figure** — `experiments/probe_targets/outputs/probe_target_sweep.png` (rendered by
+`experiments/probe_targets/scripts/sweep_figure.py` through `pim.figures.sweep_figure`):
+one row per run, Probe Skill then the Edit Index at each editor's best arm against cell
+count, the three target families in colour, guard-failing arms hollow.
+
 ### Reading the sweep
 
 1. **The observation-exact partition is a peak, on both models and for every editor.**
