@@ -86,6 +86,15 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**09:10 PT — records caught up while chain 3 runs.** Consolidated 8-ray sweep tables and
+reading in `findings/probe-target-type.md` (commit bec3776), the OOM in GOTCHAS, REGISTRY rows,
+and the sweep figure `experiments/probe_targets/outputs/probe_target_sweep.png` via
+`pim.figures.sweep_figure` (commit 3649a83; re-run `experiments/probe_targets/scripts/sweep_figure.py`
+when chains 3/4 land — the noiseless row fills in by itself). Chain 3 started 08:57, ~2.5 min
+per probe point on grid-32x16; expected done ~10:30 PT, chain 4 then ~10:30 → ~15:00 PT.
+Sevan asked (09:00) why 32x16 is redone (chain 1 OOM, never scored) and how much is left
+(chain 3: 32x16 × 2 models; chain 4: 4 noiseless variants) — answered.
+
 **08:58 PT — chain 2's last variant STOPPED by me.** grid-64x32 on dw-8ray: the linear
 probe sat exactly at the majority error (skill 0.00) at points 0–2 and the variant would have
 taken ~8 h for both models (≈15 min per point at 6,144 logits). The far end of the gradient
