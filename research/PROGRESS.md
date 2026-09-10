@@ -23,6 +23,23 @@ stage. If the session is lost: `systemctl --user is-active probe_targets`,
 `logs/probe_targets/driver.log`, then re-arm both monitors. Findings skeleton:
 `findings/probe-target-type.md`. Code committed before launch (see `git log`).
 
+**23:30 PT update.** Stages 1–4 DONE (Othello `mine_signed` on 4 runs + 8 training-curve
+checkpoints; dw-8ray `appearance` on both models + floors; tables). Headline in
+`findings/probe-target-type.md`: **dw-8ray IS editable through the observation-exact
+categorical target** (frame model GS +0.61 / fid 0.39, PI +0.43 / 0.76, ND +0.43 / 0.91;
+token model GS +0.58 / 0.31; regression target on the same models: GS negative everywhere);
+by-step stays positive for 15 steps; every residual point lands; Othello `mine_signed`
+reproduces the categorical PI/ND to a few hundredths. Chain 1 is in its variant sweep
+(appearance-d2 → d3 → grid-16x8 → if before 06:00 PT: appearance-lat, grid-8x4, grid-32x16).
+**Chain 2 queued** (`scripts/drivers/probe_targets_2.sh`, unit `probe_targets_2`, logs
+`logs/probe_targets_2/`): waits for chain 1's `chain complete`, then Sevan's additions —
+the MISALIGNED 30-cell controls `grid-6x5`, `grid-10x3` (same count as appearance, not the
+runs of rays) and the gradient ends `grid-4x2`, `grid-64x32` — ~75 min each. Both chains are
+systemd units: they do not depend on any agent session. The session died once (~22:30) and
+the chain did not notice; monitors re-armed 23:25. ⚠ master_eval SETTINGS were extended with
+the four new targets via nbformat (the Read/NotebookEdit tools refuse the notebook above the
+size limit) — the one deliberate exception, flagged to Sevan.
+
 ## Where the work is (2026-09-09)
 
 **Done this session (Sevan's ask): the grid target lives in `pim`, not in an experiment.**
