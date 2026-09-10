@@ -37,18 +37,38 @@ is cheap: dw-8ray, whose renderer produces exactly **30 distinct single-disc app
 _(filled in when the chain lands: `runs/<run>/scores.json["bases"][<target>]`, the master
 tables, `logs/probe_targets/headline_*.txt`)_
 
+**Othello — landed 2026-09-09 19:50 PT** (EI / fidelity; the canonical 3-way numbers in
+brackets; skill is R² here vs 1 − err/majority there, so the two skill columns are NOT on
+one formula):
+
 | run | target | skill LIN / MLP | unedited | PI | ND | GS |
 |---|---|---|---|---|---|---|
-| L-oth-20m | mine_signed | | | | | |
-| L-oth-20m-mse | mine_signed | | | | | |
-| L-oth-noflip-20m | mine_signed | | | | | |
-| L-oth-adjacent-20m | mine_signed | | | | | |
+| L-oth-20m | mine_signed | 0.839 / 0.892 | −0.713 | **+0.618 / 0.23** (+0.608) | **+0.625 / 0.23** (+0.622) | +0.418 / 0.45 (+0.647) |
+| L-oth-20m-mse | mine_signed | 0.803 / 0.846 | −0.817 | **+0.729 / 0.19** (+0.684) | **+0.724 / 0.18** (+0.739) | +0.479 / 0.35 (+0.730) |
+| L-oth-noflip-20m | mine_signed | 0.957 / 0.997 | −0.823 | +0.042 / 2.08 (−0.001) | +0.055 / 2.62 (+0.086) | −0.053 / 2.02 (+0.020) |
+| L-oth-adjacent-20m | mine_signed | 0.895 / 0.937 | −0.680 | −0.015 / 6.00 (−0.053) | +0.004 / 2.56 (+0.118) | −0.000 / 5.27 (+0.002) |
 | L-dw-8ray-20m | appearance | | | | | |
 | L-dw-8ray-tok-20m † | appearance | | | | | |
 
+Best arms (regression): PI pt 5 α 3 / pt 4 α 3; ND pt 4 α 0.5 / pt 4 α 0.1; GS pt 0 α 0.05
+on both editable runs — GS's best sits one step from the small end of its grid (0.02 … 0.5),
+so its lower value may be grid-limited; PI and ND are interior. Tripwire clean everywhere.
+
 ## Reading
 
-_(pending)_
+1. **Othello read by a REGRESSION probe is exactly as editable as Othello read by a
+   categorical one.** PI and ND reproduce the canonical Edit Index to within a few
+   hundredths on both editable runs, at the same fidelity (0.18–0.23); the two
+   non-editable runs stay non-editable with the same failed guards. The probe target's
+   type is therefore excluded in THIS direction as well as the discworld direction
+   (`grid-target-control.md`): the same information, read out in either form, edits (or
+   fails to edit) the same way. Decodability on the R² axis is lower (0.84–0.90 vs 0.96–0.98
+   skill) because a linear map has to place three levels on one line — a statement about the
+   axis, not the representation.
+2. GS through the regression MLP is weaker (+0.42 / +0.48 vs +0.65 / +0.73). Its best arm is
+   near the grid edge; extend the grid downward before reading anything into that number.
+
+_(dw-8ray appearance results pending)_
 
 ## Provenance
 
