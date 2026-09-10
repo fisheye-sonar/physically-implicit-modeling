@@ -121,7 +121,7 @@ def _targets(target: str, pos: np.ndarray, vel: np.ndarray, sim: dict, basis_nam
     grid = categorical_target(target)
     if grid is not None:
         y, _ = grid.label_frames(pos, sim)
-        return y, grid.n_classes
+        return y, grid.n_classes_on(sim)
     bp, bv = _to_basis(pos, vel, sim, basis_name)
     snap = snapped_target(target)
     if snap is not None:
@@ -419,10 +419,31 @@ def pinv_target(probe, h0: torch.Tensor, b: Bench) -> torch.Tensor:
     the new cell — Othello's tile swap, on two cells — flattened to (B, cells·classes)."""
     if b.kind != "classification":
         return b.tgt
+    if b.moves is not None:                  # factorised target: old ↔ new at every moved tile
+        lg = probe(h0)
+        for m in range(b.moves["tile"].shape[1]):
+            lg = swap_class_logits(lg, b.moves["tile"][:, m], b.moves["old"][:, m],
+                                   b.moves["new"][:, m])
+        return lg.reshape(h0.shape[0], -1)
     zero = torch.zeros_like(b.cells["cls"])
     lg = swap_class_logits(probe(h0), b.cells["A"], zero, b.cells["cls"])
     lg = swap_class_logits(lg, b.cells["B"], zero, b.cells["cls"])
     return lg.reshape(h0.shape[0], -1)
+
+
+def categorical_direction(probe, b) -> torch.Tensor:
+    """ND's per-case unit direction on a categorical bench. Cell target: the probe row of
+    (new cell, class) minus (old cell, class) — Othello's form. Factorised target: the row
+    contrast (new − old) at every moved tile, summed (a tile whose class holds adds zero)."""
+    C = probe.n_classes
+    if b.moves is not None:
+        W = probe.net.weight.detach() / probe.x_std
+        rows_new = b.moves["tile"] * C + b.moves["new"]           # (B, F)
+        rows_old = b.moves["tile"] * C + b.moves["old"]
+        d = (W[rows_new] - W[rows_old]).sum(1)                    # (B, d_in)
+        return d / d.norm(dim=-1, keepdim=True).clamp_min(1e-12)
+    return probe_direction(probe, b.cells["B"] * C + b.cells["cls"],
+                           subtract_rows=b.cells["A"] * C + b.cells["cls"], per_sample=True)
 
 
 @torch.no_grad()
@@ -432,6 +453,9 @@ def readout_landed(h: torch.Tensor, probe, b: Bench) -> float:
     counterpart of ``readout_error``."""
     lab = probe(h).argmax(-1)
     ar = torch.arange(h.shape[0], device=h.device)
+    if b.moves is not None:                  # every tile of the edited object reads its target
+        ok = (lab.gather(1, b.moves["tile"]) == b.moves["new"]).all(1)
+        return float(ok.float().mean())
     ok = (lab[ar, b.cells["A"]] == 0) & (lab[ar, b.cells["B"]] == b.cells["cls"])
     return float(ok.float().mean())
 
@@ -459,9 +483,7 @@ def nanda_rollout(model, b: Bench, probe, ell: int, alpha: float,
     (old cell, class), the "move the object" direction (target − current contrast)."""
     _check_dims(b, dims)
     if b.kind == "classification":
-        C = probe.n_classes
-        d = probe_direction(probe, b.cells["B"] * C + b.cells["cls"],
-                            subtract_rows=b.cells["A"] * C + b.cells["cls"], per_sample=True)
+        d = categorical_direction(probe, b)
     else:
         idx = dim_idx(dims)
         rows = b.out_dims if idx is None else [d for d in b.out_dims if d in set(idx)]

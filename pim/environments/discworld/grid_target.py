@@ -71,6 +71,16 @@ class CategoricalTarget:
     def n_cells(self, sim: dict) -> int:         # pragma: no cover — abstract
         raise NotImplementedError
 
+    def n_tiles_on(self, sim: dict) -> int:
+        """Width of the label vector the probe reads — the cells, unless a target says
+        otherwise (a factorised target reads N_OBJ × factors tiles over the same cells)."""
+        return self.n_cells(sim)
+
+    def n_classes_on(self, sim: dict) -> int:
+        """Classes per tile on this instance — the fixed {empty, obj 0, obj 1} unless a
+        target says otherwise (a factorised target's depends on the partition)."""
+        return self.n_classes
+
     def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:   # pragma: no cover
         """(..., 2) world positions → (...) int cell index in [0, n_cells)."""
         raise NotImplementedError
@@ -360,9 +370,11 @@ class AppearanceTarget(CategoricalTarget):
 
 
 def categorical_target(target: str) -> "CategoricalTarget | None":
-    """The categorical target a name denotes (``grid-…``, ``appearance…``), or None for a
-    regression target (``pos`` / ``full``). Every branch in the pipeline goes through this."""
-    return GridTarget.parse(target) or AppearanceTarget.parse(target)
+    """The categorical target a name denotes (``grid-…``, ``appearance…``, or either with
+    the ``-fac`` suffix — the factorised, object-indexed reading of the same partition), or
+    None for a regression target (``pos`` / ``full`` / ``pos@…``). Every branch in the
+    pipeline goes through this."""
+    return GridTarget.parse(target) or AppearanceTarget.parse(target) or _factorised_target(target)
 
 
 # ── the SNAPPED regression target: a categorical partition read as coordinates ────────
@@ -485,7 +497,7 @@ def selection_target(target: str) -> "CategoricalTarget | None":
     regression target (every teleport counts)."""
     cat = categorical_target(target)
     if cat is not None:
-        return cat
+        return cat.cat if isinstance(cat, FactorisedTarget) else cat
     sn = snapped_target(target)
     return sn.cat if sn is not None else None
 
@@ -494,3 +506,154 @@ def target_cells(target: str, sim: dict) -> int | None:
     """How many cells a target's partition has on this instance (None for ``pos``/``full``)."""
     sel = selection_target(target)
     return None if sel is None else sel.n_cells(sim)
+
+
+# ── the FACTORISED categorical target: per object, one softmax per factor ─────────────
+#
+# ``"<partition>-fac"`` (2026-09-10, Sevan). The cell-indexed categorical target is Othello's
+# shape (a class per CELL: empty / object 0 / object 1). A factorised target is object-indexed
+# instead: for every object, one categorical variable per FACTOR of the partition — the
+# appearance partition factors as (run centre, run length): "which pixel the disc's centre is
+# in" and "how many rays wide it is"; a product grid as (lateral bin, depth bin). The probe
+# has N_OBJ × F tiles, each a softmax over ALL the factors' classes laid out side by side
+# (centre classes first, then length classes — every class index means one thing, so the
+# pooled majority baseline reads as it does on Othello; a tile's foreign classes are never
+# labelled). Same information as the partition, far fewer logits: 8-ray appearance is
+# 2 × (15 + 5) = 40 classes over 4 tiles against 30 × 3 = 90; 128-ray would be 2 × (233 + n_len)
+# against 2,889 × 3. An edit is a per-tile class change (old → new) on the edited object's
+# tiles whose class differs — PI swaps the two logits at each such tile, ND adds the row
+# contrast (new − old) summed over the moved tiles, GS asks cross-entropy toward the new
+# labels on those tiles. Genuine edits are the partition's cell-changing teleports (a factor
+# change ⇔ a cell change), so the bench is the same 192 cases as the partition's own row.
+
+_FAC = re.compile(r"^(.+)-fac$")
+
+
+def _grid_factors(self, cells: np.ndarray, sim: dict) -> np.ndarray:
+    """(...) cells → (..., 2) (lateral bin, depth bin)."""
+    iu, idp = np.divmod(np.asarray(cells, np.int64), self.nd)
+    return np.stack([iu, idp], -1)
+
+
+def _grid_factor_sizes(self, sim: dict) -> tuple[int, ...]:
+    return (self.nu, self.nd)
+
+
+GridTarget.factors_of = _grid_factors
+GridTarget.factor_sizes = _grid_factor_sizes
+GridTarget.factor_names = ("lateral", "depth")
+
+
+def _app_factor_tables(self, sim: dict) -> tuple[dict, dict]:
+    """{2·centre: class}, {length: class} over the realisable runs (compact, sorted)."""
+    runs = self.runs(sim)
+    centres = sorted({f + la for f, la in runs})
+    lengths = sorted({la - f + 1 for f, la in runs})
+    return ({c: i for i, c in enumerate(centres)}, {ln: i for i, ln in enumerate(lengths)})
+
+
+def _app_factors(self, cells: np.ndarray, sim: dict) -> np.ndarray:
+    """(...) cells → (..., 2) (centre class, length class). Only the plain partition
+    factorises this way (a depth band or a merged centre is not a run)."""
+    if self.depth_bands != 1 or self.lateral_only:
+        raise ValueError(f"{self.name} does not factorise into (centre, length)")
+    runs = np.asarray(self.runs(sim))                      # (G, 2)
+    ct, lt = self._factor_tables(sim)
+    c_cls = np.array([ct[f + la] for f, la in runs])
+    l_cls = np.array([lt[la - f + 1] for f, la in runs])
+    cells = np.asarray(cells, np.int64)
+    return np.stack([c_cls[cells], l_cls[cells]], -1)
+
+
+def _app_factor_sizes(self, sim: dict) -> tuple[int, ...]:
+    ct, lt = self._factor_tables(sim)
+    return (len(ct), len(lt))
+
+
+AppearanceTarget._factor_tables = _app_factor_tables
+AppearanceTarget.factors_of = _app_factors
+AppearanceTarget.factor_sizes = _app_factor_sizes
+AppearanceTarget.factor_names = ("centre", "length")
+
+
+@dataclass(frozen=True)
+class FactorisedTarget(CategoricalTarget):
+    """``<partition>-fac``: the partition's cells read as per-object categorical FACTORS."""
+
+    cat: CategoricalTarget = None
+
+    @property
+    def name(self) -> str:
+        return f"{self.cat.name}-fac"
+
+    @classmethod
+    def parse(cls, target: str) -> "FactorisedTarget | None":
+        m = _FAC.match(str(target))
+        if not m:
+            return None
+        cat = GridTarget.parse(m.group(1)) or AppearanceTarget.parse(m.group(1))
+        if cat is None or not hasattr(cat, "factors_of"):
+            return None
+        if isinstance(cat, AppearanceTarget) and (cat.depth_bands != 1 or cat.lateral_only):
+            return None                    # a depth band / merged centre is not a run
+        return cls(cat)
+
+    # the partition (for the resolution axis, the bench filter and the table's cell count)
+    def n_cells(self, sim: dict) -> int:
+        return self.cat.n_cells(sim)
+
+    def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        return self.cat.cell_of(pos, sim)
+
+    # the probe's shape
+    @property
+    def n_factors(self) -> int:
+        return len(self.cat.factor_names)
+
+    @property
+    def n_tiles(self) -> int:
+        return N_OBJ * self.n_factors
+
+    def n_tiles_on(self, sim: dict) -> int:
+        return self.n_tiles
+
+    def class_offsets(self, sim: dict) -> np.ndarray:
+        """Where each factor's classes start in the shared class axis."""
+        return np.concatenate([[0], np.cumsum(self.cat.factor_sizes(sim))[:-1]]).astype(np.int64)
+
+    def n_classes_on(self, sim: dict) -> int:
+        return int(sum(self.cat.factor_sizes(sim)))
+
+    def factor_labels(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        """(..., N_OBJ, 2) positions → (..., N_OBJ · F) class labels in the shared class
+        axis; tile ``F·j + f`` is object j's factor f."""
+        cells = self.cat.cell_of(pos, sim)                          # (..., N_OBJ)
+        fac = self.cat.factors_of(cells, sim) + self.class_offsets(sim)   # (..., N_OBJ, F)
+        return fac.reshape(*fac.shape[:-2], -1).astype(np.int64)
+
+    def label_frames(self, pos: np.ndarray, sim: dict) -> tuple[np.ndarray, int]:
+        """Labels are per OBJECT here, so two objects sharing a cell is not a conflict."""
+        return self.factor_labels(pos, sim), 0
+
+    def labels_from_cells(self, cells, y_world, sim):        # pragma: no cover
+        raise NotImplementedError("a factorised target labels objects, not cells")
+
+    def edit_cells(self, pos, edit_object, ef, sim):        # pragma: no cover
+        raise NotImplementedError("a factorised target's edit is `edit_moves`, not a cell pair")
+
+    def edit_moves(self, pos: np.ndarray, edit_object: np.ndarray, ef: int, sim: dict) -> dict:
+        """Per case, the edited object's tiles and their classes before (frame ``ef − 1``) and
+        after (frame ``ef``) the teleport: ``{"tile", "old", "new"}`` (N, F) int64. A tile
+        whose class does not change has ``new == old`` — the swap is a no-op there and the
+        change mask leaves it alone."""
+        j = np.asarray(edit_object, dtype=int)
+        idx = np.arange(len(j))
+        F = self.n_factors
+        before = self.factor_labels(pos[:, ef - 1], sim).reshape(len(j), N_OBJ, F)[idx, j]
+        after = self.factor_labels(pos[:, ef], sim).reshape(len(j), N_OBJ, F)[idx, j]
+        tile = (j[:, None] * F + np.arange(F)[None, :]).astype(np.int64)
+        return {"tile": tile, "old": before.astype(np.int64), "new": after.astype(np.int64)}
+
+
+def _factorised_target(target: str) -> "FactorisedTarget | None":
+    return FactorisedTarget.parse(target)

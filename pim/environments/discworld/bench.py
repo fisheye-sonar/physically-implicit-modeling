@@ -20,7 +20,7 @@ import torch
 
 from pim.environments import layout
 from pim.environments.discworld.grid_target import (
-    CategoricalTarget, categorical_target, selection_target, snapped_target)
+    CategoricalTarget, FactorisedTarget, categorical_target, selection_target, snapped_target)
 from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
@@ -75,6 +75,9 @@ class Bench:
     # categorical MOVE per case ({"A", "B", "cls"} long tensors: old cell, new cell, class)
     kind: str = "regression"
     cells: dict | None = None
+    # a FACTORISED categorical target's move (2026-09-10): per case the edited object's tiles
+    # and their classes before / after — {"tile", "old", "new"} (N, F) long; `cells` is None
+    moves: dict | None = None
     selection: dict | None = None          # which cases were scored, when not the first n
 
 
@@ -188,8 +191,19 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     # ⛔ The ZONES stay in world space — they are ray masks over the observation and do
     # not depend on how the state is coordinatised. Only the PROBE TARGET changes basis,
     # so the Edit Index remains directly comparable across bases.
-    cells = None
-    if grid is not None:
+    cells = moves = None
+    if isinstance(grid, FactorisedTarget):
+        # Factorised MOVE: the edited object's factor tiles take their post-teleport classes;
+        # only the tiles whose class changes are asked to move (the rest hold).
+        cur, _ = grid.label_frames(pos[:, EF - 1], sim)                  # (n, tiles) int64
+        moves = grid.edit_moves(pos, eobj, EF, sim)
+        ar = np.arange(n)[:, None]
+        y = cur.copy()
+        y[ar, moves["tile"]] = moves["new"]
+        cm = np.zeros((n, grid.n_tiles), bool)
+        cm[ar, moves["tile"]] = moves["new"] != moves["old"]
+        out_dims = []
+    elif grid is not None:
         # Categorical MOVE: the labels the model should read after the edit are the
         # current frame's labels with the object gone from its old cell A and present in
         # its new cell B; only those two cells are asked to change (the rest hold).
@@ -230,7 +244,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     return dict(obs=obs, pos=pos, vel=vel, edit_object=eobj, clean=clean, sim=sim,
                 gt_roll=gt_roll, zones=zones, y=y, change_mask=cm, out_dims=out_dims, n=n,
                 blink_visible=blink, kind="classification" if grid else "regression",
-                cells=cells, selection=selection)
+                cells=cells, moves=moves, selection=selection)
 
 
 def load_bench(model, n: int = 192, target: str = "pos",
@@ -243,12 +257,13 @@ def load_bench(model, n: int = 192, target: str = "pos",
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
     tgt = torch.from_numpy(a["y"]).to(DEV)
     tgt = tgt.long() if a["kind"] == "classification" else tgt.float()
-    cells = (None if a["cells"] is None
-             else {k: torch.from_numpy(v).long().to(DEV) for k, v in a["cells"].items()})
+    _long = lambda d: (None if d is None                                   # noqa: E731
+                       else {k: torch.from_numpy(v).long().to(DEV) for k, v in d.items()})
     return Bench(a["obs"], a["gt_roll"], a["zones"], tgt,
                  torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], state, a["n"],
                  pos=a["pos"], vel=a["vel"], edit_object=a["edit_object"], sim=a["sim"],
-                 kind=a["kind"], cells=cells, selection=a["selection"])
+                 kind=a["kind"], cells=_long(a["cells"]), moves=_long(a["moves"]),
+                 selection=a["selection"])
 
 
 # ── which read-outs an edit drives ───────────────────────────────────────────

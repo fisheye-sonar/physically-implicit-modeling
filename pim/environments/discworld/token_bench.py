@@ -34,7 +34,7 @@ import numpy as np
 import torch
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
-from pim.editors.nanda import addition_delta, probe_direction
+from pim.editors.nanda import addition_delta
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
@@ -61,6 +61,7 @@ class TokenBench:
     # MOVE per case ({"A", "B", "cls"} long tensors); `selection` = the scored case list
     kind: str = "regression"
     cells: dict | None = None
+    moves: dict | None = None              # factorised categorical target (see bench.Bench)
     selection: dict | None = None
 
     @property
@@ -97,11 +98,12 @@ def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
     keep = (pre != post) & (pre != UNK) & (post != UNK) & (tokens != UNK).all(1)
     tgt = torch.from_numpy(a["y"]).to(DEV)
     tgt = tgt.long() if a["kind"] == "classification" else tgt.float()
-    cells = (None if a["cells"] is None
-             else {k: torch.from_numpy(v).long().to(DEV) for k, v in a["cells"].items()})
+    _long = lambda d: (None if d is None                                   # noqa: E731
+                       else {k: torch.from_numpy(v).long().to(DEV) for k, v in d.items()})
+    cells, moves = _long(a["cells"]), _long(a["moves"])
     return TokenBench(tokens, pre, post, keep, tgt,
                       torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], a["zones"],
-                      vocab, a["n"], kind=a["kind"], cells=cells, selection=a["selection"])
+                      vocab, a["n"], kind=a["kind"], cells=cells, moves=moves, selection=a["selection"])
 
 
 def frame_probs(outputs: torch.Tensor, kind: str = "logits") -> torch.Tensor:
@@ -228,10 +230,10 @@ def nanda_arm(model, tb: TokenBench, probe, ell: int, alphas, uns: np.ndarray,
     regression form on discworld — see the registry."""
     if tb.kind != "classification":
         raise ValueError("ND is applicable on a categorical target only")
+    from pim.environments.discworld.arms import categorical_direction
+
     _check_dims(tb, dims)
-    C = probe.n_classes
-    d = probe_direction(probe, tb.cells["B"] * C + tb.cells["cls"],
-                        subtract_rows=tb.cells["A"] * C + tb.cells["cls"], per_sample=True)
+    d = categorical_direction(probe, tb)
     h0 = residuals_last(model, tb)[ell]
     recs = []
     for a in alphas:

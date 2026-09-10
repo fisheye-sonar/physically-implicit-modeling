@@ -296,3 +296,124 @@ def test_bench_arrays_snapped_branch_on_dw8ray():
     assert np.array_equal(a["zones"].target, c["zones"].target)
     with pytest.raises(ValueError):
         dwb.bench_arrays(n=4, target="pos@appearance", basis_name="cartesian", instance="dw-8ray")
+
+
+# ── the FACTORISED categorical target (2026-09-10) ────────────────────────────────
+
+
+def test_factorised_target_names_labels_and_moves():
+    from pim.environments.discworld.grid_target import FactorisedTarget, selection_target, target_cells
+
+    T = categorical_target("appearance-fac")
+    assert isinstance(T, FactorisedTarget) and T.cat == AppearanceTarget(1) and T.name == "appearance-fac"
+    assert isinstance(categorical_target("grid-16x8-fac"), FactorisedTarget)
+    for bad in ("appearance-lat-fac", "appearance-d2-fac", "pos-fac", "fac", "appearance-fac-fac"):
+        assert categorical_target(bad) is None
+    assert selection_target("appearance-fac") == AppearanceTarget(1)      # the bench filter
+    assert target_cells("appearance-fac", SIM8) == 30 and T.n_cells(SIM8) == 30   # the resolution axis
+    assert T.n_tiles == 4 and T.n_tiles_on(SIM8) == 4
+    assert T.cat.factor_sizes(SIM8) == (15, 5) and T.n_classes_on(SIM8) == 20
+    assert list(T.class_offsets(SIM8)) == [0, 15]
+    # labels: object j's centre class in [0, 15), its length class in [15, 20), and the pair
+    # identifies the run (the factorisation is a bijection with the partition)
+    P = np.stack([_reachable(SIM8, 500), _reachable(SIM8, 500, seed=3)], 1)   # (500, N_OBJ, 2)
+    y, conflicts = T.label_frames(P, SIM8)
+    assert y.shape == (500, 4) and y.dtype == np.int64 and conflicts == 0
+    assert y[:, 0::2].min() >= 0 and y[:, 0::2].max() < 15 and y[:, 1::2].min() >= 15 and y[:, 1::2].max() < 20
+    cells = T.cat.cell_of(P, SIM8)
+    pairs = {(int(a), int(b)) for a, b in zip(y[:, 0], y[:, 1])}
+    assert len(pairs) == len(set(cells[:, 0].tolist()))
+    runs = np.asarray(T.cat.runs(SIM8))
+    ct, lt = T.cat._factor_tables(SIM8)
+    f, la = runs[cells[:, 0]].T
+    assert np.array_equal(y[:, 0], [ct[a + b] for a, b in zip(f, la)])
+    assert np.array_equal(y[:, 1], 15 + np.array([lt[b - a + 1] for a, b in zip(f, la)]))
+    # moves: object j's two tiles, classes before and after the teleport
+    pos = np.stack([P[:100], P[100:200]], 1)                                 # (100, T=2, N_OBJ, 2)
+    eobj = np.arange(100) % 2
+    mv = T.edit_moves(pos, eobj, ef=1, sim=SIM8)
+    assert mv["tile"].shape == (100, 2) and np.array_equal(mv["tile"][:, 0], 2 * eobj)
+    assert np.array_equal(mv["old"], T.factor_labels(pos[:, 0], SIM8).reshape(100, 2, 2)[np.arange(100), eobj])
+    assert np.array_equal(mv["new"], T.factor_labels(pos[:, 1], SIM8).reshape(100, 2, 2)[np.arange(100), eobj])
+    with pytest.raises(NotImplementedError):
+        T.edit_cells(pos, eobj, 1, SIM8)
+
+
+def test_factorised_probe_targets_and_editor_pieces():
+    """The pieces the editors use on a factorised bench: the PI target swaps old ↔ new at
+    every moved tile, the landing check reads every tile, ND's direction is the summed row
+    contrast — checked against hand computation on a synthetic probe and bench."""
+    from types import SimpleNamespace
+
+    from pim.environments.discworld import arms as dwa
+    from pim.probes.base import WorldStateProbe
+
+    torch.manual_seed(0)
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    pos = np.stack([_reachable(SIM8, 40), _reachable(SIM8, 40, seed=5)], 1).reshape(20, 2, 2, 2)
+    vel = np.zeros_like(pos)
+    y, nc = dwa._targets("appearance-fac", pos, vel, SIM8, "frustum")
+    assert y.shape == (20, 2, 4) and nc == 20
+    probe = WorldStateProbe(16, 4, None, n_classes=20).to(dev).eval()
+    h0 = torch.randn(8, 16, device=dev)
+    tile = torch.tensor([[0, 1]] * 4 + [[2, 3]] * 4, device=dev)
+    old = torch.tensor([[3, 16]] * 8, device=dev)
+    new = torch.tensor([[5, 16], [5, 17]] * 4, device=dev)          # length holds on half the cases
+    b = SimpleNamespace(kind="classification", moves={"tile": tile, "old": old, "new": new}, cells=None,
+                        tgt=None)
+    lg = probe(h0)
+    tgt = dwa.pinv_target(probe, h0, b).reshape(8, 4, 20)
+    ar = torch.arange(8, device=dev)
+    assert torch.allclose(tgt[ar, tile[:, 0], new[:, 0]], lg[ar, tile[:, 0], old[:, 0]])
+    assert torch.allclose(tgt[ar, tile[:, 0], old[:, 0]], lg[ar, tile[:, 0], new[:, 0]])
+    assert torch.allclose(tgt[ar, tile[:, 1], new[:, 1]], lg[ar, tile[:, 1], old[:, 1]])   # no-op where old == new
+    untouched = torch.ones(8, 4, 20, dtype=torch.bool, device=dev)
+    for m in range(2):
+        untouched[ar, tile[:, m], old[:, m]] = False
+        untouched[ar, tile[:, m], new[:, m]] = False
+    assert torch.allclose(tgt[untouched], lg[untouched])
+    landed = dwa.readout_landed(h0, probe, b)
+    assert 0.0 <= landed <= 1.0
+    d = dwa.categorical_direction(probe, b)
+    W = probe.net.weight.detach() / probe.x_std
+    ref = (W[tile * 20 + new] - W[tile * 20 + old]).sum(1)
+    ref = ref / ref.norm(dim=-1, keepdim=True)
+    assert d.shape == (8, 16) and torch.allclose(d, ref, atol=1e-6)
+
+
+def test_factorised_bench_and_token_arms_on_dw8ray():
+    """Data-dependent: the factorised bench on dw-8ray and the token arms through it."""
+    from pim.environments import layout
+    from pim.environments.discworld import bench as dwb
+    from pim.environments.discworld import token_bench as tkb
+    from pim.environments.discworld.tokens import FrameVocab
+    from pim.models import build
+    from pim.probes.base import WorldStateProbe
+
+    vocab_p = layout.tokens_dir("dw-8ray") / "vocab.npz"
+    if not layout.edits_file("discworld", "dw-8ray").exists() or not vocab_p.exists():
+        pytest.skip("dw-8ray not present")
+    a = dwb.bench_arrays(n=10, target="appearance-fac", basis_name="frustum", instance="dw-8ray")
+    c = dwb.bench_arrays(n=10, target="appearance", basis_name="frustum", instance="dw-8ray")
+    assert a["kind"] == "classification" and a["y"].shape == (10, 4) and a["cells"] is None
+    assert a["selection"] == c["selection"]                     # the same filtered cases
+    assert (a["change_mask"].sum(1) >= 1).all() and (a["change_mask"].sum(1) <= 2).all()
+    ar = np.arange(10)[:, None]
+    assert np.array_equal(a["y"][ar, a["moves"]["tile"]], a["moves"]["new"])
+    assert np.array_equal(a["change_mask"][ar, a["moves"]["tile"]], a["moves"]["new"] != a["moves"]["old"])
+    vocab = FrameVocab.load(vocab_p)
+    tb = tkb.load_token_bench(vocab, n=6, target="appearance-fac", basis_name="frustum", instance="dw-8ray")
+    assert tb.kind == "classification" and tb.tgt.shape == (6, 4) and tb.moves is not None and tb.cells is None
+    torch.manual_seed(0)
+    dev = tkb.DEV
+    model = build("transformer_l_tokens", {"vocab": int(vocab.size), "block_size": 39, "n_layer": 2,
+                                           "n_head": 2, "n_embd": 32}).to(dev).eval()
+    lin = {e: (WorldStateProbe(32, 4, None, n_classes=20).to(dev).eval(), {}) for e in range(3)}
+    mlp = {e: (WorldStateProbe(32, 4, 16, n_classes=20).to(dev).eval(), {}) for e in range(3)}
+    for pr, _ in (*lin.values(), *mlp.values()):
+        for p_ in pr.parameters():
+            p_.requires_grad_(False)
+    uns, u = tkb.unsteered(model, tb)
+    recs = tkb.pinv_arm(model, tb, lin, (1.0,), uns) + tkb.nanda_arm(model, tb, lin[1][0], 1, (1.0,), uns) \
+        + tkb.grad_steer_arm(model, tb, mlp, [1], (0.05,), uns, n_steps=2)
+    assert len(recs) == 5 and all("edit_index" in r for r in recs) and "readout_landed" in recs[0]
