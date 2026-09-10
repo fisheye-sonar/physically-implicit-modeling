@@ -234,22 +234,37 @@ def fit_probe_stream(hist, y: torch.Tensor, tr_seq, te_seq, *,
     probe.eval()
 
     classify = n_classes is not None
-    hat_te = _predict(probe, hist, s_te, f_te, classify=classify)
-    hat_tr = _predict(probe, hist, s_tr, f_tr, classify=classify)
-    g_te = y[s_te, f_te].cpu().numpy()
-    g_tr = y[s_tr, f_tr].cpu().numpy()
     if classify:
-        g_te, g_tr = g_te.astype(int), g_tr.astype(int)
+        # STREAMED error counts — never the (rows × tiles) prediction and label matrices.
+        # At 512 tiles those were two 25 GB int64 arrays for the train split, which is what
+        # OOM-killed the grid-32x16 fit under a 45 GB cap (2026-09-10 04:47). Same numbers:
+        # error rate = mismatches / (rows × tiles), majority from the TRAIN split's global
+        # class counts, exactly as before.
+        def _errors(s, f, chunk=8192):
+            n_rows, err, per_tile, counts = 0, 0, None, torch.zeros(n_classes, dtype=torch.long, device=dev)
+            for i in range(0, len(s), chunk):
+                hat = probe(hist.build(s[i:i + chunk], f[i:i + chunk])).argmax(-1)
+                g = y[s[i:i + chunk], f[i:i + chunk]].long()
+                miss = (hat != g)
+                err += int(miss.sum())
+                per_tile = miss.sum(0) if per_tile is None else per_tile + miss.sum(0)
+                counts += torch.bincount(g.reshape(-1), minlength=n_classes)
+                n_rows += len(g)
+            return n_rows, err, per_tile.cpu().numpy(), counts.cpu().numpy()
+        n_te, err_te, tile_te, _ = _errors(s_te, f_te)
+        n_tr, err_tr, _, cnt_tr = _errors(s_tr, f_tr)
         stats = {
-            "error_rate": float((hat_te != g_te).mean() * 100.0),
-            "error_rate_insample": float((hat_tr != g_tr).mean() * 100.0),
-            "accuracy": float((hat_te == g_te).mean() * 100.0),
-            "per_tile_error_rate": ((hat_te != g_te).mean(0) * 100.0).tolist(),
-            "majority_class_error_rate": float(
-                (1.0 - np.bincount(g_tr.reshape(-1), minlength=n_classes).max()
-                 / g_tr.size) * 100.0),
+            "error_rate": float(err_te / (n_te * d_out) * 100.0),
+            "error_rate_insample": float(err_tr / (n_tr * d_out) * 100.0),
+            "accuracy": float(100.0 - err_te / (n_te * d_out) * 100.0),
+            "per_tile_error_rate": (tile_te / n_te * 100.0).tolist(),
+            "majority_class_error_rate": float((1.0 - cnt_tr.max() / cnt_tr.sum()) * 100.0),
         }
     else:
+        hat_te = _predict(probe, hist, s_te, f_te)
+        hat_tr = _predict(probe, hist, s_tr, f_tr)
+        g_te = y[s_te, f_te].cpu().numpy()
+        g_tr = y[s_tr, f_tr].cpu().numpy()
         ymn = ym.cpu().numpy()
         stats = {
             "r2": r2(hat_te, g_te, ymn),
