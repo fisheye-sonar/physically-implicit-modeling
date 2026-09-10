@@ -86,6 +86,15 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**17:00 PT — `appearance-fac` scored (unit 65 min): the categorical gain SURVIVES factorisation.**
+skill 0.94 / 0.94 (above the joint cell's 0.89 / 0.90; rand-init 0.92 / 0.94), PI +0.41 / 0.71
+(joint: +0.43 / 0.76), **ND +0.50 / 0.86** (best discworld ND; joint +0.43 / 0.91), GS +0.46 / 0.53
+(joint +0.61 / 0.39 — GS loses the joint move, still ≫ regression −0.06 and the grid band +0.35).
+So alignment + categorical read-out + per-tile class-swap edit are what make discworld edit like
+Othello, and `<partition>-fac` is the cheap form that keeps all three → the one to run on
+noiseless (2 × (233 + lengths) classes instead of 2,889 × 3). Finding, registry updated; Table 2c
+has the row. Open with Sevan: the Othello converse (a fuller regression set-up).
+
 **15:55 PT — the FACTORISED categorical target `appearance-fac` launched (Sevan's pick after the
 snapped result).** Per object one softmax per factor of the appearance partition — run centre (15
 classes) and run length (5) — 4 tiles × 20 classes instead of 30 cells × 3; scales to 128 rays as

@@ -341,3 +341,46 @@ Provenance: `runs/ray_ablation/L-dw-8ray-20m/scores.json["bases"]["pos@appearanc
 `runs/_baselines/dw-8ray/baselines.json` (`pos@appearance`), unit `snapped_appearance`
 (`logs/snapped_appearance/`, 15 min), driver `scripts/drivers/score_pending.sh`; the target
 is `grid_target.SnappedTarget` and applies to any partition on any instance by name.
+
+## The factorised categorical target: does the read-out's gain need the joint cell? (2026-09-10, `appearance-fac` on `L-dw-8ray-20m`)
+
+Sevan's follow-up to the snapped result: if the gain lives in the categorical read-out, does
+it survive FACTORISING it? `appearance-fac` reads the same 30-cell partition object-wise —
+per object one softmax over the run's CENTRE (15 classes: which pixel the disc's centre is
+in) and one over its LENGTH (5 classes: how many rays wide) — 4 tiles × 20 classes instead
+of 30 cells × 3. An edit is a per-tile class change on the edited object's tiles (PI swaps
+old ↔ new at each moved tile, ND adds the summed row contrast, GS asks CE toward the new
+labels); same 192 cell-changing cases, same recipe, same floors.
+
+| target (dw-8ray frame model) | logits | skill LIN / MLP | floors: rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| appearance (cell-indexed, 30 × 3) | 90 | 0.89 / 0.90 | 0.88 · 0.89 / 0.54 · 0.89 | +0.43 / 0.76 (pt 3, α 20; landed 92%) | +0.43 / 0.91 (pt 5, α 12) | **+0.61 / 0.39** (pt 0, α 0.5) |
+| **appearance-fac** (object-indexed, 4 × 20) | 80 | **0.94 / 0.94** | 0.92 · 0.94 / 0.48 · 0.94 | +0.41 / 0.71 (pt 1, α 35; landed 95%) | **+0.50 / 0.86** (pt 0, α 12) | +0.46 / 0.53 (pt 0, α 0.5) |
+| pos@appearance (regression, snapped) | 4 | 0.96 / 0.99 | 0.97 · 0.99 / 0.40 · 0.98 | +0.34 / 0.92 | n/a | −0.13 / 0.84 |
+| frustum (regression, canonical) | 8 | 0.95 / 0.98 | 0.96 · 0.98 / 0.39 · 0.95 | +0.28 / 0.90 | n/a | −0.06 / 0.82 |
+
+**Reading.**
+1. **The categorical gain survives factorisation.** PI is unchanged (+0.41 vs +0.43, both
+   guard-passing, the read-out landing on 95% of cases), ND is the best ND on any discworld
+   target so far (+0.50 / 0.86), GS drops from +0.61 to +0.46 but stays far above the
+   regression rows (−0.06, −0.13) and above the product-grid band (+0.31 … +0.37). The
+   factorised read-out is therefore the form to scale: on 128 rays it is 2 × (233 + lengths)
+   classes against 2,889 × 3 for the joint cell.
+2. **What the factorisation costs is GS's joint move.** GS on the joint cell can push one
+   logit pair per cell and let the softmax settle the object's whole (centre, length) at once;
+   factorised, it descends two separate cross-entropies whose optimum is reached at a smaller
+   step (α 0.35–0.5, GS falling past α 0.75) — a coupling the joint cell gave for free.
+3. **Decodability is higher, not lower, than the joint cell's** (0.94 vs 0.89): fifteen centre
+   classes and five length classes are each easier than thirty joint cells, and the random-init
+   floor rises with it (0.92 / 0.94 vs 0.88 / 0.89) — as everywhere on discworld, the position
+   read is not what training adds. The observation LIN floor is lower (0.48 vs 0.54): a linear
+   map of the frame to (centre, length) is harder than to the run's one-hot.
+4. Together with the snapped result: target ALIGNMENT (the sweep), a CATEGORICAL read-out (the
+   snapped control) and a per-tile class-swap EDIT (this row: the joint cell is not required)
+   are what make the discworld model edit like Othello. The cheapest form that keeps all three
+   is `<partition>-fac`.
+
+Provenance: `runs/ray_ablation/L-dw-8ray-20m/scores.json["bases"]["appearance-fac"]`,
+`runs/_baselines/dw-8ray/baselines.json` (`appearance-fac`), unit `appearance_fac`
+(`logs/appearance_fac/`, 65 min: 15 + 16 min model probes, 15 + 16 min random-init, 1 min
+observation, 1 min scoring), driver `scripts/drivers/probe_target_fit.sh`.

@@ -21,11 +21,11 @@ import numpy as np
 from pim.figures.theme import PALETTE, style_ax
 
 EDITORS = ("PI", "ND", "GS")
-FAMILIES = ("grid", "appearance", "misaligned")
+FAMILIES = ("grid", "appearance", "misaligned", "factorised")
 LABEL = {"grid": "product grid (frustum basis)", "appearance": "appearance family",
-         "misaligned": "misaligned 30-cell grid"}
+         "misaligned": "misaligned 30-cell grid", "factorised": "factorised (centre × length)"}
 STYLE = {"grid": (PALETTE[0], "o"), "appearance": (PALETTE[1], "s"),
-         "misaligned": (PALETTE[2], "D")}
+         "misaligned": (PALETTE[2], "D"), "factorised": (PALETTE[3], "^")}
 MISALIGNED = {"grid-6x5", "grid-10x3"}
 INK2, GRID_C = "#52514e", "#e1e0d9"
 
@@ -35,6 +35,8 @@ def _hex(rgb):
 
 
 def family_of(target: str) -> str:
+    if target.endswith("-fac"):
+        return "factorised"
     if target in MISALIGNED:
         return "misaligned"
     return "appearance" if target.startswith("appearance") else "grid"
