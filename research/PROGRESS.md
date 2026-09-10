@@ -86,6 +86,13 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:40 PT — `pos@appearance` scored (unit done in 15 min): the snapped regression target IS the
+regression row.** skill 0.96 / 0.99 (gap ≤ 0.001, not overfit), PI +0.34 / 0.92 at α 100 (the
+canonical row: +0.28 / 0.90 at α 100), GS −0.13 / 0.84 (−0.06 / 0.82); the categorical
+appearance row stays alone at +0.43 / +0.61. Reading in `findings/probe-target-type.md`: the
+categorical gain is the read-out + logit-swap edit, not the target's frame-alignment; the
+regression side of this axis is closed. Table 2c shows the row under its reference. Committed.
+
 **15:20 PT — layout v2 verified from my side; Table 2c; the SNAPPED regression target launched.**
 The other agent's migration (commits ebf6a99, f3a404f, 2de841d): 240 tests green, `--verify`
 gate passed per the spec, probe caches re-keyed logically (not orphaned), my sweep-figure script

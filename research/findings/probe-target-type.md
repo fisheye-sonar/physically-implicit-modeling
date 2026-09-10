@@ -291,3 +291,53 @@ teleport at 32x16.
 Provenance: `runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m}/scores.json["bases"]`,
 `logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3,_4,_5}.sh`.
 Pending: `grid-64x32` on `L-dw-noiseless-20m` (chain 5, started 13:20 PT).
+
+## The snapped regression target: is it the target or the read-out? (2026-09-10, `pos@appearance` on `L-dw-8ray-20m`)
+
+Sevan's question after the sweep: does the categorical appearance row edit well because
+its TARGET is the frame's own partition (alignment), or because a categorical READ-OUT (a
+softmax over cells, edited by swapping two class logits) is a cleaner thing to write than a
+coordinate? `pos@appearance` separates the two: the same 30 cells, but every position is
+replaced by the centre of its cell (frustum basis) and read as the ordinary 4-output
+regression — the regression probes, PI (pseudo-inverse), GS (MSE spec), the same 192
+cell-changing cases as the appearance row, the canonical 30k recipe, floors inline.
+
+| target (dw-8ray frame model) | kind | skill LIN / MLP | in-sample gap | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| frustum (canonical) | regression, 8 outputs | 0.95 / 0.98 | 0.000 / 0.001 | +0.28 / 0.90 (α 100) | n/a | −0.06 / 0.82 |
+| **pos@appearance** | **regression, 4 outputs (snapped)** | 0.96 / 0.99 | 0.000 / 0.001 | +0.34 / 1.15 (α 175); **+0.34 / 0.92 at α 100** | n/a | −0.13 / 0.84 |
+| appearance | classification, 30 × 3 | 0.89 / 0.90 | 0.002 / 0.005 | +0.43 / 0.76 (α 20) | +0.43 / 0.91 | **+0.61 / 0.39** |
+
+Floors for `pos@appearance` (dw-8ray, Transformer-L): observation right-aligned LIN 0.40 /
+MLP 0.98; random-init 0.97 / 0.99 — the same picture as the canonical target (0.39 / 0.95;
+0.96 / 0.98). No overfit: the in-sample gap is ≤ 0.001 at every point (Sevan's condition on
+the 30k recipe).
+
+**Reading.** Snapping the regression target changes nothing the editors can use. The
+snapped row IS the regression row: PI lands only at the same enormous step (α ≈ 100, write
+ratio 4–7, the read-out overshooting by 45 units) and GS is still negative. The gain of the
+categorical row therefore does not come from the target being frame-expressible; it comes
+from the categorical read-out and its edit — swapping two cells' logits — which the
+regression pipeline cannot express even when its target values are the very same cell
+centres. Two reasons this is unsurprising in hindsight, both worth recording:
+1. The snap moves a position by 0.04 in u and 0.015 in 1/y on average against target
+   standard deviations of 0.41 and 0.043 — a few percent of the variance. A linear probe of
+   a continuous representation reads straight through to the underlying position (skill
+   0.96, up from 0.95 only because the snapped target has slightly less variance to
+   explain), so the fitted map, and hence the pseudo-inverse write, is the canonical one.
+2. A categorical edit is a DIRECTION with a magnitude the class margin sets (Othello's
+   flip); a regression edit is a displacement the pseudo-inverse must realise through a map
+   whose null space is most of the residual stream. The categorical rows' α grid sits at
+   ~20 with the read-out landing on 92% of cases; the regression α has to reach 100 to move
+   the output at all, and by then it has degraded it.
+The alignment result (§ sweep: exact partition ≫ misaligned 30-cell grids) still stands —
+but it is a result about which categorical target to use, not a route to editability for a
+regression probe. The next test on this axis is the converse: a categorical read-out on a
+target that is NOT frame-aligned already exists (the product grids, GS ≈ +0.35), so the
+remaining unknown is a categorical head on the snapped centres' cells with a coarser or
+finer partition than the frame — i.e. the sweep itself. The regression side is closed.
+
+Provenance: `runs/ray_ablation/L-dw-8ray-20m/scores.json["bases"]["pos@appearance"]`,
+`runs/_baselines/dw-8ray/baselines.json` (`pos@appearance`), unit `snapped_appearance`
+(`logs/snapped_appearance/`, 15 min), driver `scripts/drivers/score_pending.sh`; the target
+is `grid_target.SnappedTarget` and applies to any partition on any instance by name.
