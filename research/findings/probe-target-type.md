@@ -250,7 +250,17 @@ GS −0.03 / 1.01 (unedited −0.94).
 | grid-32x16 | 512 | _chain 5, queued_ | | | |
 | grid-64x32 | 2048 | _chain 5, queued_ | | | |
 
+Notes so far. (i) The LINEAR probe is at the majority on `appearance-lat` (233 narrow lateral
+bands; in-sample gap 0.000, so not overfitting): a bounded interval of one coordinate is not
+a half-space, and the finer the band the less a linear read-out can carve it — the same
+collapse as `grid-32x16` on dw-8ray, and why PI (which needs the linear probe) is dead there
+while the MLP reads it at 0.63. (ii) ND on the 233-cell aligned partition is the best editor
+result on this run so far (+0.51 / 0.79 vs +0.37 / 0.91 on `grid-16x8`, +0.34 on `grid-8x4`),
+in the direction of Sevan's prediction that the 128-ray model wants a finer,
+observation-aligned partition; GS does not follow (+0.30, guard failing on every categorical
+target here). The bench under `appearance-lat` drops only 2 same-cell teleports (21 under
+`grid-8x4`).
+
 Provenance: `runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m}/scores.json["bases"]`,
-`logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3}.sh`.
-Pending: the noiseless sweep (chain 4: grid-8x4, appearance-lat,
-grid-32x16, grid-64x32 on `L-dw-noiseless-20m`).
+`logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3,_4,_5}.sh`.
+Pending: `grid-32x16` and `grid-64x32` on `L-dw-noiseless-20m` (chain 5).
