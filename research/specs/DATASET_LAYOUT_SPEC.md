@@ -127,7 +127,9 @@ def is_migrated(cls, inst) -> bool                      # layout.json exists wit
 **Transition fallback.** Until `layout.json` exists for an instance, every function returns
 the v1 path (`probe/test.h5`, `eval/edits.h5`, `corpus/…`). This lets the code land before
 the moves and keeps the running chain safe. The fallback is deleted in the commit after
-`--verify` passes; it is not a permanent feature.
+`--verify` passes; it is not a permanent feature. *(Done 2026-09-10: the migration commit
+carried the fallback; the follow-up commit removed it. `is_migrated` / `ensure_marker` stay —
+they are how producers stamp a new instance and refuse an unmigrated one.)*
 
 **Logical split names replace paths in probe cache keys** (§5). `layout.py` also owns the
 map from an old resolved `data` path to `(cls, inst, size)`, used once by the migration.

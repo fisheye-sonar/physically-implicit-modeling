@@ -19,10 +19,11 @@ classes; the directory names the split's ROLE, the file name carries its size:
       tokens/                   frames-as-tokens (discworld, unchanged)
       _unused/                  files no code reads — moved, never deleted
 
-Every function here resolves to the **v2** location once the instance carries
-``layout.json``; until then it returns the **v1** (pre-migration) location, so code built on
-this module runs unchanged on either tree. The fallback exists for the migration window
-only (``scripts/migrate_datasets.py``).
+Every function here resolves to the **v2** location. (During the 2026-09-10 migration window
+the same functions fell back to the v1 locations for an instance without ``layout.json``;
+that fallback was removed once every instance was migrated and verified — an instance
+without a marker is now either brand new, which the producers stamp at birth via
+``ensure_marker``, or a mistake, which ``ensure_marker`` refuses.)
 
 Probe cache keys are LOGICAL (``probe_key``): ``data="discworld/<inst>"``,
 ``split="probe_120k"`` — never a filesystem path, so a move can no longer orphan a cache.
@@ -118,16 +119,14 @@ def ensure_marker(cls: str, inst: str) -> Path:
 
 
 def train_dir(cls: str, inst: str) -> Path:
-    """The training corpus directory. Discworld: unchanged across versions. Othello: the
-    role dir under v2, ``corpus/`` under v1."""
+    """The training corpus directory (``train/`` in both classes)."""
     if cls == "othello":
         return othello_split_dir(inst, "train")
     return instance_root(_check(cls), inst) / "train"
 
 
 def probe_dir(cls: str, inst: str) -> Path:
-    """The v2 probe directory (discworld and othello). Under v1 discworld had two
-    (``probe/`` and ``probe_250k/``) — use ``probe_file`` for a specific corpus."""
+    """The probe directory (discworld and othello) — use ``probe_file`` for a specific corpus."""
     if cls == "othello":
         return othello_split_dir(inst, "probe")
     return instance_root(_check(cls), inst) / "probe"
@@ -135,21 +134,17 @@ def probe_dir(cls: str, inst: str) -> Path:
 
 def probe_file(cls: str, inst: str, size: str = "120k") -> Path:
     """Discworld probe FIT corpus of the given size (``"120k"`` canonical regression recipe,
-    ``"250k"`` the categorical-target / large-floor recipe)."""
+    ``"250k"`` the categorical-target / large-floor recipe): ``probe/probe_<size>.h5``."""
     if cls != "discworld":
         raise ValueError("probe_file(size=…) is the discworld form; othello uses othello_split_file")
     if size not in DW_PROBE_SIZES:
         raise KeyError(f"probe size must be one of {DW_PROBE_SIZES}, got {size!r}")
-    r = instance_root(cls, inst)
-    if is_migrated(cls, inst):
-        return r / "probe" / f"probe_{size}.h5"
-    return r / ("probe" if size == "120k" else "probe_250k") / "test.h5"
+    return instance_root(cls, inst) / "probe" / f"probe_{size}.h5"
 
 
 def probe_manifest(cls: str, inst: str, size: str = "120k") -> Path:
     """The manifest beside a discworld probe corpus (its ``sim`` config and split record)."""
-    f = probe_file(cls, inst, size)
-    return f.with_suffix(".json") if is_migrated(cls, inst) else f.parent / "dataset.json"
+    return probe_file(cls, inst, size).with_suffix(".json")
 
 
 def eval_dir(cls: str, inst: str) -> Path:
@@ -159,7 +154,7 @@ def eval_dir(cls: str, inst: str) -> Path:
 
 
 def eval_file(cls: str, inst: str) -> Path:
-    """Discworld's held-out sequences (``eval/test.h5``, both versions). Othello: use
+    """Discworld's held-out sequences (``eval/test.h5``). Othello: use
     ``othello_split_file(inst, "test", n)``."""
     if cls != "discworld":
         raise ValueError("eval_file is the discworld form; othello uses othello_split_file")
@@ -167,19 +162,15 @@ def eval_file(cls: str, inst: str) -> Path:
 
 
 def eval_manifest(cls: str, inst: str) -> Path:
-    r = instance_root(_check(cls), inst)
-    return r / "eval" / ("test.json" if is_migrated(cls, inst) else "dataset.json")
+    return instance_root(_check(cls), inst) / "eval" / "test.json"
 
 
 def edits_dir(cls: str, inst: str, version: str = "v1") -> Path:
-    """Where an edit bench's files live. v2: ``edits/<version>/``. v1: discworld's bench was
-    the ``eval/`` suite's edits split; othello's cases sat directly under ``edits/``."""
+    """Where an edit bench's files live: ``edits/<version>/`` (``v1`` = the current
+    teleport / flip bench, ``v2`` = reserved for the paired-counterfactual bench)."""
     if version not in EDITS_VERSIONS:
         raise KeyError(f"edits version must be one of {EDITS_VERSIONS}, got {version!r}")
-    r = instance_root(_check(cls), inst)
-    if is_migrated(cls, inst) or version != "v1":
-        return r / "edits" / version
-    return r / ("eval" if cls == "discworld" else "edits")
+    return instance_root(_check(cls), inst) / "edits" / version
 
 
 def edits_file(cls: str, inst: str, version: str = "v1", n_cases: int = 1001) -> Path:
@@ -189,24 +180,19 @@ def edits_file(cls: str, inst: str, version: str = "v1", n_cases: int = 1001) ->
 
 def edits_manifest(cls: str, inst: str, version: str = "v1", n_cases: int = 1001) -> Path:
     d = edits_dir(cls, inst, version)
-    if cls == "othello":
-        return d / f"cases_{n_cases}.json"
-    return d / ("edits.json" if is_migrated(cls, inst) else "dataset.json")
+    return d / (f"cases_{n_cases}.json" if cls == "othello" else "edits.json")
 
 
 def edits_selection(cls: str, inst: str, version: str = "v1") -> Path:
     """An instance's FILTERED case list for the bench (exists for dw-8ray only; callers
     test ``.exists()``)."""
-    if is_migrated(cls, inst):
-        return edits_dir(cls, inst, version) / "selection.json"
-    return instance_root(_check(cls), inst) / "edits_selection.json"
+    return edits_dir(cls, inst, version) / "selection.json"
 
 
 def othello_split_dir(inst: str, name: str) -> Path:
     if name not in OTH_ROLE:
         raise KeyError(f"othello split must be one of {sorted(OTH_ROLE)}, got {name!r}")
-    r = instance_root("othello", inst)
-    return r / OTH_ROLE[name] if is_migrated("othello", inst) else r / "corpus"
+    return instance_root("othello", inst) / OTH_ROLE[name]
 
 
 def othello_split_file(inst: str, name: str, n: int) -> Path:

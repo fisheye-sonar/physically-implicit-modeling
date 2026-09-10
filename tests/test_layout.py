@@ -22,18 +22,11 @@ def fake_datasets(tmp_path, monkeypatch):
     return root
 
 
-def test_v1_fallback_then_v2_after_marker(fake_datasets):
+def test_v2_paths_and_marker(fake_datasets):
     r = fake_datasets / "discworld" / "dw-x"
+    # the paths are v2 regardless of the marker (the v1 fallback left with the migration);
+    # the marker is what producers stamp and what ensure_marker checks
     assert not layout.is_migrated("discworld", "dw-x")
-    assert layout.probe_file("discworld", "dw-x", "120k") == r / "probe" / "test.h5"
-    assert layout.probe_file("discworld", "dw-x", "250k") == r / "probe_250k" / "test.h5"
-    assert layout.probe_manifest("discworld", "dw-x", "250k") == r / "probe_250k" / "dataset.json"
-    assert layout.edits_file("discworld", "dw-x") == r / "eval" / "edits.h5"
-    assert layout.edits_selection("discworld", "dw-x") == r / "edits_selection.json"
-    assert layout.eval_file("discworld", "dw-x") == r / "eval" / "test.h5"
-    assert layout.othello_split_file("oth-x", "probe_large", 170_000) == (
-        fake_datasets / "othello" / "oth-x" / "corpus" / "probe_large_170000.npz")
-
     layout.write_marker("discworld", "dw-x", moves=[["a", "b"]])
     layout.write_marker("othello", "oth-x")
     assert layout.is_migrated("discworld", "dw-x")
