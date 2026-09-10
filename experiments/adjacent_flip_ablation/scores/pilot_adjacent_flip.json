@@ -1,0 +1,58 @@
+{
+ "instance": "oth-adjacent-flip",
+ "rules": {
+  "flip": true,
+  "placement": "adjacent"
+ },
+ "n_games": 20000,
+ "length": {
+  "mean": 60.0,
+  "min": 60,
+  "max": 60,
+  "frac_60": 1.0
+ },
+ "passes_per_game": 3.8969,
+ "flips_per_game": 16.13545,
+ "flips_per_move": 0.2689241666666667,
+ "frac_games_one_side_wiped_out": 0.0001,
+ "distinct_terminal_boards": 14986,
+ "most_common_terminal_share": 0.0043,
+ "colour_eq_parity_frac": 0.49745546875,
+ "black_frac_by_square": {
+  "min": 0.46155,
+  "max": 0.55105,
+  "std": 0.02335905934935146
+ },
+ "legal_size_by_move": {
+  "0": 10.0,
+  "5": 11.45925,
+  "10": 16.72105,
+  "15": 15.70895,
+  "20": 18.21215,
+  "25": 15.318,
+  "30": 16.29765,
+  "35": 12.49805,
+  "40": 12.22185,
+  "45": 8.3955,
+  "50": 6.92395,
+  "55": 3.70445
+ },
+ "bayes_ce": 2.2955992232373985,
+ "recolour": {
+  "n": 4000,
+  "frac_changed": 0.703,
+  "frac_emptied": 0.0,
+  "diff_size_hist": {
+   "1": 797,
+   "2": 597,
+   "3": 624,
+   "4": 389,
+   "5": 241,
+   "6": 113,
+   "7": 50,
+   "24": 1
+  },
+  "diff_size_mean": 2.72972972972973
+ },
+ "minutes": 1.6054372787475586
+}
