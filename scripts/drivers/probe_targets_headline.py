@@ -5,7 +5,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[2]
 RUNS = ["initial_othello_comparison/L-oth-20m", "objective_ablation/L-oth-20m-mse",
         "flip_ablation/L-oth-noflip-20m", "adjacency_ablation/L-oth-adjacent-20m",
-        "ray_ablation/L-dw-8ray-20m", "interface_ablation/L-dw-8ray-tok-20m"]
+        "ray_ablation/L-dw-8ray-20m", "interface_ablation/L-dw-8ray-tok-20m",
+        "noise_ablation/L-dw-noiseless-20m"]
 SKIP = {"cartesian", "frustum"}
 for r in RUNS:
     sp = REPO / "runs" / r / "scores.json"
