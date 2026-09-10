@@ -859,3 +859,12 @@ shows `oom-kill`), while the per-point log stops mid-family. Fix: accumulate err
 per-tile counts and class counts chunk by chunk (gated identical to the dense computation).
 Rule: anything that scales as rows × outputs must be streamed when either is large — the
 probe recipe's 7.8M rows make even int64 labels a 60 MB-per-output cost.
+
+Same lesson, second instance the same day (chain 4, 11:30): `AppearanceTarget.cell_of` ran
+the renderer's ray–disc test on all 15.6 M probe-corpus positions at once — fine at 8 rays
+(~4 GB), ~60 GB of float64 (positions × rays) intermediates at 128 rays; systemd-oomd killed
+the unit at a 35 GB peak, BELOW its 45 GB `MemoryMax` (oomd acts on memory pressure, not the
+cap — do not read "peak < MemoryMax" as "not an OOM"). Now chunked (2 GB peak, 16 s). The
+same instance also surfaced that a 128-ray disc can light a run the 500 × 500 dense sweep
+never saw (a grazing ray flipped by float32 rounding; 4 codes in 2 M positions) — such runs
+snap to the nearest realisable run instead of raising. Neither can happen on dw-8ray.

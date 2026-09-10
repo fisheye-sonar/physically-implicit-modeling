@@ -86,6 +86,16 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**11:35 PT — chain 4 OOM-killed at appearance-lat; chain 5 relaunched with the fix.**
+Chain 4 scored grid-8x4 (noiseless: skill 0.71 / 0.89, PI +0.27 / 1.05, ND +0.34 / 0.92, GS
++0.27 / 1.11 — in the tables) and was killed by systemd-oomd 50 s into appearance-lat:
+`AppearanceTarget.cell_of` labelled all 15.6 M probe positions in one shot (~60 GB at 128
+rays). Fixed: chunked labelling + snapping of unseen grazing runs (commit after 5c35ba7;
+gated: 2 GB peak, 16 s, all 233 / 2,889 cells realised; 18 tests). **Chain 5**
+(`probe_targets_5`, `scripts/drivers/probe_targets_5.sh`, `logs/probe_targets_5/`) runs the
+three remaining variants — appearance-lat, grid-32x16, grid-64x32 — started 11:35; watcher +
+heartbeat re-armed on it. Expected done ~15:00 PT (grid-64x32 the long one, ~1.5 h).
+
 **10:56 PT — chain 3 complete; chain 4 running.** grid-32x16 on both 8-ray models is in the
 tables (frame: skill 0.01 / 0.04, PI +0.14 / 1.22, ND +0.31 / 0.97, GS +0.42 / 0.68; tokens:
 0.01 / 0.05, +0.02, +0.10, +0.18 / 0.58) — the product-grid GS band holds with the probe at
