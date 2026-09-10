@@ -86,6 +86,24 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:20 PT — layout v2 verified from my side; Table 2c; the SNAPPED regression target launched.**
+The other agent's migration (commits ebf6a99, f3a404f, 2de841d): 240 tests green, `--verify`
+gate passed per the spec, probe caches re-keyed logically (not orphaned), my sweep-figure script
+updated by them. Nothing blocks. **Part 1 (Sevan):** `build_full_table` now splits every extra
+probe target out of Tables 1–3 (`DF_X`; `CANONICAL_BASES`) into **Table 2c — the probe-target
+sweep**: per run, the canonical reference row, then the extra targets by cell count; Fig 3 and
+the 3c… floor tables read `DF_X`. Executed clean. **Part 2 (Sevan):** `pos@<partition>` — the
+gridification kept as 4-D position regression (`grid_target.SnappedTarget`, cell centroids in
+the frustum basis with a medoid fallback, `bench_arrays` regression branch on the partition's
+filtered cases, `_targets` snap, canonical 30k recipe, floors inline; 4 new tests, 244 pass).
+`master_eval` SETTINGS: `pos@appearance` on `L-dw-8ray-20m`. Running as unit
+**`snapped_appearance`** (`scripts/drivers/score_pending.sh`, `logs/snapped_appearance/`),
+started 15:19 — fits LIN + MLP inline, PI/GS (ND recorded, not reported), the dw-8ray floors
+for the target, then the tables. ~1 h expected. Watcher on. Prediction on record: LIN skill
+below the regression row's 0.95 (piecewise-constant target), MLP ≈ 0.9; if PI/GS rise from
++0.28 / −0.06 toward the categorical appearance row's +0.43 / +0.61, alignment is the story.
+Notebook rule exception taken again (nbformat; the two notebooks exceed the reader's cap).
+
 **14:20 PT — chain 5 STOPPED at Sevan's call; the overnight probe-target programme is closed.**
 grid-64x32 on noiseless needed ~6 h (20 min per probe point at 6,144 logits; LIN at the majority
 at points 0–2); Sevan: "that's crazy, let's cancel it now". `systemctl --user stop probe_targets_5`;

@@ -13,6 +13,8 @@ Othello run; the observation-exact `appearance` partition and the resolution swe
 are fitted by `scripts/fit_probes.py` into each run's `probes/`, scored by `master_eval`
 into `scores.json["bases"][<target>]`; nothing is computed here.
 
+**Follow-up (2026-09-10 pm).** The SNAPPED regression target `pos@appearance` on `L-dw-8ray-20m` (unit `snapped_appearance`, driver `scripts/drivers/score_pending.sh`): the same 30 cells read as 4-D position regression — the alignment-vs-mechanism test.
+
 **Here.** `scripts/sweep_figure.py` → `outputs/probe_target_sweep.png`: the sweep drawn
 from the canonical blocks through `pim.figures.sweep_figure`. Finding:
 `research/findings/probe-target-type.md`.

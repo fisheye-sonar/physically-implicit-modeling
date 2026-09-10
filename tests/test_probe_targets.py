@@ -4,7 +4,6 @@ and the token bench's categorical branch."""
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -197,3 +196,103 @@ def test_unseen_run_snaps_to_the_nearest_realisable_run():
     assert _nearest_run(runs, 3, 5) == 0        # centre 8: (3,4) and (2,5) tie on centre and L1 → the earlier run
     assert _nearest_run(runs, 7, 9) == 2        # one extra grazing ray → the run it grazes
     assert _nearest_run(runs, 0, 7) == 3
+
+
+# ── the SNAPPED regression target (2026-09-10) ────────────────────────────────────
+
+
+def test_snapped_target_names_resolve():
+    from pim.environments.discworld.grid_target import (
+        SnappedTarget, selection_target, snapped_target, target_cells)
+
+    sn = snapped_target("pos@appearance")
+    assert isinstance(sn, SnappedTarget) and sn.base == "pos" and sn.cat == AppearanceTarget(1)
+    assert sn.name == "pos@appearance"
+    assert snapped_target("full@grid-16x8") == SnappedTarget("full", GridTarget(16, 8))
+    for bad in ("pos", "full", "appearance", "pos@", "vel@appearance", "pos@grid", "pos@nothing"):
+        assert snapped_target(bad) is None
+    # a snapped target is NOT categorical — the pipeline takes the regression branch …
+    assert categorical_target("pos@appearance") is None
+    # … but its partition defines what a genuine edit is
+    assert selection_target("pos@appearance") == AppearanceTarget(1)
+    assert selection_target("grid-4x2") == GridTarget(4, 2)
+    assert selection_target("pos") is None
+    assert target_cells("pos@appearance", SIM8) == 30 and target_cells("full", SIM8) is None
+
+
+def test_cell_centres_lie_in_their_own_cell_and_snap_is_constant_per_cell():
+    from pim.environments.discworld.frustum import basis
+    from pim.environments.discworld.grid_target import frustum_to_world, snapped_target
+
+    P = _reachable(SIM8, 4000)
+    # the basis inversion the centres rely on
+    F = basis(P, None, SIM8)[0]
+    assert np.allclose(frustum_to_world(F, SIM8), P, atol=1e-4)
+    for name in ("appearance", "appearance-lat", "appearance-d2", "grid-4x2", "grid-16x8"):
+        cat = categorical_target(name)
+        C = cat.centroids(SIM8)
+        assert C.shape == (cat.n_cells(SIM8), 2)
+        assert np.array_equal(cat.cell_of(frustum_to_world(C, SIM8), SIM8), np.arange(len(C)))
+        assert np.array_equal(cat.centroids(SIM8), C)           # cached, deterministic
+    sn = snapped_target("pos@appearance")
+    S = sn.snap(P, SIM8)
+    cells = sn.cat.cell_of(P, SIM8)
+    assert S.shape == P.shape
+    for c in np.unique(cells):                 # one value per cell, the cell's centre
+        assert np.allclose(S[cells == c], sn.cat.centroids(SIM8)[c])
+    # the snapped value sits INSIDE the cell of the position it replaces
+    assert np.array_equal(sn.cat.cell_of(frustum_to_world(S, SIM8), SIM8), cells)
+    # and is close to the true frustum coordinates on average (a 30-cell partition of the region)
+    assert np.abs(S - F).mean(0).max() < 0.1 * F.std(0).max() + 0.05
+
+
+def test_probe_targets_snapped_branch_is_regression_shaped():
+    from pim.environments.discworld import arms as dwa
+
+    rng = np.random.default_rng(1)
+    pos = _reachable(SIM8, 20 * 7).reshape(20, 7, 1, 2)
+    pos = np.concatenate([pos, _reachable(SIM8, 20 * 7, seed=2).reshape(20, 7, 1, 2)], 2)
+    vel = rng.normal(size=pos.shape).astype(np.float32) * 0.01
+    y, nc = dwa._targets("pos@appearance", pos, vel, SIM8, "frustum")
+    assert nc is None and y.shape == (20, 7, 4) and y.dtype == np.float32
+    yf, _ = dwa._targets("full@appearance", pos, vel, SIM8, "frustum")
+    assert yf.shape == (20, 7, 8)
+    yr, _ = dwa._targets("full", pos, vel, SIM8, "frustum")
+    assert np.allclose(yf[..., 4:], yr[..., 4:])            # velocities untouched by the snap
+    C = categorical_target("appearance").centroids(SIM8)
+    assert all(any(np.allclose(v, c, atol=1e-6) for c in C) for v in y[..., :2].reshape(-1, 2)[:50])
+    with pytest.raises(ValueError):
+        dwa._targets("pos@appearance", pos, vel, SIM8, "cartesian")
+    assert dwa.probe_recipe("pos@appearance", "dw-8ray")["n_seq"] == 30_000     # the regression recipe
+
+
+def test_bench_arrays_snapped_branch_on_dw8ray():
+    """Data-dependent: the snapped bench is the regression bench on the appearance
+    partition's filtered cases, with the edit asking for the new cell's centre."""
+    from pim.environments import layout
+    from pim.environments.discworld import bench as dwb
+    from pim.environments.discworld.frustum import basis
+    from pim.environments.discworld.grid_target import snapped_target
+
+    if not layout.edits_file("discworld", "dw-8ray").exists():
+        pytest.skip("dw-8ray edit bench not present")
+    a = dwb.bench_arrays(n=12, target="pos@appearance", basis_name="frustum", instance="dw-8ray")
+    assert a["kind"] == "regression" and a["cells"] is None
+    assert a["y"].shape == (12, 4) and a["y"].dtype == np.float32
+    assert (a["change_mask"].sum(1) == 2).all() and a["out_dims"] == [0, 1, 2, 3]
+    assert a["selection"]["n"] == 12 and "appearance" in a["selection"]["rule"]
+    sn = snapped_target("pos@appearance")
+    sim = a["sim"]
+    # y IS the snapped post-edit state …
+    assert np.allclose(a["y"], sn.snap(a["pos"][:, dwb.EF], sim).reshape(12, -1), atol=1e-6)
+    # … every case asks the edited object to move to a DIFFERENT cell centre
+    pre = sn.snap(a["pos"][:, dwb.EF - 1], sim).reshape(12, -1)
+    moved = np.abs(a["y"] - pre).reshape(12, 2, 2)[np.arange(12), a["edit_object"]]
+    assert (moved.max(-1) > 1e-6).all()
+    # … and differs from the unsnapped target while the zones (world space) are the same
+    c = dwb.bench_arrays(n=12, target="pos", basis_name="frustum", instance="dw-8ray",
+                         select=np.arange(12))
+    assert not np.allclose(a["y"], basis(a["pos"][:, dwb.EF], None, sim)[0].reshape(12, -1))
+    assert np.array_equal(a["zones"].target, c["zones"].target)
+    with pytest.raises(ValueError):
+        dwb.bench_arrays(n=4, target="pos@appearance", basis_name="cartesian", instance="dw-8ray")

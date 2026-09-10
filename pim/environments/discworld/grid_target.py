@@ -363,3 +363,134 @@ def categorical_target(target: str) -> "CategoricalTarget | None":
     """The categorical target a name denotes (``grid-…``, ``appearance…``), or None for a
     regression target (``pos`` / ``full``). Every branch in the pipeline goes through this."""
     return GridTarget.parse(target) or AppearanceTarget.parse(target)
+
+
+# ── the SNAPPED regression target: a categorical partition read as coordinates ────────
+#
+# ``"pos@<categorical>"`` / ``"full@<categorical>"`` (2026-09-10). The same gridification as a
+# categorical target, kept as the 4-D (or 8-D) REGRESSION task: every object's position is
+# replaced by the centre of the cell it is in, in the frustum basis, and the probe regresses
+# that. It isolates what the categorical rows changed — the target is now a piecewise-constant
+# function of position that the frame can express (its cells), while the probe, the editors
+# (PI through the pseudo-inverse, GS through the MSE spec) and the Edit Index are exactly the
+# regression pipeline's. ND stays ill-posed here (a continuous target), as on ``pos``.
+#
+# A cell's centre is its centroid in frustum coordinates (u, 1/y) under a uniform sweep of the
+# reachable region in world space; where that centroid falls outside its own cell (a
+# non-convex appearance cell), the sweep point of the cell nearest to it is used instead, so
+# a snapped value is always a realisable position inside the cell. An edit under a snapped
+# target is a MOVE between cell centres, so the bench keeps only teleports that change cell
+# (``bench.grid_selection`` with the underlying categorical target), exactly as the
+# categorical rows do — same 192 cases on the same instance.
+
+_SNAP = re.compile(r"^(pos|full)@(.+)$")
+
+
+def frustum_to_world(f: np.ndarray, sim: dict) -> np.ndarray:
+    """(..., 2) frustum coordinates (u = x/(scale·y), 1/y) → (..., 2) world (x, y): the
+    inverse of ``frustum.basis(..., depth="frustum")`` for the canonical inverse-depth axis."""
+    from pim.environments.discworld.frustum import CANONICAL_DEPTH, fov_scale
+
+    assert CANONICAL_DEPTH == "inv_y", "frustum_to_world inverts the inverse-depth axis only"
+    f = np.asarray(f, np.float64)
+    y = 1.0 / np.maximum(f[..., 1], 1e-9)
+    x = f[..., 0] * fov_scale(sim) * y
+    return np.stack([x, y], -1)
+
+
+def _numeric_sim_key(sim: dict) -> tuple:
+    return tuple((k, float(sim[k])) for k in sorted(sim) if isinstance(sim[k], (int, float, bool)))
+
+
+@functools.lru_cache(maxsize=None)
+def _centroids_of(target: "CategoricalTarget", sim_key: tuple, n_side: int = 500) -> np.ndarray:
+    """(G, 2) cell centres in frustum coordinates; see the module note above."""
+    from pim.environments.discworld.frustum import basis as fb
+
+    sim = dict(sim_key)
+    r, y_near, y_far = float(sim["radius"]), float(sim["y_near"]), float(sim["y_far"])
+    scale = float(sim["x_far"]) / y_far
+    ys = np.linspace(y_near + r, y_far - r, n_side)
+    xs = np.linspace(-1.0, 1.0, n_side)
+    Y = np.repeat(ys[:, None], n_side, 1)
+    X = xs[None, :] * (scale * Y - r)                        # the reachable region, uniformly
+    P = np.stack([X, Y], -1).reshape(-1, 2)
+    cells = target.cell_of(P, sim).reshape(-1)
+    F = fb(P, None, sim, depth="frustum")[0]                 # (n, 2) frustum coordinates
+    g = target.n_cells(sim)
+    count = np.bincount(cells, minlength=g).astype(np.float64)
+    if (count == 0).any():
+        raise ValueError(f"{target.name}: cells {np.where(count == 0)[0].tolist()} hold no swept "
+                         f"position — the sweep is too coarse for this partition")
+    cen = np.stack([np.bincount(cells, F[:, k], minlength=g) for k in range(2)], -1) / count[:, None]
+    back = target.cell_of(frustum_to_world(cen, sim), sim)
+    for c in np.where(back != np.arange(g))[0]:              # non-convex cell: use its medoid
+        idx = np.where(cells == c)[0]
+        cen[c] = F[idx[np.argmin(((F[idx] - cen[c]) ** 2).sum(-1))]]
+    return cen
+
+
+def _centroids(self, sim: dict) -> np.ndarray:
+    """(cells, 2) frustum-basis centre of every cell (cached per geometry)."""
+    return _centroids_of(self, _numeric_sim_key(sim))
+
+
+def _snap(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+    """(..., 2) world positions → (..., 2) FRUSTUM coordinates of the centre of each
+    position's cell — the snapped regression target."""
+    return self.centroids(sim)[self.cell_of(pos, sim)]
+
+
+CategoricalTarget.centroids = _centroids
+CategoricalTarget.snap = _snap
+
+
+@dataclass(frozen=True)
+class SnappedTarget:
+    """``<base>@<categorical>``: the regression target ``base`` (``pos`` — positions;
+    ``full`` — positions and velocities) with every position snapped to its cell centre
+    under ``cat``. Defined in the frustum basis, like the categorical targets."""
+
+    base: str
+    cat: CategoricalTarget
+
+    @property
+    def name(self) -> str:
+        return f"{self.base}@{self.cat.name}"
+
+    @classmethod
+    def parse(cls, target: str) -> "SnappedTarget | None":
+        m = _SNAP.match(str(target))
+        if not m:
+            return None
+        cat = categorical_target(m.group(2))
+        return cls(m.group(1), cat) if cat is not None else None
+
+    def n_cells(self, sim: dict) -> int:
+        return self.cat.n_cells(sim)
+
+    def snap(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        return self.cat.snap(pos, sim)
+
+
+def snapped_target(target: str) -> "SnappedTarget | None":
+    """The snapped regression target a name denotes (``pos@appearance``,
+    ``full@grid-16x8``), or None."""
+    return SnappedTarget.parse(target)
+
+
+def selection_target(target: str) -> "CategoricalTarget | None":
+    """The partition whose CELL CHANGE defines a genuine edit under ``target``: the
+    categorical target itself, the snapped target's partition, or None for a plain
+    regression target (every teleport counts)."""
+    cat = categorical_target(target)
+    if cat is not None:
+        return cat
+    sn = snapped_target(target)
+    return sn.cat if sn is not None else None
+
+
+def target_cells(target: str, sim: dict) -> int | None:
+    """How many cells a target's partition has on this instance (None for ``pos``/``full``)."""
+    sel = selection_target(target)
+    return None if sel is None else sel.n_cells(sim)

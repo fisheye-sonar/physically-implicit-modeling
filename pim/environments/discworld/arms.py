@@ -31,7 +31,7 @@ from pim.editors.oracle_overwrite import overwrite_rollout
 from pim.editors.pinv import pinv_step, readout_error, swap_class_logits
 from pim.environments.discworld.bench import (
     DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
-from pim.environments.discworld.grid_target import categorical_target
+from pim.environments.discworld.grid_target import categorical_target, snapped_target
 from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
 from pim.models.protocol import free_run
 from pim.probes.base import FIT_BATCH, FIT_EPOCHS, collect_residuals
@@ -71,7 +71,9 @@ GRID_PROBE_RECIPE = {"probe_size": "250k", "n_seq": 200_000, "epochs": 50}
 def probe_recipe(target: str, inst_root, n_seq: int = 30_000) -> dict:
     """``fit_probes`` / ``observation_probes`` keyword arguments that select an instance's
     probe corpus and fit length for ``target``: the canonical 120k corpus at ``n_seq`` and
-    the default step count for the regression targets; ``GRID_PROBE_RECIPE`` for a grid.
+    the default step count for the regression targets — including the SNAPPED ones
+    (``pos@<partition>``: a 4-output regression, fitted like ``pos``); ``GRID_PROBE_RECIPE``
+    for a categorical target.
 
     ``inst_root`` is the instance NAME (``"dw-8ray"``) or its directory (older callers).
     The corpus is named logically — ``{"probe": {"instance", "size"}}`` — and resolved to a
@@ -113,12 +115,19 @@ def _probe_corpus(data_dir, probe, split: str) -> tuple[Path, Path, dict]:
 
 def _targets(target: str, pos: np.ndarray, vel: np.ndarray, sim: dict, basis_name: str):
     """(y, n_classes) for a probe target: regression values in the basis (``pos`` /
-    ``full``), or the grid's (…, cells) integer labels (``grid-<nu>x<nd>``)."""
+    ``full``), the SNAPPED regression values (``pos@<partition>`` — every position replaced
+    by its cell centre in the frustum basis, 2026-09-10), or the grid's (…, cells) integer
+    labels (``grid-<nu>x<nd>``)."""
     grid = categorical_target(target)
     if grid is not None:
         y, _ = grid.label_frames(pos, sim)
         return y, grid.n_classes
     bp, bv = _to_basis(pos, vel, sim, basis_name)
+    snap = snapped_target(target)
+    if snap is not None:
+        if basis_name != "frustum":
+            raise ValueError(f"{target} is defined in the frustum basis, got basis {basis_name!r}")
+        bp, target = snap.snap(pos, sim).astype(np.float32), snap.base
     y = bp.reshape(*bp.shape[:-2], -1)
     if target == "full":
         y = np.concatenate([y, bv.reshape(*bv.shape[:-2], -1)], axis=-1)
@@ -166,7 +175,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     """
     store = ProbeCache(_require_cache_dir(cache_dir))
     grid = categorical_target(target)
-    if grid is not None and basis_name != "frustum":
+    if (grid is not None or snapped_target(target) is not None) and basis_name != "frustum":
         raise ValueError(f"{target} is defined in the frustum basis, got basis {basis_name!r}")
     # The corpus is keyed LOGICALLY (layout.probe_key) since 2026-09-10 — a path in the
     # key is how a relative/absolute spelling once fitted every probe twice (2026-09-01),

@@ -19,7 +19,8 @@ import numpy as np
 import torch
 
 from pim.environments import layout
-from pim.environments.discworld.grid_target import categorical_target
+from pim.environments.discworld.grid_target import (
+    CategoricalTarget, categorical_target, selection_target, snapped_target)
 from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
@@ -103,7 +104,7 @@ def selection_path(data_dir: Path | None = None, instance: str | None = None) ->
     return _edit_set(data_dir, instance)[1]
 
 
-def grid_selection(data_dir: Path | None, n: int, grid: "CategoricalTarget",
+def grid_selection(data_dir: Path | None, n: int, grid: CategoricalTarget,
                    instance: str | None = None) -> tuple[np.ndarray, dict]:
     """The GRID target's bench: the first ``n`` cases whose teleport CHANGES CELL.
 
@@ -140,7 +141,10 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
     canonical bench is always ``select=None``.
 
-    ``target`` is ``"pos"`` / ``"full"`` (regression, in ``basis_name``) or a grid name
+    ``target`` is ``"pos"`` / ``"full"`` (regression, in ``basis_name``), a SNAPPED
+    regression target ``"pos@<partition>"`` (2026-09-10: positions replaced by their cell
+    centre in the frustum basis; the case list is ``grid_selection`` on that partition, the
+    branch otherwise the regression one) or a grid name
     such as ``"grid-16x8"`` (classification, 2026-09-09): then ``y`` holds the (N, cells)
     labels at the edit frame, ``change_mask`` marks the old and new cell, ``cells`` the
     per-case move, and the case list is ``grid_selection`` (teleports that change cell).
@@ -154,9 +158,10 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     from pim.environments.discworld.loading import load_edits
 
     edits_h5, _sp, _inst = _edit_set(data_dir, instance)
-    grid, selection = categorical_target(target), None
-    if grid is not None and select is None:
-        select, selection = grid_selection(data_dir, n, grid, instance=instance)
+    grid, snap, selection = categorical_target(target), snapped_target(target), None
+    sel_target = selection_target(target)      # the grid, or a snapped target's partition
+    if sel_target is not None and select is None:
+        select, selection = grid_selection(data_dir, n, sel_target, instance=instance)
     if select is None and use_selection:                 # the instance's filtered case list
         if _sp.exists():
             select = np.asarray(json.loads(_sp.read_text())["select"], dtype=int)[:n]
@@ -200,8 +205,15 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         out_dims = []            # per-case rows, not a shared set — see arms.nanda_rollout
     else:
         bp, bv = _to_basis(pos[:, EF], vel[:, EF], sim, basis_name)
+        base = target
+        if snap is not None:
+            # Snapped regression (2026-09-10): the edit asks for the CENTRE of the new cell,
+            # in frustum coordinates; velocities (``full@…``) stay the basis velocities.
+            if basis_name != "frustum":
+                raise ValueError(f"{target} is defined in the frustum basis, got {basis_name!r}")
+            bp, base = snap.snap(pos[:, EF], sim).astype(np.float32), snap.base
         y = bp.reshape(n, -1)
-        if target == "full":
+        if base == "full":
             y = np.concatenate([y, bv.reshape(n, -1)], axis=1)
         # The edit moves ONE object; everything else is a hold-the-rest constraint. Marking
         # too many dims would quietly turn a targeted edit into a whole-state overwrite.
@@ -209,7 +221,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         cm = np.zeros((n, d_out), bool)
         cm[np.arange(n), 2 * eobj] = True
         cm[np.arange(n), 2 * eobj + 1] = True
-        if target == "full":
+        if base == "full":
             cm[np.arange(n), 2 * N_OBJ + 2 * eobj] = True
             cm[np.arange(n), 2 * N_OBJ + 2 * eobj + 1] = True
         out_dims = sorted({int(i) for i in np.where(cm.any(0))[0]})

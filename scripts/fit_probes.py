@@ -6,6 +6,10 @@ target's probes get fitted (2026-09-09).
     python scripts/fit_probes.py --run interface_ablation/L-dw-8ray-tok-20m --target appearance
     python scripts/fit_probes.py --run ray_ablation/L-dw-8ray-20m --target appearance --random-init
     python scripts/fit_probes.py --run ray_ablation/L-dw-8ray-20m --target appearance --observation
+    python scripts/fit_probes.py --run ray_ablation/L-dw-8ray-20m --target pos@appearance   # snapped regression
+
+A SNAPPED regression target (``pos@<partition>``, 2026-09-10) is cheap (the canonical 30k
+regression recipe) and the scorer fits it inline; this script is for fitting it ahead of time.
 
 The canonical scorer (``notebooks/master_eval.ipynb``) NEVER fits an extra target's probes:
 it asks for them with ``require_cached`` and skips the block until they exist. This script
@@ -36,7 +40,8 @@ sys.path.insert(0, str(_REPO))
 import torch  # noqa: E402
 
 from pim.environments.discworld import arms as dwa  # noqa: E402
-from pim.environments.discworld.grid_target import categorical_target  # noqa: E402
+from pim.environments.discworld.grid_target import categorical_target, snapped_target  # noqa: E402
+from pim.metrics.decodability import probe_skill_from_stats  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 from pim.probes.baselines import random_init_model  # noqa: E402
 
@@ -65,9 +70,9 @@ def main() -> None:
         recipe["n_seq"] = a.n_seq
     if a.epochs:
         recipe["epochs"] = a.epochs
-    if categorical_target(a.target) is None:
-        raise SystemExit(f"{a.target!r} is not a categorical target; the regression probes are "
-                         f"fitted by the scorer itself")
+    if categorical_target(a.target) is None and snapped_target(a.target) is None:
+        raise SystemExit(f"{a.target!r} is not an extra probe target (categorical or snapped); "
+                         f"the canonical regression probes are fitted by the scorer itself")
 
     model, info = load_checkpoint(run_dir / "best_model.pt", device="cpu")
     enc = {}
@@ -101,16 +106,14 @@ def main() -> None:
             _, st = dwa.observation_probes(target=a.target, family=fam, basis_name=a.basis,
                                            span=span, cache_dir=cache_dir, align="right",
                                            log=print, **recipe)
-            print(f"  {fam}: skill {1 - st['error_rate'] / st['majority_class_error_rate']:+.4f}"
+            print(f"  {fam}: skill {probe_skill_from_stats(st):+.4f}"
                   f"  [{(time.time() - t0) / 60:.1f} min]", flush=True)
         else:
             fits = dwa.fit_probes(model, target=a.target, family=fam, basis_name=a.basis,
                                   cache_dir=cache_dir, log=print, **recipe, **enc)
-            best = max(fits, key=lambda e: 1 - fits[e][1]["error_rate"]
-                       / fits[e][1]["majority_class_error_rate"])
+            best = max(fits, key=lambda e: probe_skill_from_stats(fits[e][1]))
             st = fits[best][1]
-            print(f"  {fam}: best point {best} skill "
-                  f"{1 - st['error_rate'] / st['majority_class_error_rate']:+.4f}"
+            print(f"  {fam}: best point {best} skill {probe_skill_from_stats(st):+.4f}"
                   f"  [{(time.time() - t0) / 60:.1f} min]", flush=True)
 
 
