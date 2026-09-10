@@ -86,6 +86,19 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:55 PT — the FACTORISED categorical target `appearance-fac` launched (Sevan's pick after the
+snapped result).** Per object one softmax per factor of the appearance partition — run centre (15
+classes) and run length (5) — 4 tiles × 20 classes instead of 30 cells × 3; scales to 128 rays as
+2 × (233 + n_len) against 2,889 × 3. Edits are per-tile class swaps (PI: swap old ↔ new at each
+moved tile; ND: summed row contrast; GS: CE toward the new labels); the bench is the partition's
+cell-changing 192 cases. `grid_target.FactorisedTarget` (`<partition>-fac`, works for product
+grids too), `Bench.moves`, `arms.categorical_direction`, token bench mirrored; 3 tests (247 pass);
+real-model smoke through every editor. Unit **`appearance_fac`** (`scripts/drivers/probe_target_fit.sh`
+— model probes, random-init + observation floors, then `score_pending.sh`), started 15:53,
+GRID_PROBE_RECIPE, ~1 h. Commit ae99a1f. Sevan's next idea on record: the CONVERSE on Othello
+(classification → regression already done as `mine_signed`; a fuller regression set-up needs
+thought — "not just swapping the optimiser").
+
 **15:40 PT — `pos@appearance` scored (unit done in 15 min): the snapped regression target IS the
 regression row.** skill 0.96 / 0.99 (gap ≤ 0.001, not overfit), PI +0.34 / 0.92 at α 100 (the
 canonical row: +0.28 / 0.90 at α 100), GS −0.13 / 0.84 (−0.06 / 0.82); the categorical
