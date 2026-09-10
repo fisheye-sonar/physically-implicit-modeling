@@ -1,7 +1,9 @@
 # Probe-target type — regression vs categorical, both directions (2026-09-09 → 10, overnight)
 
-**Status: `in progress` — the chain is running (`scripts/drivers/probe_targets.sh`, unit
-`probe_targets`, logs `logs/probe_targets/`). Numbers below are placeholders until it lands.**
+**Status: `observed` (2026-09-10 04:47 PT — the chain `scripts/drivers/probe_targets.sh`,
+unit `probe_targets`, logs `logs/probe_targets/`, completed every stage except the last
+sweep variant, `grid-32x16`, on which it was OOM-killed at the 45 GB cap; nothing partial
+was written). One seed per model; one instance per environment for the new targets.**
 
 **Question.** The grid-target control (`grid-target-control.md`) asked whether Othello's
 CATEGORICAL probe target is what makes it editable, by giving discworld a categorical target
@@ -112,6 +114,31 @@ point 3; regression: PI ≈ 0, GS negative at every point).
    distinguishes, so the categorical write asks for a change the observation can express
    and nothing more. The resolution sweep (`appearance-d2/-d3` finer than the frame,
    `appearance-lat` coarser, the product grids) is the direct test of this reading.
+**The resolution sweep (dw-8ray, 2026-09-10 00:06 → )** — one probe set per model, no
+floors; EI / fidelity at each editor's best arm:
+
+| target | cells | frame model: skill LIN / MLP · GS · PI · ND | token model †: skill LIN / MLP · GS · PI · ND |
+|---|---|---|---|
+| appearance (observation-exact) | 30 | 0.89 / 0.90 · **+0.61 / 0.39** · +0.43 / 0.76 · +0.43 / 0.91 | 0.90 / 0.91 · **+0.58 / 0.31** · +0.26 / 0.53 · +0.44 / 0.41 |
+| appearance-d2 (finer: 2 depth bands) | 60 | 0.66 / 0.68 · +0.57 / 0.41 · +0.48 / 0.67 · +0.39 / 0.89 | 0.67 / 0.69 · +0.59 / 0.29 · +0.30 / 0.50 · +0.30 / 0.51 |
+| appearance-d3 (finer: 3 depth bands) | 90 | 0.46 / 0.51 · +0.51 / 0.53 · +0.41 / 0.85 · +0.38 / 0.93 | 0.48 / 0.52 · +0.54 / 0.32 · +0.11 / 0.65 · +0.24 / 0.54 |
+| grid-16x8 (product grid, the noiseless control's target) | 128 | 0.16 / 0.21 · +0.37 / 0.66 · +0.10 / 1.43 · +0.31 / 0.99 | 0.17 / 0.23 · +0.23 / 0.54 · +0.01 / 0.75 · +0.11 / 0.66 |
+| appearance-lat (coarser: runs merged by centre) | 15 | 0.89 / 0.92 · +0.42 / 0.61 · +0.33 / 0.81 · +0.42 / 0.89 | 0.91 / 0.92 · +0.29 / 0.52 · +0.06 / 0.71 · +0.16 / 0.61 |
+| grid-8x4 (product grid, coarse) | 32 | 0.46 / 0.51 · +0.35 / 0.80 · +0.31 / 0.82 · +0.31 / 0.94 | 0.47 / 0.53 · +0.20 / 0.59 · +0.06 / 0.69 · +0.10 / 0.66 |
+| grid-32x16 (product grid, fine) | 512 | NOT RUN — the unit was OOM-killed at the 45 GB cap on this target's first fit (04:47 PT; 1,536 logits, label arrays 4× the next target's). Nothing partial was written. | |
+
+Alignment, not cell count: `appearance-d3` (90 cells, run-aligned) and `grid-8x4` (32
+cells, product) decode equally (LIN 0.46) but edit at GS +0.51 vs +0.35 on the frame model
+and +0.54 vs +0.20 on the token model.
+
+Reference: the SAME 16 × 8 grid on `L-dw-noiseless-20m` gave PI +0.13 / 1.58, ND +0.37 /
+0.91, GS +0.29 / 0.87 (`grid-target-control.md`). **So the grid control's weak, reverting
+result was a property of the TARGET (a product grid misaligned with what the frame
+resolves), not of the instance**: on dw-8ray the grid reproduces the noiseless numbers
+while the observation-exact partition edits at Othello's level, and editability degrades
+monotonically as the target over-resolves the frame (GS +0.61 → +0.57 → +0.51 → +0.37 as
+decodability falls 0.89 → 0.66 → 0.46 → 0.16).
+
 5. **Caveats to carry.** (a) On dw-8ray the appearance IS nearly a read of the current
    frame (random-init floor 0.88 vs trained 0.90), so what is edited is close to the
    observation code; whether a deeper, carried state was moved is what the by-step decay

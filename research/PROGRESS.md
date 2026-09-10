@@ -3,9 +3,23 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-09 18:50 PT — OVERNIGHT CHAIN RUNNING: probe-target controls (unit `probe_targets`)_
+_Last updated: 2026-09-10 04:55 PT — overnight probe-target chain DONE (OOM-killed only on the last, finest sweep variant)_
 
-## RUNNING NOW (2026-09-09 18:49 PT →) — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
+## Overnight chain 2026-09-09 18:49 → 2026-09-10 04:47 PT — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
+
+**Outcome:** stages 1–5 and two of the three extra variants complete; every block and floor
+persisted and scored; tables rebuilt. The unit was **OOM-killed at the 45 GB cap on the first
+fit of `grid-32x16`** (512 cells, 1,536 logits — its (200k × 39 × 512) label arrays plus the
+16 GB residual memmap's page cache exceeded the cap); nothing partial was written. To run it:
+raise the cap (the box has 59 GB; the desktop has been taken down by OOM before — prefer
+making `label_frames` lighter first) and `scripts/fit_probes.py --run … --target grid-32x16`
+for both 8-ray runs, then `master_eval` + `build_full_table` (they add only what is missing).
+Monitors: both exited on their own. Findings: `findings/probe-target-type.md` (complete tables).
+⚠ At 04:48 PT a SECOND unit, `probe_targets_2` (`scripts/drivers/probe_targets_2.sh`, not
+this session's), started fitting further grid variants on the 8-ray runs (`grid-6x5` first;
+`build_full_table` cell [1] had been edited to order `grid-4x2 / 6x5 / 10x3 / 64x32`). Its
+blocks will be absorbed by `master_eval` like the others; this session did not launch or
+monitor it.
 
 Sevan's order (2026-09-09 evening): (1) Othello read by a REGRESSION probe — `mine_signed`
 (+1 mine / 0 / −1 theirs, 64 outputs; his decision: mine/theirs frame, not absolute colour)
@@ -15,6 +29,25 @@ logits — on `L-dw-8ray-20m` and `L-dw-8ray-tok-20m` + floors; (3) a resolution
 unconditionally: `appearance-d2`, `appearance-d3`, `grid-16x8`, and if everything finishes
 before 06:00 PT, `appearance-lat`, `grid-8x4`, `grid-32x16` (one probe set per model, no
 floors). All land as extra probe-target blocks / rows in the main table.
+
+**Interim results (all but `grid-32x16` landed by 04:45 PT; `findings/probe-target-type.md`
+carries the tables):** Othello read by a REGRESSION probe is exactly as editable as by the
+categorical one (PI +0.62 / ND +0.63 vs +0.61 / +0.62); **dw-8ray under the observation-exact
+APPEARANCE target is editable at Othello's level — GS +0.61 / fid 0.39 (frame), +0.58 / 0.31
+(token), PI and ND +0.43 with guards < 1, at every residual point, persisting over the
+rollout** (regression on the same stream: GS −0.06, ND n/a, PI +0.28). The sweep is
+unimodal at the observation-exact resolution: lat (15 cells) GS +0.42, exact (30) +0.61, d2
+(60) +0.57, d3 (90) +0.51, grid-16x8 (128) +0.37 — and the 16 × 8 grid on dw-8ray reproduces
+the noiseless grid's weak numbers, so the earlier grid control's failure was the TARGET's
+misalignment with the frame, not the instance. Waterfall:
+`runs/ray_ablation/L-dw-8ray-20m/figures/waterfall_edits_appearance.png`. Fig 3 (the sweep)
+added to `build_full_table` as cell [8]; ⚠ two cosmetic defects to fix in the morning
+(tick labels "30"/"32" collide; per-panel legends crowd the Edit Index panels — the fixed
+cell is written in this session's transcript; the notebook grew past the reader's size
+limit so it could not be re-written tonight). ⚠ Another session edited
+`build_full_table` cell [1] (BASIS_ORDER gained grid-4x2/6x5/10x3/64x32, INSTANCE_ORDER
+`oth-adjacent-flip`) and REGISTRY (an `oth-adjacent-flip` instance row) during the night —
+not this chain's doing; left as found.
 
 Stages: 1 master_eval (Othello mine_signed inline + floors, ~1.5 h) → 2 appearance probes
 (2 models) → 3 floors → 4 master_eval + tables → 5 variants ×3 → 6 extra variants if before
