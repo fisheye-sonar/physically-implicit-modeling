@@ -257,6 +257,17 @@ def _runs_of(sim_key: tuple, n_side: int = 500):
     return tuple(runs), depth, hit.shape[-1]
 
 
+def _nearest_run(runs: tuple, f: int, la: int) -> int:
+    """Index of the realisable run nearest to (f, l): same centre first, then smallest
+    |Δf| + |Δl|, ties to the earlier run in cell order."""
+    best, key = 0, None
+    for i, (rf, rl) in enumerate(runs):
+        k = (abs((rf + rl) - (f + la)), abs(rf - f) + abs(rl - la))
+        if key is None or k < key:
+            best, key = i, k
+    return best
+
+
 @dataclass(frozen=True)
 class AppearanceTarget(CategoricalTarget):
     """The observation-exact partition: cell = the run of rays a disc lights, optionally
@@ -286,28 +297,51 @@ class AppearanceTarget(CategoricalTarget):
         return _runs_of(_sim_key(sim))[0]
 
     def _centres(self, sim: dict) -> list[int]:
-        return sorted({f + l for f, l in self.runs(sim)})
+        return sorted({f + la for f, la in self.runs(sim)})
 
     def n_cells(self, sim: dict) -> int:
         if self.lateral_only:
             return len(self._centres(sim))
         return len(self.runs(sim)) * self.depth_bands
 
+    # positions per chunk of the ray–disc test: (..., R) float64 intermediates at 128 rays
+    # are ~1 KB per position, so 2^18 positions ≈ 0.3 GB each; labelling the 15.6 M
+    # positions of the probe corpus in one shot was ~60 GB and OOM-killed a unit (2026-09-10)
+    CHUNK = 1 << 18
+
     def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
-        runs, depth, rk = _runs_of(_sim_key(sim))
         p = np.asarray(pos, np.float64)
+        flat = p.reshape(-1, 2)
+        if flat.shape[0] <= self.CHUNK:
+            return self._cell_of_flat(flat, sim).reshape(p.shape[:-1])
+        out = np.concatenate([self._cell_of_flat(flat[i: i + self.CHUNK], sim)
+                              for i in range(0, flat.shape[0], self.CHUNK)])
+        return out.reshape(p.shape[:-1])
+
+    def _cell_of_flat(self, p: np.ndarray, sim: dict) -> np.ndarray:
+        runs, depth, rk = _runs_of(_sim_key(sim))
         hit = covered_rays(p, sim)
         first = hit.argmax(-1)
         last = rk - 1 - hit[..., ::-1].argmax(-1)
         code = first * rk + last
         table = np.full(rk * rk, -1, np.int64)
-        for i, (f, l) in enumerate(runs):
-            table[f * rk + l] = i
+        for i, (f, la) in enumerate(runs):
+            table[f * rk + la] = i
         run_idx = table[code]
         if (run_idx < 0).any():
-            bad = np.unique(code[run_idx < 0])
-            raise ValueError(f"unrealisable run codes {bad.tolist()} — position outside the "
-                             f"reachable region or a run the sweep did not see")
+            # A run the sweep did not see: a grazing ray flipped by float32 rounding, so the
+            # disc lights one ray more or fewer than any swept position (4 in 2 M positions
+            # on dw-noiseless; never on dw-8ray). Snap to the nearest realisable run.
+            miss = run_idx < 0
+            if not hit[miss].any(-1).all():
+                raise ValueError("a position lights no ray — outside the reachable region")
+            snapped = np.array([_nearest_run(runs, int(c // rk), int(c % rk))
+                                for c in np.unique(code[miss])])
+            lut = dict(zip(np.unique(code[miss]).tolist(), snapped.tolist()))
+            run_idx = run_idx.copy()
+            run_idx[miss] = [lut[int(c)] for c in code[miss]]
+            first = np.where(miss, np.array([runs[i][0] for i in run_idx]), first)
+            last = np.where(miss, np.array([runs[i][1] for i in run_idx]), last)
         if self.lateral_only:
             cen = {c: i for i, c in enumerate(self._centres(sim))}
             ctab = np.full(2 * rk, -1, np.int64)

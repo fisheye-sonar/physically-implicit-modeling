@@ -60,8 +60,8 @@ def test_appearance_partition_on_dw8ray_has_30_contiguous_runs():
     A = AppearanceTarget()
     runs = A.runs(SIM8)
     assert len(runs) == 30 and A.n_cells(SIM8) == 30
-    assert all(0 <= f <= l < 8 for f, l in runs)
-    assert {l - f + 1 for f, l in runs} == {1, 2, 3, 4, 5}      # far discs light 1 ray, near 5
+    assert all(0 <= f <= la < 8 for f, la in runs)
+    assert {la - f + 1 for f, la in runs} == {1, 2, 3, 4, 5}      # far discs light 1 ray, near 5
     P = _reachable(SIM8, 5000)
     c = A.cell_of(P, SIM8)
     assert c.min() >= 0 and c.max() < 30
@@ -81,7 +81,7 @@ def test_appearance_variants_refine_or_merge_the_runs():
     assert D2.n_cells(SIM8) == 60 and (c2 // 2 == c).all()          # d2 refines each run
     assert LAT.n_cells(SIM8) == 15                                   # 15 distinct centres
     runs = A.runs(SIM8)
-    cen = np.array([f + l for f, l in runs])
+    cen = np.array([f + la for f, la in runs])
     assert all(len(set(cl[c == i])) == 1 for i in range(30))         # lat merges by centre
     assert len(set(cen)) == 15
 
@@ -173,3 +173,23 @@ def test_token_bench_categorical_branch():
     assert "readout_landed" in recs[0]
     with pytest.raises(ValueError):
         tkb.pinv_arm(model, tb, lin, (1.0,), uns, dims="pos")
+
+
+def test_appearance_cell_of_is_chunk_invariant(monkeypatch):
+    """Labelling the probe corpus is chunked (the one-shot ray–disc test on 128 rays OOM-killed
+    a unit); every chunk size must give the same cells, on every variant and any leading shape."""
+    P = _reachable(SIM8, 3000).reshape(500, 3, 2, 2)
+    for T in (AppearanceTarget(), AppearanceTarget(3), AppearanceTarget(lateral_only=True)):
+        ref = T.cell_of(P, SIM8)
+        assert ref.shape == (500, 3, 2)
+        monkeypatch.setattr(AppearanceTarget, "CHUNK", 7)
+        assert (T.cell_of(P, SIM8) == ref).all()
+        monkeypatch.setattr(AppearanceTarget, "CHUNK", 1 << 18)
+
+
+def test_unseen_run_snaps_to_the_nearest_realisable_run():
+    from pim.environments.discworld.grid_target import _nearest_run
+    runs = ((3, 4), (2, 5), (7, 8), (1, 6))
+    assert _nearest_run(runs, 3, 5) == 0        # centre 8: (3,4) and (2,5) tie on centre and L1 → the earlier run
+    assert _nearest_run(runs, 7, 9) == 2        # one extra grazing ray → the run it grazes
+    assert _nearest_run(runs, 0, 7) == 3
