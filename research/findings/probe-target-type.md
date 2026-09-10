@@ -247,7 +247,7 @@ GS −0.03 / 1.01 (unedited −0.94).
 | grid-8x4 | 32 | 0.71 / 0.89 | +0.27 / 1.05 | +0.34 / 0.92 | +0.27 / 1.11 |
 | grid-16x8 | 128 | 0.43 / 0.71 | +0.13 / 1.58 | +0.37 / 0.91 | +0.29 / 0.87 |
 | appearance-lat | 233 | 0.04 / 0.63 | +0.04 / 1.68 | **+0.51 / 0.79** | +0.30 / 1.08 |
-| grid-32x16 | 512 | _chain 5, queued_ | | | |
+| grid-32x16 | 512 | 0.20 / 0.44 | +0.17 / 1.13 | +0.34 / 0.92 | +0.29 / 0.90 |
 | grid-64x32 | 2048 | _chain 5, queued_ | | | |
 
 Notes so far. (i) The LINEAR probe is at the majority on `appearance-lat` (233 narrow lateral
