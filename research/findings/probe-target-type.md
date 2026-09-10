@@ -234,6 +234,22 @@ count, the three target families in colour, guard-failing arms hollow.
    the categorical head amplifying the difference between a target the frame expresses and
    one it does not.
 
+## The same gradient on dw-noiseless (2026-09-10, chains 4–5; `L-dw-noiseless-20m`, one seed)
+
+Sevan's prediction: the 128-ray noiseless model benefits from a FINER grid than the 8-ray
+model does, because its frame resolves position much more finely (its appearance partition
+has 2,889 cells vs 30). Same recipe, same editors and α grids, canonical bench filtered to
+cell-changing teleports. Regression row for reference: skill 0.97 / 0.99, PI +0.30 / 0.98,
+GS −0.03 / 1.01 (unedited −0.94).
+
+| target | cells | skill LIN / MLP | PI | ND | GS |
+|---|---|---|---|---|---|
+| grid-8x4 | 32 | 0.71 / 0.89 | +0.27 / 1.05 | +0.34 / 0.92 | +0.27 / 1.11 |
+| grid-16x8 | 128 | 0.43 / 0.71 | +0.13 / 1.58 | +0.37 / 0.91 | +0.29 / 0.87 |
+| appearance-lat | 233 | _chain 5, running_ | | | |
+| grid-32x16 | 512 | _chain 5, queued_ | | | |
+| grid-64x32 | 2048 | _chain 5, queued_ | | | |
+
 Provenance: `runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m}/scores.json["bases"]`,
 `logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3}.sh`.
 Pending: the noiseless sweep (chain 4: grid-8x4, appearance-lat,
