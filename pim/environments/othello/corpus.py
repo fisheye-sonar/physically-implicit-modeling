@@ -43,26 +43,33 @@ from pim.environments.othello import data as od
 
 SEED = 0
 BLOCK, MAXLEN = od.T_MODEL, od.MAXLEN      # 59 / 60, defined once in data.py
-# The environment instances. `datasets/` is resolved against the repo root (= CWD by repo
-# convention, same as every loader here). `flip` is the ONE rule that differs: oth-noflip
-# (2026-09-06) never recolours enclosed discs — same legality, passes, game end, index law.
-# `placement` (2026-09-08) is the second rule: "enclosure" = Othello's; "adjacent" =
-# oth-adjacent, a move must touch one of the mover's own discs (8-neighbourhood), nothing is
-# recoloured — colour is causally relevant WITHOUT the enclosure geometry. The two rules
-# compose: oth-adjacent-flip (2026-09-09) = adjacency placement + enclosure recolouring.
+# The environment instances — their RULES. Where their files live is
+# ``pim.environments.layout`` (REPO-anchored, layout v2 since 2026-09-10: train/ probe/
+# eval/ edits/ role directories; ``corpus/`` under v1). `flip` is the ONE rule that differs:
+# oth-noflip (2026-09-06) never recolours enclosed discs — same legality, passes, game end,
+# index law. `placement` (2026-09-08) is the second rule: "enclosure" = Othello's;
+# "adjacent" = oth-adjacent, a move must touch one of the mover's own discs
+# (8-neighbourhood), nothing is recoloured — colour is causally relevant WITHOUT the
+# enclosure geometry. The two rules compose: oth-adjacent-flip (2026-09-09) = adjacency
+# placement + enclosure recolouring.
 INSTANCES = {
-    "oth-uniform": {"dir": Path("datasets/othello/oth-uniform/corpus"), "flip": True, "placement": "enclosure"},
-    "oth-noflip": {"dir": Path("datasets/othello/oth-noflip/corpus"), "flip": False, "placement": "enclosure"},
-    "oth-adjacent": {"dir": Path("datasets/othello/oth-adjacent/corpus"), "flip": False, "placement": "adjacent"},
+    "oth-uniform": {"flip": True, "placement": "enclosure"},
+    "oth-noflip": {"flip": False, "placement": "enclosure"},
+    "oth-adjacent": {"flip": False, "placement": "adjacent"},
     # oth-adjacent with recolouring back ON (2026-09-09): adjacency decides legality, the
     # enclosure scan decides what the placed disc recolours. Same sampling and index law.
-    "oth-adjacent-flip": {"dir": Path("datasets/othello/oth-adjacent-flip/corpus"), "flip": True, "placement": "adjacent"},
+    "oth-adjacent-flip": {"flip": True, "placement": "adjacent"},
 }
-CACHE = INSTANCES["oth-uniform"]["dir"]          # the canonical instance, unchanged callers
 
 
-def corpus_dir(instance: str = "oth-uniform") -> Path:
-    return INSTANCES[instance]["dir"]
+def corpus_dir(instance: str = "oth-uniform", split: str = "train") -> Path:
+    """The directory holding one of an instance's splits (``train`` | ``test`` | ``probe`` |
+    ``probe_large``) — the split's role directory under layout v2, ``corpus/`` under v1."""
+    from pim.environments.layout import othello_split_dir
+
+    if instance not in INSTANCES:
+        raise KeyError(f"unknown othello instance {instance!r}; registered: {sorted(INSTANCES)}")
+    return othello_split_dir(instance, split)
 
 
 def flip_of(instance: str = "oth-uniform") -> bool:
@@ -173,14 +180,16 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
     Measured throughput is **~4.7k games/s on 32 cores**, so 20M takes ~70 min.
     Generation is CPU-only, so it can overlap GPU training rather than serialise it.
     """
-    cache, flip, placement = corpus_dir(instance), flip_of(instance), placement_of(instance)
-    cache.mkdir(parents=True, exist_ok=True)
+    from pim.environments.layout import ensure_marker
+
+    flip, placement = flip_of(instance), placement_of(instance)
     out = {}
     plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N),
             ("probe_large", PROBE_LARGE_LO, PROBE_LARGE_N)]
     if only is not None:
         plan = [x for x in plan if x[0] in only]
     for name, lo, n in plan:
+        cache = corpus_dir(instance, name)           # the split's own role directory
         p = cache / f"{name}_{n}.npz"
         out[name] = p
         if p.exists():
@@ -196,6 +205,8 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
             out[name] = bigger[0]
             log(f"  {name:<6} {n:>10,} games — prefix of {bigger[0].name}")
             continue
+        ensure_marker("othello", instance)           # a new instance is born in layout v2
+        cache.mkdir(parents=True, exist_ok=True)
         t0 = time.time()
         tok, ln = _generate(lo, n, log=log, flip=flip, placement=placement)
         np.savez(p, tokens=tok, lengths=ln, lo=lo, seed=SEED, flip=flip, placement=placement,

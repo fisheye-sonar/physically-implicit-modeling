@@ -107,14 +107,12 @@ def test_tripwire_runs_on_classification_stats():
 
 def test_bench_arrays_grid_branch_shapes():
     """Data-dependent: skipped where the canonical instance is absent."""
-    from pathlib import Path
-
+    from pim.environments import layout
     from pim.environments.discworld import bench as dwb
 
-    dd = Path("datasets/discworld/dw-noiseless/eval")
-    if not (dd / "edits.h5").exists():
-        pytest.skip("dw-noiseless eval split not present")
-    a = dwb.bench_arrays(n=8, target="grid-16x8", basis_name="frustum", data_dir=dd)
+    if not layout.edits_file("discworld", "dw-noiseless").exists():
+        pytest.skip("dw-noiseless edit bench not present")
+    a = dwb.bench_arrays(n=8, target="grid-16x8", basis_name="frustum", instance="dw-noiseless")
     assert a["kind"] == "classification" and a["y"].shape == (8, 128) and a["y"].dtype == np.int64
     assert (a["change_mask"].sum(1) == 2).all()
     ar = np.arange(8)

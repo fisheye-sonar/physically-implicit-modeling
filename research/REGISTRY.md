@@ -28,6 +28,17 @@ was uninterpretable against the canonical eval).
 | `oth-adjacent-flip` | othello | `datasets/othello/oth-adjacent-flip/instance.json` | `oth-adjacent` with RECOLOURING back on (2026-09-09): a move is legal iff the empty square touches one of the mover's own discs (8-neighbourhood), AND the placed disc recolours the discs it encloses along any line, exactly as in Othello (`OthelloBoardState(flip=True, placement='adjacent')`); same passes / game end / uniform sampling / index law / vocabulary. Colour is used by legality AND rewritten by the dynamics, so it is no longer decodable from the input — the 'used and not input-decodable' cell oth-adjacent could not reach. Pilot gate and corpus pending; edits = 1001 synthesised cases (`scripts/make_othello_edits.py`). `experiments/adjacent_flip_ablation/`. |
 | `dw-blink` | discworld | `datasets/discworld/dw-blink/instance.json` | `dw-noiseless` (128 rays, no noise, radius 0.5) plus **blackouts** (2026-09-07): an object leaves the OBSERVATION for min(12, Geometric(1/7)) frames (realised mean ~5.3; prob 0.05/object/frame; never before frame 3; never both at once; ~16% of frames hidden per object) while its physics continues, and the frame before + the last hidden frame carry a **0.5 marker on its edge ray** (ray 0 / ray 127; `obs_id` code −2−j; `pim/environments/discworld/blink.py`). The schedule is a function of the seed, so the edits split hides the same frames as the unedited world. Makes position a NECESSARY carried state (the reappearance frame is unpredictable from the current frame). Eval has **20k edits** so the subsets are populated (~3% reappearance at frame 20, ~18% mid-blackout, ~79% visible); canonical bench = first 192 as everywhere. Seeds train 110e9, eval 135e9, probe 1000e9, probe_large 1010e9. |
 
+**Layout v2 (2026-09-10; `research/specs/DATASET_LAYOUT_SPEC.md`).** Every instance is
+`train/` · `probe/` (the probe FIT corpora — discworld `probe_120k.h5` / `probe_250k.h5`,
+Othello `probe_20000.npz` / `probe_large_170000.npz`; the hold-out is an internal 80/20 split
+by sequence) · `eval/` (held-out `test.h5` / `test_10000.npz`) · `edits/v1/` (the bench:
+`edits.h5` + `selection.json`, or `cases_1001.pkl`) · `edits/v2/` (reserved for the
+paired-counterfactual bench) · `tokens/` · `_unused/` (files nothing reads, kept), marked by
+`layout.json`. The split column above keeps the historical names: probe = `probe_120k`,
+probe_large / probe_250k = `probe_250k`, eval = `eval/test.h5`, edits = `edits/v1`. ⛔ Paths
+are built ONLY by `pim/environments/layout.py`, and probe caches are keyed by
+`layout.probe_key` (logical, path-free).
+
 ⛔ **Seeds are never shared across discworld instances**, even to "pair" worlds:
 `always_in_frustum` accepts initial conditions by simulating forward, and the noise
 draws are consumed *inside* that acceptance loop, so the same seed with noise off gives

@@ -24,7 +24,8 @@ ap.add_argument("--min-rays", type=int, default=2)
 a = ap.parse_args()
 root = REPO / "datasets/discworld" / a.instance
 vocab = FrameVocab.load(REPO / a.vocab)
-arr = dwb.bench_arrays(n=a.pool, target="full", basis_name="frustum", data_dir=root / "eval")
+arr = dwb.bench_arrays(n=a.pool, target="full", basis_name="frustum", instance=a.instance,
+                       use_selection=False)      # the POOL, never the selection being built
 pre_f, post_f = arr["zones"].gt_unedited, arr["clean"][:, EF]
 pre, post = encode(pre_f, vocab).astype(int), encode(post_f, vocab).astype(int)
 tok = encode(arr["obs"][:, :EF], vocab).astype(int)
@@ -43,7 +44,9 @@ out = {"instance": a.instance, "vocab": a.vocab, "pool": a.pool, "n": int(len(se
                  "teleport_mean_selected": float(tele[sel].mean()),
                  "teleport_mean_pool": float(tele.mean()),
                  "rays_changed_selected": {int(k): int(v) for k, v in zip(*np.unique(nray[sel], return_counts=True))}}}
-p = root / "edits_selection.json"
+from pim.environments import layout  # noqa: E402
+p = layout.edits_selection("discworld", a.instance)      # edits/v1/selection.json (layout v2)
+p.parent.mkdir(parents=True, exist_ok=True)
 p.write_text(json.dumps(out, indent=1))
 print(json.dumps({k: v for k, v in out.items() if k != "select"}, indent=1))
 print(f"-> {p.relative_to(REPO)}  ({len(sel)} cases)")

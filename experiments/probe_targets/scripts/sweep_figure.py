@@ -27,7 +27,8 @@ for run, inst, label, ei in RUNS:
     sp = REPO / "runs" / run / "scores.json"
     if not sp.exists():
         continue
-    with h5py.File(REPO / "datasets/discworld" / inst / "eval/edits.h5", "r") as f:
+    from pim.environments import layout
+    with h5py.File(layout.edits_file("discworld", inst), "r") as f:
         sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
     blocks = json.loads(sp.read_text())["bases"]
     targets = {}

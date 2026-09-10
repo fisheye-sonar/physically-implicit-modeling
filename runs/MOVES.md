@@ -67,3 +67,28 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
   `noise_ablation/L-dw-noiseless-20m/figures/waterfall_edits_grid-16x8_experiment-2026-09-08.png`
 - `runs/noise_ablation/L-dw-noiseless-20m/scores.json` gained the `grid-16x8` block (`blocks_added`
   records the date and commit); nothing else in it changed.
+
+## Probe-cache re-key — 2026-09-10 (layout v2: cache keys name the corpus logically, `data=discworld/<inst>`, `split=probe_<size>`, instead of a filesystem path; bytes unchanged; full old→new list in `research/scratch/2026-09-10-layout-migration-log.json`)
+- `experiments/dw_tokens/obsfloor/probes`: 64 re-keyed
+- `runs/_architecture_gate/R-dw-20m/probes`: 4 re-keyed
+- `runs/_architecture_gate/R-dw-noiseless-20m/probes`: 4 re-keyed
+- `runs/_baselines/dw-8ray/probes`: 50 re-keyed
+- `runs/_baselines/dw-blink/probes`: 20 re-keyed
+- `runs/_baselines/dw-noiseless/probes`: 44 re-keyed
+- `runs/_baselines/dw-pn04/probes`: 40 re-keyed
+- `runs/_pipeline_smoke/S-dw-smoke/probes`: 4 re-keyed
+- `runs/_pipeline_smoke/dw-tok-smoke/probes`: 4 re-keyed
+- `runs/blink_ablation/L-dw-blink-20m/probes`: 4 re-keyed
+- `runs/initial_othello_comparison/L-dw-20m/probes`: 16 re-keyed, 4 relative-path duplicates parked in `_superseded/`
+- `runs/interface_ablation/L-dw-8ray-tok-20m/probes`: 24 re-keyed
+- `runs/noise_ablation/L-dw-noiseless-20m/probes`: 16 re-keyed, 1 relative-path duplicates parked in `_superseded/`
+- `runs/ray_ablation/L-dw-8ray-20m/probes`: 42 re-keyed
+- `runs/ray_ablation/_R-dw-8ray-20m/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s001000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s004000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s016000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s064000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s128000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s256000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s512000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s780000/probes`: 4 re-keyed

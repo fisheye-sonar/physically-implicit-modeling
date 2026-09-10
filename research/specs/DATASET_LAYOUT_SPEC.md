@@ -1,10 +1,17 @@
 # Spec — the dataset layout migration (layout v2)
 
-**Status: locked in by Sevan 2026-09-10, NOT executed, NOT implemented.** Purely cosmetic
-by contract: no trained model, probe, score, or bench case changes; every existing number
-must be reproducible from the same bytes at their new paths. Preconditions in §7 must hold
-before `--apply` runs — a chain that reads `datasets/` or writes probe caches is running
-while this is written (unit `probe_targets_5`, expected done ≈ 15:00 PT 2026-09-10).
+**Status: EXECUTED 2026-09-10 (locked in by Sevan the same day).** `scripts/migrate_datasets.py
+--apply` ran at ~15:00 PT after the `probe_targets_5` chain was stopped and the GPU was idle;
+`--verify` PASSED on every check (inodes and sizes of all 115 files, bench arrays identical
+through both the new `instance=` and the legacy `data_dir=` call forms on all four discworld
+instances, Othello benchmarks and `corpus.build` resolutions identical, 372 probe blobs re-keyed
+and loadable, 104 canonical run-probe keys + 64 observation-floor keys HIT through the code's
+own recipe, token vocab unchanged with 0 UNK on the retired `val.h5`); 240 tests pass. Log:
+`research/scratch/2026-09-10-layout-migration-log.json`; snapshot
+`research/scratch/2026-09-10-layout-snapshot.json`. Purely cosmetic by contract: no trained
+model, probe, score, or bench case changed. Deviations from the plan below: `os.chdir(REPO)` in
+`master_eval` was kept (harmless; only its comment changed); the two big notebooks' cells were
+edited with `nbformat` because they exceed the notebook reader's cap (GOTCHAS 2026-09-10).
 
 Companion: this layout also reserves the home of the paired-counterfactual edit bench
 (`edits/v2/`) that the model-referenced Edit Index will need (separate spec, not written).

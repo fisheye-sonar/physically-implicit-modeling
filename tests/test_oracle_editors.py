@@ -15,12 +15,15 @@ from pathlib import Path
 
 import pytest
 
+from pim.environments import layout
+
 RUN = Path("runs/noise_ablation/L-dw-noiseless-20m")
-EVAL = Path("datasets/discworld/dw-noiseless/eval")
+INST = "dw-noiseless"
 THRESHOLD = 0.7
 
 
-@pytest.mark.skipif(not (RUN / "best_model.pt").exists() or not (EVAL / "edits.h5").exists(),
+@pytest.mark.skipif(not (RUN / "best_model.pt").exists()
+                    or not layout.edits_file("discworld", INST).exists(),
                     reason="canonical noiseless run / instance not on disk")
 def test_both_oracle_editors_carry_the_edited_world():
     from pim.environments.discworld import arms as dwa
@@ -28,7 +31,7 @@ def test_both_oracle_editors_carry_the_edited_world():
     from pim.models import load_run
 
     model, _ = load_run(RUN, device=dwa.DEV)
-    b = dwb.load_bench(model, n=192, target="full", basis_name="cartesian", data_dir=EVAL)
+    b = dwb.load_bench(model, n=192, target="full", basis_name="cartesian", instance=INST)
     u = dwa.unsteered(model, b)
     assert u["edit_index"] < -0.8                       # the floor is where it should be
     recs = {r["editor"]: r for r in dwa.oracle_arm(model, b, n_freeze=16)}

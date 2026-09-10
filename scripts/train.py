@@ -111,8 +111,9 @@ def _discworld_tokens(inst: str, run_dir: Path):
     """The instance's frame vocabulary → (tok, ln, vocab_size, block, meta). Copies
     vocab.npz into the run dir so the run stays self-contained."""
     from pim.environments.discworld.tokens import load_tokens
+    from pim.environments.layout import tokens_dir
 
-    tdir = _REPO / "datasets" / "discworld" / inst / "tokens"
+    tdir = tokens_dir(inst)
     tok, ln, vocab, tmeta = load_tokens(tdir)
     run_dir.mkdir(parents=True, exist_ok=True)
     shutil.copy(tdir / "vocab.npz", run_dir / "vocab.npz")

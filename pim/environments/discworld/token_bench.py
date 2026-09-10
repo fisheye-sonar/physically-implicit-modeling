@@ -78,7 +78,8 @@ selection_path = dwb.selection_path        # ONE selection per instance — see 
 
 def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
                      basis_name: str = "cartesian", data_dir: Path | None = None,
-                     select: "np.ndarray | None" = None, use_selection: bool = True) -> TokenBench:
+                     select: "np.ndarray | None" = None, use_selection: bool = True,
+                     instance: str | None = None) -> TokenBench:
     """The canonical edit set as tokens: context, the two worlds' frames at EF, targets.
 
     ⛔ CASE SELECTION (2026-09-08). Taking the first ``n`` cases wastes a large share of them:
@@ -90,7 +91,7 @@ def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
     scored. Pass ``select=`` to override, or ``use_selection=False`` for the old first-n bench.
     """
     a = dwb.bench_arrays(n, target, basis_name, data_dir, select=select,
-                         use_selection=use_selection)
+                         use_selection=use_selection, instance=instance)
     tokens = encode(a["obs"][:, :EF], vocab).astype(np.int64)
     post = encode(a["clean"][:, EF], vocab).astype(np.int64)
     pre = encode(a["zones"].gt_unedited, vocab).astype(np.int64)

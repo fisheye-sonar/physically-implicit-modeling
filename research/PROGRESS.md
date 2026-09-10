@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-10 04:55 PT — overnight probe-target chain DONE (OOM-killed only on the last, finest sweep variant)_
+_Last updated: 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped (see below)_
 
 ## Overnight chain 2026-09-09 18:49 → 2026-09-10 04:47 PT — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
 
@@ -230,11 +230,15 @@ improved from 1.11 to 0.90, i.e. non-destructive. Old numbers parked as
 `scores.pre-selection-2026-09-09.json` in each run dir (`runs/MOVES.md`).
 
 **Open decisions.**
-- (2026-09-10) **LOCKED IN by Sevan:** (a) dataset layout v2 — spec written, NOT executed:
-  `research/specs/DATASET_LAYOUT_SPEC.md` (path module, probe-cache key migration, CPU-only
-  gate; `--apply` only after `probe_targets_5` prints `STAGE chain complete`, ≈15:00 PT);
-  (b) then the model-referenced Edit Index on a paired-counterfactual bench (`edits/v2/`,
-  spec not yet written); (c) then full re-evaluation when the GPU is free. Ordering fixed.
+- (2026-09-10) **Dataset layout v2 — DONE** (`research/specs/DATASET_LAYOUT_SPEC.md`,
+  `scripts/migrate_datasets.py`; verify PASSED, 240 tests green). Every `datasets/` path now comes
+  from `pim/environments/layout.py`: `train/ probe/ eval/ edits/v1/ (edits/v2 reserved) tokens/
+  _unused/` + `layout.json`; probe caches re-keyed logically (372 blobs, bytes unchanged, 5
+  duplicates parked in `_superseded/`); producers stamp new instances v2 at birth. Ledgers in
+  `datasets/MOVES.md`, `runs/MOVES.md`; GOTCHAS entry 2026-09-10. Nothing rescored. NEXT (Sevan's
+  order): the model-referenced Edit Index + paired-counterfactual bench (`edits/v2/`) — design still
+  under discussion (legal vs illegal edits; references p_A / S(B); the ceiling row); spec not yet
+  written; then full re-evaluation when the GPU is free.
 - (2026-09-09, Sevan) Re-reference the Edit Index and guard to the MODEL'S OWN predictions —
   unedited prediction and prediction on the true counterfactual history — instead of GT, so the
   floor is −1 by construction and +1 is the model's own counterfactual. Claude's read: the right

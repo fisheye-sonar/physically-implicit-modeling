@@ -62,11 +62,11 @@ def test_tokenize_instance_writes_every_file(tmp_path):
     del mm
     eval_only = LV[np.array([[2, 2, 2, 2, 2, 2, 2, 2]])].astype(np.float32)   # a frame not in train
     assert not (np.abs(train.reshape(-1, R) - eval_only).sum(1) == 0).any()
-    for name, rel in tk.H5_SPLITS:
+    for name, p in tk.h5_splits(inst):        # a synthetic instance: layout-v1 relative names
         x = _frames(rng, 5, T, R)
         if name == "edits":
             x[0, 0] = eval_only[0]
-        with h5py.File(inst / rel, "w") as h:
+        with h5py.File(p, "w") as h:
             h.create_dataset("obs_intensity", data=x)
     (inst / "train" / "corpus.json").write_text(json.dumps(          # the machine-written contract
         {"instance": "dw-tiny", "n": N, "n_frames": T, "obs_dim": R}))

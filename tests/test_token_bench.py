@@ -11,8 +11,10 @@ import numpy as np
 import pytest
 import torch
 
-REPO = Path(__file__).resolve().parents[1]
-TOK = REPO / "datasets" / "discworld" / "dw-8ray" / "tokens"
+from pim.environments import layout
+
+REPO = layout.REPO
+TOK = layout.tokens_dir("dw-8ray")
 pytestmark = pytest.mark.skipif(not (TOK / "vocab.npz").exists(), reason="dw-8ray tokens absent")
 
 
@@ -30,14 +32,14 @@ def test_token_bench_cases_and_arms(tmp_path):
     from pim.environments.discworld import token_bench as tkb
     from pim.environments.discworld.tokens import FrameVocab, decode
     vocab = FrameVocab.load(TOK / "vocab.npz")
-    inst = REPO / "datasets" / "discworld" / "dw-8ray"
+    INST = "dw-8ray"
     tb = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
-                              data_dir=inst / "eval")
+                              instance=INST)
     assert tb.tokens.shape == (16, 20) and tb.tgt.shape == (16, 8)
     # the context tokens are the stored edits tokens for THE CASES THE BENCH SELECTED
     # (dw-8ray carries edits_selection.json since 2026-09-08 — 20% of its teleports render
     # an identical frame, so the bench is a filtered case list, not the first n).
-    sp = inst / "edits_selection.json"
+    sp = layout.edits_selection("discworld", INST)
     sel = (json.loads(sp.read_text())["select"][:16] if sp.exists() else list(range(16)))
     stored = np.load(TOK / "edits.npy")[sel][:, :20]
     assert np.array_equal(tb.tokens, stored)
@@ -45,9 +47,9 @@ def test_token_bench_cases_and_arms(tmp_path):
     assert bool(tb.keep.all()), f"{int(tb.keep.sum())}/16 scoreable on the selected cases"
     # and the unfiltered bench is still reachable, and still equals the first n
     tb0 = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
-                               data_dir=inst / "eval", use_selection=False)
+                               instance=INST, use_selection=False)
     assert np.array_equal(tb0.tokens, np.load(TOK / "edits.npy")[:16, :20])
-    a = dwb.bench_arrays(16, "full", "cartesian", inst / "eval")
+    a = dwb.bench_arrays(16, "full", "cartesian", instance=INST)
     assert np.array_equal(decode(tb.post_tok, vocab), a["clean"][:, 20])
     assert np.array_equal(decode(tb.pre_tok, vocab), a["zones"].gt_unedited)
     assert tb.keep.any()
@@ -57,19 +59,19 @@ def test_token_bench_cases_and_arms(tmp_path):
     assert -1 <= uc["edit_index"] <= 1 and uc["n_scored"] == int(tb.keep.sum())
     enc, tag = tkb.token_encoder(vocab)
     lin = dwa.fit_probes(model, target="full", n_seq=64, family="linear", basis_name="cartesian",
-                         data_dir=inst / "probe", cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
+                         probe={"instance": INST, "size": "120k"}, cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
                          log=None)
     assert set(lin) == set(range(3)) and lin[0][0].d_in == 16
     recs = tkb.pinv_arm(model, tb, lin, [1.0], uns, dims="pos")
     assert len(recs) == 3 and all(-1 <= r["edit_index"] <= 1 for r in recs)
     assert all("fidelity_ratio" in r and "zone_edit_index_expected" in r for r in recs)
     mlp = dwa.fit_probes(model, target="full", n_seq=64, family="mlp", basis_name="cartesian",
-                         data_dir=inst / "probe", cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
+                         probe={"instance": INST, "size": "120k"}, cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
                          log=None)
     gs = tkb.grad_steer_arm(model, tb, mlp, [0, 2], [0.05], uns, n_steps=2)
     assert len(gs) == 2 and gs[0]["editor"] == "GS@L0"
     # the cache key carries the encoder: a refit is a hit, a frames key is not the same file
     hit = dwa.fit_probes(model, target="full", n_seq=64, family="linear", basis_name="cartesian",
-                         data_dir=inst / "probe", cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
+                         probe={"instance": INST, "size": "120k"}, cache_dir=tmp_path, encoder=enc, encoder_tag=tag,
                          log=None)
     assert torch.allclose(hit[0][0].net.weight, lin[0][0].net.weight)

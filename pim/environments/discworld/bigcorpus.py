@@ -157,14 +157,15 @@ INSTANCES = {
 
 
 def instance_dir(inst: str) -> Path:
-    return REPO / "datasets" / "discworld" / inst
+    from pim.environments.layout import instance_root
+
+    return instance_root("discworld", inst)
 
 
 def train_dir(inst: str) -> Path:
-    d = instance_dir(inst) / "train"
-    if inst == "dw-pn04" and not d.exists():          # pre-move legacy location
-        return REPO / "datasets" / "20_dwscale_20m"
-    return d
+    from pim.environments.layout import train_dir as _train_dir
+
+    return _train_dir("discworld", inst)
 
 
 def _spec(inst: str) -> dict:
@@ -312,4 +313,8 @@ if __name__ == "__main__":
          "seed_stride": SEED_STRIDE, "sim_flags": SIM_FLAGS,
          "train_n": TRAIN_N, "val_n": VAL_N,
          "instance": INSTANCE, "n_frames": FRAMES, "obs_dim": OBS_RES}, indent=1))
+    # a new instance is born in layout v2 (research/specs/DATASET_LAYOUT_SPEC.md §4f)
+    from pim.environments.layout import ensure_marker
+
+    ensure_marker("discworld", INSTANCE)
     print("corpus complete", flush=True)

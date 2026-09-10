@@ -868,3 +868,44 @@ cap — do not read "peak < MemoryMax" as "not an OOM"). Now chunked (2 GB peak,
 same instance also surfaced that a 128-ray disc can light a run the 500 × 500 dense sweep
 never saw (a grazing ray flipped by float32 rounding; 4 codes in 2 M positions) — such runs
 snap to the nearest realisable run instead of raising. Neither can happen on dw-8ray.
+
+## 2026-09-10 — Dataset layout v2: every `datasets/` path comes from `pim/environments/layout.py`
+
+Spec `research/specs/DATASET_LAYOUT_SPEC.md`; migration `scripts/migrate_datasets.py`
+(`--plan/--snapshot/--apply/--verify/--rollback`); log
+`research/scratch/2026-09-10-layout-migration-log.json`. Purely cosmetic: every file kept its
+inode, every cached probe its bytes, no score changed. What moved, and the traps around it:
+
+- The probe FIT corpus is `probe/probe_120k.h5` (was `probe/test.h5`) and `probe/probe_250k.h5`
+  (was `probe_250k/test.h5`). "test" never meant held-out there: the hold-out is an internal
+  seeded 80/20 split BY SEQUENCE inside the same file (`arms.fit_probes`). The held-out
+  sequences are `eval/test.h5` (waterfalls; never used to fit anything).
+- The edit bench is `edits/v1/edits.h5` (was `eval/edits.h5`); dw-8ray's case filter is
+  `edits/v1/selection.json` (was `edits_selection.json`). `edits/v2/` is RESERVED for the
+  paired-counterfactual bench — do not put anything else there.
+- **Probe cache keys are LOGICAL**: `data="discworld/<inst>"`, `split="probe_<size>"` — never a
+  filesystem path (a path in the key is how a dataset move would have orphaned all 394 cached
+  probes). 372 blobs were re-keyed in place; 5 pre-2026-09-01 relative-path duplicates are parked
+  under `<probes>/_superseded/`. A `data_dir=` argument still works everywhere: an instance's probe
+  directory maps onto the logical key (`layout.legacy_probe_key`), any other directory (a pilot)
+  keeps a path key. `probe_recipe` now returns `{"probe": {"instance", "size"}, ...}`, so a
+  scores.json written after 2026-09-10 records the corpus by name, not path.
+- Othello splits live in role directories: `train/train_20000000.npz`, `eval/test_10000.npz`,
+  `probe/probe_20000.npz`, `probe/probe_large_170000.npz` (+ label caches). The legacy 90k / 1M /
+  5M rungs are in `_unused/corpus/`: `train.py --limit 90000` now takes a PREFIX of the 20M corpus
+  (different games) — no canonical run uses `--limit`; the archived L90 runs trained on the moved
+  files, so reproducing one means pointing at `_unused/corpus/` explicitly.
+- `eval/val.h5` was NEVER the training validation set (that is the last tenth of the train
+  memmap); its only reader was the token-vocab builder. It and the 100-sample
+  `probe*/{train,val,edits}.h5` stubs are in `_unused/`. The token vocabulary was NOT rebuilt, and
+  every frame of the retired `val.h5` is in the stored vocab (0 UNK, verified by the gate).
+- `oth-uniform`'s bench is `edits/v1/cases_1001.pkl`, a cmp-verified copy of Li's vendored file
+  (still in git; the loader falls back to it when the copy is absent).
+- Producers write v2 directly — `generate_dataset.py --role probe|eval|edits --instance <inst>`,
+  `corpus.build`, `bigcorpus` — and stamp `layout.json` at birth (`layout.ensure_marker`), which
+  REFUSES an instance that still holds v1 files. A new instance therefore cannot be born in v1.
+- The notebook reader's 25k-token cap: `master_eval.ipynb` and `build_full_table.ipynb` exceed it
+  even with outputs stripped, so their 2026-09-10 cell edits had to be made with `nbformat`
+  (source-only cell replacement, unified diff printed in the session). This is the second time the
+  cap has blocked NotebookEdit on these two files (2026-09-10 morning was the first); splitting
+  them is the fix, not another workaround.

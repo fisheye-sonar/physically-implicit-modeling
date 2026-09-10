@@ -18,18 +18,37 @@ import h5py
 import numpy as np
 import torch
 
+from pim.environments import layout
 from pim.environments.discworld.grid_target import categorical_target
 from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
 DEV = "cuda" if torch.cuda.is_available() else "cpu"
 
-_REPO = Path(__file__).resolve().parents[3]
-# The canonical edit set, always. New instance path preferred; legacy honoured until
-# the Phase-2 data move lands.
-_EVAL_NEW = _REPO / "datasets" / "discworld" / "dw-pn04" / "eval"
-_EVAL_LEGACY = _REPO / "datasets" / "4_fixed_refl_inview"
-DATA = _EVAL_NEW if _EVAL_NEW.exists() else _EVAL_LEGACY
+_REPO = layout.REPO
+# The canonical edit set's directory on the default instance — kept as the module default
+# for callers that name neither an instance nor a directory. Resolved through
+# ``pim.environments.layout`` (v2: ``edits/v1/``; v1: ``eval/``).
+DATA = layout.edits_dir("discworld", layout.DEFAULT_INSTANCE["discworld"])
+
+
+def _edit_set(data_dir: Path | None, instance: str | None) -> tuple[Path, Path, str | None]:
+    """(edits.h5, selection.json, instance) for a bench request. ``instance`` names an
+    instance directly (the v2 form). ``data_dir`` is the older form: an instance's edit
+    directory (``<inst>/eval`` under v1, ``<inst>/edits/v1`` under v2 — both map onto the
+    instance, so old call sites keep working after the move) or ANY directory holding an
+    ``edits.h5`` (a pilot under experiments/), which is used as is."""
+    if instance is not None:
+        inst = instance
+    elif data_dir is None:
+        inst = layout.DEFAULT_INSTANCE["discworld"]
+    else:
+        li = layout.legacy_edits_instance(data_dir)
+        if li is None:
+            dd = Path(data_dir)
+            return dd / "edits.h5", dd.parent / "edits_selection.json", None
+        inst = li[1]
+    return (layout.edits_file("discworld", inst), layout.edits_selection("discworld", inst), inst)
 
 
 @dataclass
@@ -67,8 +86,9 @@ def _to_basis(pos, vel, sim, basis_name):
     return fb(pos, vel, sim, depth=basis_name)
 
 
-def selection_path(data_dir: Path | None = None) -> Path:
-    """An instance's FILTERED edit-case list, if it has one (``edits_selection.json``).
+def selection_path(data_dir: Path | None = None, instance: str | None = None) -> Path:
+    """An instance's FILTERED edit-case list, if it has one (``edits/v1/selection.json``;
+    ``edits_selection.json`` beside ``eval/`` under layout v1).
 
     Written by ``experiments/interface_ablation/edits_audit/scripts/make_selection.py``.
     It exists for dw-8ray only (2026-09-08): with 8 rays a teleport renders an IDENTICAL
@@ -80,18 +100,18 @@ def selection_path(data_dir: Path | None = None) -> Path:
     The SAME file serves the ray-zone and the frames-as-tokens bench, so the interface
     ablation stays paired case for case.
     """
-    d = Path(data_dir) if data_dir is not None else DATA
-    return Path(d).parent / "edits_selection.json"
+    return _edit_set(data_dir, instance)[1]
 
 
-def grid_selection(data_dir: Path, n: int, grid: "CategoricalTarget") -> tuple[np.ndarray, dict]:
+def grid_selection(data_dir: Path | None, n: int, grid: "CategoricalTarget",
+                   instance: str | None = None) -> tuple[np.ndarray, dict]:
     """The GRID target's bench: the first ``n`` cases whose teleport CHANGES CELL.
 
     Under a categorical target a teleport that stays inside one cell asks for no change at
     all, so it cannot be scored as an edit; such cases are skipped and the next ones taken
     (2.1% on dw-noiseless at 16 × 8). Reads positions only — no frames — so it is cheap.
     Returns the case indices and a record for ``scores.json`` (rule, counts)."""
-    with h5py.File(Path(data_dir) / "edits.h5", "r") as f:
+    with h5py.File(_edit_set(data_dir, instance)[0], "r") as f:
         pos = f["positions"][:, EF - 1: EF + 1, :N_OBJ, :].astype(np.float32)   # (M, 2, N_OBJ, 2)
         eobj = f["edit_object"][:].astype(int)
         sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
@@ -106,10 +126,15 @@ def grid_selection(data_dir: Path, n: int, grid: "CategoricalTarget") -> tuple[n
 
 def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
                  data_dir: Path | None = None, select: np.ndarray | None = None,
-                 use_selection: bool = True) -> dict:
+                 use_selection: bool = True, instance: str | None = None) -> dict:
     """The edit set's arrays and zones, model-free (factored out of ``load_bench``,
     2026-09-05, so a token model — ``token_bench`` — scores the SAME cases, targets
     and zones without a frame-space state).
+
+    ``instance`` names the instance whose canonical bench (``edits/v1``) to load — the
+    layout-v2 form (2026-09-10). ``data_dir`` is the older form and still works: an
+    instance's edit directory maps onto the instance; any other directory holding an
+    ``edits.h5`` (a pilot) is read as is. See ``_edit_set``.
 
     ``select`` (case indices into the edits split) replaces "the first ``n`` cases" —
     for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
@@ -128,17 +153,16 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     """
     from pim.environments.discworld.loading import load_edits
 
-    dd = Path(data_dir) if data_dir is not None else DATA
+    edits_h5, _sp, _inst = _edit_set(data_dir, instance)
     grid, selection = categorical_target(target), None
     if grid is not None and select is None:
-        select, selection = grid_selection(dd, n, grid)
+        select, selection = grid_selection(data_dir, n, grid, instance=instance)
     if select is None and use_selection:                 # the instance's filtered case list
-        _sp = selection_path(dd)
         if _sp.exists():
             select = np.asarray(json.loads(_sp.read_text())["select"], dtype=int)[:n]
     # the edits split alone — its own config_json carries the sim config, so the 188 MB
     # test split is never decompressed just to read a dict (2026-09-07)
-    b = load_edits(dd / "edits.h5", n_obj_keep=N_OBJ)
+    b = load_edits(edits_h5, n_obj_keep=N_OBJ)
     sl = slice(None, n) if select is None else np.asarray(select, dtype=int)
     obs = b.obs[sl].astype(np.float32)
     pos = b.positions[sl, :, :N_OBJ, :].astype(np.float32)
@@ -199,9 +223,11 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
 
 def load_bench(model, n: int = 192, target: str = "pos",
                basis_name: str = "cartesian", data_dir: Path | None = None,
-               select: np.ndarray | None = None, use_selection: bool = True) -> Bench:
+               select: np.ndarray | None = None, use_selection: bool = True,
+               instance: str | None = None) -> Bench:
     """Warm ``model`` on the edits split and build the ground-truth zones (``bench_arrays``)."""
-    a = bench_arrays(n, target, basis_name, data_dir, select=select, use_selection=use_selection)
+    a = bench_arrays(n, target, basis_name, data_dir, select=select, use_selection=use_selection,
+                     instance=instance)
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
     tgt = torch.from_numpy(a["y"]).to(DEV)
     tgt = tgt.long() if a["kind"] == "classification" else tgt.float()

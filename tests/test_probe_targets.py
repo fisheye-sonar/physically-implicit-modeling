@@ -43,9 +43,11 @@ def test_covered_rays_matches_the_renderer():
     from pim.environments.discworld.renderer import render_frame
     from pim.metrics.zone_editability import object_constants, sim_config_from
 
-    p = Path("datasets/discworld/dw-8ray/eval/edits.h5")
+    from pim.environments import layout
+
+    p = layout.edits_file("discworld", "dw-8ray")
     if not p.exists():
-        pytest.skip("dw-8ray eval split not present")
+        pytest.skip("dw-8ray edit bench not present")
     with h5py.File(p) as f:                    # the instance's own renderer config
         sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
     cfg = sim_config_from(sim, 2)
@@ -148,12 +150,14 @@ def test_token_bench_categorical_branch():
     from pim.environments.discworld.tokens import FrameVocab
     from pim.models import build
 
-    root = Path("datasets/discworld/dw-8ray")
-    if not (root / "eval/edits.h5").exists() or not (root / "tokens/vocab.npz").exists():
+    from pim.environments import layout
+
+    vocab_p = layout.tokens_dir("dw-8ray") / "vocab.npz"
+    if not layout.edits_file("discworld", "dw-8ray").exists() or not vocab_p.exists():
         pytest.skip("dw-8ray tokens not present")
-    vocab = FrameVocab.load(root / "tokens/vocab.npz")
+    vocab = FrameVocab.load(vocab_p)
     tb = tkb.load_token_bench(vocab, n=6, target="appearance", basis_name="frustum",
-                              data_dir=root / "eval")
+                              instance="dw-8ray")
     assert tb.kind == "classification" and tb.tgt.dtype == torch.long and tb.tgt.shape == (6, 30)
     assert (tb.change_mask.sum(1) == 2).all() and tb.selection["n"] == 6
     torch.manual_seed(0)

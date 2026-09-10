@@ -30,7 +30,7 @@ from pim.editors.nanda import addition_hook, probe_direction
 from pim.editors.oracle_overwrite import overwrite_rollout
 from pim.editors.pinv import pinv_step, readout_error, swap_class_logits
 from pim.environments.discworld.bench import (
-    DATA, DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
+    DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
 from pim.environments.discworld.grid_target import categorical_target
 from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
 from pim.models.protocol import free_run
@@ -65,18 +65,50 @@ def _require_cache_dir(cache_dir) -> Path:
 # on it. Every existing grid probe carries this recipe in its cache key, and
 # ``probe_recipe`` hands it to every caller (scorer, floors, waterfalls) so nobody can
 # request — and silently trigger — a differently-keyed refit.
-GRID_PROBE_RECIPE = {"split_dir": "probe_250k", "n_seq": 200_000, "epochs": 50}
+GRID_PROBE_RECIPE = {"probe_size": "250k", "n_seq": 200_000, "epochs": 50}
 
 
-def probe_recipe(target: str, inst_root: Path, n_seq: int = 30_000) -> dict:
+def probe_recipe(target: str, inst_root, n_seq: int = 30_000) -> dict:
     """``fit_probes`` / ``observation_probes`` keyword arguments that select an instance's
-    probe corpus and fit length for ``target``: the canonical ``probe`` split at ``n_seq``
-    and the default step count for the regression targets; ``GRID_PROBE_RECIPE`` for a grid."""
-    inst_root = Path(inst_root)
+    probe corpus and fit length for ``target``: the canonical 120k corpus at ``n_seq`` and
+    the default step count for the regression targets; ``GRID_PROBE_RECIPE`` for a grid.
+
+    ``inst_root`` is the instance NAME (``"dw-8ray"``) or its directory (older callers).
+    The corpus is named logically — ``{"probe": {"instance", "size"}}`` — and resolved to a
+    file by ``pim.environments.layout`` at fit time (2026-09-10, layout v2)."""
+    inst = inst_root if isinstance(inst_root, str) and "/" not in inst_root else Path(inst_root).name
     if categorical_target(target) is not None:
         r = GRID_PROBE_RECIPE
-        return {"data_dir": inst_root / r["split_dir"], "n_seq": r["n_seq"], "epochs": r["epochs"]}
-    return {"data_dir": inst_root / "probe", "n_seq": n_seq, "epochs": None}
+        return {"probe": {"instance": inst, "size": r["probe_size"]}, "n_seq": r["n_seq"],
+                "epochs": r["epochs"]}
+    return {"probe": {"instance": inst, "size": "120k"}, "n_seq": n_seq, "epochs": None}
+
+
+def _probe_corpus(data_dir, probe, split: str) -> tuple[Path, Path, dict]:
+    """(h5 file, manifest, cache-key fields) for a probe corpus request.
+
+    ``probe`` = ``{"instance", "size"}`` (or an ``(instance, size)`` pair) names an instance
+    corpus LOGICALLY; its cache key is ``layout.probe_key`` — path-free, so a dataset move
+    cannot orphan a fitted probe. ``data_dir`` is the older form: an instance's probe
+    directory maps onto the same logical key (so every existing call site produces the
+    same key as the new form); any other directory (a pilot, a test's tmp corpus) is
+    read as ``<dir>/<split>.h5`` and keyed by its resolved path, exactly as before.
+    Neither given: the default instance's 120k corpus."""
+    from pim.environments import layout
+
+    if probe is not None:
+        inst, size = (probe["instance"], probe["size"]) if isinstance(probe, dict) else probe
+    elif data_dir is None:
+        inst, size = layout.DEFAULT_INSTANCE["discworld"], "120k"
+    else:
+        lk = layout.legacy_probe_key(data_dir)
+        if lk is None:
+            dd = Path(data_dir).resolve()
+            return dd / f"{split}.h5", dd / "dataset.json", {"split": split, "data": str(dd)}
+        _, inst, size = lk
+    data, key_split = layout.probe_key("discworld", inst, size)
+    return (layout.probe_file("discworld", inst, size), layout.probe_manifest("discworld", inst, size),
+            {"split": key_split, "data": data})
 
 
 def _targets(target: str, pos: np.ndarray, vel: np.ndarray, sim: dict, basis_name: str):
@@ -97,8 +129,12 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
                family: str = "linear", log=print, basis_name: str = "cartesian",
                cache: bool = True, data_dir: Path | None = None,
                cache_dir: Path | None = None, encoder=None, encoder_tag: str | None = None,
-               epochs: int | None = None, require_cached: bool = False) -> dict:
+               epochs: int | None = None, require_cached: bool = False,
+               probe: dict | tuple | None = None) -> dict:
     """One probe per residual point, held out BY SEQUENCE. ``family`` linear|mlp.
+
+    ``probe`` (2026-09-10) names the probe corpus logically — ``{"instance", "size"}``, as
+    ``probe_recipe`` returns it; ``data_dir`` is the older path form (see ``_probe_corpus``).
 
     ``target`` is ``"pos"`` / ``"full"`` (regression in ``basis_name``) or a grid name such
     as ``"grid-16x8"`` (3-way classification per cell, 2026-09-09; ``basis_name`` must be
@@ -132,18 +168,16 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     grid = categorical_target(target)
     if grid is not None and basis_name != "frustum":
         raise ValueError(f"{target} is defined in the frustum basis, got basis {basis_name!r}")
-    # .resolve(): the cache key must not depend on how the path was SPELLED. A
-    # relative data_dir (a pilot run from the repo root) and an absolute one
-    # (master_eval, which resolves REPO) hashed to DIFFERENT keys, so every probe
-    # was fitted and stored twice — and a 4-probe refit is a ~24 GB job that once
-    # OOM-killed the desktop (2026-09-01).
-    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
+    # The corpus is keyed LOGICALLY (layout.probe_key) since 2026-09-10 — a path in the
+    # key is how a relative/absolute spelling once fitted every probe twice (2026-09-01),
+    # and how a dataset move would have orphaned all 394 cached probes.
+    h5_path, manifest, keyf = _probe_corpus(data_dir, probe, split)
     extra = {} if encoder is None else {"encoder": encoder_tag or "custom"}
     if epochs is not None:
         extra["epochs"] = int(epochs)
-    fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=split,
+    fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=keyf["split"],
                             family=family, basis=basis_name, seed=SEED,
-                            data=str(dd), **extra)
+                            data=keyf["data"], **extra)
     if cache:
         hit = store.load(fname, prov, device=DEV)
         if hit is not None:
@@ -154,11 +188,11 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     if require_cached:
         raise RuntimeError(f"no cached probes for {prov} in {store.dir} — this target's probes "
                            f"are fitted deliberately, not by the scorer (require_cached=True)")
-    with h5py.File(dd / f"{split}.h5", "r") as f:
+    with h5py.File(h5_path, "r") as f:
         obs = f["obs_intensity"][:n_seq].astype(np.float32)
         pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
         vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
-    sim = json.load(open(dd / "dataset.json"))["sim"]
+    sim = json.load(open(manifest))["sim"]
     y, n_classes = _targets(target, pos, vel, sim, basis_name)
     # Transformer-L has a fixed block_size (39, learned absolute positions) and cannot
     # take a 40-frame episode; truncating here keeps both architectures on one path.
@@ -229,7 +263,8 @@ def observation_probes(target: str = "full", n_seq: int = 30_000, split: str = "
                        family: str = "linear", basis_name: str = "cartesian",
                        span: int = 39, data_dir=None, cache_dir=None,
                        cache: bool = True, log=print, epochs: int | None = None,
-                       align: str = "left", require_cached: bool = False) -> tuple:
+                       align: str = "left", require_cached: bool = False,
+                       probe: dict | tuple | None = None) -> tuple:
     """The OBSERVATION floor: the canonical probes fitted to the causal observation
     history instead of a model's residual stream. No model is involved at all.
 
@@ -246,15 +281,15 @@ def observation_probes(target: str = "full", n_seq: int = 30_000, split: str = "
     from pim.probes.baselines import CausalHistory, fit_baseline_probe
 
     store = ProbeCache(_require_cache_dir(cache_dir))
-    dd = (Path(data_dir) if data_dir is not None else DATA).resolve()
+    h5_path, manifest, keyf = _probe_corpus(data_dir, probe, split)   # logical key, see fit_probes
     # `epochs` enters the key only when set: the canonical fit (200 epochs on 30k) keeps its
     # existing keys; the 5x-corpus floor runs 50 epochs (>= 2x the canonical step count).
     extra = {} if epochs is None else {"epochs": int(epochs)}
     if align != "left":                     # existing (left-aligned) keys stay as they are
         extra["align"] = align
     fname, prov = store.key(None, kind="observation", target=target, n_seq=int(n_seq),
-                            split=split, family=family, basis=basis_name, seed=SEED,
-                            span=int(span), data=str(dd), **extra)
+                            split=keyf["split"], family=family, basis=basis_name, seed=SEED,
+                            span=int(span), data=keyf["data"], **extra)
     if cache:
         hit = store.load(fname, prov, device=DEV)
         if hit is not None:
@@ -264,11 +299,11 @@ def observation_probes(target: str = "full", n_seq: int = 30_000, split: str = "
     if require_cached:
         raise RuntimeError(f"no cached observation probe for {prov} in {store.dir} "
                            f"(require_cached=True — see fit_probes)")
-    with h5py.File(dd / f"{split}.h5", "r") as f:
+    with h5py.File(h5_path, "r") as f:
         obs = f["obs_intensity"][:n_seq].astype(np.float32)
         pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
         vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
-    sim = json.load(open(dd / "dataset.json"))["sim"]
+    sim = json.load(open(manifest))["sim"]
     y, n_classes = _targets(target, pos, vel, sim, basis_name)   # grid → labels, 3 classes
     obs, y = obs[:, :span], y[:, :span]
     # THE SAME permutation fit_probes draws — the two floors and the model are compared

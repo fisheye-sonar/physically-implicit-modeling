@@ -8,6 +8,12 @@ edits follows.
 
 Usage
 -----
+    # layout v2 (2026-09-10): ONE split per call, straight into the instance
+    python scripts/generate_dataset.py --role probe --size 120k --instance dw-x --n 120000 --seed S ...
+    python scripts/generate_dataset.py --role eval  --instance dw-x --n 10000  --seed S ...
+    python scripts/generate_dataset.py --role edits --instance dw-x --n 10000  --seed S --edit-frame 20 ...
+
+    # legacy four-split suite into an arbitrary directory (pilots)
     python scripts/generate_dataset.py data/my_run
 
     python scripts/generate_dataset.py data/my_run \\
@@ -52,9 +58,22 @@ def parse_args() -> argparse.Namespace:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument(
-        "output_dir",
-        help="Parent directory for the suite (created if absent; must be empty if it exists)",
+        "output_dir", nargs="?", default=None,
+        help="LEGACY four-split suite: parent directory (created if absent; must be empty if "
+             "it exists). Omit it and give --role/--instance for the layout-v2 form.",
     )
+
+    # ── Layout v2: one ROLE per call, straight into the instance ──────────
+    g = p.add_argument_group(
+        "layout v2 (research/specs/DATASET_LAYOUT_SPEC.md §4f) — ONE split, written where the "
+        "instance keeps it: probe -> probe/probe_<size>.h5, eval -> eval/test.h5, "
+        "edits -> edits/v1/edits.h5, each with its .json manifest beside it")
+    g.add_argument("--role", choices=["probe", "eval", "edits"], default=None)
+    g.add_argument("--instance", default=None, metavar="INST",
+                   help="the discworld instance (datasets/discworld/<INST>); stamped layout v2 if new")
+    g.add_argument("--n", type=int, default=None, metavar="N", help="samples in the one split")
+    g.add_argument("--size", default="120k", choices=["120k", "250k"],
+                   help="probe role only: which probe corpus this is")
 
     # ── Split sizes ───────────────────────────────────────────────────────
     g = p.add_argument_group("split sizes")
@@ -146,24 +165,12 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-def main() -> None:
-    args = parse_args()
-    output_dir = Path(args.output_dir)
-
-    if output_dir.exists() and any(output_dir.iterdir()):
-        print(
-            f"Error: '{output_dir}' already exists and is not empty.  "
-            "Halting to avoid overwriting data."
-        )
-        return
-    output_dir.mkdir(parents=True, exist_ok=True)
-
+def _sim_from_args(args) -> SimConfig:
     # With --omni2d the flat observation dimension IS the grid size, and the whole
     # downstream stack sizes itself from `obs_res` — so derive it here rather than
     # asking the caller to keep two numbers in step (`render2d.validate` enforces it).
     obs_res = args.omni2d_h * args.omni2d_w if args.omni2d else args.obs_res
-
-    sim = SimConfig(
+    return SimConfig(
         n_objects=args.n_objects,
         n_frames=args.frames,
         obs_res=obs_res,
@@ -188,6 +195,85 @@ def main() -> None:
         omni2d_h=args.omni2d_h,
         omni2d_w=args.omni2d_w,
     )
+
+
+def _main_role(args) -> None:
+    """Layout v2: generate ONE split into the instance's role directory + its manifest."""
+    from pim.environments import layout
+
+    if not args.instance or args.n is None:
+        print("Error: --role needs --instance and --n.")
+        return
+    inst, role = args.instance, args.role
+    layout.ensure_marker("discworld", inst)          # a new instance is born in layout v2
+    if role == "probe":
+        target, manifest = (layout.probe_file("discworld", inst, args.size),
+                            layout.probe_manifest("discworld", inst, args.size))
+    elif role == "eval":
+        target, manifest = layout.eval_file("discworld", inst), layout.eval_manifest("discworld", inst)
+    else:
+        target, manifest = (layout.edits_file("discworld", inst, "v1"),
+                            layout.edits_manifest("discworld", inst, "v1"))
+    if target.exists():
+        print(f"Error: '{target}' already exists.  Halting to avoid overwriting data.")
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    sim = _sim_from_args(args)
+    shared_storage = dict(n_workers=args.n_workers, write_batch=args.write_batch,
+                          compression_level=args.compression_level)
+    t0 = time.perf_counter()
+    print(f"{role} -> {target}  (n={args.n:,}, seed {args.seed})")
+    if role == "edits":
+        cfg = EditDatasetConfig(n_samples=args.n, sim=sim, base_seed=args.seed,
+                                edit_frame=args.edit_frame,
+                                edit_always_in_frustum=args.edit_always_in_frustum,
+                                max_edit_attempts=args.max_edit_attempts, **shared_storage)
+        meta = generate_edits_dataset(cfg, target) or {}
+        eff_edit_frame = args.edit_frame if args.edit_frame >= 0 else args.frames // 2
+        split = {"n_samples": args.n, "base_seed": args.seed, "edit_frame": eff_edit_frame,
+                 "edit_always_in_frustum": args.edit_always_in_frustum,
+                 "max_edit_attempts": args.max_edit_attempts}
+    else:
+        cfg = DatasetConfig(n_samples=args.n, sim=sim, base_seed=args.seed, **shared_storage)
+        meta = generate_dataset(cfg, target) or {}
+        split = {"n_samples": args.n, "base_seed": args.seed}
+        if role == "probe":
+            split["size"] = args.size
+            split["holdout"] = ("internal: pim.environments.discworld.arms.fit_probes draws a "
+                                "seeded 80/20 split BY SEQUENCE inside this file (seed 0)")
+    master = {
+        "generated_at": meta.get("generated_at", time.strftime("%Y-%m-%dT%H:%M:%S")),
+        "layout": layout.LAYOUT_VERSION, "role": role, "file": target.name,
+        "sim": dataclasses.asdict(sim),
+        "splits": {role: split},
+        "generation": {"n_workers": args.n_workers, "write_batch": args.write_batch,
+                       "compression": "gzip", "compression_level": args.compression_level},
+        "schema": meta.get("schema"),
+    }
+    manifest.write_text(json.dumps(master, indent=2))
+    print(f"\ndone in {time.perf_counter() - t0:.1f}s  →  {target}\nmanifest  →  {manifest}")
+
+
+def main() -> None:
+    args = parse_args()
+    if args.role:
+        _main_role(args)
+        return
+    if not args.output_dir:
+        print("Error: give an output_dir (legacy four-split suite) or --role + --instance + --n.")
+        return
+    output_dir = Path(args.output_dir)
+
+    if output_dir.exists() and any(output_dir.iterdir()):
+        print(
+            f"Error: '{output_dir}' already exists and is not empty.  "
+            "Halting to avoid overwriting data."
+        )
+        return
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    obs_res = args.omni2d_h * args.omni2d_w if args.omni2d else args.obs_res
+    sim = _sim_from_args(args)
 
     if args.omni2d:
         dy = (sim.y_far - sim.y_near) / args.omni2d_h

@@ -60,8 +60,7 @@ def main() -> None:
     run_dir = _REPO / "runs" / a.run
     cfg = json.loads((run_dir / "config.json").read_text())
     inst = cfg["data"]["instance"]
-    inst_root = _REPO / "datasets" / "discworld" / inst
-    recipe = dwa.probe_recipe(a.target, inst_root)
+    recipe = dwa.probe_recipe(a.target, inst)      # the corpus is named logically (layout v2)
     if a.n_seq:
         recipe["n_seq"] = a.n_seq
     if a.epochs:

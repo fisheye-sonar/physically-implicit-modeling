@@ -19,7 +19,7 @@ def _touches_own(board, sq, color):
 def test_instance_row():
     assert oc.rules_of("oth-adjacent-flip") == {"flip": True, "placement": "adjacent"}
     assert oc.rules_of("oth-adjacent") == {"flip": False, "placement": "adjacent"}
-    assert oc.corpus_dir("oth-adjacent-flip").parts[-3:] == ("othello", "oth-adjacent-flip", "corpus")
+    assert oc.corpus_dir("oth-adjacent-flip", "train").parts[-3:-1] == ("othello", "oth-adjacent-flip")
 
 
 def test_adjacent_flip_recolours_exactly_the_enclosed_discs():

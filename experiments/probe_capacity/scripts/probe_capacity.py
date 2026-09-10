@@ -83,8 +83,8 @@ def write_scores(S):
 # ── environment-specific loading ─────────────────────────────────────────────────────
 if ENV == "discworld":
     RUN = Path("runs/initial_othello_comparison/L-dw-20m")
-    root = Path("datasets/discworld/dw-pn04")
-    corpus = root / "probe_250k" / "test.h5"
+    from pim.environments import layout
+    corpus = layout.probe_file("discworld", "dw-pn04", "250k")         # layout v2 (2026-09-10)
     N_SEQ = 400 if SMOKE else 250_000
     BASIS, TARGET, POINT = "frustum", "full", 3               # point 3 = canonical LIN/MLP argmax
     model, info = load_checkpoint(RUN / "best_model.pt", device=DEV)
@@ -93,7 +93,7 @@ if ENV == "discworld":
         obs = f["obs_intensity"][:N_SEQ].astype(np.float32)
         pos = f["positions"][:N_SEQ, :, :dwb.N_OBJ, :].astype(np.float32)
         vel = f["velocities"][:N_SEQ, :, :dwb.N_OBJ, :].astype(np.float32)
-    sim = json.load(open(corpus.parent / "dataset.json"))["sim"]
+    sim = json.load(open(layout.probe_manifest("discworld", "dw-pn04", "250k")))["sim"]
     bp, bv = dwb._to_basis(pos, vel, sim, BASIS)
     y = np.concatenate([bp.reshape(N_SEQ, bp.shape[1], -1), bv.reshape(N_SEQ, bv.shape[1], -1)], -1)
     obs, y = obs[:, :span], y[:, :span]

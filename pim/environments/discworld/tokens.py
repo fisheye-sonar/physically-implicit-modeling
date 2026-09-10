@@ -14,8 +14,10 @@ out, cross-entropy on the next frame) trains on discworld with nothing else chan
                        convention as Othello's pad token 0.
 * ``encode``/``decode`` ids ↔ frames (row ``UNK`` decodes to NaN).
 * ``tokenize_instance`` writes ``<instance>/tokens/``: ``train.i16`` (N, T) int16 memmap,
-                       ``probe.npy``/``val.npy``/``test.npy``/``edits.npy``, ``vocab.npz``,
-                       ``meta.json``. Additive — nothing in the instance is touched.
+                       ``test.npy``/``edits.npy``, ``vocab.npz``, ``meta.json`` (the probe
+                       corpus joins the vocabulary; ``h5_splits`` names the source files
+                       through ``pim.environments.layout``). Additive — nothing else in the
+                       instance is touched.
 """
 from __future__ import annotations
 
@@ -28,8 +30,29 @@ import h5py
 import numpy as np
 
 UNK = 0
-H5_SPLITS = (("probe", "probe/test.h5"), ("val", "eval/val.h5"),
-             ("test", "eval/test.h5"), ("edits", "eval/edits.h5"))
+# The splits also written as token files. The probe corpus joins the VOCABULARY only —
+# token probes re-encode the float corpus through ``token_bench.token_encoder``. (`val`
+# and `probe.npy` left 2026-09-10, layout v2: `eval/val.h5` was read by nothing but this
+# builder, and the vocabulary is a stored artefact — DATASET_LAYOUT_SPEC.md §4d.)
+NPY_SPLITS = ("test", "edits")
+
+
+def h5_splits(instance_dir) -> tuple[tuple[str, Path], ...]:
+    """(name, h5 file) for every small split that joins the train memmap in the
+    vocabulary: the probe FIT corpus, the held-out eval sequences, the edit bench.
+    Resolved through ``pim.environments.layout`` for an instance under ``datasets/``; a
+    synthetic instance elsewhere (tests) uses the same relative names as layout v1."""
+    from pim.environments import layout
+
+    d = Path(instance_dir)
+    parsed = layout.parse_dataset_path(d.resolve())
+    if parsed is not None and parsed["rel"] == () and parsed["cls"] == "discworld":
+        inst = parsed["inst"]
+        return (("probe", layout.probe_file("discworld", inst, "120k")),
+                ("test", layout.eval_file("discworld", inst)),
+                ("edits", layout.edits_file("discworld", inst)))
+    return (("probe", d / "probe" / "test.h5"), ("test", d / "eval" / "test.h5"),
+            ("edits", d / "eval" / "edits.h5"))
 
 
 def frame_codes(frames, levels: np.ndarray) -> np.ndarray:
@@ -150,8 +173,9 @@ def tokenize_instance(instance_dir: Path, chunk: int = 250_000, levels=None, log
     counts += tr_counts
     # the small splits, held as codes until the vocabulary is fixed
     split_codes = {}
-    for name, rel in H5_SPLITS:
-        with h5py.File(inst_dir / rel) as h:
+    splits = h5_splits(inst_dir)
+    for name, p in splits:
+        with h5py.File(p) as h:
             x = h["obs_intensity"][:]
         c = frame_codes(x, levels)
         split_codes[name] = c
@@ -166,22 +190,24 @@ def tokenize_instance(instance_dir: Path, chunk: int = 250_000, levels=None, log
     mm.flush()
     del mm
     for name, c in split_codes.items():
-        np.save(out / f"{name}.npy", vocab.code_to_id[c])
+        if name in NPY_SPLITS:
+            np.save(out / f"{name}.npy", vocab.code_to_id[c])
 
     in_vocab = counts > 0
     meta = {
         "instance": inst["instance"], "created": time.strftime("%Y-%m-%d %H:%M"),
+        "layout": 2, "sources": {n: str(p) for n, p in splits},
         "n_train": N, "n_frames": T, "obs_dim": R, "levels": levels.tolist(),
         "possible_patterns": int(K ** R), "vocab_size": int(vocab.size),
         "unk_id": UNK, "id_order": "ascending pattern code; ids 1..V, 0 = UNK",
-        "vocab_built_from": ["train"] + [n for n, _ in H5_SPLITS],
+        "vocab_built_from": ["train"] + [n for n, _ in splits],
         "distinct_frames": {k: int((v > 0).sum()) for k, v in per_split_counts.items()},
         "frames_only_outside_train": int((in_vocab & (tr_counts == 0)).sum()),
         "frame_occurrences_outside_train_vocab": {
             k: int(v[in_vocab & (tr_counts == 0)].sum()) for k, v in per_split_counts.items()
             if k != "train"},
         "files": {"train": "train.i16 (N, T) int16 memmap", **{n: f"{n}.npy (n, T) int16"
-                                                              for n, _ in H5_SPLITS},
+                                                              for n in NPY_SPLITS},
                   "vocab": "vocab.npz (levels, frames (V+1, R), code_to_id, counts)"},
         "minutes": round((time.time() - t0) / 60, 1),
     }

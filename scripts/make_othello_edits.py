@@ -18,6 +18,7 @@ from pathlib import Path
 _REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(_REPO))
 
+from pim.environments import layout  # noqa: E402
 from pim.environments.othello import corpus as oc  # noqa: E402
 from pim.environments.othello.bench import shipped_length_distribution, synthesise_cases  # noqa: E402
 from pim.environments.othello.data import canonical_vocab  # noqa: E402
@@ -35,7 +36,8 @@ def main() -> None:
     hist = [[int(itos[int(t)]) for t in row[:L]] for row, L in zip(tok, ln)]
     cases, manifest = synthesise_cases(hist, a.n, shipped_length_distribution(), seed=a.seed,
                                        **oc.rules_of(a.instance))
-    out = _REPO / "datasets" / "othello" / a.instance / "edits"
+    layout.ensure_marker("othello", a.instance)              # a new instance is born in layout v2
+    out = layout.edits_dir("othello", a.instance, "v1")
     out.mkdir(parents=True, exist_ok=True)
     with open(out / f"cases_{a.n}.pkl", "wb") as f:
         pickle.dump(cases, f)
