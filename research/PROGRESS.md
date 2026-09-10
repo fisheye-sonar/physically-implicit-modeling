@@ -86,6 +86,12 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**10:56 PT — chain 3 complete; chain 4 running.** grid-32x16 on both 8-ray models is in the
+tables (frame: skill 0.01 / 0.04, PI +0.14 / 1.22, ND +0.31 / 0.97, GS +0.42 / 0.68; tokens:
+0.01 / 0.05, +0.02, +0.10, +0.18 / 0.58) — the product-grid GS band holds with the probe at
+the majority, i.e. editability there is insensitive to decodability (findings §4). Chain 4
+(`probe_targets_4`) started 10:57 with grid-8x4 on the noiseless run; heartbeat + watcher on.
+
 **09:10 PT — records caught up while chain 3 runs.** Consolidated 8-ray sweep tables and
 reading in `findings/probe-target-type.md` (commit bec3776), the OOM in GOTCHAS, REGISTRY rows,
 and the sweep figure `experiments/probe_targets/outputs/probe_target_sweep.png` via
