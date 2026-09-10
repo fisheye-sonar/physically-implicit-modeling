@@ -65,9 +65,10 @@ class OthelloBoardState():
         self.flip = flip   # False = enclosed discs are NOT recoloured (legality is unchanged)
         # placement (2026-09-08): "enclosure" is Othello's rule — the move must enclose at
         # least one opponent disc along a line; "adjacent" (oth-adjacent) — the move must
-        # touch one of the mover's own discs in the 8-neighbourhood, and nothing is
-        # recoloured (its games are generated with flip=False). Passes and game end follow
-        # the same forfeit logic under either rule.
+        # touch one of the mover's own discs in the 8-neighbourhood. With flip=False
+        # (oth-adjacent) nothing is recoloured; with flip=True (oth-adjacent-flip) the
+        # placed disc recolours the discs it encloses, exactly as under the enclosure rule.
+        # Passes and game end follow the same forfeit logic under either rule.
         if placement not in ("enclosure", "adjacent"):
             raise ValueError(f"placement must be enclosure|adjacent, got {placement!r}")
         self.placement = placement
@@ -130,7 +131,10 @@ class OthelloBoardState():
             for direction in eights:
                 rr, cc = r + direction[0], c + direction[1]
                 if 0 <= rr < 8 and 0 <= cc < 8 and self.state[rr, cc] == color:
-                    return True, []
+                    # oth-adjacent-flip (2026-09-09): legality is adjacency, but a placed disc
+                    # still recolours whatever it encloses. The scan is skipped when flip is
+                    # off so oth-adjacent's games (and their cost) are byte-identical.
+                    return True, (self._captures(r, c, color) if self.flip else [])
             return False, []
         tbf = self._captures(r, c, color)
         return len(tbf) > 0, tbf

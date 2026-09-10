@@ -71,7 +71,8 @@ def _parse():
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
                    help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink; "
-                        "othello: oth-uniform | oth-noflip | oth-adjacent). Default: the env's canonical instance.")
+                        "othello: oth-uniform | oth-noflip | oth-adjacent | oth-adjacent-flip). "
+                        "Default: the env's canonical instance.")
     # the interface — see the module docstring
     p.add_argument("--repr", choices=("frames", "tokens"), default=None,
                    help="frames = float observations, linear encoder, frame-regression head, MSE "

@@ -48,11 +48,15 @@ BLOCK, MAXLEN = od.T_MODEL, od.MAXLEN      # 59 / 60, defined once in data.py
 # (2026-09-06) never recolours enclosed discs — same legality, passes, game end, index law.
 # `placement` (2026-09-08) is the second rule: "enclosure" = Othello's; "adjacent" =
 # oth-adjacent, a move must touch one of the mover's own discs (8-neighbourhood), nothing is
-# recoloured — colour is causally relevant WITHOUT the enclosure geometry.
+# recoloured — colour is causally relevant WITHOUT the enclosure geometry. The two rules
+# compose: oth-adjacent-flip (2026-09-09) = adjacency placement + enclosure recolouring.
 INSTANCES = {
     "oth-uniform": {"dir": Path("datasets/othello/oth-uniform/corpus"), "flip": True, "placement": "enclosure"},
     "oth-noflip": {"dir": Path("datasets/othello/oth-noflip/corpus"), "flip": False, "placement": "enclosure"},
     "oth-adjacent": {"dir": Path("datasets/othello/oth-adjacent/corpus"), "flip": False, "placement": "adjacent"},
+    # oth-adjacent with recolouring back ON (2026-09-09): adjacency decides legality, the
+    # enclosure scan decides what the placed disc recolours. Same sampling and index law.
+    "oth-adjacent-flip": {"dir": Path("datasets/othello/oth-adjacent-flip/corpus"), "flip": True, "placement": "adjacent"},
 }
 CACHE = INSTANCES["oth-uniform"]["dir"]          # the canonical instance, unchanged callers
 
