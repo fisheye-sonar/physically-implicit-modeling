@@ -86,6 +86,18 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**13:45 PT — chain 5 on its last variant, grid-64x32; ETA revised.** appearance-lat (233
+cells: LIN 0.04 / MLP 0.63, PI +0.04 / 1.68, **ND +0.51 / 0.79**, GS +0.30 / 1.08) and
+grid-32x16 (0.20 / 0.44, +0.17 / 1.13, +0.34 / 0.92, +0.29 / 0.90) are in the tables and the
+finding (commits 932089f, 4549455); figure re-rendered. grid-64x32 started 13:19: ~20 min per
+probe point at 6,144 logits, so ~5–6 h for LIN + MLP → done **~19:30 PT**, not 15:30. Unit
+memory 36 GiB steady under the 45 GiB cap (label tensor 7.8 M × 2,048), GPU 18.6 GiB. LIN at
+the majority at point 0 (as on 8-ray); the MLP is what the noiseless question needs (it read
+grid-32x16 at 0.44 where 8-ray was at 0.04), so the stage runs on. So far the noiseless
+gradient: decodability survives finer grids, editability does not follow — ND +0.34…+0.37 and
+GS +0.27…+0.30 flat across 32 → 512 cells, PI degrading; appearance-lat is the one outlier
+(ND +0.51, linearly unreadable).
+
 **11:35 PT — chain 4 OOM-killed at appearance-lat; chain 5 relaunched with the fix.**
 Chain 4 scored grid-8x4 (noiseless: skill 0.71 / 0.89, PI +0.27 / 1.05, ND +0.34 / 0.92, GS
 +0.27 / 1.11 — in the tables) and was killed by systemd-oomd 50 s into appearance-lat:
@@ -207,6 +219,11 @@ improved from 1.11 to 0.90, i.e. non-destructive. Old numbers parked as
 `scores.pre-selection-2026-09-09.json` in each run dir (`runs/MOVES.md`).
 
 **Open decisions.**
+- (2026-09-10) **LOCKED IN by Sevan:** (a) dataset layout v2 — spec written, NOT executed:
+  `research/specs/DATASET_LAYOUT_SPEC.md` (path module, probe-cache key migration, CPU-only
+  gate; `--apply` only after `probe_targets_5` prints `STAGE chain complete`, ≈15:00 PT);
+  (b) then the model-referenced Edit Index on a paired-counterfactual bench (`edits/v2/`,
+  spec not yet written); (c) then full re-evaluation when the GPU is free. Ordering fixed.
 - (2026-09-09, Sevan) Re-reference the Edit Index and guard to the MODEL'S OWN predictions —
   unedited prediction and prediction on the true counterfactual history — instead of GT, so the
   floor is −1 by construction and +1 is the model's own counterfactual. Claude's read: the right
