@@ -18,7 +18,7 @@ import h5py
 import numpy as np
 import torch
 
-from pim.environments.discworld.grid_target import GridTarget
+from pim.environments.discworld.grid_target import categorical_target
 from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
@@ -84,7 +84,7 @@ def selection_path(data_dir: Path | None = None) -> Path:
     return Path(d).parent / "edits_selection.json"
 
 
-def grid_selection(data_dir: Path, n: int, grid: GridTarget) -> tuple[np.ndarray, dict]:
+def grid_selection(data_dir: Path, n: int, grid: "CategoricalTarget") -> tuple[np.ndarray, dict]:
     """The GRID target's bench: the first ``n`` cases whose teleport CHANGES CELL.
 
     Under a categorical target a teleport that stays inside one cell asks for no change at
@@ -129,7 +129,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     from pim.environments.discworld.loading import load_edits
 
     dd = Path(data_dir) if data_dir is not None else DATA
-    grid, selection = GridTarget.parse(target), None
+    grid, selection = categorical_target(target), None
     if grid is not None and select is None:
         select, selection = grid_selection(dd, n, grid)
     if select is None and use_selection:                 # the instance's filtered case list
@@ -170,7 +170,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         y = cur.astype(np.int64)
         y[ar, cells["A"]] = 0
         y[ar, cells["B"]] = cells["cls"]
-        cm = np.zeros((n, grid.g), bool)
+        cm = np.zeros((n, grid.n_cells(sim)), bool)
         cm[ar, cells["A"]] = True
         cm[ar, cells["B"]] = True
         out_dims = []            # per-case rows, not a shared set — see arms.nanda_rollout

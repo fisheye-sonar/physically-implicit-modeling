@@ -31,7 +31,7 @@ from pim.editors.oracle_overwrite import overwrite_rollout
 from pim.editors.pinv import pinv_step, readout_error, swap_class_logits
 from pim.environments.discworld.bench import (
     DATA, DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
-from pim.environments.discworld.grid_target import GridTarget
+from pim.environments.discworld.grid_target import categorical_target
 from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
 from pim.models.protocol import free_run
 from pim.probes.base import FIT_BATCH, FIT_EPOCHS, collect_residuals
@@ -73,7 +73,7 @@ def probe_recipe(target: str, inst_root: Path, n_seq: int = 30_000) -> dict:
     probe corpus and fit length for ``target``: the canonical ``probe`` split at ``n_seq``
     and the default step count for the regression targets; ``GRID_PROBE_RECIPE`` for a grid."""
     inst_root = Path(inst_root)
-    if GridTarget.parse(target) is not None:
+    if categorical_target(target) is not None:
         r = GRID_PROBE_RECIPE
         return {"data_dir": inst_root / r["split_dir"], "n_seq": r["n_seq"], "epochs": r["epochs"]}
     return {"data_dir": inst_root / "probe", "n_seq": n_seq, "epochs": None}
@@ -82,7 +82,7 @@ def probe_recipe(target: str, inst_root: Path, n_seq: int = 30_000) -> dict:
 def _targets(target: str, pos: np.ndarray, vel: np.ndarray, sim: dict, basis_name: str):
     """(y, n_classes) for a probe target: regression values in the basis (``pos`` /
     ``full``), or the grid's (…, cells) integer labels (``grid-<nu>x<nd>``)."""
-    grid = GridTarget.parse(target)
+    grid = categorical_target(target)
     if grid is not None:
         y, _ = grid.label_frames(pos, sim)
         return y, grid.n_classes
@@ -129,7 +129,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     model's probes.
     """
     store = ProbeCache(_require_cache_dir(cache_dir))
-    grid = GridTarget.parse(target)
+    grid = categorical_target(target)
     if grid is not None and basis_name != "frustum":
         raise ValueError(f"{target} is defined in the frustum basis, got basis {basis_name!r}")
     # .resolve(): the cache key must not depend on how the path was SPELLED. A

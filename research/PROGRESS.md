@@ -3,7 +3,25 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-09 (evening) — the grid probe target is canonical; `experiments/grid_target_control` removed_
+_Last updated: 2026-09-09 18:50 PT — OVERNIGHT CHAIN RUNNING: probe-target controls (unit `probe_targets`)_
+
+## RUNNING NOW (2026-09-09 18:49 PT →) — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
+
+Sevan's order (2026-09-09 evening): (1) Othello read by a REGRESSION probe — `mine_signed`
+(+1 mine / 0 / −1 theirs, 64 outputs; his decision: mine/theirs frame, not absolute colour)
+on all three Othello runs + floors, ND included; (2) the dw-8ray APPEARANCE target — the
+observation-exact partition: exactly 30 single-disc appearances (runs of lit rays), 90
+logits — on `L-dw-8ray-20m` and `L-dw-8ray-tok-20m` + floors; (3) a resolution sweep run
+unconditionally: `appearance-d2`, `appearance-d3`, `grid-16x8`, and if everything finishes
+before 06:00 PT, `appearance-lat`, `grid-8x4`, `grid-32x16` (one probe set per model, no
+floors). All land as extra probe-target blocks / rows in the main table.
+
+Stages: 1 master_eval (Othello mine_signed inline + floors, ~1.5 h) → 2 appearance probes
+(2 models) → 3 floors → 4 master_eval + tables → 5 variants ×3 → 6 extra variants if before
+06:00 PT. Monitors armed: stage watcher + 30-min heartbeat (this session). ntfy pings at each
+stage. If the session is lost: `systemctl --user is-active probe_targets`,
+`logs/probe_targets/driver.log`, then re-arm both monitors. Findings skeleton:
+`findings/probe-target-type.md`. Code committed before launch (see `git log`).
 
 ## Where the work is (2026-09-09)
 

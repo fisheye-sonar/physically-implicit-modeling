@@ -94,14 +94,18 @@ editors apply.
 |---|---|---|---|---|---|
 | `full` × basis (`cartesian`, `frustum`) | discworld | regression, 8 outputs (u/x, 1/y or y, per object; + velocities) | `bench.bench_arrays`, `arms.fit_probes` | canonical: `probe` split, 30k seq, 200 epochs (LIN closed-form) | every discworld run |
 | **`grid-16x8`** | discworld | classification, 128 cells × 3 {empty, obj 0, obj 1} | `pim/environments/discworld/grid_target.py` — cells uniform in the frustum basis (u′, 1/y) over the reachable region; nearer object wins a shared cell; a same-cell teleport is a no-op and is dropped from its bench (`bench.grid_selection`) | `arms.GRID_PROBE_RECIPE`: `probe_250k` split, 200k seq, 50 epochs, streamed (`fit_probe_stream`); LIN is SGD-CE (no closed form) | `noise_ablation/L-dw-noiseless-20m` ONLY (probes fitted 2026-09-08 in `experiments/grid_target_control`, re-keyed into the run's `probes/` 2026-09-09; never fitted by the scorer — `require_cached`). Opt-in per run: `master_eval` SETTINGS `dw_extra_targets` |
+| **`appearance`** (+ `-d2`, `-d3`, `-lat`) | discworld | classification, cells = the RUNS of rays a disc lights (the observation-exact partition); dw-8ray: 30 cells × 3 = 90 logits; `-d<k>` splits each run into k depth bands (uniform in 1/y over the run's depth range), `-lat` merges runs by centre (15 cells) | `grid_target.AppearanceTarget` — `covered_rays` is the renderer's own ray–disc test (gated equal to `render_frame`); the realisable runs come from a deterministic dense sweep of the reachable region | `GRID_PROBE_RECIPE` (200k seq, 50 epochs, streamed), fitted by `scripts/fit_probes.py` | `ray_ablation/L-dw-8ray-20m`, `interface_ablation/L-dw-8ray-tok-20m` (overnight 2026-09-09→10, with the grid variants `grid-16x8`, `grid-8x4`, `grid-32x16` as the resolution sweep). Every teleport of the filtered 8-ray bench changes cell; two objects share a cell in 0.31% of frames |
 | `mine` (mine/theirs) | othello | classification, 64 tiles × 3 | `othello.data.tokens_and_labels` | 20k probe games, 200 epochs | every Othello run |
+| **`mine_signed`** | othello | **regression**, 64 outputs: +1 mine, 0 blank, −1 theirs (`othello.data.signed_mine`) — the same information and frame as `mine`, read by a regression probe: Othello's counterpart of the grid control | `othello.arms.fit_probe_grid(targets=("mine_signed",))`; editors through the regression branches of `linear_arm` (PI: the tile's read-out set to ±1, z-space + y-affine; ND: the tile's row × the sign of the flip, constant magnitude) and `grad_steer_arm` (MSE spec) | 20k probe games, 200 epochs, fitted inline by `master_eval` | every Othello run (block `bases["mine_signed"]`; overnight 2026-09-09→10) + floors on all three instances |
 
 ND is reported on classification targets (Othello and the grid: one categorical change per
 case) and never on the regression target. PI's categorical target is the probe's own
 read-out with two classes swapped at the edited tile(s) — ONE helper,
 `pim.editors.pinv.swap_class_logits`, spelled once for both environments. Probe Skill is
 read off any fit through `pim.metrics.probe_skill_from_stats` (R² / 1 − err/majority).
-A regression target for Othello is NOT implemented (no probes exist; a follow-up ablation).
+Extra targets are opt-in per run in `master_eval` SETTINGS (`dw_extra_targets`,
+`oth_extra_targets`); discworld ones are fitted deliberately by `scripts/fit_probes.py`
+(the scorer only ADDS blocks whose probes exist), Othello ones inline.
 
 ⛔ **Discworld no longer fits position-only probes** (2026-09-01). Editability instead
 sweeps each editor over two *dim sets* through the one full-state probe —
