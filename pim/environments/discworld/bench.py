@@ -18,6 +18,7 @@ import h5py
 import numpy as np
 import torch
 
+from pim.environments.discworld.grid_target import GridTarget
 from pim.metrics.zone_editability import build_edit_zones
 
 N_OBJ, EF, K_ROLL, SEED = 2, 20, 15, 0
@@ -49,6 +50,12 @@ class Bench:
     vel: np.ndarray | None = None          # (N, T, N_OBJ, 2)
     edit_object: np.ndarray | None = None  # (N,)
     sim: dict | None = None                # the instance's sim config
+    # the probe target's KIND (2026-09-09): "regression" — tgt holds values in the probe's
+    # output units; "classification" — tgt holds (N, d_out) long labels and `cells` the
+    # categorical MOVE per case ({"A", "B", "cls"} long tensors: old cell, new cell, class)
+    kind: str = "regression"
+    cells: dict | None = None
+    selection: dict | None = None          # which cases were scored, when not the first n
 
 
 def _to_basis(pos, vel, sim, basis_name):
@@ -77,6 +84,26 @@ def selection_path(data_dir: Path | None = None) -> Path:
     return Path(d).parent / "edits_selection.json"
 
 
+def grid_selection(data_dir: Path, n: int, grid: GridTarget) -> tuple[np.ndarray, dict]:
+    """The GRID target's bench: the first ``n`` cases whose teleport CHANGES CELL.
+
+    Under a categorical target a teleport that stays inside one cell asks for no change at
+    all, so it cannot be scored as an edit; such cases are skipped and the next ones taken
+    (2.1% on dw-noiseless at 16 × 8). Reads positions only — no frames — so it is cheap.
+    Returns the case indices and a record for ``scores.json`` (rule, counts)."""
+    with h5py.File(Path(data_dir) / "edits.h5", "r") as f:
+        pos = f["positions"][:, EF - 1: EF + 1, :N_OBJ, :].astype(np.float32)   # (M, 2, N_OBJ, 2)
+        eobj = f["edit_object"][:].astype(int)
+        sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
+    mv = grid.edit_cells(pos, eobj, ef=1, sim=sim)          # frame 1 of the 2-frame slice = EF
+    valid = np.where(mv["A"] != mv["B"])[0]
+    sel = valid[:n]
+    scanned = int(sel[-1]) + 1 if len(sel) else 0
+    return sel, {"rule": f"first {n} cases whose teleport changes a {grid.name} cell",
+                 "n": int(len(sel)), "scanned": scanned,
+                 "dropped_same_cell": int(scanned - len(sel))}
+
+
 def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
                  data_dir: Path | None = None, select: np.ndarray | None = None,
                  use_selection: bool = True) -> dict:
@@ -88,6 +115,12 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
     canonical bench is always ``select=None``.
 
+    ``target`` is ``"pos"`` / ``"full"`` (regression, in ``basis_name``) or a grid name
+    such as ``"grid-16x8"`` (classification, 2026-09-09): then ``y`` holds the (N, cells)
+    labels at the edit frame, ``change_mask`` marks the old and new cell, ``cells`` the
+    per-case move, and the case list is ``grid_selection`` (teleports that change cell).
+    The zones are unchanged either way — they never depend on the probe target.
+
     Uses ``pim.environments.discworld.loading``: ``clean_obs`` is RECONSTRUCTED from
     stored ids/reflectivities, not stored — reading the h5 directly gets a KeyError.
     On a blink instance the split's ``blink_visible`` schedule is handed to the zone
@@ -96,6 +129,9 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     from pim.environments.discworld.loading import load_edits
 
     dd = Path(data_dir) if data_dir is not None else DATA
+    grid, selection = GridTarget.parse(target), None
+    if grid is not None and select is None:
+        select, selection = grid_selection(dd, n, grid)
     if select is None and use_selection:                 # the instance's filtered case list
         _sp = selection_path(dd)
         if _sp.exists():
@@ -123,25 +159,42 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     # ⛔ The ZONES stay in world space — they are ray masks over the observation and do
     # not depend on how the state is coordinatised. Only the PROBE TARGET changes basis,
     # so the Edit Index remains directly comparable across bases.
-    bp, bv = _to_basis(pos[:, EF], vel[:, EF], sim, basis_name)
-    y = bp.reshape(n, -1)
-    if target == "full":
-        y = np.concatenate([y, bv.reshape(n, -1)], axis=1)
-    # The edit moves ONE object; everything else is a hold-the-rest constraint. Marking
-    # too many dims would quietly turn a targeted edit into a whole-state overwrite.
-    d_out = y.shape[1]
-    cm = np.zeros((n, d_out), bool)
-    cm[np.arange(n), 2 * eobj] = True
-    cm[np.arange(n), 2 * eobj + 1] = True
-    if target == "full":
-        cm[np.arange(n), 2 * N_OBJ + 2 * eobj] = True
-        cm[np.arange(n), 2 * N_OBJ + 2 * eobj + 1] = True
-    out_dims = sorted({int(i) for i in np.where(cm.any(0))[0]})
+    cells = None
+    if grid is not None:
+        # Categorical MOVE: the labels the model should read after the edit are the
+        # current frame's labels with the object gone from its old cell A and present in
+        # its new cell B; only those two cells are asked to change (the rest hold).
+        cur, _ = grid.label_frames(pos[:, EF - 1], sim)                  # (n, G) uint8
+        cells = grid.edit_cells(pos, eobj, EF, sim)
+        ar = np.arange(n)
+        y = cur.astype(np.int64)
+        y[ar, cells["A"]] = 0
+        y[ar, cells["B"]] = cells["cls"]
+        cm = np.zeros((n, grid.g), bool)
+        cm[ar, cells["A"]] = True
+        cm[ar, cells["B"]] = True
+        out_dims = []            # per-case rows, not a shared set — see arms.nanda_rollout
+    else:
+        bp, bv = _to_basis(pos[:, EF], vel[:, EF], sim, basis_name)
+        y = bp.reshape(n, -1)
+        if target == "full":
+            y = np.concatenate([y, bv.reshape(n, -1)], axis=1)
+        # The edit moves ONE object; everything else is a hold-the-rest constraint. Marking
+        # too many dims would quietly turn a targeted edit into a whole-state overwrite.
+        d_out = y.shape[1]
+        cm = np.zeros((n, d_out), bool)
+        cm[np.arange(n), 2 * eobj] = True
+        cm[np.arange(n), 2 * eobj + 1] = True
+        if target == "full":
+            cm[np.arange(n), 2 * N_OBJ + 2 * eobj] = True
+            cm[np.arange(n), 2 * N_OBJ + 2 * eobj + 1] = True
+        out_dims = sorted({int(i) for i in np.where(cm.any(0))[0]})
     ef = int(getattr(b, "edit_frame", EF))
     assert ef == EF, f"edits split has edit_frame {ef}, every thread number assumes {EF}"
     return dict(obs=obs, pos=pos, vel=vel, edit_object=eobj, clean=clean, sim=sim,
                 gt_roll=gt_roll, zones=zones, y=y, change_mask=cm, out_dims=out_dims, n=n,
-                blink_visible=blink)
+                blink_visible=blink, kind="classification" if grid else "regression",
+                cells=cells, selection=selection)
 
 
 def load_bench(model, n: int = 192, target: str = "pos",
@@ -150,9 +203,14 @@ def load_bench(model, n: int = 192, target: str = "pos",
     """Warm ``model`` on the edits split and build the ground-truth zones (``bench_arrays``)."""
     a = bench_arrays(n, target, basis_name, data_dir, select=select, use_selection=use_selection)
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
-    return Bench(a["obs"], a["gt_roll"], a["zones"], torch.from_numpy(a["y"]).float().to(DEV),
+    tgt = torch.from_numpy(a["y"]).to(DEV)
+    tgt = tgt.long() if a["kind"] == "classification" else tgt.float()
+    cells = (None if a["cells"] is None
+             else {k: torch.from_numpy(v).long().to(DEV) for k, v in a["cells"].items()})
+    return Bench(a["obs"], a["gt_roll"], a["zones"], tgt,
                  torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], state, a["n"],
-                 pos=a["pos"], vel=a["vel"], edit_object=a["edit_object"], sim=a["sim"])
+                 pos=a["pos"], vel=a["vel"], edit_object=a["edit_object"], sim=a["sim"],
+                 kind=a["kind"], cells=cells, selection=a["selection"])
 
 
 # ── which read-outs an edit drives ───────────────────────────────────────────

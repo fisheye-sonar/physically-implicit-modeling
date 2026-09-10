@@ -84,6 +84,22 @@ against alignment as the explanation: at its best editing point adjacent has HIG
 alignment than standard Othello has at its best editing point (0.200 at pt 2 vs 0.146 at pt 4)
 and reaches +0.375 against +0.631. Matched alignment, half the editability.
 
+## Result 5 — the grid (classification) probes are the one above-chance discworld read-out
+
+`scripts/grid_probe_alignment.py`, same model / Δ / cases, 104 cell-changing cases; the
+subspace is the 6 rows ({empty, obj0, obj1} × the two cells that change) against the
+regression probes' 4 position rows:
+
+| probe target | rows | generic | ratio | Haufe | genH | ratio |
+|---|---|---|---|---|---|---|
+| grid 3-way (pt 5) | 0.057 | 0.025 | **2.3×** | 0.018 | 0.019 | 1.0× |
+| regression (pt 5) | 0.014 | 0.018 | 0.8× | 0.031 | 0.040 | 0.8× |
+
+Making the target categorical lifts a discworld read-out above chance for the first time —
+and Haufe then washes it back to chance, which is exactly the ordering its editability
+follows (ND +0.373 raw → +0.048 Haufe; `findings/grid-target-control.md`). 2.3× against
+Othello's 26× remains the gap.
+
 ## Scope note
 
 ⛔ This analysis modifies the INSTRUMENT (write directions), which is outside the project's

@@ -21,7 +21,7 @@ import torch
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
 from pim.editors.nanda import addition_delta, probe_direction
-from pim.editors.pinv import pinv_step
+from pim.editors.pinv import pinv_step, swap_class_logits
 from pim.environments.othello.bench import Benchmark
 from pim.environments.othello.data import (
     N_CLASSES, N_TILES, T_MODEL, board_probs, canonical_vocab, flatten_rows, move_probs)
@@ -332,13 +332,10 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 # size of write at every residual point (the scale differs ~3×)
                 delta = addition_delta(cur, d, alpha)
             else:
-                lg = p(cur).clone()                       # (B, N_TILES, N_CLASSES) logits
-                ar = torch.arange(bsz, device=cur.device)
-                sel = lg[ar, sq]
-                new = sel.clone()
-                new[ar, td] = sel[ar, cd]
-                new[ar, cd] = sel[ar, td]
-                lg[ar, sq] = new
+                # the probe's own read-out with current <-> target swapped at the square
+                # (the shared spelling of a categorical flip — discworld's grid target
+                # calls the same helper twice, once per cell)
+                lg = swap_class_logits(p(cur), sq, cd, td)   # (B, N_TILES, N_CLASSES)
                 delta = alpha * pinv_step(cur, lg.view(bsz, -1), p, space="zspace")
             _rec.append(float((delta.norm(dim=1) / cur.norm(dim=1)).mean()))
             out = x.clone()

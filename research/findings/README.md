@@ -51,3 +51,7 @@ Full model: `../../harness/WORKFLOW.md`.
 _(A standalone identifiability / probe-recovery file — sub-question 2 — is still folded into
 `editability.md` and `architecture-independence.md`; split it out when it earns its own
 concept.)_
+- [blink-ablation.md](blink-ablation.md) — dw-blink: position is CARRIED through blackouts (MLP 0.97–0.99 on hidden frames) and still not editable — the carried-state condition is excluded
+- [adjacency-ablation.md](adjacency-ablation.md) — oth-adjacent: colour is causally USED (Bayes-optimal legality) and the read-out lands 100%, yet edits are inert — causal use is not sufficient
+- [grid-target-control.md](grid-target-control.md) — a categorical 128-cell discworld target: ND +0.37 / GS +0.29 one-frame, far from Othello — the target's type is not the ingredient
+- [edit-direction-alignment.md](edit-direction-alignment.md) — oracle counterfactual Δ vs probe subspaces: alignment relative to a generic baseline tracks editability; the full-Δ patch DOES edit discworld (+0.94)

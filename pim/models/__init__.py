@@ -1,13 +1,16 @@
-"""pim.models — the canonical architectures, each swappable between the two tasks.
+"""pim.models — the canonical architectures, each swappable between the two interfaces.
 
-Three architectures (two transformers × two task heads, plus the recurrent control):
+Three architectures (two transformers × two interfaces, plus the recurrent control):
 
     transformer_s.py   Transformer-S (~3.2M, ours): banded-causal attention, RoPE,
                        pre-norm blocks. `TransformerS` (regression) /
                        `TransformerSTokens` (move classification).
     transformer_l.py   Transformer-L (~25M, Li et al.'s minGPT, vendored): full
-                       causal attention, learned absolute positions.
-                       `TransformerL` (regression) / `TransformerLTokens` (tokens).
+                       causal attention, learned absolute positions. ONE class with two
+                       interface parameters (2026-09-09) — `input` linear | embedding,
+                       `head` regression | categorical — and the two canonical pairs as
+                       named presets: `TransformerL` (linear + regression: frames) /
+                       `TransformerLTokens` (embedding + categorical: tokens).
     recurrent.py       Recurrent-L (~25.4M, stacked GRU, parameter-matched to L; the
                        recomputation control, 2026-09-02). `RecurrentL` (regression only).
 

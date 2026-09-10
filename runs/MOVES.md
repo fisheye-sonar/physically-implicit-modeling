@@ -46,3 +46,24 @@
 - `runs/pipeline_smoke/` → `runs/_pipeline_smoke/` (underscore prefix = skipped by the master scan; these were 600-step pipeline tests, 0.077% of a canonical run, never interpretable as results)
 
 - 2026-09-09  runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m,ray_ablation/_R-dw-8ray-20m}/scores.json -> scores.pre-selection-2026-09-09.json  (rescored on the filtered dw-8ray edit-case selection; old numbers kept for comparison)
+
+## 2026-09-09 — the grid probe target canonicalised (experiments/grid_target_control removed)
+Probe blobs were LOADED and RE-STORED under canonical cache keys (no refit); the source
+files were in the experiment's gitignored `probes/` dirs, which are gone with the folder.
+- `experiments/grid_target_control/probes/` (18 per-point fits, model `8e615e18076c`) →
+  `noise_ablation/L-dw-noiseless-20m/probes/probes_37be083f519e4f5f.pt` (LIN, points 0-8) and
+  `…/probes_d04c9d9450fedf73.pt` (MLP-128, points 0-8): target `grid-16x8`, 200k seq, 50 epochs
+- `experiments/grid_target_control/probes/` (18 random-init fits, model `a295a3758336` =
+  `random_init_model("transformer_l", seed 0)`) → `_baselines/dw-noiseless/probes/probes_4c7bd6cdc06de02e.pt`
+  (LIN) and `…/probes_b35092e3ec37f522.pt` (MLP)
+- `experiments/grid_target_control/probes/` (2 observation floors, right-aligned, 200k, 50 epochs) →
+  `_baselines/dw-noiseless/probes/probes_b19531c23a65e3cf.pt` (LIN), `…/probes_ec44d4ed567d5e2a.pt` (MLP);
+  their skills added to `_baselines/dw-noiseless/baselines.json` under `bases["grid-16x8"]`
+- `experiments/grid_target_control/_pn04_partial/probes/` (4 real fits on `L-dw-20m`, points 0-1 only;
+  the fit was stopped 2026-09-08) → `initial_othello_comparison/L-dw-20m/probes/probes_68d1ea01cd0fd06c.pt`
+  (LIN) and `…/probes_bde36cc476e7da5f.pt` (MLP), provenance marked `partial`. The four 2-epoch /
+  3k-sequence smoke fits beside them were not kept.
+- `experiments/grid_target_control/outputs/waterfall_grid_edits.png` →
+  `noise_ablation/L-dw-noiseless-20m/figures/waterfall_edits_grid-16x8_experiment-2026-09-08.png`
+- `runs/noise_ablation/L-dw-noiseless-20m/scores.json` gained the `grid-16x8` block (`blocks_added`
+  records the date and commit); nothing else in it changed.

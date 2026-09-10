@@ -3,7 +3,105 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
+_Last updated: 2026-09-09 (evening) — the grid probe target is canonical; `experiments/grid_target_control` removed_
+
+## Where the work is (2026-09-09)
+
+**Done this session (Sevan's ask): the grid target lives in `pim`, not in an experiment.**
+`pim.environments.discworld.grid_target` (`"grid-16x8"`), a categorical branch in
+`discworld/bench.py` + `discworld/arms.py`, ONE class-swap helper shared with Othello
+(`pim.editors.pinv.swap_class_logits`), kind-agnostic Probe Skill / tripwire
+(`pim.metrics.probe_skill_from_stats`). No probe was fitted: the 18 grid probes + the two
+floors were RE-KEYED from the experiment into `runs/noise_ablation/L-dw-noiseless-20m/probes/`
+and `runs/_baselines/dw-noiseless/`, and `master_eval` ADDS a missing probe-target block to a
+current `scores.json` instead of rescoring (`dw_extra_targets`, `require_cached` — the scorer
+can never start a grid fit). `build_full_table`: one row per (run, probe target); the grid
+row reports ND; Table 3c. Canonical numbers = the experiment's to 4 decimals (ND +0.373 /
+0.91, GS +0.289 / 0.87, PI +0.126 / 1.58). ⛔ **Sevan's constraint stands: no new probe
+training.** The Othello REGRESSION-target ablation he intends is NOT implemented (no probes;
+the arm wiring would be dead code until they exist) — when it runs, it is a `kind="regression"`
+block on the Othello side, keyed like the grid one.
+
+**Also done (2026-09-09, later): Transformer-L is ONE class with two interface parameters.**
+`input` linear | embedding and `head` regression | categorical (`output_kind` logits | raw),
+the two old names kept as presets (`TransformerL`, `TransformerLTokens`); parameter names and
+registration order preserved, so every probe-cache fingerprint is unchanged. Gated on all 28
+canonical L checkpoints: identical fingerprints, state-dict keys, residual streams and head
+outputs (bit-identical). `scripts/train.py` now takes the interface as a run parameter
+(`--repr frames|tokens`, `--objective ce|mse_onehot`, either environment; Othello has only a
+token corpus so `frames` is rejected there), and `master_eval` picks the scorer by what the
+model EMITS (frame → ray-zone rollout; distribution → set-based step-0), not by environment.
+No retraining, no probe fits, no rescoring; 221 tests. Decided in discussion the same day:
+the mixed discworld cells (linear-in/categorical-out, embedding-in/regression-out), the
+discworld MSE-on-one-hot cell and any Othello continuous-input cell are NOT pursued — an
+embedding on a one-hot IS a linear layer, so "Othello under discworld's input" is degenerate;
+the control logic (each environment invariant to the interface swap meaningful for it) is
+complete with `L-dw-8ray-tok-20m` and `L-oth-20m-mse`. Flagged as the real gaps: a second
+SEED of the flagship pair (the record is `observed`, one seed per cell), bootstrap intervals
+on the Edit Index, and — as a research call — a discrete-state discworld instance (lattice
+positions, jump dynamics) as the one environment-side test of the constitutive hypothesis.
+
+**The claim the paper can make.** Othello is editable, discworld is not, under an
+identical pipeline (probes, editors, α grids, Edit Index + guard). Everything we varied to
+explain the gap came back negative, so the honest framing is **"decodability is not
+editability"** in a matched cross-environment design — NOT "the conditions for
+editability". (Framing discussion 2026-09-07; retreat ratified after blink failed.)
+
+**Runs since 09-01** — each has a findings note; numbers there, not here.
+
+| run | what it varied | editable? | note |
+|---|---|---|---|
+| `objective_ablation/L-oth-20m-mse` | CE → MSE-on-one-hot head | YES +0.68 | `othello-mse-head.md` |
+| `interface_ablation/L-dw-8ray-tok-20m` | frames → tokens, Othello arch | no (+0.006) | `interface-ablation.md` |
+| `flip_ablation/L-oth-noflip-20m` | Othello without recolouring | no (~0) — but colour is causally IRRELEVANT there (checkerboard theorem), so it is a "decodable ≠ used" control, not a rules ablation | `flip-ablation.md` |
+| `blink_ablation/L-dw-blink-20m` | position must be CARRIED (blackouts) | no (+0.27 reappearance ≈ +0.22 visible) | `blink-ablation.md` |
+| `adjacency_ablation/L-oth-adjacent-20m` | colour USED without enclosure geometry | **no** (PI −0.05 / ND +0.12 / GS 0), read-out lands 100% | `adjacency-ablation.md` |
+
+**Excluded as explanations:** objective, interface, observation resolution, noise,
+decodability, causal use, carried state, and target type (categorical vs continuous —
+`grid-target-control.md`: a 128-cell 3-way discworld target gives ND +0.37 / GS +0.29,
+one-frame and reverting, vs Othello's +0.63). What remains is constitutive: a discrete
+combinatorial state read through a categorical head vs continuous geometry through a
+regression head.
+
+**The geometry line** (`edit-direction-alignment.md`, `experiments/edit_direction_alignment/`).
+With oracle counterfactual states, Δ = h_cf − h, the fraction of Δ inside the probe's
+read-out subspace tracks editability: oth-uniform 26×/30× its generic baseline,
+oth-adjacent 8×, every discworld variant 0.5–1.2× (at chance). Two results worth carrying:
+patching discworld's last-position residual with the FULL Δ produces the edit (+0.94), so
+the residual IS load-bearing and position's code is high-rank/nonlinear; and the canonical
+Othello editors reach 91% of the true-counterfactual ceiling, which validates the metric.
+⚠ Alignment relative to the GENERIC baseline predicts editability; ABSOLUTE alignment does
+not (Haufe correction raises absolute overlap everywhere and reorders nothing).
+⛔ Scope: that analysis modifies the INSTRUMENT — see `RESEARCH.md` "The independent
+variable is the ENVIRONMENT, not the editor" before extending it.
+
+**Housekeeping done 2026-09-09.** dw-8ray's edit bench was silently degenerate — 20% of
+its teleports render an identical frame and 22% move one ray of eight — so both 8-ray runs
+now score a stored filtered case list (`datasets/discworld/dw-8ray/edits_selection.json`,
+≥2 differing rays, 192/192 scoreable, shared by the ray-zone and token benches so the
+interface pair stays matched). Conclusions unchanged; PI's guard on `L-dw-8ray-20m`
+improved from 1.11 to 0.90, i.e. non-destructive. Old numbers parked as
+`scores.pre-selection-2026-09-09.json` in each run dir (`runs/MOVES.md`).
+
+**Open decisions.**
+- (2026-09-09, Sevan) Re-reference the Edit Index and guard to the MODEL'S OWN predictions —
+  unedited prediction and prediction on the true counterfactual history — instead of GT, so the
+  floor is −1 by construction and +1 is the model's own counterfactual. Claude's read: the right
+  object, but it demands a counterfactual per bench case (dw ≈110/192 in-frustum; Othello ≈5%
+  of flips are reachable boards), so the bench must be rebuilt from counterfactual PAIRS, or the
+  GT index kept as headline with the true-counterfactual ceiling reported beside it. Undecided.
+- Table 1b per-component point-selection rule (options given 2026-09-05, undecided).
+- Untrack the four `runs/*/config.json|scores.json` files on the remote? (`runs/` is
+  gitignored; these predate it and were force-added.)
+- Rewrite history to drop ~315 MB of old smoke-run checkpoints under
+  `logs/archive/_smoke_runs/` (needs force-push across ~20 branches).
+
+**Repo state.** `main` = `origin/main` = 484428a (housekeeping_big merged). 196 tests pass.
+The nbstripout git filter now runs with `-W ignore` (it was flooding the terminal with
+nbformat MissingIDFieldWarning on every git command).
+
+_Previous update: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
 
 _2026-09-01 (later) — **The guard is now one metric everywhere** (EVAL_VERSION 2026-09-01.1,
 all five runs rescored):_

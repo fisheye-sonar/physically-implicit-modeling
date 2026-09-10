@@ -44,8 +44,10 @@ def _build_s_tokens(cfg: dict):
 
 
 def _build_l(cfg: dict):
-    keep = {k: cfg[k] for k in ("obs_res", "block_size", "n_layer", "n_head",
-                                "n_embd", "dropout") if k in cfg}
+    # the regression preset by default; a config naming `input` / `head` (2026-09-09)
+    # selects any interface pair on the same body
+    keep = {k: cfg[k] for k in ("obs_res", "vocab", "block_size", "n_layer", "n_head",
+                                "n_embd", "dropout", "input", "head", "output_kind") if k in cfg}
     return TransformerL(**keep)
 
 

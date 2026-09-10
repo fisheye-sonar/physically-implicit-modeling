@@ -785,7 +785,9 @@ hides the same frames. Consequences worth knowing before reading numbers:
 ## 2026-09-08 — A categorical (grid) target puts discworld decodability on a HARSHER axis, not a lower one
 
 Re-expressing the discworld state as 128 cells × {empty, obj0, obj1} and fitting 3-way
-probes (experiments/grid_target_control) gives Probe Skill 0.71 (MLP) / 0.43 (LIN) where the
+probes (the `grid-16x8` probe target, `pim.environments.discworld.grid_target`; canonicalised
+2026-09-09 from experiments/grid_target_control, now the third block of
+`L-dw-noiseless-20m`'s scores.json) gives Probe Skill 0.71 (MLP) / 0.43 (LIN) where the
 regression probes report 0.996 / 0.96. That is not a worse read of the state: the regression
 probes' own predictions, mapped onto the same cells, score 0.31–0.45 and put a disc in its
 correct cell 66–72% of the time, against 84–86% for the direct grid probes. A depth bin is two

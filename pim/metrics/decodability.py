@@ -32,7 +32,36 @@ from __future__ import annotations
 
 import numpy as np
 
-__all__ = ["probe_skill_regression", "probe_skill_classification", "trivial_error_rate", "r2"]
+__all__ = ["probe_skill_regression", "probe_skill_classification", "trivial_error_rate", "r2",
+           "probe_skill_from_stats", "insample_gap_from_stats"]
+
+
+def probe_skill_from_stats(stats: dict) -> float:
+    """Probe Skill read off a fitted probe's stats dict — SELECTS, computes nothing new.
+
+    A regression fit reports ``r2`` (which IS its skill, see above); a classification fit
+    reports ``error_rate`` and ``majority_class_error_rate`` (both %, majority from TRAIN),
+    whose skill is ``1 − err/majority_err``. One accessor, so every consumer of a stats dict
+    — the scorer, the tripwire, the baselines — reads the two kinds the same way (2026-09-09;
+    the discworld grid target put a classification probe on the discworld side for the
+    first time).
+    """
+    if "r2" in stats:
+        return float(stats["r2"])
+    return float(1.0 - stats["error_rate"] / stats["majority_class_error_rate"])
+
+
+def insample_gap_from_stats(stats: dict) -> float:
+    """Train-minus-held-out on the SKILL scale — the overfit check beside every skill.
+    Regression: ``r2_insample − r2``; classification: the error-rate drop over the majority
+    error, i.e. the same quantity in skill units. NaN when the fit recorded no in-sample
+    counterpart."""
+    if "r2" in stats:
+        return float(stats.get("r2_insample", np.nan)) - float(stats["r2"])
+    if "error_rate_insample" not in stats:
+        return float("nan")
+    return float((stats["error_rate"] - stats["error_rate_insample"])
+                 / stats["majority_class_error_rate"])
 
 
 def probe_skill_regression(pred: np.ndarray, y: np.ndarray,

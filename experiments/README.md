@@ -3,7 +3,7 @@
 Every experiment is one folder here, and everything it produces stays inside it. **One
 folder per QUESTION, follow-ups as subfolders** (depth over breadth, 2026-09-06): a bridge, a
 floor or an ablation that serves the same run family lives INSIDE that family's folder,
-e.g. `dw_tokens/{bridge,obsfloor}`, `inlp/8ray`, `othello_by_step/{decode,edit}`. `blink_ablation/` (2026-09-07): the dw-blink subset editability and hidden-frame decodability, with its pilot gates. `grid_target_control/` (2026-09-08): discworld state as a categorical grid, Othello-shaped probes on the same model. `adjacency_ablation/` (2026-09-08): the oth-adjacent pilot gate and analysis.
+e.g. `dw_tokens/{bridge,obsfloor}`, `inlp/8ray`, `othello_by_step/{decode,edit}`. `blink_ablation/` (2026-09-07): the dw-blink subset editability and hidden-frame decodability, with its pilot gates. `adjacency_ablation/` (2026-09-08): the oth-adjacent pilot gate and analysis. *(`grid_target_control/` — discworld state as a categorical grid, Othello-shaped probes on the same model, 2026-09-08 — was folded into the canonical core on 2026-09-09 and the folder removed: the target is `pim.environments.discworld.grid_target`, its probes live in `runs/noise_ablation/L-dw-noiseless-20m/probes/`, its floors in `runs/_baselines/dw-noiseless/`, its scores are the `grid-16x8` block of that run's `scores.json`, and its Haufe follow-up moved to `edit_direction_alignment/scripts/haufe_edit_grid.py`. The original scripts and score JSONs are in git history before that date.)*
 
     experiments/<name>/            one per question (named like its runs/<topic>)
       <follow-up>/                 the same layout one level down, when there is one
