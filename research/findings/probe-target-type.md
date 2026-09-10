@@ -155,3 +155,73 @@ Code: `pim/environments/discworld/grid_target.py` (`AppearanceTarget`, `covered_
 `pim/environments/discworld/token_bench.py`, `scripts/fit_probes.py`, `master_eval`
 SETTINGS `dw_extra_targets` / `oth_extra_targets`. Tests: `tests/test_probe_targets.py`.
 Geometry check: 30 appearances on dw-8ray vs 2,883 on the 128-ray noiseless instance.
+
+## The resolution sweep on dw-8ray (2026-09-10, chains 1–2; `observed`, one seed)
+
+Every categorical target below is fitted with one recipe (200k sequences × 50 epochs) and
+scored with the same editors, α grids and 192-case bench; EI / fidelity at each editor's best
+arm. The product grids (`grid-<nu>x<nd>`) are uniform in (u′, 1/y); `appearance` is the
+frame's own partition (the runs of lit rays), `-d<k>` splits each run into k depth bands,
+`-lat` merges runs by centre. `grid-6x5` and `grid-10x3` are Sevan's MISALIGNED controls:
+the appearance partition's cell count with a structure that is not the runs of rays.
+
+**Frame model `L-dw-8ray-20m`** (regression target, canonical frustum row, for reference:
+skill 0.95 / 0.98, PI +0.28 / 0.90, ND n/a, GS −0.06 / 0.82):
+
+| target | cells | skill LIN / MLP | PI | ND | GS |
+|---|---|---|---|---|---|
+| grid-4x2 | 8 | 0.75 / 0.78 | +0.41 / 0.73 | +0.24 / 0.92 | +0.31 / 0.85 |
+| appearance-lat | 15 | 0.89 / 0.92 | +0.33 / 0.81 | +0.42 / 0.89 | +0.42 / 0.61 |
+| **appearance** | **30** | 0.89 / 0.90 | **+0.43 / 0.76** | **+0.43 / 0.91** | **+0.61 / 0.39** |
+| grid-6x5 (misaligned) | 30 | 0.47 / 0.54 | +0.32 / 0.87 | +0.29 / 0.92 | +0.34 / 0.66 |
+| grid-10x3 (misaligned) | 30 | 0.44 / 0.50 | +0.36 / 0.85 | +0.34 / 0.95 | +0.34 / 0.63 |
+| grid-8x4 | 32 | 0.46 / 0.51 | +0.31 / 0.82 | +0.31 / 0.94 | +0.35 / 0.80 |
+| appearance-d2 | 60 | 0.66 / 0.68 | +0.48 / 0.67 | +0.39 / 0.89 | +0.57 / 0.41 |
+| appearance-d3 | 90 | 0.46 / 0.51 | +0.41 / 0.85 | +0.38 / 0.93 | +0.51 / 0.53 |
+| grid-16x8 | 128 | 0.16 / 0.21 | +0.10 / 1.43 | +0.31 / 0.99 | +0.37 / 0.66 |
+| grid-32x16 | 512 | _chain 3, pending_ | | | |
+| grid-64x32 | 2048 | LIN at the majority error (skill 0.00, points 0–2); fit stopped as uninformative (~8 h) | | | |
+
+**Token model `L-dw-8ray-tok-20m` †** (frame-set index, step 0; regression row: skill 0.97 /
+0.98, PI +0.01 / 0.74, GS −0.10 / 0.77):
+
+| target | cells | skill LIN / MLP | PI | ND | GS |
+|---|---|---|---|---|---|
+| grid-4x2 | 8 | 0.75 / 0.79 | +0.03 / 0.74 | +0.05 / 0.72 | +0.09 / 0.71 |
+| appearance-lat | 15 | 0.91 / 0.92 | +0.06 / 0.71 | +0.16 / 0.61 | +0.29 / 0.52 |
+| **appearance** | **30** | 0.90 / 0.91 | **+0.26 / 0.53** | **+0.44 / 0.41** | **+0.58 / 0.31** |
+| grid-6x5 (misaligned) | 30 | 0.49 / 0.55 | +0.03 / 0.72 | +0.07 / 0.69 | +0.19 / 0.60 |
+| grid-10x3 (misaligned) | 30 | 0.45 / 0.51 | +0.05 / 0.70 | +0.11 / 0.65 | +0.23 / 0.57 |
+| grid-8x4 | 32 | 0.47 / 0.53 | +0.06 / 0.69 | +0.10 / 0.66 | +0.19 / 0.59 |
+| appearance-d2 | 60 | 0.67 / 0.69 | +0.30 / 0.50 | +0.30 / 0.51 | +0.58 / 0.29 |
+| appearance-d3 | 90 | 0.48 / 0.52 | +0.11 / 0.65 | +0.24 / 0.54 | +0.54 / 0.32 |
+| grid-16x8 | 128 | 0.17 / 0.23 | +0.01 / 0.75 | +0.11 / 0.66 | +0.23 / 0.54 |
+
+### Reading the sweep
+
+1. **The observation-exact partition is a peak, on both models and for every editor.**
+   Coarser than the frame (`appearance-lat`, 15 cells) is just as DECODABLE (0.89 vs 0.89)
+   but edits worse (GS +0.42 vs +0.61; token +0.29 vs +0.58): a lateral-only cell leaves
+   the run length, hence the depth, unspecified, so the write underdetermines the frame it
+   has to produce. Finer than the frame (`-d2`, `-d3`) loses decodability quickly (0.89 →
+   0.66 → 0.46) and editability gradually (GS +0.61 → +0.57 → +0.51 on the frame model;
+   the token model holds GS at +0.58 → +0.54 while PI and ND fall).
+2. **Alignment, not cell count** (Sevan's control). Two independent 30-cell product grids
+   decode at half the skill and edit at about half the level of the 30-cell appearance
+   partition (frame model GS +0.34 / +0.34 vs +0.61; token model +0.19 / +0.23 vs +0.58, PI
+   and ND near zero). The whole product-grid family, from 8 cells to 128, sits in a flat
+   band (frame model GS +0.31 … +0.37) regardless of resolution: a grid uniform in the
+   frustum basis cuts through the appearance cells everywhere, so at any resolution most
+   of its cells ask for a change the frame cannot express, or express only partly.
+3. **Sevan's hypothesis holds on the fine side**, with a shape: past the frame's resolution
+   the probe stops reading the target long before the editors stop landing (at 2048 cells
+   the linear probe is at the majority baseline). The peak is at the frame's own partition.
+4. The token model's PI is fragile (+0.26 at the peak, near zero everywhere else) while its
+   GS is robust to depth-splitting (+0.58 → +0.54) — same shape as on the frame model, with
+   the categorical head amplifying the difference between a target the frame expresses and
+   one it does not.
+
+Provenance: `runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m}/scores.json["bases"]`,
+`logs/probe_targets*/headline_*.txt`, drivers `scripts/drivers/probe_targets{,_2,_3}.sh`.
+Pending: `grid-32x16` (chain 3), the noiseless sweep (chain 4: grid-8x4, appearance-lat,
+grid-32x16, grid-64x32 on `L-dw-noiseless-20m`).

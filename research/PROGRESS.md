@@ -73,6 +73,35 @@ the chain did not notice; monitors re-armed 23:25. ⚠ master_eval SETTINGS were
 the four new targets via nbformat (the Read/NotebookEdit tools refuse the notebook above the
 size limit) — the one deliberate exception, flagged to Sevan.
 
+**04:55 PT update.** Chain 1 scored appearance-d2 / -d3 / grid-16x8 / appearance-lat /
+grid-8x4 (sweep so far: the observation-exact target is a PEAK — coarser (lat 15) edits
+worse at equal decodability, finer loses decodability fast and editability gradually;
+grid-8x4 at ~the same cell count edits at about half the appearance level → alignment, not
+count) and was **OOM-killed at 45 GB on grid-32x16** (`fit_probe_stream` built 2 × 25 GB
+int64 label matrices for the in-sample stats). Fixed (streamed counts, gated identical,
+commit after ee556cd); chain 2 (`probe_targets_2`, started 04:48: grid-6x5, grid-10x3,
+grid-4x2, grid-64x32) imports the fix fresh at each stage; **chain 3** (`probe_targets_3`,
+`logs/probe_targets_3/`) is queued behind chain 2 to redo grid-32x16. Expected: chain 2
+done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` with the full
+sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
+for the OOM.
+
+**08:58 PT — chain 2's last variant STOPPED by me.** grid-64x32 on dw-8ray: the linear
+probe sat exactly at the majority error (skill 0.00) at points 0–2 and the variant would have
+taken ~8 h for both models (≈15 min per point at 6,144 logits). The far end of the gradient
+is thereby measured (decodability collapses); the editors on a probe that reads nothing are
+noise, not a result. Stopped via `systemctl --user stop probe_targets_2` so chain 3 (grid-32x16
+redo) and chain 4 (the noiseless sweep Sevan asked for) run today instead of tonight. Chain 2's
+scored variants: grid-6x5, grid-10x3, grid-4x2 (all in the tables). Re-queue grid-64x32 on
+dw-8ray only if Sevan wants the number in the table.
+
+**05:40 PT — chain 4 queued** (Sevan: "run similar grid sweeps on L-dw-noiseless-20m; I
+predict it benefits from a finer grid than 8-ray"): `scripts/drivers/probe_targets_4.sh`,
+unit `probe_targets_4`, behind chain 3 — grid-8x4, appearance-lat (233 cells), grid-32x16,
+grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full appearance
+partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
+Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
+
 ## Where the work is (2026-09-09)
 
 **Done this session (Sevan's ask): the grid target lives in `pim`, not in an experiment.**

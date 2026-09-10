@@ -847,3 +847,15 @@ reading an interpolation or patch experiment, and never compare it across enviro
 ceilings differ (discworld's is +0.94). RESOLVED the same day: the low ceiling and the
 "editor beats the real thing" paradox were both caused by unvalidated swap-based
 counterfactuals — see the entry above.
+
+## 2026-09-10 — A wide categorical probe's "stats" can be the memory hog, not the fit
+
+`fit_probe_stream` used to materialise the train split's PREDICTED and TRUE labels as
+int64 arrays for the in-sample error and the majority baseline. At 512 tiles × 6.2M train
+rows that is two 25 GB arrays — the fit itself streams and needs ~3 GB — and the grid-32x16
+fit was OOM-killed at the unit's 45 GB cap (chain 1, 04:47). At 2048 tiles it would have
+been 100 GB. Symptom: a unit that dies WITHOUT a FAILED marker (`journalctl --user -u <unit>`
+shows `oom-kill`), while the per-point log stops mid-family. Fix: accumulate error counts,
+per-tile counts and class counts chunk by chunk (gated identical to the dense computation).
+Rule: anything that scales as rows × outputs must be streamed when either is large — the
+probe recipe's 7.8M rows make even int64 labels a 60 MB-per-output cost.
