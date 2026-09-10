@@ -248,7 +248,29 @@ GS −0.03 / 1.01 (unedited −0.94).
 | grid-16x8 | 128 | 0.43 / 0.71 | +0.13 / 1.58 | +0.37 / 0.91 | +0.29 / 0.87 |
 | appearance-lat | 233 | 0.04 / 0.63 | +0.04 / 1.68 | **+0.51 / 0.79** | +0.30 / 1.08 |
 | grid-32x16 | 512 | 0.20 / 0.44 | +0.17 / 1.13 | +0.34 / 0.92 | +0.29 / 0.90 |
-| grid-64x32 | 2048 | _chain 5, queued_ | | | |
+| grid-64x32 | 2048 | LIN at the majority error (points 0–2); fit stopped 14:20 PT at Sevan's call (~6 h for LIN + MLP at 6,144 logits) | | | |
+
+### Reading the noiseless gradient
+
+1. **Decodability does survive finer grids here, as Sevan predicted.** The MLP reads
+   grid-32x16 at 0.44 (the 8-ray models: 0.04) and grid-8x4 at 0.89; the 128-ray frame
+   resolves position finely enough that a 512-cell grid is still a readable target.
+2. **Editability does not follow it.** ND sits at +0.34 … +0.37 and GS at +0.27 … +0.30 across
+   32, 128 and 512 cells — the same flat product-grid band as on dw-8ray, one level lower —
+   and PI degrades monotonically as the grid gets finer (+0.27 / 1.05 → +0.13 / 1.58 →
+   +0.17 / 1.13, the guard failing at every resolution). A finer grid buys this model
+   nothing an editor can use; the model does not "prefer" a resolution.
+3. **The outlier is `appearance-lat`** (233 cells, depth dropped): linearly unreadable (LIN
+   0.00–0.04 at every point) yet MLP 0.63, and the best ND on any discworld target so far
+   (**+0.51 / 0.79**). The lateral partition is the one target here that is aligned with the
+   frame (a run's centre is a ray index), so this is the dw-8ray alignment result reappearing
+   through the one editor whose write is a fixed direction per cell — PI and GS are at or over
+   the guard on it. The full appearance partition (2,889 cells, 22 GB label tensor) remains
+   the untested case that would close the comparison with dw-8ray.
+4. Where the two instances differ: on dw-8ray every product grid is misaligned with a coarse
+   frame, so the whole grid family is flat AND weakly decodable; on noiseless the grids are
+   decodable but equally flat. Editability tracks alignment with the observation, not the
+   probe's skill — the same conclusion (§4) from a second instance.
 
 Notes so far. (i) The LINEAR probe is at the majority on `appearance-lat` (233 narrow lateral
 bands; in-sample gap 0.000, so not overfitting): a bounded interval of one coordinate is not

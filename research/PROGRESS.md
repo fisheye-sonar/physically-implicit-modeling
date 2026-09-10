@@ -86,6 +86,17 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**14:20 PT — chain 5 STOPPED at Sevan's call; the overnight probe-target programme is closed.**
+grid-64x32 on noiseless needed ~6 h (20 min per probe point at 6,144 logits; LIN at the majority
+at points 0–2); Sevan: "that's crazy, let's cancel it now". `systemctl --user stop probe_targets_5`;
+no partial probe or score artefact (the cache writes only after a full fit). **Nothing is running
+or queued; GPU free; the tree is clear for the other agent's cache-key migration** (pinged).
+Noiseless reading written into `findings/probe-target-type.md`: decodability survives finer
+grids (MLP 0.44 at 512 cells vs 0.04 on 8-ray), editability does not follow (ND / GS flat across
+32 → 512, PI degrading); `appearance-lat` the outlier (ND +0.51 / 0.79, linearly unreadable).
+Re-queue grid-64x32 (noiseless) or the full 2,889-cell appearance partition only if wanted.
+Sevan is moving to a new idea next.
+
 **13:45 PT — chain 5 on its last variant, grid-64x32; ETA revised.** appearance-lat (233
 cells: LIN 0.04 / MLP 0.63, PI +0.04 / 1.68, **ND +0.51 / 0.79**, GS +0.30 / 1.08) and
 grid-32x16 (0.20 / 0.44, +0.17 / 1.13, +0.34 / 0.92, +0.29 / 0.90) are in the tables and the
