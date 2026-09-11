@@ -109,6 +109,12 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:55 PT — loss-matched control for the GRU result: the 8-ray transformer at step 32k (val 0.00600 vs the
+GRU's best 0.00595) under `appearance-fac`: ND +0.57 / 0.73, GS +0.46 / 0.52, PI +0.33 / 1.09 (guarded +0.32)
+— edits at its fully-trained level, where the GRU at the same loss does not (+0.13 / +0.07). Architecture, not
+exposure. `runs/training_curve/L-dw-8ray-20m_s032000` (training-curve view; out of the main tables by design);
+unit `l8ray_s32k_fac`, 43 min. Recorded in `probe-target-type.md` and `recurrent-l.md`. Nothing running.
+
 **15:40 PT — Othello centre tiles (Sevan's quick check; `experiments/othello_centre_tiles/`).** Li's bench
 never intervenes on d4/e4/d5/e5; 98 cases synthesised with the bench recipe. L-oth-20m, cached probes:
 PI +0.64 / 0.20, ND +0.65 / 0.20, GS +0.57 / 0.27 vs whole bench +0.61 / +0.62 / +0.65 — as editable as

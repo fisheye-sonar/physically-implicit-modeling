@@ -594,3 +594,24 @@ categories into the input works on both architectures.
 Provenance: `runs/ray_ablation/R-dw-8ray-20m/scores.json["bases"]["appearance-fac"]`,
 `runs/_baselines/dw-8ray/baselines.json` (`recurrent_l` / `appearance-fac`), unit `r8ray_fac`
 (`logs/r8ray_fac/`, 59 min). The run left quarantine (`runs/MOVES.md`, 2026-09-11) for this.
+
+**Loss-matched control (2026-09-11 15:55): the transformer at step 32k.** The GRU's probed
+checkpoint is its best, at step 40k (val 0.00595). The transformer's own step-32k checkpoint
+(val 0.00600, `runs/training_curve/L-dw-8ray-20m_s032000`) under the same target:
+
+| dw-8ray, `appearance-fac` | val MSE | skill LIN / MLP | PI | ND | GS |
+|---|---|---|---|---|---|
+| Transformer-L, step 32k | 0.00600 | 0.93 / 0.94 | +0.33 / 1.09 (guarded best +0.32 / pt 1) | **+0.57 / 0.73** (pt 2, α 4) | **+0.46 / 0.52** (pt 0) |
+| Recurrent-L, step 40k (its best) | 0.00595 | 0.94 / 0.94 | +0.25 / 0.73 (pt 0 only) | +0.13 / 0.65 | +0.07 / 0.86 |
+| Transformer-L, step 780k | 0.00574 | 0.94 / 0.94 | +0.41 / 0.71 | +0.50 / 0.86 | +0.46 / 0.53 |
+
+At matched predictive loss the transformer already edits at its fully-trained level (ND even
+higher, GS equal, PI slightly lower and just over the guard at its best arm), so the GRU's
+inertness is not a matter of training exposure: same data, same loss, same decodability,
+same target — different architecture, opposite editability. Editability under the factorised
+target is also present by step 32k on the transformer, consistent with the training-curve
+finding that decodability saturates early; whether editability rises further between 32k and
+780k is a by-step question (PI +0.33 → +0.41, ND +0.57 → +0.50, GS flat) that one checkpoint
+cannot answer. Provenance: unit `l8ray_s32k_fac` (`logs/l8ray_s32k_fac/`, 43 min; both floors
+cache hits); the checkpoint's canonical frustum row is also scored (PI +0.20 / 1.28, GS −0.18:
+inert, as at 780k).

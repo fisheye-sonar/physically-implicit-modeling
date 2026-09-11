@@ -79,4 +79,7 @@ above ("recomputation is not the gate") was drawn under the regression target, w
 architecture edits; under a target the transformer does edit along, the architecture whose
 state is rebuilt from the window each step edits and the one that carries a hidden forward
 does not. Recomputation is back in play — as a help, not a gate.
+Loss-matched control (same day): the transformer's own step-32k checkpoint (val 0.00600 vs the
+GRU's 0.00595) edits under `appearance-fac` at its fully-trained level — ND +0.57 / 0.73, GS
++0.46 / 0.52 — so the GRU's inertness is architecture, not training exposure.
 
