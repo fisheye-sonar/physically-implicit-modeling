@@ -68,3 +68,15 @@ different experiment, and the plateau at 50k is itself consistent with the train
 lesson that more training moves nothing here.
 
 Related: `training-curve.md`, `inlp-redundancy.md`, `decodability-baselines.md`, `editability.md`.
+
+## Addendum 2026-09-11 — under the read-out that DOES edit, the GRU still does not
+
+`R-dw-8ray-20m` under the factorised categorical target `appearance-fac`
+(`probe-target-type.md`): decodability identical to the transformer's (0.94 / 0.94), PI +0.25
+at the input projection only and destructive at every carried hidden, ND +0.13, GS +0.07 —
+against the transformer's +0.41 / +0.50 / +0.46 on the same data and target. The conclusion
+above ("recomputation is not the gate") was drawn under the regression target, where neither
+architecture edits; under a target the transformer does edit along, the architecture whose
+state is rebuilt from the window each step edits and the one that carries a hidden forward
+does not. Recomputation is back in play — as a help, not a gate.
+

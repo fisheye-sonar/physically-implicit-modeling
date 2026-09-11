@@ -555,3 +555,42 @@ Othello's level (+0.65 / 0.21). As on 8-ray, the joint cell wins GS and PI's gua
 factorised form wins ND — so on dw-5ray, taking each editor's better read-out: PI +0.54, ND
 +0.56, GS +0.64, all guard-passing. The quantisation toggle moves every editor under both
 categorical read-outs and none under regression.
+
+## The factorised target on the RECURRENT 8-ray model (2026-09-11, `R-dw-8ray-20m`, un-quarantined for this)
+
+Is the read-out result architecture-independent? `R-dw-8ray-20m` is the stacked GRU
+(4 × 1024, parameter-matched to Transformer-L, `pim/models/recurrent.py`) trained on the same
+dw-8ray corpus with the same recipe; its regression rows were as inert as the transformer's
+(`recurrent-l.md`). Its edits write one layer's hidden state and CARRY it forward — the GRU has
+no recomputation route around a write. Same target, recipe, floors and 192 cell-changing cases.
+
+| dw-8ray, `appearance-fac` | points | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| Transformer-L `L-dw-8ray-20m` | 9 | 0.94 / 0.94 | 0.92 · 0.93 / 0.48 · 0.93 | +0.41 / 0.71 (pt 1) | +0.50 / 0.86 (pt 0) | +0.46 / 0.53 (pt 0) |
+| **Recurrent-L `R-dw-8ray-20m`** | 5 | 0.94 / 0.94 | 0.93 · 0.93 / 0.48 · 0.93 | +0.25 / 0.73 (pt 0 ONLY) | +0.13 / 0.65 (pt 2) | +0.07 / 0.86 (pt 1) |
+| Recurrent-L, regression (frustum) | 5 | 0.97 / 0.98 | | +0.17 / 1.10 | n/a | −0.61 / 0.91 |
+
+Per point, the best guard-passing Edit Index on the GRU: PI +0.25 at point 0 (the input
+projection) and −0.11 to −0.57 at every carried hidden; ND +0.13 / +0.07 at points 2–3, −0.5 to
+−0.9 elsewhere; GS ≤ +0.07 everywhere. The read-out LANDS (94% of cases read the target state
+after the PI write) and the output does not follow.
+
+**Reading.** The factorised categorical read-out unlocks the transformer and NOT the GRU, on
+the same data, with identical decodability (0.94 / 0.94 on both, floors alike). So the
+categorical-target result is architecture-dependent, and the earlier "recomputation is not the
+gate" conclusion (`recurrent-l.md`, drawn under the regression target where nothing edits)
+needs restating: under a read-out that does edit, the architecture whose state is rebuilt each
+step from the window (attention) is editable and the one that carries a single hidden forward
+is not. Two readings, not yet separable: (a) the transformer's write is "corrected into" a
+consistent state by later layers re-reading the window, and that repair is what makes a
+one-shot categorical write land in the output — recomputation HELPS rather than gates; (b)
+the GRU's hidden encodes position in a code the probe reads but the recurrence does not
+consume linearly, so the write is read out and then washed out by the next update. Either way
+the Othello parallel is intact — Othello's editable model is a transformer — and the
+discworld toggles found so far (the read-out; the ray count) hold for the transformer only.
+The one place the GRU edits at all is point 0, the input projection: writing the frame's own
+categories into the input works on both architectures.
+
+Provenance: `runs/ray_ablation/R-dw-8ray-20m/scores.json["bases"]["appearance-fac"]`,
+`runs/_baselines/dw-8ray/baselines.json` (`recurrent_l` / `appearance-fac`), unit `r8ray_fac`
+(`logs/r8ray_fac/`, 59 min). The run left quarantine (`runs/MOVES.md`, 2026-09-11) for this.

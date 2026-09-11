@@ -107,6 +107,14 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:00 PT — `appearance-fac` on the RECURRENT 8-ray run (R-dw-8ray-20m, un-quarantined by Sevan 12:45;
+unit `r8ray_fac`, 59 min): the GRU does NOT edit under the read-out that unlocks the transformer.**
+skill 0.94 / 0.94 (identical to L-dw-8ray-20m; floors alike), PI +0.25 / 0.73 at point 0 only (input
+projection; every carried hidden destructive), ND +0.13 / 0.65, GS +0.07 / 0.86 vs the transformer's
++0.41 / +0.50 / +0.46. The categorical-target result is architecture-dependent; recomputation is back
+in play as a help (addendum in `recurrent-l.md`). Finding, registry, Table 2c updated. GPU idle;
+nothing queued.
+
 **12:30 PT — cartesian basis dropped (Sevan, 10:20; done once no unit was executing the notebooks).**
 `master_eval` `dw_bases = ("frustum",)` (no EVAL_VERSION bump — the scorer only adds missing blocks);
 `build_full_table` `HIDDEN_BASES = ("cartesian",)` hides the old blocks in Tables 1–3 and 1b–1e; Table 3

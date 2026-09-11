@@ -18,6 +18,8 @@ RUNS = [("ray_ablation/L-dw-5ray-20m", "dw-5ray", "Transformer-L, frames (L-dw-5
          "Edit Index (ray-zone)"),
         ("ray_ablation/L-dw-8ray-20m", "dw-8ray", "Transformer-L, frames (L-dw-8ray-20m)",
          "Edit Index (ray-zone)"),
+        ("ray_ablation/R-dw-8ray-20m", "dw-8ray", "Recurrent-L, frames (R-dw-8ray-20m)",
+         "Edit Index (ray-zone)"),
         ("interface_ablation/L-dw-8ray-tok-20m", "dw-8ray", "Transformer-L, tokens (L-dw-8ray-tok-20m)",
          "Edit Index † (frame-set)"),
         ("noise_ablation/L-dw-noiseless-20m", "dw-noiseless", "Transformer-L, frames (L-dw-noiseless-20m)",
