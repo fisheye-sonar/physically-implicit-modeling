@@ -92,3 +92,6 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 - `runs/training_curve/L-dw-20m_s256000/probes`: 4 re-keyed
 - `runs/training_curve/L-dw-20m_s512000/probes`: 4 re-keyed
 - `runs/training_curve/L-dw-20m_s780000/probes`: 4 re-keyed
+
+## 2026-09-11 — R-dw-8ray-20m back in the record
+- `runs/ray_ablation/_R-dw-8ray-20m` → `runs/ray_ablation/R-dw-8ray-20m` (Sevan, by hand, 2026-09-11 ~12:45): the recurrent 8-ray run leaves quarantine so the factorised categorical target can be scored on it through the canonical scorer and land in the tables. Its `scores.json` (regression bases, eval 2026-09-01.4) and probes are unchanged.
