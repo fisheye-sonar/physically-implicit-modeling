@@ -1,0 +1,24 @@
+{
+ "run": "runs/initial_othello_comparison/L-oth-20m",
+ "instance": "oth-uniform",
+ "n_cases": 18,
+ "unedited": -0.6023501727135947,
+ "ceiling_true_counterfactual": 0.6878106638488788,
+ "cf_mass_on_legal_post": 0.9991064071655273,
+ "editors": {
+  "PI": {
+   "point": 4,
+   "alpha": 3.0,
+   "edit_index_union": 0.2944091787360745,
+   "mass_on_legal_post": 0.9707350134849548,
+   "full_bench_edit_index_union": 0.6078598033574586
+  },
+  "ND": {
+   "point": 4,
+   "alpha": 0.35,
+   "edit_index_union": 0.5354134938059352,
+   "mass_on_legal_post": 0.9927234649658203,
+   "full_bench_edit_index_union": 0.6218231268206724
+  }
+ }
+}

@@ -27,3 +27,20 @@ steps, the matched recipe); driver `drivers/oth_adjacent_flip.sh`; logs
   set >= 30%, no colour/parity theorem, diverse terminal boards, AND flips/game > 0 (the
   variant is not oth-adjacent). Reports game length, passes, and how often one side is wiped
   out (a wiped-out player can never move again under adjacency). Result → `scores/pilot_adjacent_flip.json`.
+
+## Alignment, Haufe correction, ceiling (2026-09-11) — DONE
+
+Self-contained; reuses `experiments/edit_direction_alignment/scripts/{othello_alignment,haufe_edit,common}.py`.
+- `othello_alignment.py --run runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m` →
+  `../edit_direction_alignment/scores/othello_alignment_L-oth-adjacent-flip-20m_clean.json`: 42 clean
+  cases; best pt 1 rows 0.051 / generic 0.012 / Haufe 0.094 / genH 0.036.
+- `scripts/alignment_extras.py --run …` (all three Othello runs) → `scores/alignment_extras_<run>.json`:
+  ND-direction cos² raw / Haufe / random, recoloured-vs-lookup split, prefix lengths, ceiling.
+- `scripts/honesty_check.py --run …` (all three) → `scores/honesty_check_<run>.json`: true-counterfactual
+  ceiling vs the run's canonical best PI / ND arms on the SAME clean cases, with mass on legal_post.
+- `scripts/haufe_edit_adjacent_flip.py` → `scores/haufe_edit_adjacent_flip.json`: PI-haufe +0.291 / 0.53, ND-haufe +0.328 / 0.47.
+Headline: least-aligned Othello model (4× generic raw, 2.6× Haufe) yet edits to 2.4× its own
+ceiling (+0.34 vs +0.14 on the same cases); the ceiling is a fifth of standard Othello's, so
+the cross-instance Edit-Index gap is mostly dynamic range. Write-up in
+`research/findings/adjacent-flip-ablation.md` (alignment section) and `edit-direction-alignment.md` Result 7;
+new `GOTCHAS.md` entry on instance-dependent ceilings. Logs: `logs/adjacent_flip_ablation/`, `logs/edit_direction_alignment/`.

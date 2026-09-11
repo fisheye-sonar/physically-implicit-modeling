@@ -20,6 +20,14 @@ oth-adjacent (+0.12 / 1.05 and −0.05 / 2.31) and oth-noflip (≈ 0, guards 2.6
 below standard Othello (+0.61 to +0.65, guards 0.21–0.24). GS stays inert and destructive
 (+0.03 / 2.62), as on both no-flip variants.
 
+⚠ **Read the Edit Index against its ceiling (added later on 2026-09-11).** On the clean
+exact-counterfactual cases the model run on the true counterfactual world scores only +0.14
+here (standard Othello +0.69): adjacency legality changes ~2 of 16 legal moves per
+recolouring, so the union index has little dynamic range on this instance. On those same
+cases ND scores +0.34 and PI +0.17 with 98–99% of their mass on the post-edit legal set —
+at or above what the real counterfactual achieves. The "third of Othello" gap is therefore
+mostly metric range, not a third of the effect; see the alignment section below.
+
 ## Results (`scores.json`, EVAL_VERSION 2026-09-01.4; floors in `runs/_baselines/<instance>/baselines.json`)
 
 | run | CE (Bayes) | skill LIN / MLP | observation floor LIN / MLP | random-init LIN / MLP | unedited | PI EI / fid | ND EI / fid | GS EI / fid |
@@ -76,7 +84,72 @@ Assets: `experiments/adjacent_flip_ablation/` (pilot gate, driver, README); run 
 instance `datasets/othello/oth-adjacent-flip/` (`instance.json`); logs
 `logs/adjacent_flip_ablation/L-oth-adjacent-flip-20m/` (on wsl-sevan; not yet copied).
 
+## Alignment with the true edit direction, Haufe correction, and the honest ceiling (2026-09-11)
+
+Same method as `edit-direction-alignment.md` (`experiments/edit_direction_alignment/scripts/othello_alignment.py --run …`):
+for each bench case a real history of the same length and mover whose board is EXACTLY the
+edited board (search over move substitutions / swaps), kept only if the model treats it as an
+ordinary game (legal mass ≥ 0.99); Δ = h_cf − h at the last position; the probe subspace is
+the 3 rows of the flipped tile; generic = the displacement to an unrelated clean case. Extras
+(`experiments/adjacent_flip_ablation/scripts/alignment_extras.py`, `honesty_check.py`,
+`haufe_edit_adjacent_flip.py`): the single ND write direction's cos² with Δ, raw vs Haufe vs a
+random direction; the split by whether the flipped tile was actually recoloured in the game;
+the true counterfactual's own Edit Index (the ceiling) against the canonical best arms on the
+SAME cases; Haufe-corrected PI/ND edits on the full bench.
+
+**Alignment at each model's best point** (fraction of Δ in the probe subspace; ND-direction cos²):
+
+| run | n clean | pt | rows (raw) | generic | ×gen | Haufe | genH | ×genH | ND-dir cos² raw | Haufe | random | ‖Δ‖/‖h‖ | canonical PI / ND |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| L-oth-20m (standard) | 18 | 5 | 0.188 | 0.007 | 25.7× | 0.238 | 0.009 | 27.7× | 0.181 | 0.256 | 0.0015 | 0.38 | +0.61 / +0.62 |
+| L-oth-adjacent-20m | 52 | 1 | 0.077 | 0.009 | 8.4× | 0.236 | 0.022 | 10.9× | 0.032 | 0.134 | 0.0016 | 0.39 | −0.05 / +0.12 |
+| **L-oth-adjacent-flip-20m** | 42 | 1 | 0.051 | 0.012 | 4.4× | 0.094 | 0.036 | 2.6× | 0.013 | 0.096 | 0.0016 | 0.43 | +0.17 / +0.24 |
+
+The new model's true direction is the LEAST probe-aligned of the three (4× generic raw, 2.6×
+after Haufe; oth-adjacent 8× / 11×, standard 26× / 28×), yet it edits better than oth-adjacent
+on the canonical bench — alignment does not order these two, raw or corrected. ⚠ Selection:
+exact counterfactual boards are reachable almost only when the flipped tile is a
+placement-parity tile — 2/42 clean cases here had a tile that was ever recoloured
+(standard Othello: 11/18), so this measurement probes the LOOKUP copy of colour in the
+flip model, not the computed one. In standard Othello the split is readable and points the
+other way from the intuition: recoloured-tile cases align LESS than parity-tile cases (rows
+0.174 vs 0.211 at pt 5).
+
+**Haufe-corrected editing** (full bench): PI-haufe +0.291 / fid 0.53 (pt3 α2),
+ND-haufe +0.328 / fid 0.47 (pt3 α1) vs canonical +0.168 / 0.85 and +0.237 / 0.62 — a
++0.1 gain and a closer landing, as on oth-adjacent (+0.12 → +0.375); the two corrected models
+now sit within 0.05 of each other, both far below standard Othello's +0.63.
+
+**The honest ceiling — the result that changes the reading.** On the SAME clean cases:
+
+| run | n | unedited | true counterfactual (ceiling) | PI | ND | ND / ceiling | mass on legal_post: cf / PI / ND |
+|---|---|---|---|---|---|---|---|
+| L-oth-20m (standard) | 18 | -0.602 | **+0.688** | +0.294 (pt4 α3; bench +0.608) | +0.535 (pt4 α0.35; bench +0.622) | 0.78× | 0.999 / 0.971 / 0.993 |
+| L-oth-adjacent-20m | 52 | -0.646 | **+0.252** | -0.086 (pt8 α5; bench -0.053) | +0.212 (pt1 α2; bench +0.118) | 0.84× | 1.000 / 0.998 / 0.984 |
+| **L-oth-adjacent-flip-20m** | 42 | -0.670 | **+0.140** | +0.169 (pt2 α5; bench +0.168) | +0.336 (pt1 α2; bench +0.237) | 2.39× | 1.000 / 0.984 / 0.991 |
+
+The ceiling is +0.14 here against +0.69 on standard Othello, and it is structural, not a
+contaminated counterfactual: the counterfactual puts 100% of its mass on the post-edit legal
+set, and so do the editors (98–99%). Under the adjacency rule a one-tile recolouring changes
+2.2 of 16 legal moves (standard Othello: 2.0 of 11), so the two uniform reference worlds the
+union Edit Index measures between differ by ~1/16 on two squares, and the honest model's
+own deviation from uniform is of that size (`GOTCHAS.md` 2026-09-09). ND at +0.34 above a
++0.14 ceiling means it moves the differing squares MORE sharply than a real counterfactual
+world does — an over-steer the union index rewards — while keeping legality; PI lands at the
+ceiling. Read against ceilings, the picture inverts: the new model's edit is complete
+(ND 2.4× ceiling, PI 1.2×), oth-adjacent's ND reaches 0.84× of ITS ceiling (+0.21 vs +0.25;
+its PI fails), and standard Othello's ND 0.78×. **"A third of Othello's editability" is
+mostly the metric's dynamic range across instances, not a third of the effect.** The union
+Edit Index cannot be compared across instances whose legal-set geometry differs; a
+ceiling-normalised index (or scoring only the symmetric-difference squares against the
+counterfactual) is the right cross-instance quantity — not built here (canonical metric
+untouched).
+
+Status of this section: `observed` (single seed; 42 / 52 / 18 clean cases; ceilings on the
+clean subsets, editors' full-bench numbers on all 1001).
+
 ## Log
 
+- **2026-09-11 (later)** — alignment / Haufe / ceiling section added (`observed`): least probe-aligned Othello model yet edits above its own true-counterfactual ceiling (+0.34 vs +0.14 on the same cases); the ceiling is +0.14 here vs +0.69 on standard Othello, so the cross-instance Edit-Index gap is largely dynamic range.
 - **2026-09-11** — `observed`. First and only run scored (chain 2026-09-10 00:15 → 2026-09-11
   04:22 PT on wsl-sevan, unit `oth_adjacent_flip`). Numbers above.

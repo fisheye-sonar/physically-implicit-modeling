@@ -922,3 +922,20 @@ message means "reboot when convenient", never "the run died" — check the metri
 `systemctl --user is-active <unit>` first. Heartbeats should read GPU state from `torch` or
 tolerate an empty `nvidia-smi` rather than treating its failure as the job's.
 
+
+## 2026-09-11 — The union Edit Index's ceiling differs by INSTANCE; an editor can honestly exceed it
+
+On oth-adjacent-flip the model run on a true counterfactual history (exact flipped board,
+model-normal) scores only +0.14 on the same clean cases where canonical ND scores +0.34 and PI
++0.17 — with 98–99% of the edited mass on the post-edit legal set, i.e. NOT a contaminated
+counterfactual (that failure mode is the 2026-09-09 entry). Under adjacency legality a
+one-tile recolouring changes ~2 of 16 legal moves, so uniform-over-legal_pre and
+uniform-over-legal_post differ by ~1/16 on two squares and the honest model's own deviation
+from uniform is of that size; standard Othello's ceiling is +0.69 (2 of 11). An editor that
+sharpens the symmetric-difference squares beyond the honest world is rewarded past the
+ceiling. Consequences: (1) never compare raw union Edit Indices across instances whose
+legal-set geometry differs — "adjacent-flip is a third as editable as Othello" is mostly
+dynamic range; (2) quote the ceiling on the same cases beside any Othello Edit Index
+(`experiments/adjacent_flip_ablation/scripts/honesty_check.py --run …`); (3) a
+ceiling-normalised index is the missing cross-instance quantity (not built; canonical metric
+untouched).

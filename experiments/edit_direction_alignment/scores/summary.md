@@ -132,6 +132,7 @@ point (0.200) than standard Othello at its best (0.146) and edits half as well.
 | dw-blink | L-dw-blink-20m | no | 100 | 6 | **0.026** | 0.022 | 1.2× | 80.6° | 0.047 | 0.052 | 0.9× | 59 | 0.95 |
 | oth-uniform | L-oth-20m | YES +0.61 | 18 | 5 | **0.188** | 0.007 | 25.7× | 64.3° | 0.238 | 0.009 | 27.7× | — | 0.38 |
 | oth-uniform (MSE) | L-oth-20m-mse | YES +0.68 | 13 | 4 | **0.172** | 0.006 | 30.2× | 65.5° | 0.195 | 0.006 | 35.4× | — | 0.34 |
+| oth-adjacent-flip | L-oth-adjacent-flip-20m | partly +0.24 (ceiling +0.14) | 42 | 1 | **0.051** | 0.012 | 4.4× | — | 0.094 | 0.036 | 2.6× | — | 0.43 |
 | oth-adjacent | L-oth-adjacent-20m | no | 52 | 1 | **0.077** | 0.009 | 8.4× | 73.8° | 0.236 | 0.022 | 10.9× | — | 0.39 |
 | oth-noflip | L-oth-noflip-20m | no | **0** | — | — | — | — | — | — | — | — | — | — |
 

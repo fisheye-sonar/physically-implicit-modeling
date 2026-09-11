@@ -138,6 +138,31 @@ stay at the generic floor (0.003), as in Result 1. Absolute numbers remain small
 the writable subspace against Othello's 19% (Result 1) — the categorical read-outs close part
 of the gap, not all of it.
 
+## Result 7 — oth-adjacent-flip: the least-aligned Othello model edits to (and past) its own ceiling (2026-09-11)
+
+`othello_alignment.py --run runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m` (+ extras in
+`experiments/adjacent_flip_ablation/scripts/`): 42 clean cases (90 exact boards of 900; cf legal
+mass 0.9997). Best point 1: rows **0.051** vs generic 0.012 (4.4×), Haufe 0.094 vs
+0.036 (2.6×); ND-direction cos² raw 0.013 / Haufe 0.096 / random 0.0016; ‖Δ‖/‖h‖ 0.43.
+Lower than oth-adjacent (0.077 / 8×, Haufe 0.236) on every measure, yet canonically more
+editable (ND +0.24 vs +0.12). Haufe-corrected edits: PI +0.291 / fid 0.53, ND +0.328 / fid 0.47
+(oth-adjacent: +0.270 / +0.375) — the correction pulls the two inert-ish models together and
+leaves them at half of standard Othello. Two things the extras add:
+
+1. **Selection bias in the Othello counterfactuals.** Exact one-tile-flipped boards are
+   reachable almost only for placement-parity tiles: 2/42 clean cases on the flip
+   instance had a tile that was ever recoloured (standard Othello 11/18). The alignment number for
+   the flip model is therefore about its LOOKUP copy of colour. In standard Othello, where the
+   split is readable, recoloured-tile cases are LESS aligned than parity-tile cases (rows
+   0.174 vs 0.211 at pt 5).
+2. **The ceiling inverts the cross-instance reading.** Same clean cases, canonical best arms:
+   flip ceiling **+0.140**, PI +0.169, ND **+0.336** (2.4× the ceiling, 99% mass on legal_post —
+   an over-steer of the 2-square symmetric difference, not a contaminated counterfactual);
+   oth-adjacent ceiling +0.252, ND +0.212 (0.84×), PI −0.086; standard Othello ceiling +0.688,
+   ND +0.535 (0.78×), PI +0.294. Adjacency legality changes ~2 of 16 legal moves per
+   recolouring (Othello 2 of 11), so the union index has a fifth of the range there. Cross-
+   instance Edit-Index comparisons need a ceiling normalisation; `adjacent-flip-ablation.md`.
+
 ## Scope note
 
 ⛔ This analysis modifies the INSTRUMENT (write directions), which is outside the project's

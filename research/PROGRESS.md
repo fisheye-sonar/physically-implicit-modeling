@@ -18,8 +18,12 @@ splits/cases (moved into layout v2 on arrival); `build_full_table` rebuilt with 
 Remote (`~/research/physically-implicit-modeling` on wsl-sevan) is at 268f6c6 on this branch
 with its nbconvert outputs stashed; its `runs/_smoke/` rename is ledgered in its `runs/MOVES.md`.
 Remote setup notes live in memory (`wsl-remote-host`, `wsl-remote-hardware-check`).
-**Open follow-ups:** case-level splits (flipped-tile vs parity-tile; differing-set size),
-extended-α + read-out-landing sweep, a second seed.
+**Follow-up done 2026-09-11 (self-contained, `experiments/adjacent_flip_ablation/scripts/`):** true-edit-direction
+alignment (42 clean exact counterfactuals; least-aligned Othello model: 4× generic raw, 2.6× Haufe), Haufe-corrected
+edits (PI +0.29 / ND +0.33, fid ~0.5), and the honest ceiling on the same cases (+0.14 vs ND +0.34, PI +0.17; standard
+Othello's ceiling +0.69) — the cross-instance Edit-Index gap is mostly the metric's dynamic range (new GOTCHAS entry).
+**Still open:** a ceiling-normalised cross-instance index (design decision, not built), the recoloured-tile split
+(only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 
 
 ## Overnight chain 2026-09-09 18:49 → 2026-09-10 04:47 PT — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
