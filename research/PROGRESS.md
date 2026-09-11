@@ -19,9 +19,10 @@ Remote (`~/research/physically-implicit-modeling` on wsl-sevan) is at 268f6c6 on
 with its nbconvert outputs stashed; its `runs/_smoke/` rename is ledgered in its `runs/MOVES.md`.
 Remote setup notes live in memory (`wsl-remote-host`, `wsl-remote-hardware-check`).
 **Follow-up done 2026-09-11 (self-contained, `experiments/adjacent_flip_ablation/scripts/`):** true-edit-direction
-alignment (42 clean exact counterfactuals; least-aligned Othello model: 4× generic raw, 2.6× Haufe), Haufe-corrected
-edits (PI +0.29 / ND +0.33, fid ~0.5), and the honest ceiling on the same cases (+0.14 vs ND +0.34, PI +0.17; standard
-Othello's ceiling +0.69) — the cross-instance Edit-Index gap is mostly the metric's dynamic range (new GOTCHAS entry).
+alignment (least-aligned Othello model: 4× generic raw, 2.6× Haufe), Haufe-corrected edits (PI +0.29 / ND +0.33, fid ~0.5),
+and the ceiling on ordinary counterfactuals: +0.655 / +0.679 / +0.697 (flip / adjacent / standard) with ND at 55% / 30% / 75%
+of it. ⚠ A first pass reported a +0.14 ceiling and blamed the index — wrong (swap-built histories through a toothless
+legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewritten.
 **Still open:** a ceiling-normalised cross-instance index (design decision, not built), the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 

@@ -1,4 +1,7 @@
-"""Head-to-head on the SAME clean cases (2026-09-11): the true counterfactual history's Edit Index
+"""⚠ SUPERSEDED by honesty_check_v2.py the same day: the legal-mass filter used here is toothless on
+adjacency instances (mass 1.000 on everything) and let swap-built histories through. Kept for the record.
+
+Head-to-head on the SAME clean cases (2026-09-11): the true counterfactual history's Edit Index
 (the ceiling) vs the run's canonical best PI and ND arms (point/alpha from its scores.json), per
 `research/GOTCHAS.md` 2026-09-09 ("report the ceiling beside any patch result"). Reuses
 `edit_direction_alignment/scripts/othello_alignment.py::search_cf` and `pim.environments.othello.arms.linear_arm`.

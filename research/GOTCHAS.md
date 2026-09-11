@@ -923,19 +923,20 @@ message means "reboot when convenient", never "the run died" — check the metri
 tolerate an empty `nvidia-smi` rather than treating its failure as the job's.
 
 
-## 2026-09-11 — The union Edit Index's ceiling differs by INSTANCE; an editor can honestly exceed it
+## 2026-09-11 — The legal-mass filter for Othello counterfactuals is TOOTHLESS on adjacency instances; filter on ordinariness
 
-On oth-adjacent-flip the model run on a true counterfactual history (exact flipped board,
-model-normal) scores only +0.14 on the same clean cases where canonical ND scores +0.34 and PI
-+0.17 — with 98–99% of the edited mass on the post-edit legal set, i.e. NOT a contaminated
-counterfactual (that failure mode is the 2026-09-09 entry). Under adjacency legality a
-one-tile recolouring changes ~2 of 16 legal moves, so uniform-over-legal_pre and
-uniform-over-legal_post differ by ~1/16 on two squares and the honest model's own deviation
-from uniform is of that size; standard Othello's ceiling is +0.69 (2 of 11). An editor that
-sharpens the symmetric-difference squares beyond the honest world is rewarded past the
-ceiling. Consequences: (1) never compare raw union Edit Indices across instances whose
-legal-set geometry differs — "adjacent-flip is a third as editable as Othello" is mostly
-dynamic range; (2) quote the ceiling on the same cases beside any Othello Edit Index
-(`experiments/adjacent_flip_ablation/scripts/honesty_check.py --run …`); (3) a
-ceiling-normalised index is the missing cross-instance quantity (not built; canonical metric
-untouched).
+(Replaces an entry written earlier the same day that blamed the index's "dynamic range" — wrong,
+caught by Sevan.) The 2026-09-09 rule "keep a counterfactual history only if the model's legal
+mass on it is ≥ 0.99" screened swap-built histories on standard Othello (legal mass 0.845 vs
+0.994). On oth-adjacent and oth-adjacent-flip the models put legal mass 1.000 on essentially
+EVERY history, including off-distribution swaps, so the filter passes them and the "true
+counterfactual" scores +0.14 / +0.25 — below the editors — while a perfect predictor scores
++1.000 on the same cases. The tell: the model's rmse to uniform-over-its-own-legal-set on the
+kept counterfactuals was 3–4× its held-out value. Rules: (1) ALL exact one-tile counterfactual
+boards are swap-built in every Othello instance (0 substitutions of 900 reach the board), so the
+contaminant is always present; (2) screen on ORDINARINESS — rmse-to-own-uniform within the
+held-out 95th percentile for the same prefix length — not on legal mass
+(`experiments/adjacent_flip_ablation/scripts/honesty_check_v2.py`); (3) sanity-check any
+ceiling against the ideal distribution's score (+1.000) and the held-out deviation before
+interpreting it. With the right filter the ceilings agree across instances (+0.66 to +0.70) and
+the editors sit below them.

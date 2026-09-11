@@ -155,13 +155,18 @@ leaves them at half of standard Othello. Two things the extras add:
    the flip model is therefore about its LOOKUP copy of colour. In standard Othello, where the
    split is readable, recoloured-tile cases are LESS aligned than parity-tile cases (rows
    0.174 vs 0.211 at pt 5).
-2. **The ceiling inverts the cross-instance reading.** Same clean cases, canonical best arms:
-   flip ceiling **+0.140**, PI +0.169, ND **+0.336** (2.4× the ceiling, 99% mass on legal_post —
-   an over-steer of the 2-square symmetric difference, not a contaminated counterfactual);
-   oth-adjacent ceiling +0.252, ND +0.212 (0.84×), PI −0.086; standard Othello ceiling +0.688,
-   ND +0.535 (0.78×), PI +0.294. Adjacency legality changes ~2 of 16 legal moves per
-   recolouring (Othello 2 of 11), so the union index has a fifth of the range there. Cross-
-   instance Edit-Index comparisons need a ceiling normalisation; `adjacent-flip-ablation.md`.
+2. **The legal-mass filter does not bite on adjacency instances — filter on ordinariness (corrected
+   the same day).** Every exact counterfactual board in all three instances is SWAP-built. The
+   ≥ 0.99 legal-mass screen that made Result 3 honest on standard Othello (16 of its 18 kept
+   cases are also ordinary) passes almost anything on the adjacency models, which put mass 1.000
+   on off-distribution histories; a first pass therefore reported ceilings of +0.14 (flip) and
+   +0.25 (adjacent) and an editor "above the ceiling". Screening on the model's rmse to
+   uniform-over-its-own-legal-set (≤ held-out 95th percentile at the same length) keeps
+   18 / 26 / 16 cases and gives ceilings **+0.655 / +0.679 / +0.697** (flip / adjacent /
+   standard) with the canonical ND at +0.359 / +0.206 / +0.520 below them (55% / 30% / 75%);
+   PI +0.073 / −0.079 / +0.247. Alignment on the ordinary subsets: rows 0.048 / 0.088 / 0.185,
+   full-probe Haufe 0.184 / 0.250 / 0.262 — same ordering as above.
+   `experiments/adjacent_flip_ablation/scripts/honesty_check_v2.py`; `GOTCHAS.md` 2026-09-11.
 
 ## Scope note
 

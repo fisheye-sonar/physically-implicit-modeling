@@ -39,8 +39,11 @@ Self-contained; reuses `experiments/edit_direction_alignment/scripts/{othello_al
 - `scripts/honesty_check.py --run …` (all three) → `scores/honesty_check_<run>.json`: true-counterfactual
   ceiling vs the run's canonical best PI / ND arms on the SAME clean cases, with mass on legal_post.
 - `scripts/haufe_edit_adjacent_flip.py` → `scores/haufe_edit_adjacent_flip.json`: PI-haufe +0.291 / 0.53, ND-haufe +0.328 / 0.47.
-Headline: least-aligned Othello model (4× generic raw, 2.6× Haufe) yet edits to 2.4× its own
-ceiling (+0.34 vs +0.14 on the same cases); the ceiling is a fifth of standard Othello's, so
-the cross-instance Edit-Index gap is mostly dynamic range. Write-up in
-`research/findings/adjacent-flip-ablation.md` (alignment section) and `edit-direction-alignment.md` Result 7;
-new `GOTCHAS.md` entry on instance-dependent ceilings. Logs: `logs/adjacent_flip_ablation/`, `logs/edit_direction_alignment/`.
+- `scripts/honesty_check_v2.py --run …` (all three) → `scores/honesty_check_v2_<run>.json`: SUPERSEDES
+  `honesty_check.py` — its legal-mass filter is toothless on adjacency instances; v2 screens on the
+  model's rmse-to-own-uniform (≤ held-out p95) and classifies substitution vs swap (all exact boards are swaps).
+Headline: least-aligned Othello model (4× generic raw, 2.6× Haufe). Ceilings on ORDINARY counterfactuals
++0.655 / +0.679 / +0.697 (flip / adjacent / standard), editors below them (ND 55% / 30% / 75% of ceiling
+on the same cases) — a first-pass "+0.14 ceiling, dynamic range" claim was wrong and is withdrawn.
+Write-up in `research/findings/adjacent-flip-ablation.md` (alignment section, corrected) and
+`edit-direction-alignment.md` Result 7; corrected `GOTCHAS.md` entry. Logs: `logs/adjacent_flip_ablation/`.
