@@ -488,3 +488,56 @@ editor lands, which is Sevan's ranking (2026-09-10 22:25).
 Provenance: `runs/interface_ablation/L-dw-8ray-tok-20m/scores.json["bases"]["appearance-fac"]`,
 `runs/_baselines/dw-8ray/baselines.json` (`transformer_l_tokens` / `appearance-fac`), unit
 `appearance_fac_tok` (`logs/appearance_fac_tok/`, 63 min).
+
+## The quantisation push: dw-5ray (2026-09-11, `L-dw-5ray-20m`, trained overnight)
+
+Sevan's environment toggle, pushed one step further: dw-8ray's geometry with **5 usable rays**
+(7 cast, wall rays dropped; radius 1.0, the floor for this ray count — at 4 kept rays a
+reachable disc can light no ray). 20M sequences, the matched Transformer-L recipe, 780k steps
+(best val MSE 0.00694 at 450k vs 0.00574 on 8-ray — the coarser frame is intrinsically less
+predictable). Appearance partition 14 cells (run lengths 1–4, 9 centres); factorised 9 + 4 = 13
+classes per object, 52 logits. Bets on record (2026-09-11 09:10): Sevan — a slight bump over
+8-ray; me — level with 8-ray and a noisier index.
+
+**Regression rows** (canonical; first 192 cases — dw-5ray has no filtered selection file, so
+identical-frame teleports are included and the unedited floor sits at −0.86 rather than −0.91):
+
+| run, frustum regression | skill LIN / MLP | rand-init | PI | ND | GS |
+|---|---|---|---|---|---|
+| L-dw-5ray-20m | 0.94 / 0.97 | 0.95 / 0.96 | +0.30 / 1.12 (α 175) | n/a | −0.11 / 1.02 |
+| L-dw-8ray-20m | 0.95 / 0.98 | 0.96 / 0.97 | +0.28 / 0.90 (α 100) | n/a | −0.06 / 0.82 |
+
+Inert, like every discworld regression row: PI only at the top of the α grid and over the
+guard, GS negative, the random-init floor equal to the trained probe.
+
+**The factorised categorical target** (same recipe, floors, cell-changing bench — 51 of the
+first 243 teleports stay in their cell at 14 cells vs 34 of 226 at 30):
+
+| run, `appearance-fac` | logits | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| **L-dw-5ray-20m** | 52 | 0.93 / 0.93 | 0.92 · 0.92 / 0.52 · 0.92 | **+0.49 / 0.68** (pt 1, α 20; landed 95%) | **+0.56 / 0.90** (pt 0, α 12) | **+0.58 / 0.47** (pt 0, α 0.35) |
+| L-dw-8ray-20m | 80 | 0.94 / 0.94 | 0.92 · 0.93 / 0.48 · 0.93 | +0.41 / 0.71 (pt 1, α 35) | +0.50 / 0.86 (pt 0, α 12) | +0.46 / 0.53 (pt 0, α 0.5) |
+| L-dw-noiseless-20m | 1,048 | 0.43 / 0.79 | 0.30 · 0.59 / 0.12 · 0.52 | +0.01 / 1.95 | +0.63 / 0.78 | +0.35 / 0.68 |
+| L-dw-blink-20m | 1,048 | 0.46 / 0.68 | 0.22 · 0.45 / 0.07 · 0.39 | +0.02 / 2.44 | +0.53 / 0.94 | +0.33 / 0.95 |
+
+**Reading.** Sevan's bet holds: every editor is higher on 5-ray than on 8-ray — PI +0.07,
+ND +0.05, GS +0.12 — with the guards alike or better, and PI lands at a smaller step (α 20 vs
+35, write ratio 3.4 vs 7.5). Under the factorised target 5-ray is now the best-edited discworld
+run on PI and GS and second on ND, and the first discworld row where all three editors clear
++0.48. The bump is small against one seed's noise (a categorical Edit Index over 192 cases
+moves by ~±0.03 between α neighbours), but it is on all three editors in the same direction.
+Decodability is unchanged (0.93 vs 0.94; the random-init floor equal to the trained probe, as
+on 8-ray) — the environment toggle moved editability without moving decodability, which is
+what a genuine environment effect on the write side should look like. GS at point 0 (the input
+embedding) dominates as on 8-ray; deeper points fall off faster here (guarded GS +0.58 → +0.38 →
++0.28 at points 0–2). So along the ray axis 128 → 8 → 5, under the read-out that works, PI and
+GS rise monotonically (PI —, +0.41, +0.49; GS +0.35, +0.46, +0.58) while ND is flat-to-down
+(+0.63, +0.50, +0.56): coarser frames make the model's state more WRITABLE by the exact and
+gradient editors, at no cost in how readable it is. The next rung down does not exist at this
+radius (4 rays leaves blind positions); a larger radius at 4 rays, or a smaller one at 5 (discs
+between rays — a natural blink), are the remaining moves on this axis.
+
+Provenance: `runs/ray_ablation/L-dw-5ray-20m/scores.json` (canonical + `appearance-fac`),
+`runs/_baselines/dw-5ray/baselines.json`, unit `dw_5ray` (`scripts/drivers/dw_5ray.sh`,
+`logs/ray_ablation/dw_5ray/`: generate 2 h 07, train 7 h 53, score 29 min, fac 65 min), joint-cell
+`appearance` row pending (unit `dw_5ray_appearance`).

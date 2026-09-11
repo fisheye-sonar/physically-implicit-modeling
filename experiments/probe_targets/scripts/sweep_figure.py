@@ -14,7 +14,9 @@ sys.path.insert(0, str(REPO))
 from pim.environments.discworld.grid_target import categorical_target  # noqa: E402
 from pim.figures import sweep_figure  # noqa: E402
 
-RUNS = [("ray_ablation/L-dw-8ray-20m", "dw-8ray", "Transformer-L, frames (L-dw-8ray-20m)",
+RUNS = [("ray_ablation/L-dw-5ray-20m", "dw-5ray", "Transformer-L, frames (L-dw-5ray-20m)",
+         "Edit Index (ray-zone)"),
+        ("ray_ablation/L-dw-8ray-20m", "dw-8ray", "Transformer-L, frames (L-dw-8ray-20m)",
          "Edit Index (ray-zone)"),
         ("interface_ablation/L-dw-8ray-tok-20m", "dw-8ray", "Transformer-L, tokens (L-dw-8ray-tok-20m)",
          "Edit Index † (frame-set)"),

@@ -107,6 +107,16 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**11:15 PT 2026-09-11 — dw-5ray chain COMPLETE (11:09): Sevan's bet holds — a bump on every editor.**
+`L-dw-5ray-20m` best val 0.00694; canonical regression rows inert as everywhere (PI +0.30 / 1.12,
+GS −0.11); **`appearance-fac`: skill 0.93 / 0.93, PI +0.49 / 0.68, ND +0.56 / 0.90, GS +0.58 / 0.47** vs
+8-ray +0.41 / +0.50 / +0.46 — the best-edited discworld row on PI and GS, decodability unchanged.
+Along 128 → 8 → 5 rays PI and GS rise monotonically under the factorised target; ND flat. Finding,
+registry, Table 2c, sweep figure updated. Joint-cell `appearance` on 5-ray running (unit
+`dw_5ray_appearance`, ~12:10). Then: drop cartesian from `dw_bases` + hide it in the tables (Sevan,
+10:20 — agreed; deferred until no unit is executing the notebooks). Note for the record: dw-5ray has
+no filtered edit selection (identical-frame teleports in the canonical bench; unedited −0.86).
+
 **06:40 PT 2026-09-11 — training on course; NVML broken by an unattended driver upgrade (harmless).**
 dw-5ray corpus VERIFIED 01:41 (20M seq, seeds 160e9…179.5e9, obs.f32 16 GB); training started 01:41,
 ~1,650 steps/min, step 480k at 06:34, best val 0.00694 → ends ~09:45, scoring ~10:15, fac ~11:15.
