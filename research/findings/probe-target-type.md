@@ -384,3 +384,48 @@ Provenance: `runs/ray_ablation/L-dw-8ray-20m/scores.json["bases"]["appearance-fa
 `runs/_baselines/dw-8ray/baselines.json` (`appearance-fac`), unit `appearance_fac`
 (`logs/appearance_fac/`, 65 min: 15 + 16 min model probes, 15 + 16 min random-init, 1 min
 observation, 1 min scoring), driver `scripts/drivers/probe_target_fit.sh`.
+
+## The factorised target on the 128-ray model (2026-09-10 evening, `appearance-fac` on `L-dw-noiseless-20m`)
+
+The scaled test the factorisation was built for: the noiseless instance's appearance partition
+has 2,889 cells (8,667 logits as a joint cell — never fitted); factorised it is 233 centre
+classes + 29 length classes per object, 4 tiles × 262 = 1,048 logits. Same recipe, floors and
+192 cell-changing cases as every categorical row.
+
+| target (noiseless frame model) | logits | skill LIN / MLP | floors: rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| frustum (regression, canonical) | 8 | 0.96 / 1.00 | 0.96 · 0.99 / 0.39 · 0.95 | +0.23 / 1.95 | n/a | −0.10 / 0.99 |
+| grid-16x8 (joint cell) | 384 | 0.43 / 0.71 | — | +0.13 / 1.58 | +0.37 / 0.91 | +0.29 / 0.87 |
+| appearance-lat (joint cell, 233) | 699 | 0.04 / 0.63 | — | +0.04 / 1.68 | +0.51 / 0.79 | +0.30 / 1.08 |
+| **appearance-fac** (centre × length) | 1,048 | **0.43 / 0.79** | 0.30 · 0.59 / 0.12 · 0.52 | +0.01 / 1.95 | **+0.63 / 0.78** | **+0.35 / 0.68** |
+| *Othello `L-oth-20m`, mine/theirs, for scale* | 192 | 0.98 / 0.98 | | +0.61 / 0.24 | +0.62 / 0.23 | +0.65 / 0.21 |
+
+**Reading.**
+1. **ND on the 128-ray model now matches Othello's** (+0.63 / 0.78 vs +0.62 / 0.23 — the
+   guard is looser, the index the same), from a run whose regression rows have never edited
+   (PI +0.23 at guard 1.95, GS −0.10). Sevan's prediction that noiseless wants a finer
+   partition than 8-ray holds in this form: the observation-exact partition, factorised, is
+   the target this model edits along. ND's α curve is a clean peak (α 1.5 → 6 → 12: +0.31 →
+   +0.63 → +0.55, guard 0.58 → 0.78 → 0.93).
+2. **Decodability here is what training added.** LIN 0.43 / MLP 0.79 against a random-init
+   floor of 0.30 / 0.59 and an observation floor of 0.12 / 0.52 — the first discworld target
+   on which the trained model sits clearly above BOTH floors (on 8-ray and on every regression
+   row the random-init floor is within 0.02 of the trained probe). 233 lateral classes at
+   128 rays are a hard linear read; the skill peaks at point 1 and drifts down, unlike 8-ray's
+   flat profile.
+3. **PI collapses** (+0.01, guard 1.95, write ratio 1,076): the pseudo-inverse of a
+   1,048-row read-out is ill-conditioned, so the exact-jump write explodes. This is the
+   pipeline's PI, unchanged; it says the factorised target at this width is ND's and GS's
+   territory. A ridge / z-space-clipped PI would be an instrument change and is not made.
+4. **GS is at the product-grid band's ceiling** (+0.35 / 0.68, α 0.35), consistent with the
+   8-ray reading that factorisation costs GS the joint move.
+5. Combined with the 8-ray rows: the factorised categorical read-out gives the best ND on
+   both discworld instances (+0.50, +0.63), scales to the full 128-ray partition at a tenth
+   of the joint cell's logits, and its raw rows are the best-aligned discworld subspace
+   with the true edit direction (`edit-direction-alignment.md` Result 6). It is the target to
+   carry forward — and the one to try on `L-dw-blink-20m`, where position is a carried
+   variable but only the regression target has ever been probed.
+
+Provenance: `runs/noise_ablation/L-dw-noiseless-20m/scores.json["bases"]["appearance-fac"]`,
+`runs/_baselines/dw-noiseless/baselines.json`, unit `appearance_fac_noiseless`
+(`logs/appearance_fac_noiseless/`, 72 min), driver `scripts/drivers/probe_target_fit.sh`.

@@ -86,6 +86,15 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**18:25 PT — `appearance-fac` on L-dw-noiseless-20m scored (unit 72 min): ND +0.63 / 0.78 — OTHELLO'S
+LEVEL, on the 128-ray run whose regression rows never edited.** 233 + 29 classes, 1,048 logits;
+skill 0.43 / 0.79 vs rand-init 0.30 / 0.59 and obs-right 0.12 / 0.52 (the first discworld target
+where training's margin is clear); GS +0.35 / 0.68; PI +0.01 / 1.95 (pseudo-inverse ill-conditioned
+at 1,048 rows — pipeline unchanged, noted). Finding, registry, Table 2c, sweep figure updated.
+Sevan's next-step discussion (17:45): a new instance tonight (5-ray quantisation vs anti-aliasing);
+my recommendation — first `appearance-fac` on `L-dw-blink-20m` (no training; the "computed
+variable" test with the working target), then the 5-ray instance. Awaiting the call.
+
 **17:30 PT — alignment of the factorised probe with the true edit direction (Sevan's contained
 test; `experiments/edit_direction_alignment/scripts/fac_probe_alignment.py`, no canonical change).**
 66/192 valid counterfactuals on dw-8ray. fac rows hold 0.070 of Δ vs 0.025 generic / 0.006 random
