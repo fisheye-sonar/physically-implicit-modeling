@@ -909,3 +909,16 @@ inode, every cached probe its bytes, no score changed. What moved, and the traps
   (source-only cell replacement, unified diff printed in the session). This is the second time the
   cap has blocked NotebookEdit on these two files (2026-09-10 morning was the first); splitting
   them is the fix, not another workaround.
+
+## 2026-09-11 — `nvidia-smi: Driver/library version mismatch` mid-run is unattended-upgrades, not a crash
+
+At 06:15 an unattended apt upgrade moved the NVIDIA userspace libraries to 595.91 while the
+loaded kernel module stayed at 595.84 (`/proc/driver/nvidia/version`). From then on NVML —
+and so `nvidia-smi` and any heartbeat that shells out to it — fails with the mismatch message
+until the machine reboots. **CUDA itself keeps working**: the training process kept its
+context (steps advanced, 480k → …), and a FRESH Python process still initialised CUDA and ran
+an op, so the chain's later GPU stages (scoring, probe fits) were unaffected. Reading: the
+message means "reboot when convenient", never "the run died" — check the metrics file and
+`systemctl --user is-active <unit>` first. Heartbeats should read GPU state from `torch` or
+tolerate an empty `nvidia-smi` rather than treating its failure as the job's.
+

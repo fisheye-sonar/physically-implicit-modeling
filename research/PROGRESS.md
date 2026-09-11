@@ -103,6 +103,13 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**06:40 PT 2026-09-11 — training on course; NVML broken by an unattended driver upgrade (harmless).**
+dw-5ray corpus VERIFIED 01:41 (20M seq, seeds 160e9…179.5e9, obs.f32 16 GB); training started 01:41,
+~1,650 steps/min, step 480k at 06:34, best val 0.00694 → ends ~09:45, scoring ~10:15, fac ~11:15.
+At 06:15 unattended-upgrades moved the NVIDIA userspace to 595.91 (kernel module 595.84): `nvidia-smi`
+fails until reboot; CUDA still initialises in fresh processes (tested), so stages D/E are unaffected.
+GOTCHAS entry added. Reboot at Sevan's convenience after the chain completes.
+
 **23:35 PT — token-model `appearance-fac` scored (63 min): skill 0.94 / 0.94, PI +0.24 / 0.54, ND +0.30 / 0.50,
 GS +0.40 / 0.43 — below its joint-cell row (+0.26 / +0.44 / +0.58): factorisation costs the token model,
 whose output is a softmax over whole frames (one token per run). Finding, registry, Table 2c updated.
