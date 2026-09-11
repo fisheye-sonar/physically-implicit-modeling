@@ -107,6 +107,11 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**15:40 PT — Othello centre tiles (Sevan's quick check; `experiments/othello_centre_tiles/`).** Li's bench
+never intervenes on d4/e4/d5/e5; 98 cases synthesised with the bench recipe. L-oth-20m, cached probes:
+PI +0.64 / 0.20, ND +0.65 / 0.20, GS +0.57 / 0.27 vs whole bench +0.61 / +0.62 / +0.65 — as editable as
+the rest of the board (linear editors' best point 5 rather than 4).
+
 **15:00 PT — `appearance-fac` on the RECURRENT 8-ray run (R-dw-8ray-20m, un-quarantined by Sevan 12:45;
 unit `r8ray_fac`, 59 min): the GRU does NOT edit under the read-out that unlocks the transformer.**
 skill 0.94 / 0.94 (identical to L-dw-8ray-20m; floors alike), PI +0.25 / 0.73 at point 0 only (input
