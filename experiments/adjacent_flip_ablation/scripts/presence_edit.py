@@ -24,6 +24,9 @@ from pim.environments.othello.vendor.othello import OthelloBoardState  # noqa: E
 from pim.metrics.set_editability import move_fidelity_ratio  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 from pim.probes.cache import ProbeCache  # noqa: E402
+import torch  # noqa: E402
+from pim.environments.othello.data import N_TILES, board_probs  # noqa: E402
+from pim.metrics.set_editability import move_scorecard  # noqa: E402
 
 EXP = REPO / "experiments/adjacent_flip_ablation"; DEV = "cuda"
 
@@ -56,9 +59,40 @@ def presence_cases(hist, n, length_counts, seed, rules):
     return cases, rej
 
 
+@torch.no_grad()
+def presence_nd_arm(model, bench, probe, point, alpha):
+    """ND through the 2-class presence probe: direction = W[tile, target] - W[tile, current], scaled to
+    alpha * |z| (the canonical `add_sub` construction with 2 classes instead of 3)."""
+    W = probe.net.weight.detach()
+    probs = np.zeros((len(bench.pos_int), N_TILES), np.float32); landed = []
+    for toks, ids in zip(bench.tokens, bench.case_ids):
+        idx = torch.from_numpy(toks).to(DEV); bsz = len(ids)
+        sq = torch.from_numpy(bench.pos_int[ids]).to(DEV)
+        want_occ = torch.from_numpy((bench.tgt_lab[ids] != BLANK).astype(np.int64)).to(DEV)
+        cur_occ = 1 - want_occ
+        rec = {}
+
+        def hook(layer, x, _rec=rec):
+            if layer != point:
+                return x
+            cur = x[:, -1]; z = (cur - probe.x_mean) / probe.x_std
+            dvec = W[sq * 2 + want_occ] - W[sq * 2 + cur_occ]
+            dz = alpha * z.norm(dim=-1, keepdim=True) * dvec / dvec.norm(dim=-1, keepdim=True)
+            out = x.clone(); out[:, -1] = cur + dz * probe.x_std
+            lg2 = probe(out[:, -1]).view(bsz, N_TILES, 2)
+            _rec["landed"] = float((lg2[torch.arange(bsz), sq].argmax(-1) == want_occ).float().mean())
+            return out
+
+        probs[ids] = board_probs(model.decode(idx, edit=hook), getattr(model, "output_kind", "logits"))
+        landed.append(rec.get("landed", float("nan")))
+    card = move_scorecard(probs, bench.legal_pre, bench.legal_post); card["readout_landed"] = float(np.nanmean(landed))
+    return probs, card
+
+
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--run", required=True)
     ap.add_argument("--points", type=int, nargs="+", default=[1, 2, 3, 4, 5, 6]); ap.add_argument("--alphas", type=float, nargs="+", default=[0.5, 1.0, 2.0, 3.0, 5.0])
+    ap.add_argument("--nd-alphas", type=float, nargs="+", default=[0.05, 0.2, 0.35, 0.7, 1.0, 2.0])
     ap.add_argument("--n", type=int, default=400); args = ap.parse_args(); t0 = time.time()
     run_dir = REPO / args.run; inst = json.loads((run_dir / "config.json").read_text())["data"]["instance"]; rules = oc.rules_of(inst)
     model, _ = load_checkpoint(run_dir / "best_model.pt", device=DEV); model.eval(); label = Path(args.run).name
@@ -80,17 +114,22 @@ def main():
     for p in args.points:
         probe, st = fit_presence_probe(model, data, p, store, log=lambda s: print(s, flush=True))
         out["probes"][p] = {k: v for k, v in st.items() if isinstance(v, (int, float))}
-        for a in args.alphas:
-            pr, card = presence_pinv_arm(model, bench, probe, p, a); fid = move_fidelity_ratio(pr, uns_probs, bench.legal_post)
+        for ed, fn, grid in (("PI", presence_pinv_arm, args.alphas), ("ND", presence_nd_arm, args.nd_alphas)):
+          for a in grid:
+            pr, card = fn(model, bench, probe, p, a); fid = move_fidelity_ratio(pr, uns_probs, bench.legal_post)
             ei = np.array(card["edit_index_union_per_case"], float)
-            rec = {"point": p, "alpha": a, "edit_index_union": card["edit_index_union"], "fidelity_ratio": fid, "li_error_vs_post": card["li_error_vs_post"],
+            rec = {"editor": ed, "point": p, "alpha": a, "edit_index_union": card["edit_index_union"], "fidelity_ratio": fid, "li_error_vs_post": card["li_error_vs_post"],
                    "li_error_vs_pre": card["li_error_vs_pre"], "legal_mass": card["legal_mass"], "readout_landed": card["readout_landed"],
                    "ei_remove": float(np.nanmean(ei[is_rm])), "ei_add": float(np.nanmean(ei[~is_rm]))}
             out["arms"].append(rec)
-            print(f"{p:>3} {a:>5g} | {rec['edit_index_union']:>+7.3f} {fid:>5.2f} {rec['legal_mass']:>6.3f} {rec['readout_landed']:>6.2f} | {rec['ei_remove']:>+7.3f} {rec['ei_add']:>+7.3f}", flush=True)
-    b = max(out["arms"], key=lambda r: r["edit_index_union"]); g = [r for r in out["arms"] if r["fidelity_ratio"] <= 1.1]; bg = max(g, key=lambda r: r["edit_index_union"]) if g else None
-    out["best"] = b; out["best_guarded"] = bg; out["minutes"] = round((time.time() - t0) / 60, 1)
-    print(f"BEST {label}: {b['edit_index_union']:+.3f} / fid {b['fidelity_ratio']:.2f} (pt{b['point']} α{b['alpha']:g}; remove {b['ei_remove']:+.3f} add {b['ei_add']:+.3f})" + (f" | guarded {bg['edit_index_union']:+.3f} / {bg['fidelity_ratio']:.2f} (pt{bg['point']} α{bg['alpha']:g})" if bg else ""), flush=True)
+            print(f"{ed} {p:>3} {a:>5g} | {rec['edit_index_union']:>+7.3f} {fid:>5.2f} {rec['legal_mass']:>6.3f} {rec['readout_landed']:>6.2f} | {rec['ei_remove']:>+7.3f} {rec['ei_add']:>+7.3f}", flush=True)
+    out["best"] = {}; out["best_guarded"] = {}
+    for ed in ("PI", "ND"):
+        arms = [r for r in out["arms"] if r["editor"] == ed]
+        b = max(arms, key=lambda r: r["edit_index_union"]); g = [r for r in arms if r["fidelity_ratio"] <= 1.1]; bg = max(g, key=lambda r: r["edit_index_union"]) if g else None
+        out["best"][ed] = b; out["best_guarded"][ed] = bg
+        print(f"BEST {label} {ed}: {b['edit_index_union']:+.3f} / fid {b['fidelity_ratio']:.2f} (pt{b['point']} α{b['alpha']:g}; remove {b['ei_remove']:+.3f} add {b['ei_add']:+.3f})" + (f" | guarded {bg['edit_index_union']:+.3f} / {bg['fidelity_ratio']:.2f} (pt{bg['point']} α{bg['alpha']:g})" if bg else ""), flush=True)
+    out["minutes"] = round((time.time() - t0) / 60, 1)
     (EXP / "scores" / f"presence_edit_{label}.json").write_text(json.dumps(out, indent=1, default=float))
 
 
