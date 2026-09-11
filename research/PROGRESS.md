@@ -86,6 +86,14 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**17:30 PT — alignment of the factorised probe with the true edit direction (Sevan's contained
+test; `experiments/edit_direction_alignment/scripts/fac_probe_alignment.py`, no canonical change).**
+66/192 valid counterfactuals on dw-8ray. fac rows hold 0.070 of Δ vs 0.025 generic / 0.006 random
+rank (2.8× / 12×); ND direction cos² 0.056 vs 0.002 random (28×), joint cell 0.035, regression rows
+0.003 (= generic). Haufe: fac 0.034 vs 0.039 random-pattern floor — washed to chance, as in Result 5.
+`findings/edit-direction-alignment.md` Result 6. Next (approved): `appearance-fac` on
+`L-dw-noiseless-20m`.
+
 **17:00 PT — `appearance-fac` scored (unit 65 min): the categorical gain SURVIVES factorisation.**
 skill 0.94 / 0.94 (above the joint cell's 0.89 / 0.90; rand-init 0.92 / 0.94), PI +0.41 / 0.71
 (joint: +0.43 / 0.76), **ND +0.50 / 0.86** (best discworld ND; joint +0.43 / 0.91), GS +0.46 / 0.53

@@ -16,3 +16,5 @@ no canonical code changes. `scripts/{common,discworld_alignment,othello_alignmen
 `scores/*.json`; `summary.md` after the runs.
 
 **Status (2026-09-09): DONE.** Archive result replicated (discworld rows hold 1% of Δ = generic; Haufe/PCA ≤ 4%); standard Othello 4–6× generic at the editable points, adjacent at generic; Haufe does not order the models. New: patching discworld's last-position residual with the full Δ produces the edit (+0.9), the complement alone +0.85, the row part alone nothing — the residual is load-bearing and position's load-bearing code is nonlinear/high-rank. Write-up `research/findings/edit-direction-alignment.md`.
+
+**2026-09-10 — Result 6.** `scripts/fac_probe_alignment.py [run] [target]`: the factorised categorical probes (`appearance-fac`, `L-dw-8ray-20m`) against the same oracle Δ, with the joint-cell and regression probes on the same 66 valid cases; raw rows 2.8× generic / 12× random rank, ND direction cos² 0.056 (28× random), Haufe at the random-pattern floor. `scores/fac_probe_alignment_L-dw-8ray-20m.json`.

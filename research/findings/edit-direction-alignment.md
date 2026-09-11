@@ -100,6 +100,44 @@ and Haufe then washes it back to chance, which is exactly the ordering its edita
 follows (ND +0.373 raw → +0.048 Haufe; `findings/grid-target-control.md`). 2.3× against
 Othello's 26× remains the gap.
 
+## Result 6 — the factorised categorical probe is the best-aligned discworld read-out yet, raw; Haufe washes it to chance again
+
+`scripts/fac_probe_alignment.py` (2026-09-10), `L-dw-8ray-20m`, the same oracle counterfactual
+(the edited object's trajectory shifted and re-rendered; Δ = h_cf − h at the last context
+position). On the 8-ray instance (radius 1.0) only **66 of 192** shifted trajectories stay
+inside the frustum and clear of the other disc; the shift changes the object's cell in all 66
+(its run centre in 66, its length in 32). Three read-outs on the same model and cases:
+
+| read-out (pt 5; pts 1–8 within ±0.005) | rows | Δ in rows | generic | random rank | ratio vs generic / random | Haufe | genH | randH |
+|---|---|---|---|---|---|---|---|---|
+| **appearance-fac** — (tile, old) + (tile, new) of the moved factors | 2–4 | **0.070** | 0.025 | 0.006 | **2.8× / 12×** | 0.034 | 0.023 | 0.039 |
+| appearance (joint cell) — {empty, obj0, obj1} × the two cells | 6 | 0.048 | 0.020 | — | 2.4× | 0.074 | 0.045 | — |
+| regression (full, frustum) — the 4 position rows | 4 | 0.003 | 0.003 | — | 1.0× | 0.078 | 0.090 | — |
+
+And the single ND write direction (target − current contrast) against Δ, cos²:
+
+| direction (pt 5) | raw | Haufe | random direction |
+|---|---|---|---|
+| **appearance-fac** (summed contrast over the moved factors) | **0.056** | 0.013 | 0.002 |
+| appearance (joint cell) | 0.035 | 0.007 | 0.002 |
+
+Point 0 (the input embedding) is the exception everywhere: fac rows 0.28 / generic 0.18, joint
+cell 0.57 / 0.30 — there the residual IS the frame, and the probes read it directly.
+
+**Reading.** The factorised probe's raw row space holds 2.8× the generic and 12× the
+random-rank share of the true displacement, and its one ND direction captures 5.6% of Δ's
+energy — 28× a random direction and 1.6× the joint cell's contrast. That is the ordering
+the editors follow (fac ND +0.50 > joint ND +0.43 ≫ regression, `probe-target-type.md`), so
+Result 5's pattern holds with the better-aligned probe: **raw alignment tracks editability;
+Haufe does not.** The Haufe patterns of the fac rows sit AT the random-pattern floor (0.034 vs
+0.039 — a random pattern subspace captures 4% of Δ because patterns concentrate in the
+residual's high-variance directions, and so does Δ by chance), and the Haufe ND direction loses
+three quarters of its overlap. Across the whole project no Haufe-corrected discworld subspace
+has ever risen above its own baseline; the raw categorical rows have, twice. The regression rows
+stay at the generic floor (0.003), as in Result 1. Absolute numbers remain small: 5–7% of Δ in
+the writable subspace against Othello's 19% (Result 1) — the categorical read-outs close part
+of the gap, not all of it.
+
 ## Scope note
 
 ⛔ This analysis modifies the INSTRUMENT (write directions), which is outside the project's
