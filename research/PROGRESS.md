@@ -86,6 +86,19 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**22:45 PT — overnight: token-model `appearance-fac` running; the dw-5ray instance + training chain
+queued behind it (Sevan's call, 22:25: "run the 70 min L-dw-8ray-tok-20m evaluation under appearance
+factorized, then kick off a heavier quantization run — 5 rays, radius 1.0; standard overnight protocol").**
+Sevan's ranking correction on record: dw-8ray is the best-edited discworld run under `-fac` (all three
+editors land, GS highest), not noiseless. Unit `appearance_fac_tok` started 22:30 (~70 min). Unit
+`dw_5ray` (`scripts/drivers/dw_5ray.sh`): stage A waits for `appearance_fac_tok` (4 h timeout), B
+generates dw-5ray (7 cast / 5 kept rays, radius 1.0 — 4 kept rays leaves positions lighting no ray;
+14 appearance cells, fac 9 + 4 classes; fresh seed block 160e9 / 185e9 / 1020e9 / 1030e9 registered in
+`bigcorpus.INSTANCES`; ~2 h), C trains 780k steps (~8 h), D scores canonically (~30 min), E fits
+`appearance-fac` + floors and scores (~1 h). ETA ~11:30 PT 2026-09-11. Generator path smoked on
+`_smoke_5ray` (layout v2 --role; moved to `datasets/archive/`). Watchers: stage + heartbeat on both
+units; ntfy pings at every stage. Both units are systemd, independent of this session.
+
 **20:15 PT — `appearance-fac` on L-dw-blink-20m scored (unit 72 min): ND +0.53 / 0.94, GS +0.33 / 0.95,
 PI +0.02 / 2.44; skill 0.46 / 0.68 (rand 0.22 / 0.45, obs 0.07 / 0.39).** Blink's first positive edit —
 and NOT above noiseless under the same target (+0.63 / 0.78): carrying position does not make it more
