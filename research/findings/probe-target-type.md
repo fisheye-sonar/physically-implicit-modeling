@@ -463,3 +463,28 @@ Provenance: `runs/blink_ablation/L-dw-blink-20m/scores.json["bases"]["appearance
 `runs/_baselines/dw-blink/baselines.json`, unit `appearance_fac_blink` (`logs/appearance_fac_blink/`,
 72 min), driver `scripts/drivers/probe_target_fit.sh`. The canonical blink bench (first 192
 cases, mostly visible at the edit frame) — the blink subsets under this target are not scored.
+
+## The factorised target on the token model (2026-09-10 night, `appearance-fac` on `L-dw-8ray-tok-20m`)
+
+| `L-dw-8ray-tok-20m` (frame-set Edit Index †) | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|
+| appearance (joint cell, 30 × 3) | 0.90 / 0.91 | 0.87 · 0.87 / 0.54 · 0.89 | +0.26 / 0.53 | **+0.44 / 0.41** | **+0.58 / 0.31** |
+| appearance-fac (centre × length, 4 × 20) | 0.94 / 0.94 | 0.92 · 0.93 / 0.48 · 0.94 | +0.24 / 0.54 | +0.30 / 0.50 | +0.40 / 0.43 |
+| *frame model `L-dw-8ray-20m`, appearance-fac, for comparison* | 0.94 / 0.94 | 0.92 · 0.93 / 0.48 · 0.93 | +0.41 / 0.71 | +0.50 / 0.86 | +0.46 / 0.53 |
+
+**Reading.** On the token model the factorisation COSTS editability: ND +0.44 → +0.30 and GS
++0.58 → +0.40 (PI unchanged at +0.24), where on the frame model ND rose (+0.43 → +0.50) and
+only GS fell. Decodability is identical across the two models (0.94 / 0.94, floors alike) —
+the difference is entirely in what the editors can do with the write. A plausible reason:
+the token model's output is a softmax over whole FRAMES, one token per (centre, length) run,
+so the joint-cell write — one class swap per cell, the cell being the frame's own token — is
+the write most nearly aligned with its output head; splitting it into a centre move and a
+length move asks the head to combine two partial writes. The frame model renders rays and
+has no such preference. The ranking across the four factorised rows is therefore
+frame-8-ray (+0.41 / +0.50 / +0.46) > noiseless (— / +0.63 / +0.35) ≈ blink (— / +0.53 / +0.33)
+> tokens-8-ray (+0.24 / +0.30 / +0.40) — with 8-ray's frame model the only run where every
+editor lands, which is Sevan's ranking (2026-09-10 22:25).
+
+Provenance: `runs/interface_ablation/L-dw-8ray-tok-20m/scores.json["bases"]["appearance-fac"]`,
+`runs/_baselines/dw-8ray/baselines.json` (`transformer_l_tokens` / `appearance-fac`), unit
+`appearance_fac_tok` (`logs/appearance_fac_tok/`, 63 min).

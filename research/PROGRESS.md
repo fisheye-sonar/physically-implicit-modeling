@@ -86,6 +86,11 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**23:35 PT — token-model `appearance-fac` scored (63 min): skill 0.94 / 0.94, PI +0.24 / 0.54, ND +0.30 / 0.50,
+GS +0.40 / 0.43 — below its joint-cell row (+0.26 / +0.44 / +0.58): factorisation costs the token model,
+whose output is a softmax over whole frames (one token per run). Finding, registry, Table 2c updated.
+`dw_5ray` chain released from its wait stage; generation running.
+
 **22:45 PT — overnight: token-model `appearance-fac` running; the dw-5ray instance + training chain
 queued behind it (Sevan's call, 22:25: "run the 70 min L-dw-8ray-tok-20m evaluation under appearance
 factorized, then kick off a heavier quantization run — 5 rays, radius 1.0; standard overnight protocol").**
