@@ -3,7 +3,24 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped (see below)_
+_Last updated: 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE and recorded (first section); before that 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped_
+
+## oth-adjacent-flip chain on the WSL remote — DONE 2026-09-11 04:22 PT (`experiments/adjacent_flip_ablation/drivers/oth_adjacent_flip.sh`, unit `oth_adjacent_flip` on wsl-sevan)
+
+**Outcome:** pilot → corpus → cases → 780k-step training (25.7 h on the RTX 4090) → master_eval
+(+ oth-adjacent-flip floors) → tables, all clean; unit result success, 26.7 GB peak under the
+40 GB cap; Windows hardware-error count flat at 40 throughout. Result: Bayes-optimal; skill
+0.947 / 0.970 above the observation floor 0.888 / 0.914; ND +0.24 / fid 0.62, PI +0.17 / 0.85,
+GS +0.03 / 2.62 vs unedited −0.70 — editability returns at a third of Othello's level.
+`findings/adjacent-flip-ablation.md` (`observed`), REGISTRY run row, instance row updated.
+Pulled to this box: run dir (2.2 GB) + `runs/_baselines/oth-adjacent-flip/` + the instance's
+splits/cases (moved into layout v2 on arrival); `build_full_table` rebuilt with the new row.
+Remote (`~/research/physically-implicit-modeling` on wsl-sevan) is at 268f6c6 on this branch
+with its nbconvert outputs stashed; its `runs/_smoke/` rename is ledgered in its `runs/MOVES.md`.
+Remote setup notes live in memory (`wsl-remote-host`, `wsl-remote-hardware-check`).
+**Open follow-ups:** case-level splits (flipped-tile vs parity-tile; differing-set size),
+extended-α + read-out-landing sweep, a second seed.
+
 
 ## Overnight chain 2026-09-09 18:49 → 2026-09-10 04:47 PT — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
 

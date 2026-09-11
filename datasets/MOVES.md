@@ -136,3 +136,16 @@ that motivated the environment-instance manifests.
   - `corpus/train_90000.npz` → `_unused/corpus/train_90000.npz`
   - `corpus/train_90000.npz.regen-dup` → `_unused/corpus/train_90000.npz.regen-dup`
   - copy `pim/environments/othello/vendor/intervention_benchmark.pkl` → `edits/v1/cases_1001.pkl`
+
+## 2026-09-10 — dw-5ray generator smoke
+- `datasets/discworld/_smoke_5ray/` (layout-v2 `--role` smoke for the dw-5ray chain: 40 eval, 60 edits, 40 probe sequences at 7 cast / 5 kept rays, radius 1.0) → `datasets/archive/_smoke_5ray_2026-09-10/` — a smoke artefact, never read by code.
+
+## 2026-09-11 — oth-adjacent-flip pulled from the WSL remote (layout v1 there) and moved into layout v2 on arrival
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_20000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_20000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_20000_labels_20000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_20000_labels_20000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_large_170000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_large_170000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_large_170000_labels_170000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_large_170000_labels_170000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/test_10000.npz` → `datasets/othello/oth-adjacent-flip/eval/test_10000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/train_20000000.npz` → `datasets/othello/oth-adjacent-flip/train/train_20000000.npz`
+  - `datasets/othello/oth-adjacent-flip/edits/cases_1001.pkl` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.pkl`
+  - `datasets/othello/oth-adjacent-flip/edits/cases_1001.json` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.json`
