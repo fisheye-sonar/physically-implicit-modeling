@@ -23,3 +23,5 @@ driver `scripts/drivers/dw_blink.sh`; logs `logs/blink_ablation/dw_blink/`.
   by step at reappearance, visible control), both bases; plus the hidden-frame decodability
   split (probe skill on hidden vs visible frames, against the observation floors).
 - `scores/` — its outputs.
+
+**2026-09-10 — `scripts/hidden_frame_floors.py`:** the random-init and observation probes (cached) evaluated on the SAME hidden frames as the trained model's decodability table; trained MLP 0.96–0.98 at ten frames since seen vs observation 0.46–0.78 and random-init 0.58–0.74 — position is computed and carried, and still not editable (regression target). `scores/hidden_frame_floors.json`. `research/findings/blink-ablation.md`.
