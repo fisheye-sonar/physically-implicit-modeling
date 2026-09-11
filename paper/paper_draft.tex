@@ -1,0 +1,292 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage{iclr2027_conference,times}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{enumitem}
+
+\title{When Generative Models Act as Simulators}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\author{
+}
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+
+% \iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+% 1. No thesis. The abstract lists results but never states what the reader should now believe. Your paper's claim is that decodability is not evidence of simulation, that editability is the right operationalization, and that whether a variable is editable is set by the environment, not the architecture. None of that is stated. A reader finishes and knows you ran experiments on Othello and discs; they don't know what changed. This needs a sentence, probably right after the setup, and the final sentence should return to it.
+% 2. "Act as a simulator" is never cashed out. You use the phrase in sentence 3 and then jump to "editability" in sentence 4 without connecting them. The reader needs the definition: the model acts as a simulator for a variable when interventions on its internal representation of that variable produce the outputs the simulator would produce under the corresponding intervention. Decodability vs. editability is the conceptual contribution; right now it's implicit.
+% 3. The Othello sentence is unreadable to anyone who doesn't already know your variants. "Changing whether token color varies independently from grid placement" — no reader can picture this. Say the concrete thing (remove the flipping rule), then the consequence (color becomes a deterministic function of grid parity), then the finding. And the sharpest fact you have is missing entirely: within one model, presence stays editable while color does not. That contrast does more work than anything else in the paragraph. Also check "its editability" — the referent is ambiguous between color, the model, and the board.
+% 4. Sentence 5 refers to a comparison the reader hasn't been shown. "In both cases... linearly decodable from the input action sequences" — if one of the cases is standard Othello, that's false with flipping; if the cases are the two no-flip variants, the reader doesn't know a second variant exists. Either introduce the adjacency variant explicitly (if it's run) or cut the sentence. Also "in contrast to the computational complexity" doesn't name the hypothesis you're ruling out. Say what the alternative explanation was and that it fails.
+% 5. Vocabulary for state is inconsistent. "Latent state," "board state," "object positions," "environment" — the reader can't tell when you mean the simulator's state and when you mean the model's internal representation. Pick two terms and hold them.
+% 6. The Discworld sentence undersells the negative. Its strength is the control suite: same architecture, objective, data volume, probes, editors; categorical variant; blinks; discretized targets; oracle sanity check. Without that, "cannot be cleanly edited with our tested editors" reads as "we tried a bit." One clause naming the controls turns it from a shrug into evidence. And "despite their... use in rendering" asserts an interpretation you should be careful about — decodable and used aren't the same thing, which is your own point. If velocity edits land, this sentence changes shape entirely; leave room.
+% 7. Hedging density. "In the tested settings," "cleanly," "our tested editors," "when ground truth access is assumed" — four hedges in three sentences. Keep one, move the rest to the body.
+% Smaller: "produce novel sequences from an environment" — they produce observations of one. The first two sentences could be one. The metric sentence is methodology and probably belongs before the results, not after.
+
+Generative models can produce novel sequences from an underlying environment by learning from a large set of partial observations. Many of the use cases for such systems, \textit{e.g.} agentic training, planning, or counterfactuals, depend on a view of them as a class of environment simulators. To investigate the conditions under which a generative model will act as a simulator, we hold the architecture and training setup fixed while varying attributes of the training environment, focusing our analysis on next-step prediction. Beginning with the game of Othello as a positive case, we show that changing whether token color \red{WHAT GOES HERE} also changes its editability in the tested settings, even while it remains perfectly decodable from the latent state. \red{This is in contrast to the computational complexity of the representations as it holds true even when the board state is linearly decodable from the input action sequences alone in both cases. However, in a separate environment with moving discs rendered into partial observations, we find that despite their high decodability and use in rendering the object positions cannot be cleanly edited with our tested editors.} We further present a method to quantify the editability of a generative model when ground truth access to a simulator is assumed, in order to draw comparisons across diverse environments.
+\end{abstract}
+
+
+% #####################################################################
+\section{Introduction}
+
+It is frequently proposed that modern generative models learn internal representations and dynamics that correspond faithfully to the environments underlying their training data, leading them to be called world models \citep{Othello, SORA, GENIE, blank_cite}. This is a stronger claim than saying that they can generate realistic observations resembling those found in the data. Intuitively, it is the difference between predicting how pixels move and modeling how objects move.
+
+One way to ground the distinction between a purely predictive model and one which is modeling its environment is to use the notion of a simulator. If the learned model's representations permit a readout of environment state, and the setting of that state can steer the generation to match a true environment observation, then the learned model is effectively operating as a simulator. Therefore, the determination of this property falls on our capacity to find mappings between the model's latent state and known environment states.
+
+To quantify the extent to which a generative model is a simulator, we use the common decomposition of analysis into two categories: decodability and editability. Decodability measures the predictive power of learned mappings from latent states to environment states. Editability asks, when we have a shift in the environment state and implement a corresponding shift in the latent state, how well does the subsequent generation match the true edited observation? As has been well-established, decodability does not guarantee editability \citep{amnesiac_probing, blank_cite}.
+
+While prior work has extensively studied how architecture \citep{blank_cite}, training setup \citep{blank_cite}, probe class \citep{blank_cite}, and intervention method \citep{blank_cite} affect our ability to recover and manipulate learned world representations, comparatively little attention has been paid to the environment as the independent variable. We instead keep a shared transformer architecture and matched experimental protocol, with explicit controls for observation format, and systematically vary properties of the underlying environment. Using this strategy, we find that the environment setup can meaningfully determine whether a variable will be subsequently editable, and identify the relevant switches in our own environments.
+
+% What are we actually showing? Needs to be supplied earlier.
+
+% The reader needs the contrast: move histories with board-state targets versus partial visual observations with position targets. “State is determined by the board grid” is imprecise—presumably you mean the configuration of occupied squares and colors, with turn information where relevant.
+In this paper we focus analysis on two classes of environment, and vary properties within each to get a spread of environment instances on which a fixed model is trained. The first environment is based on the board game of Othello, and was chosen for its simplicity and prior demonstrations of positive decodability and editability \citep{othellogpt, blank_cite}. The second environment, which we call Discworld, is our own setup involving a 2D frustum where small discs move according to fixed velocity and are projected into 1D observations. In the case of Othello the state is determined by the board grid, and the editing target is the color or presence of placed tokens. In Discworld the state is composed of the 2D positions and velocities of the two discs, and our editing target is the position of one disc.
+
+% Simplifying Othello preserves editability when color supplies an independent predictive distinction.
+% Changing the placement rule removes color editability despite strong decoding, while occupancy remains partly editable.
+% Discworld retains strong prediction and decoding but resists clean position edits; changing probe targets improves directional effects without eliminating collateral damage.
+Across these two environments, we find that high decodability across all our conditions, although the extent to which it lies above observation-space and random initialization baselines varies. Editability, however, is strongly influenced by the environment setup. In particular, we show that toggling the standard token flipping rule in Othello makes token color a non-editable variable, even when it is still causally needed for the prediction task. In Discworld we analyze a spread of setups that become increasingly similar to the Othello case, without ever making position an editable variable. Altogether, our findings indicate that causal relevance is insufficient for an environment variable to be editable.
+
+As part of our quantification of decodability and editability we run the environment simulators across two different trajectories and collect the latent states across them. This allows us to also measure the alignement between the linear probes' row spaces and the 'true' edit directions. We find that cases of successful editing have naturally higher alignment but still lie mostly unaligned with the true direction. We further find that linear probes may be misaligned by default, but this can be partially corrected by an unwhitening procedure as suggested by \citet{haufe, blank_cite}. Under this procedure, we find that alignment is only a partial predictor of editability, but unwhitening can materially improve the editability in some cases.
+
+Our main contributions are as follows:
+\begin{enumerate}[
+    label=(\arabic*),
+    leftmargin=*,
+    align=left,
+    itemsep=0.25em,
+    topsep=0pt,
+    parsep=0pt,
+    partopsep=0pt
+]
+\item \textbf{A characterization of how environment influences learned representations in two distinct types.}
+\item \textbf{A method for quantifying the decodability and editability of learned generative models when acccess to a simulator is assumed.}
+\item \textbf{A demonstration of a specific environmental factor (token flipping) which determines the editability of colors in Othello.}
+\item \textbf{An outline of how the alignment between probe row spaces and edit directions acquired through counterfactuals can influence editability.}
+\end{enumerate}
+
+
+% #####################################################################
+\section{Methods}
+
+Our design holds the analysis fixed and varies the environment. Every model is a transformer of the same size, trained with the same recipe on the same number of sequences to predict the next observation, and every model is read with the same probes, written to with the same editors, and scored with the same metrics. A difference between rows of our tables is therefore a fact about the world the training data came from. \red{Appendix labels (app:predictive, app:frustum, app:tokens, app:categorical, app:inlp) are not yet defined.}
+
+\subsection{Othello}
+
+Players alternate placing discs on an $8 \times 8$ board, a legal move must enclose opponent discs along a line, and the enclosed discs flip. We follow \citet{othellogpt}, who trained a GPT on synthetic games and edited the board decoded from its residual stream, and \citet{nanda}, who showed the board is linearly decodable in the frame of the player about to move. Our games come from the generator of \citet{othellogpt}, which draws every move uniformly from the legal set $L_t$, so the cross entropy has an exact floor of $\mathbb{E}[\log |L_t|]$.
+
+The state is the board after each move in the mine/theirs frame, 64 squares each empty, the mover's, or the opponent's. The edit benchmark is the 1001 cases of \citet{othellogpt}, a real prefix with one occupied square recolored, scored against the legal sets before and after the flip, and for the variants we synthesize 1001 cases with the same recipe (Appendix~\ref{app:predictive}).
+
+Two variants change one rule each. In no-flip, enclosed discs keep their color, which from the standard opening preserves a checkerboard invariant: every disc's color equals the parity of its square, no player ever passes, and legality never depends on color, so color is decodable by lookup and causally irrelevant. In adjacent, nothing recolors either, but a move is legal exactly when the empty square touches one of the mover's own discs, so legality depends on color while color remains a lookup on the input. \red{A third variant with adjacency placement and recoloring, in which color is used by legality and not readable from the input, is in training.}
+
+\subsection{Discworld}
+
+An observer at the origin looks into a frustum of depth $y \in [3, 12]$ and half-width $y/2$, in which two discs of radius $0.5$ move at constant velocity for 40 frames, with trajectories that touch the walls or bring the discs within 1.6 diameters rejected, so the dynamics are exactly linear. The noise-free observation is 128 rays uniform in the tangent of the viewing angle, each returning the reflectivity of the nearest disc it hits ($0.4$ or $0.8$, fixed per disc) or $0$. Depth is never observed directly and enters only through the number of rays a disc covers and through occlusion.
+
+The state is the position and velocity of both discs, and predicting the next frame requires a belief over it,
+\begin{align}
+\mathbf{x}_t &= \begin{bmatrix} p_{1,t} & v_{1,t} & p_{2,t} & v_{2,t} \end{bmatrix}^\top \in \mathbb{R}^8, \qquad
+\mathbf{x}_{t+1} = A\,\mathbf{x}_t, \qquad \mathbf{y}_t = h(\mathbf{x}_t) \in [0,1]^R, \\
+p(\mathbf{y}_{t+1} \mid \mathbf{y}_{1:t}) &= \int p(\mathbf{y}_{t+1} \mid \mathbf{x}_{t+1})\, p(\mathbf{x}_{t+1} \mid \mathbf{y}_{1:t})\, d\mathbf{x}_{t+1},
+\end{align}
+where $A$ advances each position by its velocity and $h$ is the ray caster. We probe the state in the frustum basis (the ray coordinate $u = x/(ky)$, the inverse depth $1/y$, and their rates), which is linear in what the sensor measures (Appendix~\ref{app:frustum}). The edit benchmark teleports one disc at frame 20 of a held-out sequence to a random position clear of the walls and the other disc. We warm the model on frames 0 to 19, edit its residual stream at the last position, and score its prediction of frame 20 and its 15-frame free run on the first 192 cases.
+
+Two variants change the sensor. The 8-ray variant keeps 8 rays and doubles the disc radius, so a disc covers one to five rays and has exactly 30 distinct appearances, which lets us define a categorical state below. The blink variant hides a disc from the observation for a run of frames while its physics continues, marking the blackout's start and end on the disc's edge ray, so the model must carry an advanced position to predict where the disc reappears. We also tokenize the 8-ray frames into a 422-token vocabulary and train the Othello model on them (Appendix~\ref{app:tokens}).
+
+\subsection{Model, training, and probes}
+
+Every model is the minGPT used by \citet{othellogpt}, eight blocks of width 512, about 25M parameters, with only the two ends changed: an embedding table and a softmax over 61 tokens trained with cross entropy for Othello, and a linear map from and back to the $R$ ray values trained with squared error for Discworld. Every model trains on 20M sequences for 780,000 steps at batch size 256 from one seed (Appendix~\ref{app:predictive}). The probes are those of \citet{othellogpt}, a linear map and an MLP with one hidden layer of 128 units, fitted at every residual point on 30,000 sequences or 20,000 games and held out by sequence. Targets are the mine/theirs board in Othello and the eight-dimensional state in Discworld. To test whether the target's type matters we also give the 8-ray model a categorical state of Othello's shape, each of the 30 appearances a cell labeled empty or holding disc one or two, with a factorized form that reads each disc's run center (15 classes) and length (5 classes), and product grids of the frustum coordinates at matched cell counts as controls (Appendix~\ref{app:categorical}).
+
+\subsection{Editors}
+
+An editor changes the residual stream at one point (the stream after $\ell$ blocks) and the last position, and the network computes its prediction from the changed stream. Edits target position only, since a velocity change is invisible in one frame. With $\mathbf{z}$ the standardized residual and $f(\mathbf{h}) = W\mathbf{z} + \mathbf{b}$ the linear probe,
+\begin{align}
+\text{PI:}\quad & \Delta\mathbf{z} = W^{+}(\mathbf{t} - \mathbf{b} - W\mathbf{z}), \qquad \mathbf{h}' = \mathbf{h} + \alpha\,\boldsymbol{\sigma} \odot \Delta\mathbf{z}, \\
+\text{GS:}\quad & \mathbf{h} \leftarrow \mathbf{h} - \eta\, \nabla_{\mathbf{h}}\, \mathcal{L}\big(f_{\mathrm{MLP}}(\mathbf{h}), B'\big), \\
+\text{ND:}\quad & \mathbf{h}' = \mathbf{h} + \alpha\, \|\mathbf{h}\|\, \hat{\mathbf{d}}, \qquad \mathbf{d} = (\mathbf{w}_{\mathrm{new}} - \mathbf{w}_{\mathrm{old}})/\boldsymbol{\sigma}.
+\end{align}
+Pseudoinverse injection (PI) is the minimum-norm write that makes the linear probe read a target $\mathbf{t}$, exact at $\alpha = 1$, where $\mathbf{t}$ is the edited world's state in Discworld and the probe's own logits with two classes swapped at the edited square or cells otherwise. Gradient steering (GS) is the method of \citet{othellogpt}, 100 Adam steps on $\mathbf{h}$ through the frozen MLP probe toward its current reading with the edited entries replaced, repeated at every residual point after the starting layer. Direction addition (ND), from \citet{nanda}, adds the contrast between the probe rows of the requested and current class, and is defined only for a categorical change, since one direction and magnitude cannot implement teleports that differ from case to case. Every editor is swept over residual points and step sizes, and we report the arm with the highest Edit Index with its fidelity ratio. Writing to a whole cascade of orthogonal probes from iterative nullspace projection \citep{blank_cite} changes the Edit Index by at most $0.09$ (Appendix~\ref{app:inlp}).
+
+\subsection{Metrics}
+
+Decodability is Probe Skill, $1 - \text{probe loss} / \text{trivial predictor loss}$, which is $R^2$ for regression and one minus the ratio of error rates to the majority class for classification. Every skill is read against two floors fitted with the same probes on the same held-out sequences, the untrained architecture and the raw input history.
+
+Editability is scored at the edit step against two reference outputs the simulator supplies, the clean renders of the edited and unedited worlds in Discworld and the uniform distributions over the legal moves before and after the flip in Othello. With $d_{\mathrm{edit}}$ and $d_{\mathrm{uned}}$ the RMSE from the model's output $\hat{o}$ to each reference over the support where they differ,
+\begin{align}
+\text{Edit Index} = \frac{d_{\mathrm{uned}} - d_{\mathrm{edit}}}{d_{\mathrm{uned}} + d_{\mathrm{edit}}}, \qquad
+\text{Fidelity Ratio} = \frac{\operatorname{RMSE}(\hat{o}, o^{\mathrm{edit}})}{\operatorname{RMSE}(\hat{o}^{\mathrm{unedited}}, o^{\mathrm{edit}})}.
+\end{align}
+The index is $+1$ for the edited world, $-1$ for the unedited one, and near $0$ for an output far from both, so destroying the output does not score. Because it is relative, we pair it with the fidelity ratio over the whole frame or all 64 squares, and no arm above one counts as a success. Unlike interchange intervention accuracy \citep{blank_cite}, the edits are synthesized from a probe rather than patched from a counterfactual run and the outputs are frames and distributions rather than labels, so we score distance to both worlds instead of accuracy. Overwriting the model's context with the frames of the edited world reaches $+0.91$ on Discworld, so the index does register a landed edit.
+
+
+% #####################################################################
+\section{Experiments}
+
+Table~\ref{tab:instances} lists the instances with their predictive quality and decodability. The Othello models sit within $0.02$ nats of their exact floors, and the Discworld models reach held-out squared errors below $0.006$ on frames whose disc values are $0.4$ and $0.8$.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l r rr rr rr}
+\hline
+ & & \multicolumn{2}{c}{Trained} & \multicolumn{2}{c}{Random init} & \multicolumn{2}{c}{Observation} \\
+Instance & Loss (floor) & Lin. & MLP & Lin. & MLP & Lin. & MLP \\
+\hline
+Othello & 2.029 (2.011) & 0.975 & 0.976 & 0.577 & 0.583 & 0.792 & 0.809 \\
+Othello no-flip & 1.680 (1.679) & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+Othello adjacent & 2.435 (2.433) & 0.988 & 0.990 & 0.581 & 0.588 & 0.988 & 0.983 \\
+\red{Othello adjacent-flip} & \multicolumn{7}{c}{\red{pending}} \\
+Discworld & 0.00106 & 0.959 & 0.996 & 0.825 & 0.987 & 0.390 & 0.960 \\
+Discworld 8-ray & 0.00574 & 0.950 & 0.981 & 0.955 & 0.975 & 0.391 & 0.950 \\
+Discworld blink & 0.00126 & 0.904 & 0.992 & 0.722 & 0.940 & 0.346 & 0.906 \\
+\hline
+\end{tabular}
+\caption{Instances, predictive quality, and decodability. Loss is test cross entropy in nats with the exact floor in parentheses for Othello, and validation squared error for Discworld. Decodability is Probe Skill at the best residual point, held out by sequence, beside the two floors fitted with the same probes on the same sequences.}
+\label{tab:instances}
+\end{table}
+
+\subsection{Decodability}
+
+State is decodable in every instance, and the floors are where the instances separate. Standard Othello is the one case where training clearly builds decodability, at $0.975$ against floors of $0.58$ and $0.79$, because the board must be computed through the flips and a shallow read of the moves cannot do it. Both variants are decodable from the input alone, at $1.000$ for no-flip even from the untrained network and at the observation floor for adjacent. Discworld's decodability is likewise not a product of training, with the untrained transformer's MLP skill within $0.01$ of the trained one on 128 and 8 rays. Blink is the exception. Its linear observation floor drops to $0.35$ while the trained model reads a hidden disc at $0.63$ to $0.89$ linearly and $0.97$ to $0.99$ with the MLP, so the model carries position through a blackout. In control-theoretic terms the state is observable everywhere, and only in standard Othello does its reconstruction need computation beyond a shallow map of the history.
+
+\subsection{Editability}
+
+Table~\ref{tab:editability} reports the best arm of each editor against unedited scores of $-0.68$ to $-0.92$. Standard Othello is editable by every editor, with indices of $+0.61$ to $+0.65$ at fidelity ratios of $0.21$ to $0.24$, and a squared-error head in place of cross entropy gives $+0.68$ to $+0.74$ (Appendix~\ref{app:tokens}), so the objective is not the cause.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l r rr rr rr}
+\hline
+ & & \multicolumn{2}{c}{PI} & \multicolumn{2}{c}{ND} & \multicolumn{2}{c}{GS} \\
+Instance & Unedited & Index & Fid. & Index & Fid. & Index & Fid. \\
+\hline
+Othello & $-0.71$ & $+0.61$ & 0.24 & $+0.62$ & 0.23 & $+0.65$ & 0.21 \\
+Othello no-flip & $-0.82$ & $-0.00$ & 3.25 & $+0.09$ & 2.57 & $+0.02$ & 4.00 \\
+Othello adjacent & $-0.68$ & $-0.05$ & 2.31 & $+0.12$ & 1.05 & $+0.00$ & 5.73 \\
+\red{Othello adjacent-flip} & \multicolumn{7}{c}{\red{pending}} \\
+Discworld & $-0.92$ & $+0.23$ & 1.95 & -- & -- & $-0.10$ & 0.99 \\
+Discworld 8-ray & $-0.91$ & $+0.28$ & 0.90 & -- & -- & $-0.06$ & 0.82 \\
+Discworld blink & $-0.91$ & $+0.22$ & 1.78 & -- & -- & $-0.09$ & 1.00 \\
+\hline
+\end{tabular}
+\caption{Editability. Edit Index and fidelity ratio of each editor's best arm over residual points and step sizes, at the edit step, over 1001 Othello cases (legal-set construction) or 192 Discworld cases (ray-zone construction). A fidelity ratio above 1 means the edit left the output further from the edited world than no edit. \red{Bootstrap intervals to be added.}}
+\label{tab:editability}
+\end{table}
+
+Removing the flips removes editability, and restoring a causal role for color does not restore it. No editor exceeds $+0.09$ on the no-flip model, and only while destroying the prediction. On the adjacent model legality depends on color, the model predicts it essentially perfectly, and the probe reads the requested color at the edited square in 99\% of cases after the write, yet the next-move distribution does not follow, with ND at $+0.12$ and never above $+0.13$ at step sizes far beyond the grid. Within the no-flip model the variable makes the difference. Editing the presence of a disc instead of its color, with a dedicated linear probe and PI on 400 synthesized cases, reaches $+0.39$ at a fidelity ratio of $0.44$, against $+0.45$ on the standard model. \red{(Experiment-level result, not in the canonical table.)}
+
+Discworld position is not editable through these probes on any instance. PI's best index of $+0.23$ on the 128-ray model comes at a fidelity ratio of $1.95$, GS is negative everywhere, blink gives $+0.22$ at $1.78$, and the 8-ray model's one non-destructive positive, $+0.28$ at $0.90$, is a smear across the old and new rays rather than a relocated disc. The exact write at $\alpha = 1$ lands the probe read-out at every point after the embedding on every Discworld model and leaves the index within $0.03$ of the unedited floor at the first three of those points.
+
+A categorical target changes the picture, with a qualification (Table~\ref{tab:categorical}, Figure~\ref{fig:waterfall}). Through the 30-cell appearance partition GS reaches $+0.61$ at a fidelity ratio of $0.39$, PI and ND reach $+0.43$ below one, and the index stays positive over all 15 rollout steps while decaying to $+0.06$. The factorized form keeps the gain, the size-matched grids stay between $+0.29$ and $+0.36$, and across every grid from 8 to 512 cells GS never exceeds $+0.42$, so the effect is alignment with what the frame resolves rather than cell count. Snapping the regression target to the same cell centers leaves the regression numbers essentially unchanged, so the gain requires the categorical read-out and its class-swap edit. The qualification is collateral damage and provenance. PI and ND raise the error on the other disc's rays from $0.11$ to $0.34$ and $0.40$ (GS $0.14$), visible as gray smearing in Figure~\ref{fig:waterfall}, and the 8-ray appearance is close to a read of the current frame (untrained network $0.88$, trained $0.90$).
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l rr rr rr rr}
+\hline
+ & \multicolumn{2}{c}{Skill} & \multicolumn{2}{c}{PI} & \multicolumn{2}{c}{ND} & \multicolumn{2}{c}{GS} \\
+Probe target (8-ray model) & Lin. & MLP & Index & Fid. & Index & Fid. & Index & Fid. \\
+\hline
+Position, regression & 0.950 & 0.981 & $+0.28$ & 0.90 & -- & -- & $-0.06$ & 0.82 \\
+Appearance (30 cells) & 0.893 & 0.904 & $+0.43$ & 0.76 & $+0.43$ & 0.91 & $+0.61$ & 0.39 \\
+Appearance, factorized & 0.935 & 0.943 & $+0.41$ & 0.71 & $+0.50$ & 0.86 & $+0.46$ & 0.53 \\
+Grid $6 \times 5$ (30) & 0.466 & 0.535 & $+0.32$ & 0.87 & $+0.29$ & 0.92 & $+0.34$ & 0.66 \\
+Grid $10 \times 3$ (30) & 0.443 & 0.496 & $+0.36$ & 0.85 & $+0.34$ & 0.95 & $+0.34$ & 0.63 \\
+Grid $16 \times 8$ (128) & 0.156 & 0.212 & $+0.10$ & 1.43 & $+0.31$ & 0.99 & $+0.37$ & 0.66 \\
+Snapped regression (30) & 0.959 & 0.991 & $+0.34$ & 1.15 & -- & -- & $-0.13$ & 0.84 \\
+\hline
+\end{tabular}
+\caption{Probe targets on the Discworld 8-ray model, each a new probe fit on the same trained model with the same editors run through it on 192 cases. Grids bin the frustum coordinates uniformly as size-matched and resolution-matched controls. Snapped regression replaces each position by its appearance-cell center and keeps the regression pipeline.}
+\label{tab:categorical}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\fbox{\parbox{0.9\linewidth}{\centering \vspace{3em} \red{Placeholder: qualitative panel of ground truth, unedited, PI, ND, and GS rollouts on the 8-ray model through the appearance target.} \vspace{3em}}}
+% source: runs/ray_ablation/L-dw-8ray-20m/figures/waterfall_edits_appearance.png
+\caption{Edits on the Discworld 8-ray model through the appearance target. Each column is one method's own rollout after the edit at frame 20, below six frames of observed context, with the target and vacated rays marked. Samples are drawn at random.}
+\label{fig:waterfall}
+\end{figure}
+
+\subsection{Probe alignment}
+
+\red{Placeholder subsection, may move to the appendix.} We compare the editors' write directions with $\Delta = \mathbf{h}_{\mathrm{cf}} - \mathbf{h}$, the displacement to the residual the model produces on a counterfactual history (a shifted and re-rendered trajectory in Discworld, a real game with the flipped board in Othello), as the fraction $\cos^2\theta$ of $\Delta$ inside the probe's row space against an unrelated displacement as chance, before and after the encoding-pattern correction of \citet{haufe}. Raw alignment tracks editability, at $0.188$ against chance $0.007$ for standard Othello, $0.077$ against $0.009$ for adjacent, and chance for every Discworld model. The correction raises every fraction without reordering them, and editing along the corrected directions triples adjacent to $+0.38$ at a fidelity ratio of $0.60$ while changing nothing on standard Othello. Patching the full $\Delta$ into the Discworld residual produces the edit ($+0.94$ at a fidelity ratio of $0.10$) almost entirely through the complement of the probe's row space, so the information is present at the edited point in a high-rank code that no linear position probe spans. \red{Full table and per-point curves in the appendix.}
+
+
+% #####################################################################
+\section{Discussion}
+
+% what the two environments jointly tell us, competing explanations, and limitations.
+
+
+% #####################################################################
+\section{Related Work}
+
+
+% #####################################################################
+\section{Conclusion}
+
+
+
+% #####################################################################
+\bibliography{iclr2027_conference}
+\bibliographystyle{iclr2027_conference}
+
+
+% #####################################################################
+% #####################################################################
+\appendix
+
+
+% #####################################################################
+\section{Appendix}
+
+
+\subsection{Matching GPT-style Prediction in Discworld}
+
+
+\subsection{Matching Categorical Probe Targets in Discworld}
+
+
+\subsection{Dimensionality Control with Iterative Nullspace Projection (INLP)}
+
+
+\subsection{Frustum Basis Derivation for Discworld}
+
+
+\subsection{Predictive Skill Verification for Trained Models}
+
+
+% #####################################################################
+\subsection{Choice of Basis for Discworld}
+
+
+\end{document}
