@@ -541,3 +541,17 @@ Provenance: `runs/ray_ablation/L-dw-5ray-20m/scores.json` (canonical + `appearan
 `runs/_baselines/dw-5ray/baselines.json`, unit `dw_5ray` (`scripts/drivers/dw_5ray.sh`,
 `logs/ray_ablation/dw_5ray/`: generate 2 h 07, train 7 h 53, score 29 min, fac 65 min), joint-cell
 `appearance` row pending (unit `dw_5ray_appearance`).
+
+**The joint-cell target on dw-5ray** (unit `dw_5ray_appearance`, 65 min; 14 cells × 3 = 42 logits):
+
+| run, `appearance` (joint cell) | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|
+| **L-dw-5ray-20m** | 0.88 / 0.89 | 0.86 · 0.87 / 0.53 · 0.87 | **+0.54 / 0.78** (pt 3, α 20) | +0.47 / 0.85 (pt 7, α 12) | **+0.64 / 0.40** (pt 0, α 0.2) |
+| L-dw-8ray-20m | 0.89 / 0.90 | 0.88 · 0.89 / 0.54 · 0.89 | +0.43 / 0.76 (pt 3, α 20) | +0.43 / 0.91 (pt 5, α 12) | +0.61 / 0.39 (pt 0, α 0.5) |
+
+The bump replicates on the other read-out: PI +0.11, ND +0.04, GS +0.02 over 8-ray's joint
+cell, decodability again unchanged. GS +0.64 / 0.40 is the highest discworld GS on record, at
+Othello's level (+0.65 / 0.21). As on 8-ray, the joint cell wins GS and PI's guard, the
+factorised form wins ND — so on dw-5ray, taking each editor's better read-out: PI +0.54, ND
++0.56, GS +0.64, all guard-passing. The quantisation toggle moves every editor under both
+categorical read-outs and none under regression.

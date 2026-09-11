@@ -107,6 +107,15 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**12:30 PT — cartesian basis dropped (Sevan, 10:20; done once no unit was executing the notebooks).**
+`master_eval` `dw_bases = ("frustum",)` (no EVAL_VERSION bump — the scorer only adds missing blocks);
+`build_full_table` `HIDDEN_BASES = ("cartesian",)` hides the old blocks in Tables 1–3 and 1b–1e; Table 3
+re-lettered (3a = frustum). Executed clean. REGISTRY note added. Nothing running; GPU idle.
+
+**12:20 PT — joint-cell `appearance` on dw-5ray scored (12:14): PI +0.54 / 0.78, ND +0.47 / 0.85, GS +0.64 / 0.40
+vs 8-ray's +0.43 / +0.43 / +0.61 — the quantisation bump replicates on the second read-out; GS at Othello's
+level.** All units done; GPU idle. Now: dropping cartesian from `dw_bases` and hiding it in the tables.
+
 **11:15 PT 2026-09-11 — dw-5ray chain COMPLETE (11:09): Sevan's bet holds — a bump on every editor.**
 `L-dw-5ray-20m` best val 0.00694; canonical regression rows inert as everywhere (PI +0.30 / 1.12,
 GS −0.11); **`appearance-fac`: skill 0.93 / 0.93, PI +0.49 / 0.68, ND +0.56 / 0.90, GS +0.58 / 0.47** vs
