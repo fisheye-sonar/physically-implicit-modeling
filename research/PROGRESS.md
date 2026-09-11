@@ -86,6 +86,16 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**20:15 PT — `appearance-fac` on L-dw-blink-20m scored (unit 72 min): ND +0.53 / 0.94, GS +0.33 / 0.95,
+PI +0.02 / 2.44; skill 0.46 / 0.68 (rand 0.22 / 0.45, obs 0.07 / 0.39).** Blink's first positive edit —
+and NOT above noiseless under the same target (+0.63 / 0.78): carrying position does not make it more
+editable; the "integration pressure" account of a discworld toggle is not supported. ND ranking under
+`-fac`: noiseless +0.63 > blink +0.53 > 8-ray +0.50. Also today: hidden-frame floors on blink
+(`experiments/blink_ablation/scripts/hidden_frame_floors.py`): trained MLP 0.96–0.98 at ten frames
+hidden vs observation 0.46–0.78 / random-init 0.58–0.74 — position IS computed and carried there.
+GPU idle; tonight's training instance still Sevan's call (5-ray quantisation was my recommendation
+before this result; see the discussion — the result weakens the case for integration pressure).
+
 **18:25 PT — `appearance-fac` on L-dw-noiseless-20m scored (unit 72 min): ND +0.63 / 0.78 — OTHELLO'S
 LEVEL, on the 128-ray run whose regression rows never edited.** 233 + 29 classes, 1,048 logits;
 skill 0.43 / 0.79 vs rand-init 0.30 / 0.59 and obs-right 0.12 / 0.52 (the first discworld target

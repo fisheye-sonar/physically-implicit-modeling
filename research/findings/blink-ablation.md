@@ -80,6 +80,13 @@ carried variable in the strong sense, with a margin over both floors that grows 
 — and it is still not editable through the regression probes. (Object 1, the bright disc, is
 easier for every source, as everywhere: GOTCHAS 2026-08-21.) `scores/hidden_frame_floors.json`.
 
+## Under the factorised categorical target (2026-09-10 night)
+
+`appearance-fac` on this run (`probe-target-type.md`): skill 0.46 / 0.68 (floors: random-init
+0.22 / 0.45, observation-right 0.07 / 0.39), **ND +0.53 / 0.94**, GS +0.33 / 0.95, PI +0.02 / 2.44
+— blink's first positive edit, and NOT better than the always-visible noiseless run under the
+same target (ND +0.63 / 0.78). Carrying position does not make it more editable.
+
 ## What this settles
 
 The candidate sufficient condition "the environment forces the model to carry the

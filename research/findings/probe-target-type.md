@@ -429,3 +429,37 @@ classes + 29 length classes per object, 4 tiles × 262 = 1,048 logits. Same reci
 Provenance: `runs/noise_ablation/L-dw-noiseless-20m/scores.json["bases"]["appearance-fac"]`,
 `runs/_baselines/dw-noiseless/baselines.json`, unit `appearance_fac_noiseless`
 (`logs/appearance_fac_noiseless/`, 72 min), driver `scripts/drivers/probe_target_fit.sh`.
+
+## The factorised target on the blink model (2026-09-10 night, `appearance-fac` on `L-dw-blink-20m`)
+
+The test of the "integration pressure" account of discworld editability with the working target
+held fixed: dw-blink is the one instance where position is a CARRIED variable (an object leaves
+the observation for ~5 frames at a time; the trained model reads its position at 0.96–0.98 ten
+frames into a blackout where the observation and random-init floors have decayed to 0.46–0.78 —
+`blink-ablation.md`), and it has never been probed with anything but the regression target,
+which edits nowhere. Same partition, classes, recipe, floors and bench construction as the
+noiseless row (dw-blink shares dw-noiseless's geometry).
+
+| run, `appearance-fac` | skill LIN / MLP | floors: rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|
+| `L-dw-noiseless-20m` (position always visible) | 0.43 / 0.79 | 0.30 · 0.59 / 0.12 · 0.52 | +0.01 / 1.95 | **+0.63 / 0.78** (pt 2, α 6) | +0.35 / 0.68 |
+| `L-dw-blink-20m` (position carried through blackouts) | 0.46 / 0.68 | 0.22 · 0.45 / 0.07 · 0.39 | +0.02 / 2.44 | **+0.53 / 0.94** (pt 3, α 8) | +0.33 / 0.95 |
+| `L-dw-blink-20m`, regression (canonical), for reference | 0.90 / 0.99 | 0.72 · 0.94 / 0.35 · 0.91 | +0.22 / 1.78 | n/a | −0.09 / 1.00 |
+
+**Reading.** Blink edits under the factorised target — its first positive editability result of
+any kind — at ND +0.53 with the guard just passing (0.94; +0.51 / 0.87 at α 6), GS +0.33 at the
+guard's edge. It does NOT edit better than noiseless, whose position is never hidden: ND +0.53
+vs +0.63, GS at the same level with a worse guard. The training margin over the floors is as
+wide on blink as on noiseless (MLP +0.23 / +0.29 vs +0.20 / +0.27), and the extra pressure to
+carry position bought nothing an editor can use. So the account "the environment must make the
+model COMPUTE position, and then position edits" is not supported on discworld: blink makes the
+model compute it in the strongest sense we can measure, and its editability under the target
+that works is at or below the always-visible instance's. What decides editability across the
+three discworld instances is the read-out (categorical, factorised, on the observation-exact
+partition), and within that read-out the instances rank noiseless > blink > 8-ray on ND
+(+0.63, +0.53, +0.50) — a narrow band, with the run whose frame is finest on top.
+
+Provenance: `runs/blink_ablation/L-dw-blink-20m/scores.json["bases"]["appearance-fac"]`,
+`runs/_baselines/dw-blink/baselines.json`, unit `appearance_fac_blink` (`logs/appearance_fac_blink/`,
+72 min), driver `scripts/drivers/probe_target_fit.sh`. The canonical blink bench (first 192
+cases, mostly visible at the edit frame) — the blink subsets under this target are not scored.
