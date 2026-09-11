@@ -1,0 +1,160 @@
+{
+ "run": "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+ "instance": "oth-adjacent-flip",
+ "rules": {
+  "flip": true,
+  "placement": "adjacent"
+ },
+ "n_cases": 400,
+ "n_remove": 204,
+ "symdiff_mean": 2.1875,
+ "unedited": {
+  "li_error_vs_post": 3.59,
+  "li_error_vs_pre": 0.0,
+  "edit_index_union": -0.6624435550999844,
+  "edit_index_symdiff": -0.9584473344061899,
+  "legal_mass": 0.9573941826820374,
+  "n_scored": 400
+ },
+ "probes": {
+  "2": {
+   "error_rate": 0.05257547669491525,
+   "error_rate_insample": 0.04165287341101695,
+   "accuracy": 99.94742452330509,
+   "majority_class_error_rate": 46.875,
+   "n_train_rows": 944000,
+   "n_test_rows": 236000
+  },
+  "3": {
+   "error_rate": 0.014691472457627119,
+   "error_rate_insample": 0.006782971398305086,
+   "accuracy": 99.98530852754237,
+   "majority_class_error_rate": 46.875,
+   "n_train_rows": 944000,
+   "n_test_rows": 236000
+  }
+ },
+ "arms": [
+  {
+   "point": 2,
+   "alpha": 5.0,
+   "edit_index_union": 0.04903546730822132,
+   "fidelity_ratio": 0.7410107838342298,
+   "li_error_vs_post": 1.33,
+   "li_error_vs_pre": 1.37,
+   "legal_mass": 0.9878154993057251,
+   "readout_landed": 1.0,
+   "ei_remove": 0.1920712118526069,
+   "ei_add": -0.09983847089103709
+  },
+  {
+   "point": 2,
+   "alpha": 8.0,
+   "edit_index_union": 0.07652721521593646,
+   "fidelity_ratio": 1.2681682870211775,
+   "li_error_vs_post": 1.995,
+   "li_error_vs_pre": 2.66,
+   "legal_mass": 0.970649242401123,
+   "readout_landed": 1.0,
+   "ei_remove": 0.2115376507092755,
+   "ei_add": -0.06399385029753887
+  },
+  {
+   "point": 2,
+   "alpha": 12.0,
+   "edit_index_union": 0.060504171480575374,
+   "fidelity_ratio": 2.290987120649682,
+   "li_error_vs_post": 3.795,
+   "li_error_vs_pre": 4.73,
+   "legal_mass": 0.9412552118301392,
+   "readout_landed": 1.0,
+   "ei_remove": 0.11754160494208245,
+   "ei_add": 0.001138679510435368
+  },
+  {
+   "point": 2,
+   "alpha": 20.0,
+   "edit_index_union": 0.039059298094594984,
+   "fidelity_ratio": 4.199857082021848,
+   "li_error_vs_post": 7.335,
+   "li_error_vs_pre": 8.425,
+   "legal_mass": 0.9193398952484131,
+   "readout_landed": 1.0,
+   "ei_remove": 0.05954118692218251,
+   "ei_add": 0.01774141380465695
+  },
+  {
+   "point": 3,
+   "alpha": 5.0,
+   "edit_index_union": 0.06010518733021757,
+   "fidelity_ratio": 1.3961839469268675,
+   "li_error_vs_post": 2.66,
+   "li_error_vs_pre": 2.91,
+   "legal_mass": 0.9759742617607117,
+   "readout_landed": 1.0,
+   "ei_remove": 0.24673639855855162,
+   "ei_add": -0.1341436243564158
+  },
+  {
+   "point": 3,
+   "alpha": 8.0,
+   "edit_index_union": -0.0006691987786165088,
+   "fidelity_ratio": 2.4981355741127076,
+   "li_error_vs_post": 4.085,
+   "li_error_vs_pre": 4.63,
+   "legal_mass": 0.9411157369613647,
+   "readout_landed": 1.0,
+   "ei_remove": 0.1275068868756045,
+   "ei_add": -0.13407696139831593
+  },
+  {
+   "point": 3,
+   "alpha": 12.0,
+   "edit_index_union": -0.019934017687308576,
+   "fidelity_ratio": 4.067982310836421,
+   "li_error_vs_post": 6.33,
+   "li_error_vs_pre": 7.13,
+   "legal_mass": 0.9064781069755554,
+   "readout_landed": 1.0,
+   "ei_remove": 0.058927931437744496,
+   "ei_add": -0.10201482187869035
+  },
+  {
+   "point": 3,
+   "alpha": 20.0,
+   "edit_index_union": 0.010315053328420233,
+   "fidelity_ratio": 5.824256987288695,
+   "li_error_vs_post": 10.26,
+   "li_error_vs_pre": 11.245,
+   "legal_mass": 0.8600444197654724,
+   "readout_landed": 1.0,
+   "ei_remove": 0.037603995124204835,
+   "ei_add": -0.01808772282637599
+  }
+ ],
+ "best": {
+  "point": 2,
+  "alpha": 8.0,
+  "edit_index_union": 0.07652721521593646,
+  "fidelity_ratio": 1.2681682870211775,
+  "li_error_vs_post": 1.995,
+  "li_error_vs_pre": 2.66,
+  "legal_mass": 0.970649242401123,
+  "readout_landed": 1.0,
+  "ei_remove": 0.2115376507092755,
+  "ei_add": -0.06399385029753887
+ },
+ "best_guarded": {
+  "point": 2,
+  "alpha": 5.0,
+  "edit_index_union": 0.04903546730822132,
+  "fidelity_ratio": 0.7410107838342298,
+  "li_error_vs_post": 1.33,
+  "li_error_vs_pre": 1.37,
+  "legal_mass": 0.9878154993057251,
+  "readout_landed": 1.0,
+  "ei_remove": 0.1920712118526069,
+  "ei_add": -0.09983847089103709
+ },
+ "minutes": 0.2
+}

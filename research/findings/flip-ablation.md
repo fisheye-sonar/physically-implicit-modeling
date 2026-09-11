@@ -131,6 +131,13 @@ necessary, decodable, not editable — is the case this leaves open, and the nat
 hypothesis is that its next-frame computation consumes ray-level features directly, so the
 linear position read-out is a spectator projection there in a way presence is not here.
 
+**2026-09-11 addendum (`adjacent-flip-ablation.md`, presence section).** Re-run rule-aware on the two
+adjacency instances: presence is NOT editable on oth-adjacent (best guarded −0.12; +0.015 only at
+fidelity 5) or oth-adjacent-flip (+0.05 at fidelity 0.74; removal +0.19–0.25, add ≈ 0), while the
+standard-Othello row reproduces (+0.447 / 0.37). Adjacency legality consumes presence directly, so
+"the output consumes the probed variable" is not sufficient for editability; the reading above is
+superseded — see `adjacent-flip-ablation.md`.
+
 ## Caveats
 
 - The main caveat is the theorem above: the ablation confounds "no flips" with "colour is

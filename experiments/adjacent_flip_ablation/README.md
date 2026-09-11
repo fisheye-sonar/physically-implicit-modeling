@@ -47,3 +47,13 @@ Headline: least-aligned Othello model (4× generic raw, 2.6× Haufe). Ceilings o
 on the same cases) — a first-pass "+0.14 ceiling, dynamic range" claim was wrong and is withdrawn.
 Write-up in `research/findings/adjacent-flip-ablation.md` (alignment section, corrected) and
 `edit-direction-alignment.md` Result 7; corrected `GOTCHAS.md` entry. Logs: `logs/adjacent_flip_ablation/`.
+
+## Presence edits (2026-09-11) — DONE
+
+`scripts/presence_edit.py --run …` — rule-aware re-implementation of `flip_ablation/scripts/presence_probe_edit.py`
+(dedicated 2-class presence probe per point, PI through it, 400 remove/add artificial boards, standard scorecard +
+guard); probes under `probes/<run>/` (gitignored). Results (`scores/presence_edit_<run>.json`, `_ext_alpha` for α ≤ 20
+at pts 2–3): standard Othello +0.447 / fid 0.37 (pt4 α3; reproduces 2026-09-07); oth-adjacent −0.042 / 4.02, guarded
+−0.123 / 1.00; oth-adjacent-flip +0.060 / 1.40, guarded +0.049 / 0.74 (remove +0.19–0.25, add ≈ 0). Presence is not
+editable on either adjacency model. Write-up: `research/findings/adjacent-flip-ablation.md` (presence section) and an
+addendum in `flip-ablation.md`.

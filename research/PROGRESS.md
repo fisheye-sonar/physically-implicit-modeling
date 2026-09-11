@@ -23,7 +23,8 @@ alignment (least-aligned Othello model: 4× generic raw, 2.6× Haufe), Haufe-cor
 and the ceiling on ordinary counterfactuals: +0.655 / +0.679 / +0.697 (flip / adjacent / standard) with ND at 55% / 30% / 75%
 of it. ⚠ A first pass reported a +0.14 ceiling and blamed the index — wrong (swap-built histories through a toothless
 legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewritten.
-**Still open:** a ceiling-normalised cross-instance index (design decision, not built), the recoloured-tile split
+**Presence edits (2026-09-11 evening, `scripts/presence_edit.py`):** standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (guarded −0.12 / +0.05) — the enclosure-vs-local-legality difference is now the leading candidate for the gap.
+**Still open:** the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 
 

@@ -152,8 +152,48 @@ labelled wherever quoted.
 Status of this section: `observed` (single seed; 16 / 26 / 18 ordinary cases; lookup-tile
 biased — see the selection note above).
 
+## Presence edits — occupied ↔ empty, the standard way (2026-09-11)
+
+Sevan's question: the colour edits above steer badly on the adjacency instances; can the same
+models be steered on PRESENCE, the variable adjacency legality most directly depends on? Same
+construction as `flip-ablation.md` §"Presence is editable" (2026-09-07): a dedicated 2-class
+linear presence probe per residual point (error ≤ 1.2% everywhere, ≤ 0.07% at pts 2–4), PI
+through it (swap the tile's empty/occupied logits, re-solve in z-space), 400 artificial boards
+from the instance's test split (204 REMOVE an occupied non-centre disc, 196 ADD a parity-colour
+disc on an empty square; Li's length mix), scored the standard way against uniform-over-legal
+of the pre- and post-edit boards under the instance's OWN rules, with the fidelity guard.
+Rule-aware re-implementation: `experiments/adjacent_flip_ablation/scripts/presence_edit.py`
+(the 2026-09-07 script only knew the flip flag, which gives the wrong legal sets on adjacency
+instances); the standard-Othello row reproduces the 2026-09-07 number exactly.
+
+| model | unedited | best presence PI (pts 1–6, α ≤ 5) | remove / add | best under the guard (fid ≤ 1.1) | extended α (pts 2–3, α ≤ 20) | colour edits, same model |
+|---|---|---|---|---|---|---|
+| L-oth-20m (standard) | −0.695 | **+0.447 / fid 0.37** (pt4 α3) | +0.60 / +0.28 | same | — | PI +0.61, ND +0.62 |
+| L-oth-adjacent-20m | −0.648 | −0.042 / fid 4.02 (pt6 α5) | +0.02 / −0.11 | −0.123 / 1.00 (pt4 α3) | +0.015 / fid 5.0 (pt2 α20) | PI −0.05, ND +0.12 |
+| **L-oth-adjacent-flip-20m** | −0.662 | +0.060 / fid 1.40 (pt3 α5) | +0.25 / −0.13 | **+0.049 / 0.74** (pt2 α5) | +0.077 / fid 1.27 (pt2 α8) | PI +0.17, ND +0.24 |
+
+The presence read-out LANDS on every model at every α ≥ 1 (landed 1.00), as before. Standard
+Othello's presence is editable at the colour edits' level (+0.45, guard 0.37; removing a disc
++0.60, adding +0.28). On both adjacency models presence is **not** editable: the best arms are
+at the unedited floor with the guard intact, or past it only by destroying the output (guard
+4–5). Removal edits on the flip model move the output a little (+0.19 to +0.25 at guards 0.7–1.4),
+adds not at all. So on the adjacency instances presence — which the placement rule consumes
+directly — behaves like colour did on oth-adjacent, while on standard Othello both variables
+are editable. The 2026-09-07 reading ("the operative condition is whether the output
+computation consumes the probed variable") does not survive this: adjacency legality consumes
+presence and colour of the neighbourhood, both are decodable at ~100%, and neither is
+editable. What separates standard Othello from the adjacency worlds is not which variables the
+output consumes but how — the enclosure rule's line scans versus a local 8-neighbourhood test —
+and that difference is now the leading candidate for the editability gap.
+
+Status: `observed` (one seed per model; 400 cases; the α grid extended to 20 at the two best
+points only; PI only, as in the 2026-09-07 test). Scores
+`experiments/adjacent_flip_ablation/scores/presence_edit_*.json` (+ `_ext_alpha`); log
+`logs/adjacent_flip_ablation/presence_edit*.log`.
+
 ## Log
 
+- **2026-09-11 (evening)** — presence edits (`observed`): standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (best guarded −0.12 and +0.05; destructive past that); removal > add on the flip model. Overturns the 2026-09-07 "consumed variable is editable" reading.
 - **2026-09-11 (later still) — retracts the ceiling claim of the entry below.** The +0.14 / +0.25 "ceilings" were swap-built counterfactual histories passing a legal-mass filter that is toothless on adjacency instances (mass 1.000 on everything); filtered on ordinariness the ceilings are +0.66 / +0.68 / +0.70 and the editors sit below them (ND 55% / 30% / 75%). Caught by Sevan ("the model is near the Bayes floor; it would not score so poorly"); verified by scoring the ideal uniform-over-legal_post (+1.000) and the model's rmse-to-uniform on the counterfactual histories (3–4× held-out). The "mostly dynamic range" reading is withdrawn; the canonical ordering stands.
 - **2026-09-11 (later)** — alignment / Haufe / ceiling section added (`observed`): least probe-aligned Othello model; first-pass ceiling claim (+0.14, "dynamic range") — RETRACTED above.
 - **2026-09-11** — `observed`. First and only run scored (chain 2026-09-10 00:15 → 2026-09-11
