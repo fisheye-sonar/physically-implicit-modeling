@@ -57,3 +57,7 @@ at pts 2–3): standard Othello +0.447 / fid 0.37 (pt4 α3; reproduces 2026-09-0
 −0.123 / 1.00; oth-adjacent-flip +0.060 / 1.40, guarded +0.049 / 0.74 (remove +0.19–0.25, add ≈ 0). Presence is not
 editable on either adjacency model. Write-up: `research/findings/adjacent-flip-ablation.md` (presence section) and an
 addendum in `flip-ablation.md`.
+
+## Flipped tiles (2026-09-11) — DONE
+
+`scripts/flipped_tiles.py`: legality vs recolourings (mild degradation), probe error on flipped vs parity tiles (9–28% vs 4–7%), editability of flipped-tile vs parity-tile cases at every point (flipped LESS editable: ND +0.085/0.95 pt3 vs +0.215/0.64 pt1). `scores/flipped_tiles_L-oth-adjacent-flip-20m.json`; finding section "Flipped tiles".

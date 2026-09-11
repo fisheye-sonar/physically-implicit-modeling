@@ -191,8 +191,42 @@ points only; PI only, as in the 2026-09-07 test). Scores
 `experiments/adjacent_flip_ablation/scores/presence_edit_*.json` (+ `_ext_alpha`); log
 `logs/adjacent_flip_ablation/presence_edit*.log`.
 
+## Flipped tiles: decoded worse, edited worse, computed later (2026-09-11, `scripts/flipped_tiles.py`)
+
+Sevan's three questions on the flip model, all cheap (1.2 min): (a) does legality degrade with
+recolourings? (b) are FLIPPED tiles (current colour ≠ placement colour) more editable, searching
+all points? (c) how accurate is the cached mine/theirs probe on flipped tiles?
+
+**(a)** Mildly. Test-split prefixes binned by recolourings so far: legal mass 0.9997 (0–3 flips)
+→ 0.9990 (4–8) → 0.9953 (9–15) → 0.9903 (16+); rmse-to-uniform 0.0021 → 0.0036. Confounded with
+prefix length (the heavy-flip bins are the long prefixes), but the model does fumble a little in
+flip-heavy positions while staying near-optimal.
+
+**(c)** The probe reads the parity lookup. 19% of occupied tile-rows are flipped. Linear
+mine/theirs probe error, flipped vs parity tiles: pt 1 28.2% vs 7.1%; pt 2 19.5 / 4.8; pt 3
+12.7 / 4.3; pt 4 9.3 / 4.1; pt 5–8 ≈ 9.5 / 4.7. Flipped-tile colour becomes decodable only
+progressively over layers 1–4 (a computed variable), and never as well as parity colour; the
+aggregate skill 0.947 is mostly the lookup.
+
+**(b)** Flipped tiles are LESS editable, not more. 300 synthesised cases each (Li's length mix,
+target tile flipped-in-game vs parity), canonical PI (α ≤ 8) and ND (α ≤ 2) at every point:
+
+| cases | unedited | best PI (guard ≤ 1.1) | best ND (guard ≤ 1.1) | guarded ND by point 1–4 |
+|---|---|---|---|---|
+| parity tiles | −0.687 | +0.143 / 0.88 (pt2 α5) | **+0.215 / 0.64** (pt1 α2) | +0.22 +0.10 −0.01 −0.33 |
+| flipped tiles | −0.645 | −0.035 / 0.87 (pt4 α3) | +0.085 / 0.95 (pt3 α0.7) | +0.05 +0.06 +0.08 −0.36 |
+
+The flipped-tile optimum sits later (pt 3–4, where its decodability has formed) and lower. So
+the "registers may sit elsewhere" idea is half right — flipped colour is computed later and
+elsewhere in depth — but the canonical probe, fitted on rows that are 81% parity tiles, reads
+that register at 9–13% error, and edits through it are misdirected. Natural follow-up: a
+per-tile probe fitted on FLIPPED rows only (or on the residual from the parity lookup), then
+edit flipped-tile cases through it; if that lands, the register exists and the probe was the
+limitation. Status `observed`. Scores `scores/flipped_tiles_L-oth-adjacent-flip-20m.json`.
+
 ## Log
 
+- **2026-09-11 (night)** — flipped tiles: decoded worse (9–28% vs 4–7% error), edited worse (ND +0.09 vs +0.22 guarded), computed later (pt 3–4); legality degrades mildly with flips. Follow-up: a flipped-row probe.
 - **2026-09-11 (evening)** — presence edits (`observed`): standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (best guarded −0.12 and +0.05; destructive past that); removal > add on the flip model. Overturns the 2026-09-07 "consumed variable is editable" reading.
 - **2026-09-11 (later still) — retracts the ceiling claim of the entry below.** The +0.14 / +0.25 "ceilings" were swap-built counterfactual histories passing a legal-mass filter that is toothless on adjacency instances (mass 1.000 on everything); filtered on ordinariness the ceilings are +0.66 / +0.68 / +0.70 and the editors sit below them (ND 55% / 30% / 75%). Caught by Sevan ("the model is near the Bayes floor; it would not score so poorly"); verified by scoring the ideal uniform-over-legal_post (+1.000) and the model's rmse-to-uniform on the counterfactual histories (3–4× held-out). The "mostly dynamic range" reading is withdrawn; the canonical ordering stands.
 - **2026-09-11 (later)** — alignment / Haufe / ceiling section added (`observed`): least probe-aligned Othello model; first-pass ceiling claim (+0.14, "dynamic range") — RETRACTED above.
