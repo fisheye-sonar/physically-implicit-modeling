@@ -92,6 +92,12 @@ def _parse():
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--smoke", action="store_true",
                    help="tiny cadence overrides for an end-to-end pipeline check")
+    p.add_argument("--resume", action="store_true",
+                   help="continue the run in --topic/--run-name from its ckpt/latest.pt up to --steps "
+                        "(which may exceed the original: a finished run can be extended)")
+    p.add_argument("--dropout", type=float, default=None,
+                   help="transformer_l only: override the body's dropout (class default 0.1 on the "
+                        "embedding, attention and residual paths); 0 disables it")
     return p.parse_args()
 
 
@@ -140,12 +146,16 @@ def _othello_tokens(inst: str, limit):
 # ── the model for an interface ───────────────────────────────────────────────
 
 
-def _model_config(arch: str, repr_: str, dim: int, block: int, objective: str) -> tuple[str, dict]:
+def _model_config(arch: str, repr_: str, dim: int, block: int, objective: str,
+                  dropout: float | None = None) -> tuple[str, dict]:
     """(registry name, model_config) for a body under an interface. ``dim`` is the
-    observation dimension (frames) or the vocabulary size (tokens)."""
+    observation dimension (frames) or the vocabulary size (tokens). ``dropout`` (2026-09-11)
+    overrides Transformer-L's class default when given; it is recorded in the config."""
+    if arch != "transformer_l" and dropout is not None:
+        raise SystemExit("--dropout is implemented for transformer_l only")
     if repr_ == "frames":
         if arch == "transformer_l":
-            return arch, {"obs_res": dim, "block_size": block}
+            return arch, {"obs_res": dim, "block_size": block, **({"dropout": dropout} if dropout is not None else {})}
         if arch == "recurrent_l":     # 4 x 1024 GRU ~= Transformer-L's 25.4M params (2026-09-02)
             return arch, {"input_dim": dim, "d_model": 1024, "n_layers": 4, "dropout": 0.1}
         return arch, {"input_dim": dim, "d_model": 256, "n_layers": 4, "n_heads": 4,
@@ -153,7 +163,7 @@ def _model_config(arch: str, repr_: str, dim: int, block: int, objective: str) -
     if arch == "recurrent_l":
         raise SystemExit("recurrent_l has no categorical head (frames only)")
     if arch == "transformer_l":
-        mc = {"vocab": dim, "block_size": block}
+        mc = {"vocab": dim, "block_size": block, **({"dropout": dropout} if dropout is not None else {})}
         if objective != "ce":
             mc["output_kind"] = "raw"           # the head's outputs ARE the estimates
         return "transformer_l_tokens", mc
@@ -187,19 +197,19 @@ def main() -> None:
 
     if repr_ == "frames":
         obs, n_total, dim, block, meta = _discworld_frames(inst)
-        arch, mc = _model_config(a.arch, repr_, dim, block, a.objective)
+        arch, mc = _model_config(a.arch, repr_, dim, block, a.objective, a.dropout)
         source = discworld_source(obs, n_total=n_total, batch_size=a.batch_size, seed=a.seed,
                                   device=DEV, limit=a.limit, meta=meta)
     else:
         tok, ln, dim, block, meta = (_discworld_tokens(inst, run_dir) if a.env == "discworld"
                                      else _othello_tokens(inst, a.limit))
-        arch, mc = _model_config(a.arch, repr_, dim, block, a.objective)
+        arch, mc = _model_config(a.arch, repr_, dim, block, a.objective, a.dropout)
         source = token_source(tok, ln, block=block, env=a.env, batch_size=a.batch_size,
                               seed=a.seed, device=DEV, limit=a.limit, objective=a.objective,
                               meta=meta)
 
     model = build_model(arch, mc)
-    train(model, source, cfg, run_dir, arch=arch, model_config=mc, device=DEV)
+    train(model, source, cfg, run_dir, arch=arch, model_config=mc, device=DEV, resume=a.resume)
 
 
 if __name__ == "__main__":
