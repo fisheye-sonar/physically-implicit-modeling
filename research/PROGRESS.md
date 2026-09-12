@@ -343,6 +343,20 @@ grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full a
 partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
 Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
 
+## 2026-09-12 — METRICS COMMITTED; discworld RESCORING under the pre-dynamics target (branch `new_metrics`)
+
+Sevan's decisions: (1) the Edit Index keeps the SIMULATOR references (Bayes-optimal given the exact state;
+the model-referenced v2 is dropped — pilot: ≤ 0.03 change, magnitude entanglement); (2) **the discworld write
+target is the PRE-dynamics state** — `pos[EF] − v·dt` for the edited object, the current state for the rest —
+because the probe reads the state of the LAST consumed frame and the model's output is one dynamics step ahead
+(a perfect edit had been capped at +0.70 on 128 rays; GOTCHAS 2026-09-12; commit b7f741f; test
+`tests/test_bench_target_alignment.py`). Probes and Othello untouched. **RUNNING:** systemd unit
+`rescore_dw_alignment` (MemoryMax 45G) = master_eval (discworld only, `EVAL_VERSION_BY_ENV` 2026-09-12.1) →
+build_full_table; logs `logs/rescore/dw_alignment_2026-09-12_*.log`; 19 discworld runs; pre-fix scores parked
+as `scores.pre-alignment-2026-09-12.json`. Started 13:15 PT, expected 3–4 h. Watcher armed (5-min polls).
+AFTER: rebuild tables, superseding entries in every finding quoting a discworld editor number, PROGRESS.
+Expect 128-ray editor numbers UP modestly, 8-ray barely moved, conclusions intact.
+
 ## 2026-09-11 (night) — PILOT: the model-referenced Edit Index on paired counterfactuals (branch `new_metrics`)
 
 `research/scratch/2026-09-11-edit-index-v2-pilot.md`; `experiments/edit_index_v2_pilot/`. Nine

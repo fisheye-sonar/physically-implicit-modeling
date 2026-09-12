@@ -175,3 +175,14 @@ BLANK↔MINE/THEIRS — no colour flip among them).** PI sweep with the read-out
   pooled table's PI row is not comparable to the single-flip number. The by-magnitude
   figure's PI line (+0.08…+0.15) is the mis-tuned α and should be redrawn with a per-bin
   sweep.
+
+## Decision (2026-09-12, Sevan) — the model-referenced index is NOT adopted
+
+The pilot showed the reference change buys ≤ 0.03 on every noiseless and Othello condition
+while entangling edit magnitude across environments through the pair generator. The canonical
+metric stays: both references the simulator's predictions from the exact state (Bayes-optimal
+given the state; exact in Othello and noiseless discworld), the index relative so shared
+state-from-history uncertainty cancels, the floor and ceiling rows reporting the residual gap.
+What the pilot DID surface and what is kept: the pre-dynamics / post-dynamics alignment fix
+(GOTCHAS 2026-09-12; every discworld run rescored), the no-flip result on realisable edits as a
+legal-vs-illegal finding to be written up separately, the ceiling row, and the α lesson.
