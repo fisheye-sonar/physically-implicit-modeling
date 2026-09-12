@@ -26,3 +26,5 @@ without the regulariser; K ≤ 16 edits inert at every point; best guarded +0.45
 §Dropout ablation; `inlp-redundancy.md` entry. Canonical scores: CE 2.436 (Bayes 2.433), legal mass 0.999; skill LIN 0.979 / MLP 0.981 (dropout run 0.988 / 0.990; observation floor 0.988); unedited -0.655; PI -0.302 / fid 1.07, ND +0.042 / 2.96, GS +0.001 / 7.76 (dropout run: PI −0.05 / 2.31, ND +0.12 / 1.05, GS +0.00 / 5.73); mine_signed skill 0.821 / 0.902, ND -0.029 / 2.66 — canonically inert, as with dropout.
 ⚠ Lab-GPU note: the INLP script's moment accumulation is now chunked — the desktop holds ~11 GB of the 5090 and the
 un-chunked version OOM'd (surfacing as the NVML assert while the driver mismatch awaits a reboot).
+
+**Extension (2026-09-12 12:04 →).** `drivers/oth_adjacent_nodrop_extend.sh`: the 390k resumable state copied into `L-oth-adjacent-nodrop-20m` (without scores/probes) and continued to 780k with `--resume`; the 390k dir remains the scored snapshot. Question for the 780k INLP: does the long, weak tail of colour copies (no-dropout's 150–280 vs dropout's 85–230) prune with more training, or is it the no-dropout regime's steady state?
