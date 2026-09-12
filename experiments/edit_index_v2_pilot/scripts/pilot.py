@@ -58,6 +58,7 @@ K_BACK = 4                                       # Othello: substitute one of th
 N_TARGET = 48                                    # valid cases aimed for per condition
 POOL_OTH = 900                                   # Othello pair attempts drawn from the bench histories
 GS_STEPS, GS_BETA = 100, 0.2                     # the scorer's GS settings
+_CURRENT = "unnamed"                             # the condition being scored (for the arrays dump)
 
 CONDITIONS = {
     # name: (run dir, env, probe target block, notes)
@@ -116,6 +117,11 @@ def score_block(pred: dict, p_a: np.ndarray, p_b: np.ndarray, ref_a: np.ndarray,
     out["ceiling_v1"] = float(np.nanmean(edit_index_per_case(p_b, ref_b, ref_a, supp)[keep]))
     out["unedited_v1"] = float(np.nanmean(edit_index_per_case(p_a, ref_b, ref_a, supp)[keep]))
     out["unedited_v2"] = float(np.nanmean(edit_index_per_case(p_a, p_b, p_a, supp)[keep]))
+    out["ceiling_v2"] = float(np.nanmean(edit_index_per_case(p_b, p_b, p_a, supp)[keep]))   # +1 by construction
+    # raw arrays for audits (the per-case decomposition of the two constructions)
+    (EXP / "scores" / "arrays").mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(EXP / "scores" / "arrays" / f"{_CURRENT.replace('@', '_')}.npz", p_a=p_a, p_b=p_b,
+                        ref_a=ref_a, ref_b=ref_b, supp=supp, keep=keep, **{f"pred_{ed}": pr for ed, pr in pred.items()})
     out["editors"] = {}
     for ed, pr in pred.items():
         ei2 = edit_index_per_case(pr, p_b, p_a, supp)
@@ -575,6 +581,8 @@ def main() -> None:
     for name in names:
         run_rel, env, block = CONDITIONS[name]
         t0 = time.time()
+        global _CURRENT
+        _CURRENT = name
         log(f"\n=== {name}  ({run_rel}, block {block}) ===")
         res = run_othello(name, run_rel, block) if env == "othello" else run_discworld(name, run_rel, env, block)
         res["minutes"] = round((time.time() - t0) / 60, 2)
