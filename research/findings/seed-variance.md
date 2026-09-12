@@ -1,7 +1,6 @@
 # Seed variance — how much do the numbers move across training seeds and probe seeds? (pilot, 2026-09-12)
 
-**Status:** run-seed half measured 2026-09-12 09:10; probe-seed half running (unit
-`seed_variance`, `experiments/seed_variance/`). One run family: `L-dw-noiseless-20m`.
+**Status:** measured 2026-09-12 (run seeds 09:10; probe seeds on the canonical run 12:00; the replicates' probe seeds skipped at Sevan's call). Unit `seed_variance`, `experiments/seed_variance/`. One run family: `L-dw-noiseless-20m`.
 
 ## Set-up
 
@@ -54,6 +53,47 @@ Provenance: `runs/noise_ablation/L-dw-noiseless-20m{,__seed0_s421875,__seed1,__s
 driver `scripts/drivers/seed_variance.sh`, `logs/seed_variance/` (train 4 h 01 + 4 h 01, scoring
 3 × ~40 min). Tables: ± cells in Tables 1–2, Table 4a.
 
-## Probe seeds
+## Probe seeds: refitting the linear probe (canonical run, 2026-09-12 09:10–12:00)
 
-*Pending — stage E of the chain (20 regression + 6 factorised linear seeds per run, every residual point).*
+20 seeds on the frustum regression probe and 6 on `appearance-fac`, each at EVERY residual
+point (the seed drives the probe's init and the 80/20 sequence split), with PI — and ND on
+the categorical target — swept at the seed's own best point and at the seed-0 best point.
+Stopped after the canonical run at Sevan's call (12:00): the two trained replicates' probe
+seeds were skipped as uninformative once these numbers were in.
+
+| `L-dw-noiseless-20m` | seeds | best skill mean ± SD | best point | SD across seeds, per point | SD across POINTS, per seed | editors at the best point |
+|---|---|---|---|---|---|---|
+| frustum (regression) | 20 | **0.9587 ± 0.0006** | 6, every seed | 0.0006–0.0008 at points 1–8 (0.020 at point 0) | 0.364 (0.348–0.373) | PI +0.175 ± 0.001, guard 2.51 ± 0.00 |
+| appearance-fac | 6 | **0.4319 ± 0.0007** | 1, every seed | 0.0001–0.0009 | 0.066 (0.0660–0.0666) | ND **+0.505 ± 0.000**, guard 0.78 ± 0.00; PI +0.005 ± 0.015 |
+
+**Reading.**
+1. **The probe seed contributes nothing measurable.** Skill SD 0.0006–0.0007 at the best
+   point, and 0.0001–0.0009 at every other point but point 0 (the input embedding, where the
+   regression probe is at chance and its seed matters: 0.020). The best point is the same
+   for every seed on both targets. ND's best Edit Index is identical to three decimals across
+   six seeds; PI's varies by 0.001 on the regression target and 0.015 on the categorical one,
+   where it is at zero anyway.
+2. **The spread ACROSS residual points is a property of the model, not the seed.** Per seed,
+   the SD of skill over the nine points is 0.364 ± 0.006 on the regression target (driven by
+   point 0's −0.15) and 0.0663 ± 0.0002 on the factorised one — the profile over points is
+   reproduced seed for seed to three decimals. So "which point is best" and "how peaked the
+   profile is" are stable facts about the run, not artefacts of one fit.
+3. **A note on the editor numbers here.** By design they are evaluated at the probe's
+   best-DECODABILITY point, so they are not the table's best-over-points arms: regression PI
+   reads +0.175 at point 6 (the table's +0.233 is point 1), factorised ND +0.505 at point 1
+   (the table's +0.628 is point 2). Both are the same arms every seed — the point is that the
+   probe seed does not move them, not what their level is.
+
+Provenance: `runs/noise_ablation/L-dw-noiseless-20m/variance.json`; the seeded probes are
+cached in that run's `probes/` (key field `seed`); `logs/seed_variance/e_probe_seeds_L-dw-noiseless-20m.log`
+(20 regression seeds 51 min, 6 factorised seeds 2 h — each refit at 9 points on the 200k
+recipe). Table 4b.
+
+## What the pilot settles
+
+For this run family, a single seed's number carries roughly **±0.01–0.02 on the Edit Index
+from training-seed noise and nothing from probe-seed noise**; the guard near 1.0 is the one
+quantity that moves materially between seeds (±0.15). Contrasts of ≥ 0.05 on the index are
+real at this scale. What is NOT yet measured: the same spread on dw-8ray (the best-edited
+instance, where the contrasts we quote live) and on Othello; and whether GS — an MLP-probe
+editor, not refitted here — carries a probe-seed spread of its own.

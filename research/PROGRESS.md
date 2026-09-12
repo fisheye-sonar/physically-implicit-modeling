@@ -113,6 +113,14 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**12:15 PT 2026-09-12 — seed-variance pilot CLOSED (stopped after the canonical run's probe seeds, Sevan's call;
+my ETA had slipped 08:00 → 18:00 because the probe refits ran at all 9 points and each seed re-collects its
+stack — recorded).** Probe seeds: skill 0.9587 ± 0.0006 (20 seeds, regression) / 0.4319 ± 0.0007 (6, fac); same best
+point every seed; ND +0.505 ± 0.000, PI ±0.001; the across-points profile reproduces seed for seed (SD of the
+per-seed spread 0.006 / 0.0002). Training seed: Edit Index SD 0.005–0.017; guard SD up to 0.15. Tables rebuilt by
+hand: ± cells in Tables 1–2 for the noiseless row (n = 3), Table 4a/4b. `findings/seed-variance.md` complete.
+Nothing running.
+
 **09:15 PT 2026-09-12 — seed-variance: run-seed half in.** Two 390k replicates + the seed-0 422k checkpoint,
 pooled n = 3: decodability SD ≤ 0.005; Edit Index SD 0.005–0.017 on every editor / target (fac ND +0.624 ±
 0.017, fac GS +0.322 ± 0.014); the GUARD is where the spread lives (GS fid 0.68–1.09, SD 0.15). Half budget
