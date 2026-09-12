@@ -313,6 +313,19 @@ grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full a
 partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
 Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
 
+## 2026-09-11 (night) — PILOT: the model-referenced Edit Index on paired counterfactuals (branch `new_metrics`)
+
+`research/scratch/2026-09-11-edit-index-v2-pilot.md`; `experiments/edit_index_v2_pilot/`. Nine
+conditions × 48 cases × one canonical arm per editor. **v2 ≈ v1 (±0.03) on every frame / Othello
+row** — the reference change alone moves nothing on these near-Bayes models (token model +0.04..+0.10).
+What moves is the EDIT TYPE: realisable (paired-history) edits are 2-tile occupancy changes on the
+no-flip / adjacency instances and ~5-tile changes on standard Othello. **⭐ oth-noflip becomes
+EDITABLE (ND +0.58, guard 0.27) on realisable edits** — the canonical bench asked it for an
+impossible one-tile recolouring; the adjacency instances stay inert on the same edits. Standard
+Othello: GS +0.68 holds, PI/ND collapse at their single-flip arms (not re-tuned). Discworld unchanged.
+Sevan sleeps on the metric decision (v2 vs p_A + S(B)); next: magnitude-stratified rerun, α re-tune
+for multi-tile Othello edits, then the `edits/v2/` spec.
+
 ## Where the work is (2026-09-09)
 
 **Done this session (Sevan's ask): the grid target lives in `pim`, not in an experiment.**
