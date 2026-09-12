@@ -112,6 +112,12 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**09:15 PT 2026-09-12 — seed-variance: run-seed half in.** Two 390k replicates + the seed-0 422k checkpoint,
+pooled n = 3: decodability SD ≤ 0.005; Edit Index SD 0.005–0.017 on every editor / target (fac ND +0.624 ±
+0.017, fac GS +0.322 ± 0.014); the GUARD is where the spread lives (GS fid 0.68–1.09, SD 0.15). Half budget
+vs full: same size as the seed spread. `findings/seed-variance.md` drafted; probe-seed stage running
+(3 runs × ~2 h) → ~15:00 PT.
+
 **23:00 PT 2026-09-11 — seed-variance pilot launched (Sevan: "retrain L-dw-noiseless-20m twice at half the steps,
 refit a ton of linear probes, report fluctuation; replicates as ± not rows").** Decisions: pool seed 0 (as the
 run's own 421,875-step checkpoint, matched budget) with the two 390k replicates, n = 3, SD; probe refits at
