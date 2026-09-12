@@ -156,6 +156,25 @@ breadth: a reviewer opening `experiments/` should see one entry per question, an
 the pieces in the order they were asked. Name the folder after the question or the run
 family it serves (the same word as the `runs/<topic>`), never after the technique.
 
+## Seed replicates — ± values, never extra rows
+
+A number quoted from one seed is a point estimate. When a run is re-trained with another seed
+to measure that spread, the replicate is a full run directory beside its parent, named
+`<parent>__seed<k>`, whose config carries a `replicate` block naming the parent, the seed and
+the step budget (the trainer writes it from `--replicate-of`). A checkpoint of the parent laid
+out at the replicates' budget is the seed-0 member of the set and is marked as such. Replicates
+are scored by the canonical scorer exactly like any run — same probes, same editors, their
+extra targets listed under their own key — so their numbers are on the record. They are
+**never table rows**: the tables pool the replicate set per (parent, quantity) into the parent
+row's ± (standard deviation, n − 1), and print n and the step budget beside it. Two spreads
+are kept apart and labelled: the RUN-seed spread (re-training) and the PROBE-seed spread
+(re-fitting the probe; the probe seed is part of the probe cache key, so every seed's probes
+persist beside the canonical seed-0 set, and the spread is written into the run's own
+variance file). Half-budget replicates are legitimate where the loss and the editors have
+plateaued by then — check the training-curve record first — and the parent's own checkpoint at
+that budget must join the set so seed 0 is compared at equal training. A replicate that
+changes anything but the seed is not a replicate; it is a new run with its own row.
+
 ## Local instantiations (this project — not portable)
 
 - Vision → `../RESEARCH.md`

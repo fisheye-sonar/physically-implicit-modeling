@@ -98,6 +98,8 @@ memorisation) runs on every paired fit; violations are recorded in `scores.json`
 locked mine/theirs target, sequence split. Discworld: **2 × 2 × L** (basis × family ×
 point) — one probe set per basis, fitted on the **FULL** state.
 
+**Seed replicates** (2026-09-11). A re-training of a canonical run with another seed lives at `runs/<topic>/<parent>__seed<k>/` with a `replicate` block in `config.json` (`scripts/train.py --replicate-of <topic>/<parent>`; a checkpoint of the parent at the replicates' step budget via `experiments/seed_variance/scripts/layout_checkpoint_replicate.py`, `"checkpoint": true`). Scored like any run; **never a table row** — `build_full_table` pools the replicate set per (parent, basis) into the parent row's ± (SD, ddof 1; n and step budget in Table 4a). Probe-seed spread (`fit_probes(seed=k)`, cached beside seed 0) → `runs/<run>/variance.json` (`experiments/seed_variance/scripts/probe_seeds.py`), Table 4b. First set: `L-dw-noiseless-20m__seed1`, `__seed2` (390k steps), `__seed0_s421875`.
+
 **Bases** — since 2026-09-11 the canonical discworld regression basis is **frustum only**: cartesian is no longer scored for new runs (`master_eval` SETTINGS `dw_bases`) and `build_full_table` hides it (`HIDDEN_BASES`); the cartesian blocks and floors of every run scored before that date remain in their `scores.json` / `baselines.json` as a record (frustum settled 2026-09-01; the 2026-09-11 cut-off is `L-dw-5ray-20m`, the last run with a cartesian block).
 
 **Probe targets** (2026-09-09). A probe target is what the probe is asked to read; each

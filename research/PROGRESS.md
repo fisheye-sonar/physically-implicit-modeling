@@ -112,6 +112,20 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**23:00 PT 2026-09-11 — seed-variance pilot launched (Sevan: "retrain L-dw-noiseless-20m twice at half the steps,
+refit a ton of linear probes, report fluctuation; replicates as ± not rows").** Decisions: pool seed 0 (as the
+run's own 421,875-step checkpoint, matched budget) with the two 390k replicates, n = 3, SD; probe refits at
+every point, each seed's own best point reported alongside the seed-0 point, plus the spread across points
+per seed. Code: `fit_probes(seed=)` (key already carried the seed; seed 0 keys unchanged), `train.py
+--replicate-of` → `config.json["replicate"]`, `build_full_table` folds replicates into ± cells of Tables 1/2 +
+Table 4 (run-seed and probe-seed spread), `experiments/seed_variance/scripts/{probe_seeds,layout_checkpoint_replicate}.py`,
+driver `scripts/drivers/seed_variance.sh`. Smoked (train --smoke with the flag; probe_seeds --smoke; layout;
+tables with zero replicates); 248 tests. Unit `seed_variance` started 22:59: train seed 1 (~4 h) → seed 2
+(~4 h) → score + fac ×3 (~2 h) → probe seeds ×3 (~2 h each: 20 regression + 6 factorised, the latter 16 min
+a seed) → tables. Honest ETA **~15:00 PT 2026-09-12** (the factorised probe seeds dominate; trim to 4 seeds
+if wanted — decide at stage E). Watchers + heartbeat armed; pings per stage. Convention written into
+`harness/WORKFLOW.md`, REGISTRY, `experiments/seed_variance/README.md`.
+
 **15:55 PT — loss-matched control for the GRU result: the 8-ray transformer at step 32k (val 0.00600 vs the
 GRU's best 0.00595) under `appearance-fac`: ND +0.57 / 0.73, GS +0.46 / 0.52, PI +0.33 / 1.09 (guarded +0.32)
 — edits at its fully-trained level, where the GRU at the same loss does not (+0.13 / +0.07). Architecture, not

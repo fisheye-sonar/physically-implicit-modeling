@@ -139,8 +139,13 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
                cache: bool = True, data_dir: Path | None = None,
                cache_dir: Path | None = None, encoder=None, encoder_tag: str | None = None,
                epochs: int | None = None, require_cached: bool = False,
-               probe: dict | tuple | None = None) -> dict:
+               probe: dict | tuple | None = None, seed: int = SEED) -> dict:
     """One probe per residual point, held out BY SEQUENCE. ``family`` linear|mlp.
+
+    ``seed`` (2026-09-11) drives the probe's init AND the 80/20 sequence permutation, and
+    is part of the cache key (it always was, fixed at ``SEED``): seed 0 is the canonical
+    probe set every score quotes; other seeds are the probe-seed replicates of
+    ``experiments/seed_variance``, cached beside it.
 
     ``probe`` (2026-09-10) names the probe corpus logically — ``{"instance", "size"}``, as
     ``probe_recipe`` returns it; ``data_dir`` is the older path form (see ``_probe_corpus``).
@@ -185,7 +190,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     if epochs is not None:
         extra["epochs"] = int(epochs)
     fname, prov = store.key(model, target=target, n_seq=int(n_seq), split=keyf["split"],
-                            family=family, basis=basis_name, seed=SEED,
+                            family=family, basis=basis_name, seed=int(seed),
                             data=keyf["data"], **extra)
     if cache:
         hit = store.load(fname, prov, device=DEV)
@@ -209,7 +214,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     obs = obs[:, : min(obs.shape[1], span)]
     if encoder is not None:
         obs = encoder(obs)                      # e.g. (N, T) token ids
-    rng = np.random.default_rng(SEED)
+    rng = np.random.default_rng(int(seed))
     perm = rng.permutation(n_seq)
     tr, te = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
     # Disk-backed: the stack alone is 21.6-24.6 GB and the fits' temporaries must fit
@@ -233,7 +238,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
                 R = collect_residuals(model, obs, batch=64, memmap=_tmp.name, points=[ell])
                 p, s = fit_probe_stream(MemmapRows(R[0], device=DEV), y_t, tr, te,
                                         hidden=None if family == "linear" else CANONICAL_HIDDEN,
-                                        n_classes=n_classes, seed=SEED,
+                                        n_classes=n_classes, seed=int(seed),
                                         epochs=epochs or FIT_EPOCHS, batch=FIT_BATCH, log=None)
                 del R
             finally:
@@ -254,7 +259,7 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
                 X = R[ell]
                 p, s = fit(X[tr].reshape(-1, X.shape[-1]), y[tr].reshape(-1, y.shape[-1]),
                            X[te].reshape(-1, X.shape[-1]), y[te].reshape(-1, y.shape[-1]),
-                           device=DEV, seed=SEED, **kw)
+                           device=DEV, seed=int(seed), **kw)
                 out[ell] = (p, s)
                 if log:
                     log(f"    point {ell}: R2 {s['r2']:+.4f}  rmse {s['rmse']:.4f}")
