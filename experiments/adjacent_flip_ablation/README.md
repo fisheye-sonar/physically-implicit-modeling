@@ -61,3 +61,7 @@ addendum in `flip-ablation.md`.
 ## Flipped tiles (2026-09-11) — DONE
 
 `scripts/flipped_tiles.py`: legality vs recolourings (mild degradation), probe error on flipped vs parity tiles (9–28% vs 4–7%), editability of flipped-tile vs parity-tile cases at every point (flipped LESS editable: ND +0.085/0.95 pt3 vs +0.215/0.64 pt1). `scores/flipped_tiles_L-oth-adjacent-flip-20m.json`; finding section "Flipped tiles".
+
+## Masked probes (2026-09-11) — DONE
+
+`scripts/masked_probes.py --data canonical|large`: canonical classification fit with a per-(row, tile) loss weight (`all` / `flipped+blank` / `parity+blank`) + a 2-class flip-bit probe; held-out error by tile class; canonical PI/ND through each probe on 300 flipped-tile + 300 parity-tile cases at every point. Result: the flipped-row probe decodes recoloured tiles at 7% (vs 9–13%) and edits them worse (ND guarded −0.27 vs +0.08); the parity-only probe edits best (+0.28 / 0.60 on parity tiles); flip-bit edits inert. The computed colour is decodable and causally inert at the last position. Probes under `probes/<run>/masked_*/`; `scores/masked_probes_*.json`; finding section "Masked probes".

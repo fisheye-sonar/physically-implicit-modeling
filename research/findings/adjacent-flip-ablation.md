@@ -224,8 +224,70 @@ per-tile probe fitted on FLIPPED rows only (or on the residual from the parity l
 edit flipped-tile cases through it; if that lands, the register exists and the probe was the
 limitation. Status `observed`. Scores `scores/flipped_tiles_L-oth-adjacent-flip-20m.json`.
 
+## Masked probes: the computed colour is decodable and inert; the lookup direction is the only handle (2026-09-11, `scripts/masked_probes.py`)
+
+Sevan's proposal, executed as agreed: the canonical classification fit copied line for line
+(per-tile CE, 200 epochs, Adam 1e-3, batch 4096, sequence hold-out, seed 0) with ONE change, a
+per-(row, tile) loss weight — `all` (control), `flipped+blank` (mine/theirs learnt on
+recoloured tiles only; blank everywhere), `parity+blank` (mirror) — plus a 2-class FLIP-BIT
+probe (recoloured or not, occupied tiles). Canonical 20k probe split; the flipped mask repeated
+on 40k games of the large split (numbers identical to ±0.2 pt at every point — not data-limited).
+Each probe evaluated held out by tile class, then used for canonical PI / ND on 300 flipped-tile
+and 300 parity-tile cases at every residual point. The `all` control reproduces the cached
+probe's errors and yesterday's edits to the third decimal, so the masked path adds no confound.
+
+**Decodability, held-out error % by residual point 0…8 (flipped tiles / parity tiles):**
+
+| probe | flipped tiles | parity tiles |
+|---|---|---|
+| all (canonical) | 38 / 29 / 20 / 13 / 10 / 9 / 10 / 10 / 10 | 50 / 7 / 5 / 4 / 4 / 4 / 5 / 5 / 5 |
+| flipped+blank | **49 / 14 / 10 / 8 / 7 / 7 / 7 / 7 / 7** | 89 / 89 / 79 / 58 / 43 / 46 / 47 / 47 / 47 |
+| parity+blank | 58 / 73 / 68 / 57 / 51 / 51 / 51 / 51 / 51 | **50 / 6 / 4 / 4 / 4 / 4 / 5 / 5 / 5** |
+| flip-bit (miss rate on flipped / false alarms on parity) | 38 / 30 / 25 / 22 / 22 / 23 / 23 / 23 / 23 | 0 / 2 / 2 / 2 / 2 / 2 / 2 / 2 / 2 |
+
+Two encodings. The flipped-only probe reads recoloured tiles at 7% from point 4 (canonical: 9–13%)
+and mis-reads parity tiles at 89% at point 1 → 43% at point 4 → 47% thereafter: it learns
+"the reverse of the placing move" and never converges onto true colour for parity tiles. The
+parity-only probe is the exact mirror (3.7–5.5% on parity, 51–73% on flipped). The two
+directions converge over layers 1–4 and then plateau far apart; the flip bit itself is 78%
+detectable from point 3 with 2% false alarms.
+
+**Editability (canonical PI / ND through each probe; EI / fidelity at the best arm):**
+
+| probe | flipped-tile cases, PI | flipped, ND | parity-tile cases, PI | parity, ND |
+|---|---|---|---|---|
+| all (canonical) | +0.09 / 1.79 (pt4); guarded **-0.03** / 0.88 (pt4) | +0.08 / 0.95 (pt3); guarded **+0.08** / 0.95 (pt3) | +0.15 / 0.87 (pt2); guarded **+0.15** / 0.87 (pt2) | +0.21 / 0.64 (pt1); guarded **+0.21** / 0.64 (pt1) |
+| flipped+blank | -0.00 / 5.85 (pt8); guarded **-0.49** / 1.08 (pt3) | +0.01 / 2.30 (pt3); guarded **-0.27** / 1.03 (pt1) | -0.11 / 2.93 (pt8); guarded **-0.31** / 1.03 (pt2) | -0.02 / 2.32 (pt4); guarded **-0.32** / 0.98 (pt4) |
+| parity+blank | -0.04 / 4.06 (pt7); guarded **-0.32** / 1.02 (pt4) | +0.09 / 0.80 (pt3); guarded **+0.09** / 0.80 (pt3) | +0.21 / 1.01 (pt2); guarded **+0.21** / 1.01 (pt2) | +0.28 / 0.60 (pt1); guarded **+0.28** / 0.60 (pt1) |
+| flip-bit (2-class arms) | -0.15 / 2.34 (pt8); guarded **-0.50** / 1.07 (pt8) | +0.03 / 6.24 (pt8); guarded **-0.52** / 1.00 (pt1) | -0.01 / 5.41 (pt8); guarded **-0.48** / 1.08 (pt0) | +0.01 / 5.68 (pt5); guarded **-0.54** / 1.07 (pt1) |
+
+Unedited −0.645 (flipped cases) / −0.687 (parity cases). Large-split flipped-mask probe: ND
+guarded -0.16 on flipped, -0.32 on parity — same.
+
+**Reading.** The hypothesis under test — "the register for flipped colour exists, the canonical
+probe just reads it badly, so a flipped-row probe will edit flipped tiles" — is refuted on both
+halves that matter. (1) The better-reading direction edits WORSE: the flipped-mask probe halves
+the decoding error on recoloured tiles and its ND lands at −0.27 where the canonical probe's
+lands at +0.08. (2) The parity-only probe, at chance on flipped tiles' colour, edits them as well
+as the canonical probe (+0.09 vs +0.08), and edits parity tiles BETTER than it (+0.28 vs +0.21):
+the purer the placement-parity lookup direction, the better the edit. (3) Toggling the
+recoloured bit through its own probe moves nothing at any point. So on this model every edit that
+lands runs through the lookup direction, and the computed colour — which the model demonstrably
+consumes (legal mass 0.99 in 16-flip positions) — is linearly decodable at the last position and
+causally inert there. That is the discworld pattern (`edit-direction-alignment.md` Result 2)
+reproduced inside Othello: the load-bearing copy of a computed variable is not the copy a linear
+probe reads. It also sharpens the register theory: flipping did create a computed variable, but
+not a WRITABLE one — a register in the editability sense is a computed variable whose downstream
+consumers read it through the same linear direction the probe finds, and the adjacency rule's
+consumers evidently do not.
+
+Status `observed` (one seed; 300 + 300 cases; α ≤ 8 / 2). Probes persisted under
+`probes/L-oth-adjacent-flip-20m/masked_{canonical,large}/`; scores
+`scores/masked_probes_L-oth-adjacent-flip-20m_{canonical,large}.json`; logs `logs/adjacent_flip_ablation/masked_probes_*.log`.
+
 ## Log
 
+- **2026-09-11 (late night)** — masked probes: a flipped-row probe halves the decoding error on recoloured tiles and edits them WORSE (ND −0.27 vs +0.08); the parity-only probe edits best of all (+0.28 on parity tiles); the flip bit is 78% decodable and inert. The computed colour has no linear causal handle; every landing edit runs through the placement-parity lookup direction. Hypothesis "the probe was the limitation" refuted.
 - **2026-09-11 (night)** — flipped tiles: decoded worse (9–28% vs 4–7% error), edited worse (ND +0.09 vs +0.22 guarded), computed later (pt 3–4); legality degrades mildly with flips. Follow-up: a flipped-row probe.
 - **2026-09-11 (evening)** — presence edits (`observed`): standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (best guarded −0.12 and +0.05; destructive past that); removal > add on the flip model. Overturns the 2026-09-07 "consumed variable is editable" reading.
 - **2026-09-11 (later still) — retracts the ceiling claim of the entry below.** The +0.14 / +0.25 "ceilings" were swap-built counterfactual histories passing a legal-mass filter that is toothless on adjacency instances (mass 1.000 on everything); filtered on ordinariness the ceilings are +0.66 / +0.68 / +0.70 and the editors sit below them (ND 55% / 30% / 75%). Caught by Sevan ("the model is near the Bayes floor; it would not score so poorly"); verified by scoring the ideal uniform-over-legal_post (+1.000) and the model's rmse-to-uniform on the counterfactual histories (3–4× held-out). The "mostly dynamic range" reading is withdrawn; the canonical ordering stands.

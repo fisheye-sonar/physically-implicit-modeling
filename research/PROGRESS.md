@@ -24,6 +24,7 @@ and the ceiling on ordinary counterfactuals: +0.655 / +0.679 / +0.697 (flip / ad
 of it. ⚠ A first pass reported a +0.14 ceiling and blamed the index — wrong (swap-built histories through a toothless
 legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewritten.
 **Presence edits (2026-09-11 evening, `scripts/presence_edit.py`):** standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (guarded −0.12 / +0.05) — the enclosure-vs-local-legality difference is now the leading candidate for the gap.
+**Masked probes (2026-09-11 late, `scripts/masked_probes.py`):** flipped-row colour probe reads recoloured tiles at 7% error and edits them WORSE than the canonical probe (ND −0.27 vs +0.08); parity-only probe edits best (+0.28); flip-bit probe 78% decodable, inert. Computed colour = decodable + causally inert at the last position (the discworld pattern inside Othello); the register theory now needs "writable" as a separate property.
 **Still open:** the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 
