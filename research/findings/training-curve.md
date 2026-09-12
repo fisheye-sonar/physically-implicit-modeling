@@ -1,5 +1,8 @@
 # Editability tracks decodability in time, in both environments — the gate is not training
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Status:** measured overnight 2026-09-01/02 on the canonical runs' own log-spaced checkpoints
 (steps 1k, 4k, 16k, 64k, 128k, 256k, 512k, 780k), laid out as `runs/training_curve/<run>_s<step>/`
 by `experiments/training_curve/scripts/make_training_curve.py` and scored by the unchanged `master_eval.ipynb`

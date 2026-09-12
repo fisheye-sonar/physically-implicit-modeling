@@ -1,5 +1,8 @@
 # Finding: Editability (causal manipulability of hidden state)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 *Sub-question 3 — are targeted latent edits coherent, intended behavioral changes?*
 Model/data context unless noted: GRU `3_dset3_gru_persistentids_inview_400epochs`,
 dataset `4_fixed_refl_inview`, 2 objects, N=500 edit samples.

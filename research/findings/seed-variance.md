@@ -1,5 +1,8 @@
 # Seed variance — how much do the numbers move across training seeds and probe seeds? (pilot, 2026-09-12)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Status:** measured 2026-09-12 (run seeds 09:10; probe seeds on the canonical run 12:00; the replicates' probe seeds skipped at Sevan's call). Unit `seed_variance`, `experiments/seed_variance/`. One run family: `L-dw-noiseless-20m`.
 
 ## Set-up

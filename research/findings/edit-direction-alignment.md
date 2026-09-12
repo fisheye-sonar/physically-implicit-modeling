@@ -1,5 +1,8 @@
 # Edit-direction alignment — probe subspace vs the true edit direction (2026-09-09)
 
+> **Note 2026-09-12:** the edit / patch numbers here come from experiment scripts run under the pre-2026-09-12 (post-dynamics) write target and are NOT rescored; the canonical rescoring moved every discworld editor number by ≤ 0.06 (`scratch/2026-09-12-alignment-rescore.md`), so the same band applies here.
+
+
 **Question.** The RNN-era archive found the true edit direction actively misaligned with the
 probe's row space, and Haufe / PCA corrections improved alignment without making the edits
 work. Re-done at scale on the three Transformer-L runs with oracle counterfactual states
