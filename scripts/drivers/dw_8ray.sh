@@ -9,7 +9,7 @@
 # every other range by bigcorpus.verify().
 #
 # Stages (each gated on the previous one's exit code; a failed stage pings and stops):
-#   B  CPU  generate the dw-8ray instance: eval suite, probe split, probe_250k, 20M corpus
+#   B  CPU  generate the dw-8ray instance (layout v2): eval, edit bench, probe 120k/250k, 20M corpus
 #   C  GPU  train Transformer-L, 780k steps, matched recipe                       (~8 h)
 #   D  GPU  master_eval (probes cached in the run, baselines, all editors) + tables
 #
@@ -49,37 +49,43 @@ SIM_FLAGS=(--n-objects 2 --frames 40 --obs-res 10 --drop-edge-rays --radius 1.0
            --boundary open --position-noise 0.0 --obs-noise-std 0.0
            --fixed-reflectivities --always-in-frustum --max-edit-attempts 2000)
 
-if [ ! -f "$INST_DIR/eval/dataset.json" ]; then
-  "$PY" scripts/generate_dataset.py "$INST_DIR/eval" \
-      --n-train 100 --n-val 10000 --n-test 10000 --n-edits 10000 \
+# Layout v2 (2026-09-10, research/specs/DATASET_LAYOUT_SPEC.md §4f): one role per call,
+# only the file the role needs, straight into the instance's role directory. Seeds are the
+# ones the v1 suite used for the SAME split, so the data is identical to what a v1 suite
+# would have produced for that split.
+if [ ! -f "$INST_DIR/eval/test.h5" ]; then
+  "$PY" scripts/generate_dataset.py --role eval --instance "$INST" --n 10000 \
+      "${SIM_FLAGS[@]}" --seed 85200000000 --n-workers 16 --compression-level 4 \
+      > "$LOGS/b1_eval.log" 2>&1 || fail "B1 eval split" "$(tail -15 "$LOGS/b1_eval.log")"
+else
+  echo "  eval split already present — skipping" | tee -a "$LOGS/driver.log"
+fi
+
+if [ ! -f "$INST_DIR/edits/v1/edits.h5" ]; then
+  "$PY" scripts/generate_dataset.py --role edits --instance "$INST" --n 10000 \
       "${SIM_FLAGS[@]}" --edit-frame 20 --edit-always-in-frustum \
-      --seed 85000000000 --seed-val 85100000000 --seed-test 85200000000 \
-      --seed-edits 85300000000 --n-workers 16 --compression-level 4 \
-      > "$LOGS/b1_eval.log" 2>&1 || fail "B1 eval suite" "$(tail -15 "$LOGS/b1_eval.log")"
+      --seed 85300000000 --n-workers 16 --compression-level 4 \
+      > "$LOGS/b1b_edits.log" 2>&1 || fail "B1b edit bench" "$(tail -15 "$LOGS/b1b_edits.log")"
 else
-  echo "  eval suite already present — skipping" | tee -a "$LOGS/driver.log"
+  echo "  edit bench already present — skipping" | tee -a "$LOGS/driver.log"
 fi
 
-if [ ! -f "$INST_DIR/probe/dataset.json" ]; then
-  "$PY" scripts/generate_dataset.py "$INST_DIR/probe" \
-      --n-train 100 --n-val 100 --n-test 120000 --n-edits 100 \
+if [ ! -f "$INST_DIR/probe/probe_120k.h5" ]; then
+  "$PY" scripts/generate_dataset.py --role probe --size 120k --instance "$INST" --n 120000 \
       "${SIM_FLAGS[@]}" --edit-frame 20 \
-      --seed 980000000000 --seed-val 980000000100 --seed-test 980000000200 \
-      --seed-edits 980000120200 --n-workers 16 --compression-level 4 \
-      > "$LOGS/b2_probe.log" 2>&1 || fail "B2 probe split" "$(tail -15 "$LOGS/b2_probe.log")"
+      --seed 980000000200 --n-workers 16 --compression-level 4 \
+      > "$LOGS/b2_probe.log" 2>&1 || fail "B2 probe corpus 120k" "$(tail -15 "$LOGS/b2_probe.log")"
 else
-  echo "  probe split already present — skipping" | tee -a "$LOGS/driver.log"
+  echo "  probe corpus 120k already present — skipping" | tee -a "$LOGS/driver.log"
 fi
 
-if [ ! -f "$INST_DIR/probe_250k/dataset.json" ]; then
-  "$PY" scripts/generate_dataset.py "$INST_DIR/probe_250k" \
-      --n-train 100 --n-val 100 --n-test 250000 --n-edits 100 \
+if [ ! -f "$INST_DIR/probe/probe_250k.h5" ]; then
+  "$PY" scripts/generate_dataset.py --role probe --size 250k --instance "$INST" --n 250000 \
       "${SIM_FLAGS[@]}" --edit-frame 20 \
-      --seed 990000000000 --seed-val 990000000100 --seed-test 990000000200 \
-      --seed-edits 990001000000 --n-workers 16 --compression-level 4 \
-      > "$LOGS/b2b_probe_250k.log" 2>&1 || fail "B2b probe_250k" "$(tail -15 "$LOGS/b2b_probe_250k.log")"
+      --seed 990000000200 --n-workers 16 --compression-level 4 \
+      > "$LOGS/b2b_probe_250k.log" 2>&1 || fail "B2b probe corpus 250k" "$(tail -15 "$LOGS/b2b_probe_250k.log")"
 else
-  echo "  probe_250k already present — skipping" | tee -a "$LOGS/driver.log"
+  echo "  probe corpus 250k already present — skipping" | tee -a "$LOGS/driver.log"
 fi
 
 # B3: the 20M corpus (25.6 GB at 8 rays). Idempotent per shard via _done_NNN markers.

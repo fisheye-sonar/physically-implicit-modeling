@@ -1,5 +1,5 @@
 """Othello instances (2026-09-06): corpus paths and rules per instance; the case synthesiser."""
-from pathlib import Path
+import pytest
 
 from pim.environments.othello import corpus as oc
 from pim.environments.othello.bench import benchmark_from_cases, synthesise_cases
@@ -8,8 +8,13 @@ from pim.environments.othello.data import synthetic_games
 
 def test_instance_table():
     assert oc.flip_of("oth-uniform") is True and oc.flip_of("oth-noflip") is False
-    assert oc.corpus_dir("oth-uniform") == oc.CACHE
-    assert oc.corpus_dir("oth-noflip") == Path("datasets/othello/oth-noflip/corpus")
+    # paths come from pim.environments.layout: REPO-anchored, the split's role directory
+    # under layout v2 (corpus/ under v1)
+    d = oc.corpus_dir("oth-noflip", "train")
+    assert d.is_absolute() and d.parts[-3:-1] == ("othello", "oth-noflip") and d.name in ("train", "corpus")
+    assert oc.corpus_dir("oth-noflip", "test").name in ("eval", "corpus")
+    with pytest.raises(KeyError):
+        oc.corpus_dir("oth-nope")
 
 
 def test_synthesised_cases_change_the_legal_set_and_build_a_benchmark():

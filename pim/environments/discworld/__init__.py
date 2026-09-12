@@ -18,7 +18,8 @@ Module map (a file per concern, ordered by how data flows):
                       probe targets, DIM_SETS (mirrors othello/bench.py)
     arms.py           probes over residual points, rollouts, the oracle editors and the
                       PI / ND / GS arms (mirrors othello/arms.py)
-    bigcorpus.py      the 20M-sequence streaming train corpus (shards -> obs.f32 memmap)
+    bigcorpus.py      the 20M-sequence streaming train corpus (shards -> obs.f32 memmap);
+                      every path under datasets/ comes from ../layout.py (layout v2)
     tokens.py         frames-as-tokens: an instance's frame vocabulary + token files
     token_bench.py    the editability bench scored the Othello way, for a token model
 

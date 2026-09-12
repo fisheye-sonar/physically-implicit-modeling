@@ -55,6 +55,38 @@ The position of a hidden object is read from the residual stream at 0.97–0.99 
 state; the model uses it (it renders the reappearance); it is decodable; and the probe
 directions still do not steer it.
 
+## The two floors on the same hidden frames (2026-09-10, `scripts/hidden_frame_floors.py`)
+
+The table above quotes the trained model against whole-split floors. Put on the SAME 4,000
+held-out sequences and the same hidden-frame masks (frustum, object 0 / object 1, best point):
+
+| source | visible | hidden | 1 frame since seen | 3 | 6 | 10 |
+|---|---|---|---|---|---|---|
+| trained · LIN | 0.91 / 0.96 | 0.63 / 0.89 | 0.63 / 0.91 | 0.64 / 0.90 | 0.62 / 0.88 | 0.58 / 0.84 |
+| random-init · LIN | 0.66 / 0.88 | 0.33 / 0.52 | 0.45 / 0.65 | 0.37 / 0.57 | 0.28 / 0.45 | 0.15 / 0.26 |
+| observation right-aligned · LIN (large) | 0.08 / 0.74 | −0.10 / 0.09 | −0.06 / 0.27 | −0.08 / 0.16 | −0.12 / 0.00 | −0.17 / −0.19 |
+| observation left-aligned · LIN (large) | 0.03 / 0.49 | −0.02 / 0.36 | 0.02 / 0.45 | 0.00 / 0.40 | −0.02 / 0.32 | −0.07 / 0.19 |
+| **trained · MLP-128** | 0.99 / 1.00 | **0.97 / 0.99** | 0.98 / 0.99 | 0.98 / 0.99 | 0.97 / 0.98 | **0.96 / 0.98** |
+| random-init · MLP-128 | 0.95 / 0.98 | 0.77 / 0.88 | 0.86 / 0.92 | 0.83 / 0.91 | 0.74 / 0.86 | 0.58 / 0.74 |
+| observation right-aligned · MLP-128 (large) | 0.91 / 0.96 | 0.71 / 0.83 | 0.80 / 0.88 | 0.80 / 0.89 | 0.68 / 0.81 | 0.46 / 0.62 |
+| observation left-aligned · MLP-128 (large) | 0.87 / 0.92 | 0.79 / 0.88 | 0.86 / 0.91 | 0.83 / 0.90 | 0.77 / 0.86 | 0.64 / 0.78 |
+
+The observation probes DO extrapolate a hidden object from the frames before the blackout
+(MLP 0.7–0.9 one frame in), but their read decays with staleness — to 0.46–0.78 ten frames in
+— and so does the random-init model's (0.58–0.74). The trained model's read does not decay
+(0.96–0.98 at ten frames). So on hidden frames the trained model holds a position that neither
+a shallow read of the history nor untrained features supply: position here is a COMPUTED,
+carried variable in the strong sense, with a margin over both floors that grows with staleness
+— and it is still not editable through the regression probes. (Object 1, the bright disc, is
+easier for every source, as everywhere: GOTCHAS 2026-08-21.) `scores/hidden_frame_floors.json`.
+
+## Under the factorised categorical target (2026-09-10 night)
+
+`appearance-fac` on this run (`probe-target-type.md`): skill 0.46 / 0.68 (floors: random-init
+0.22 / 0.45, observation-right 0.07 / 0.39), **ND +0.53 / 0.94**, GS +0.33 / 0.95, PI +0.02 / 2.44
+— blink's first positive edit, and NOT better than the always-visible noiseless run under the
+same target (ND +0.63 / 0.78). Carrying position does not make it more editable.
+
 ## What this settles
 
 The candidate sufficient condition "the environment forces the model to carry the

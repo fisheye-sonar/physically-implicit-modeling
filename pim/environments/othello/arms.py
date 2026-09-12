@@ -21,10 +21,12 @@ import torch
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
 from pim.editors.nanda import addition_delta, probe_direction
-from pim.editors.pinv import pinv_step
+from pim.editors.pinv import pinv_step, swap_class_logits
 from pim.environments.othello.bench import Benchmark
 from pim.environments.othello.data import (
-    N_CLASSES, N_TILES, T_MODEL, board_probs, canonical_vocab, flatten_rows, move_probs)
+    MINE, N_CLASSES, N_TILES, REGRESSION_TARGETS, T_MODEL, board_probs, canonical_vocab,
+    flatten_rows, move_probs, signed_mine)
+from pim.metrics.decodability import probe_skill_from_stats
 from pim.environments.othello.vendor.othello import OthelloBoardState
 from pim.metrics.set_editability import move_scorecard
 from pim.probes.base import CANONICAL_HIDDEN, FIT_BATCH, FIT_EPOCHS, FIT_LR, fit_probe
@@ -175,17 +177,23 @@ def observation_probes(data, family: str = "linear", target: str = "mine",
     cut = int((1 - holdout) * n_seq)
     tr, te = order[:cut], order[cut:]
 
-    y = data.mine if target == "mine" else data.labels
+    regress = target in REGRESSION_TARGETS
+    if regress:                                   # the signed mine/theirs values (2026-09-09)
+        y_t = _t.from_numpy(signed_mine(data.mine)).to(DEV)
+    else:
+        y = data.mine if target == "mine" else data.labels
+        y_t = _t.from_numpy(y.astype("int64")).to(DEV)
     hist = CausalHistory(_t.from_numpy(data.tokens).to(DEV), kind="one_hot", vocab=vocab, align=align)
     out = fit_baseline_probe(
-        hist, _t.from_numpy(y.astype("int64")).to(DEV), tr, te,
-        hidden=None if family == "linear" else CANONICAL_HIDDEN, n_classes=3,
+        hist, y_t, tr, te,
+        hidden=None if family == "linear" else CANONICAL_HIDDEN,
+        n_classes=None if regress else 3,
         row_mask=_t.from_numpy(data.mask).to(DEV), seed=seed, log=log,
         **{k: v for k, v in extra.items() if k != "align"})
     if log:
         st = out[1]
-        log(f"    obs baseline [{target}/{family}]: err {st['error_rate']:.2f}% "
-            f"(in-sample {st['error_rate_insample']:.2f}%, d_in {st['d_in']})")
+        log(f"    obs baseline [{target}/{family}]: skill {probe_skill_from_stats(st):+.4f} "
+            f"(d_in {st['d_in']})")
     if cache:
         store.store(fname, prov, out)
     return out
@@ -237,7 +245,11 @@ def fit_probe_grid(model, data, *, targets=("mine",),
             return ProbeGrid(blob["probes"], blob["stats"])
 
     seq_of_row, _ = flatten_rows(data)
-    ys = {t: flatten_rows(data, t)[1].astype(np.int64) for t in ("state", "mine")}
+    # 3-way labels for the categorical targets; the signed ±1/0 values for "mine_signed",
+    # which is fitted by REGRESSION (n_classes None) — the Othello counterpart of the
+    # discworld grid target's question, asked the other way round (2026-09-09)
+    ys = {t: (flatten_rows(data, t)[1] if t in REGRESSION_TARGETS
+              else flatten_rows(data, t)[1].astype(np.int64)) for t in targets}
     idx = {s: _split(len(data.tokens), seq_of_row, s, holdout, seed) for s in splits}
     hidden = {"linear": None, "mlp": CANONICAL_HIDDEN}
 
@@ -254,15 +266,15 @@ def fit_probe_grid(model, data, *, targets=("mine",),
                     probe, st = fit_probe(x[tr], y[tr], x[te], y[te],
                                           hidden=hidden[fam], epochs=epochs,
                                           batch=batch, lr=lr, device=DEV, seed=seed,
-                                          n_classes=N_CLASSES)
+                                          n_classes=None if target in REGRESSION_TARGETS
+                                          else N_CLASSES)
                     st |= {"target": target, "family": fam, "split": split,
                            "point": point}
                     probes[(target, fam, split, point)] = probe
                     stats.append(st)
                     if log:
-                        log(f"  point {point}  {target:5s}  {split:8s}  {fam:6s}  "
-                            f"error {st['error_rate']:6.2f}%  "
-                            f"(in-sample {st['error_rate_insample']:5.2f}%)")
+                        log(f"  point {point}  {target:11s}  {split:8s}  {fam:6s}  "
+                            f"skill {probe_skill_from_stats(st):+.4f}")
         del x
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -324,7 +336,23 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 return x
             p = probes[layer]
             cur = x[:, -1]
-            if mode in ("add", "add_sub"):
+            if p.n_classes is None:
+                # the signed mine/theirs REGRESSION probe (2026-09-09): the flip asks the
+                # tile's value to become +1 (mine) or −1 (theirs). ND: the tile's probe row,
+                # signed by the requested direction — the target−current contrast, whose
+                # magnitude is the same 2 units for every case. PI: the probe's own 64-value
+                # read-out with the tile set to its target, solved in z-space with the
+                # y-affine (the discworld regression path, one tile driven per case).
+                ar = torch.arange(bsz, device=cur.device)
+                val = torch.where(td == MINE, 1.0, -1.0).to(cur.dtype)
+                if mode in ("add", "add_sub"):
+                    d = probe_direction(p, sq, per_sample=True) * val[:, None]
+                    delta = addition_delta(cur, d, alpha)
+                else:
+                    tgt = p(cur).clone()
+                    tgt[ar, sq] = val
+                    delta = alpha * pinv_step(cur, tgt, p, space="zspace")
+            elif mode in ("add", "add_sub"):
                 # flat probe row of (tile, class) = tile * N_CLASSES + class
                 d = probe_direction(p, sq * N_CLASSES + td, per_sample=True,
                                     subtract_rows=(sq * N_CLASSES + cd) if mode == "add_sub" else None)
@@ -332,13 +360,10 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 # size of write at every residual point (the scale differs ~3×)
                 delta = addition_delta(cur, d, alpha)
             else:
-                lg = p(cur).clone()                       # (B, N_TILES, N_CLASSES) logits
-                ar = torch.arange(bsz, device=cur.device)
-                sel = lg[ar, sq]
-                new = sel.clone()
-                new[ar, td] = sel[ar, cd]
-                new[ar, cd] = sel[ar, td]
-                lg[ar, sq] = new
+                # the probe's own read-out with current <-> target swapped at the square
+                # (the shared spelling of a categorical flip — discworld's grid target
+                # calls the same helper twice, once per cell)
+                lg = swap_class_logits(p(cur), sq, cd, td)   # (B, N_TILES, N_CLASSES)
                 delta = alpha * pinv_step(cur, lg.view(bsz, -1), p, space="zspace")
             _rec.append(float((delta.norm(dim=1) / cur.norm(dim=1)).mean()))
             out = x.clone()
@@ -380,9 +405,15 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
         cm = np.zeros((bsz, N_TILES), bool)
         cm[np.arange(bsz), bench.pos_int[ids]] = True
         lab = bench.new_class if target_labels is None else np.asarray(target_labels)
-        tv = torch.zeros(bsz, N_TILES, dtype=torch.long, device=DEV)
-        tv[torch.arange(bsz), torch.from_numpy(bench.pos_int[ids]).to(DEV)] = (
-            torch.from_numpy(lab[ids]).to(DEV))
+        sq_t = torch.from_numpy(bench.pos_int[ids]).to(DEV)
+        if next(iter(probes.values())).n_classes is None:
+            # regression probes (signed mine/theirs): the tile's target VALUE, ±1
+            tv = torch.zeros(bsz, N_TILES, device=DEV)
+            tv[torch.arange(bsz), sq_t] = torch.where(
+                torch.from_numpy(lab[ids]).to(DEV) == MINE, 1.0, -1.0)
+        else:
+            tv = torch.zeros(bsz, N_TILES, dtype=torch.long, device=DEV)
+            tv[torch.arange(bsz), sq_t] = torch.from_numpy(lab[ids]).to(DEV)
         specs = {ell: build_edit_spec(probes[ell], x0[ell], cm, tv, beta=beta)
                  for ell in range(n_points)}
         hook = make_intervention_hook(probes, specs, start_layer, alpha=alpha,

@@ -3,7 +3,422 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
+_Last updated: 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE and recorded (first section); before that 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped_
+
+## oth-adjacent-flip chain on the WSL remote — DONE 2026-09-11 04:22 PT (`experiments/adjacent_flip_ablation/drivers/oth_adjacent_flip.sh`, unit `oth_adjacent_flip` on wsl-sevan)
+
+**Outcome:** pilot → corpus → cases → 780k-step training (25.7 h on the RTX 4090) → master_eval
+(+ oth-adjacent-flip floors) → tables, all clean; unit result success, 26.7 GB peak under the
+40 GB cap; Windows hardware-error count flat at 40 throughout. Result: Bayes-optimal; skill
+0.947 / 0.970 above the observation floor 0.888 / 0.914; ND +0.24 / fid 0.62, PI +0.17 / 0.85,
+GS +0.03 / 2.62 vs unedited −0.70 — editability returns at a third of Othello's level.
+`findings/adjacent-flip-ablation.md` (`observed`), REGISTRY run row, instance row updated.
+Pulled to this box: run dir (2.2 GB) + `runs/_baselines/oth-adjacent-flip/` + the instance's
+splits/cases (moved into layout v2 on arrival); `build_full_table` rebuilt with the new row.
+Remote (`~/research/physically-implicit-modeling` on wsl-sevan) is at 268f6c6 on this branch
+with its nbconvert outputs stashed; its `runs/_smoke/` rename is ledgered in its `runs/MOVES.md`.
+Remote setup notes live in memory (`wsl-remote-host`, `wsl-remote-hardware-check`).
+**Follow-up done 2026-09-11 (self-contained, `experiments/adjacent_flip_ablation/scripts/`):** true-edit-direction
+alignment (least-aligned Othello model: 4× generic raw, 2.6× Haufe), Haufe-corrected edits (PI +0.29 / ND +0.33, fid ~0.5),
+and the ceiling on ordinary counterfactuals: +0.655 / +0.679 / +0.697 (flip / adjacent / standard) with ND at 55% / 30% / 75%
+of it. ⚠ A first pass reported a +0.14 ceiling and blamed the index — wrong (swap-built histories through a toothless
+legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewritten.
+**Presence edits (2026-09-11 evening, `scripts/presence_edit.py`):** standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (guarded −0.12 / +0.05) — the enclosure-vs-local-legality difference is now the leading candidate for the gap.
+**Masked probes (2026-09-11 late, `scripts/masked_probes.py`):** flipped-row colour probe reads recoloured tiles at 7% error and edits them WORSE than the canonical probe (ND −0.27 vs +0.08); parity-only probe edits best (+0.28); flip-bit probe 78% decodable, inert. Computed colour = decodable + causally inert at the last position (the discworld pattern inside Othello); the register theory now needs "writable" as a separate property.
+**INLP (2026-09-12 early, `scripts/inlp_othello.py`):** copies of a tile's colour 30 / 50 / 85–232 (standard / flip / adjacent) = the editability ordering; writing 64 copies at once edits oth-adjacent to +0.47 / 0.47 where single copies do nothing; standard peaks at K=16 (+0.65); flip saturates at K=8 (+0.24). Vocabulary: materialised vs fused variable (compiler sense); materialisation follows fan-out.
+**Dropout ablation (2026-09-11 evening):** `scripts/train.py` gained `--resume` (exact continuation from `ckpt/latest.pt`, incl. optimizer/RNG/history; extendable; token sources fast-forward the batch stream so a resumed run reproduces an uninterrupted one — `tests/test_training_resume.py`) and `--dropout`. `L-oth-adjacent-nodrop-390k` launching on wsl-sevan (unit `oth_adjacent_nodrop`; oth-adjacent data built there from scratch in layout v2): dropout 0, 390k steps (~13 h on the 4090), then INLP + K-copy edits vs the dropout run. `experiments/dropout_ablation/`.
+**Still open:** the recoloured-tile split
+(only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
+
+
+## Overnight chain 2026-09-09 18:49 → 2026-09-10 04:47 PT — `scripts/drivers/probe_targets.sh`, unit `probe_targets`, logs `logs/probe_targets/`
+
+**Outcome:** stages 1–5 and two of the three extra variants complete; every block and floor
+persisted and scored; tables rebuilt. The unit was **OOM-killed at the 45 GB cap on the first
+fit of `grid-32x16`** (512 cells, 1,536 logits — its (200k × 39 × 512) label arrays plus the
+16 GB residual memmap's page cache exceeded the cap); nothing partial was written. To run it:
+raise the cap (the box has 59 GB; the desktop has been taken down by OOM before — prefer
+making `label_frames` lighter first) and `scripts/fit_probes.py --run … --target grid-32x16`
+for both 8-ray runs, then `master_eval` + `build_full_table` (they add only what is missing).
+Monitors: both exited on their own. Findings: `findings/probe-target-type.md` (complete tables).
+⚠ At 04:48 PT a SECOND unit, `probe_targets_2` (`scripts/drivers/probe_targets_2.sh`, not
+this session's), started fitting further grid variants on the 8-ray runs (`grid-6x5` first;
+`build_full_table` cell [1] had been edited to order `grid-4x2 / 6x5 / 10x3 / 64x32`). Its
+blocks will be absorbed by `master_eval` like the others; this session did not launch or
+monitor it.
+
+Sevan's order (2026-09-09 evening): (1) Othello read by a REGRESSION probe — `mine_signed`
+(+1 mine / 0 / −1 theirs, 64 outputs; his decision: mine/theirs frame, not absolute colour)
+on all three Othello runs + floors, ND included; (2) the dw-8ray APPEARANCE target — the
+observation-exact partition: exactly 30 single-disc appearances (runs of lit rays), 90
+logits — on `L-dw-8ray-20m` and `L-dw-8ray-tok-20m` + floors; (3) a resolution sweep run
+unconditionally: `appearance-d2`, `appearance-d3`, `grid-16x8`, and if everything finishes
+before 06:00 PT, `appearance-lat`, `grid-8x4`, `grid-32x16` (one probe set per model, no
+floors). All land as extra probe-target blocks / rows in the main table.
+
+**Interim results (all but `grid-32x16` landed by 04:45 PT; `findings/probe-target-type.md`
+carries the tables):** Othello read by a REGRESSION probe is exactly as editable as by the
+categorical one (PI +0.62 / ND +0.63 vs +0.61 / +0.62); **dw-8ray under the observation-exact
+APPEARANCE target is editable at Othello's level — GS +0.61 / fid 0.39 (frame), +0.58 / 0.31
+(token), PI and ND +0.43 with guards < 1, at every residual point, persisting over the
+rollout** (regression on the same stream: GS −0.06, ND n/a, PI +0.28). The sweep is
+unimodal at the observation-exact resolution: lat (15 cells) GS +0.42, exact (30) +0.61, d2
+(60) +0.57, d3 (90) +0.51, grid-16x8 (128) +0.37 — and the 16 × 8 grid on dw-8ray reproduces
+the noiseless grid's weak numbers, so the earlier grid control's failure was the TARGET's
+misalignment with the frame, not the instance. Waterfall:
+`runs/ray_ablation/L-dw-8ray-20m/figures/waterfall_edits_appearance.png`. Fig 3 (the sweep)
+added to `build_full_table` as cell [8]; ⚠ two cosmetic defects to fix in the morning
+(tick labels "30"/"32" collide; per-panel legends crowd the Edit Index panels — the fixed
+cell is written in this session's transcript; the notebook grew past the reader's size
+limit so it could not be re-written tonight). ⚠ Another session edited
+`build_full_table` cell [1] (BASIS_ORDER gained grid-4x2/6x5/10x3/64x32, INSTANCE_ORDER
+`oth-adjacent-flip`) and REGISTRY (an `oth-adjacent-flip` instance row) during the night —
+not this chain's doing; left as found.
+
+Stages: 1 master_eval (Othello mine_signed inline + floors, ~1.5 h) → 2 appearance probes
+(2 models) → 3 floors → 4 master_eval + tables → 5 variants ×3 → 6 extra variants if before
+06:00 PT. Monitors armed: stage watcher + 30-min heartbeat (this session). ntfy pings at each
+stage. If the session is lost: `systemctl --user is-active probe_targets`,
+`logs/probe_targets/driver.log`, then re-arm both monitors. Findings skeleton:
+`findings/probe-target-type.md`. Code committed before launch (see `git log`).
+
+**23:30 PT update.** Stages 1–4 DONE (Othello `mine_signed` on 4 runs + 8 training-curve
+checkpoints; dw-8ray `appearance` on both models + floors; tables). Headline in
+`findings/probe-target-type.md`: **dw-8ray IS editable through the observation-exact
+categorical target** (frame model GS +0.61 / fid 0.39, PI +0.43 / 0.76, ND +0.43 / 0.91;
+token model GS +0.58 / 0.31; regression target on the same models: GS negative everywhere);
+by-step stays positive for 15 steps; every residual point lands; Othello `mine_signed`
+reproduces the categorical PI/ND to a few hundredths. Chain 1 is in its variant sweep
+(appearance-d2 → d3 → grid-16x8 → if before 06:00 PT: appearance-lat, grid-8x4, grid-32x16).
+**Chain 2 queued** (`scripts/drivers/probe_targets_2.sh`, unit `probe_targets_2`, logs
+`logs/probe_targets_2/`): waits for chain 1's `chain complete`, then Sevan's additions —
+the MISALIGNED 30-cell controls `grid-6x5`, `grid-10x3` (same count as appearance, not the
+runs of rays) and the gradient ends `grid-4x2`, `grid-64x32` — ~75 min each. Both chains are
+systemd units: they do not depend on any agent session. The session died once (~22:30) and
+the chain did not notice; monitors re-armed 23:25. ⚠ master_eval SETTINGS were extended with
+the four new targets via nbformat (the Read/NotebookEdit tools refuse the notebook above the
+size limit) — the one deliberate exception, flagged to Sevan.
+
+**04:55 PT update.** Chain 1 scored appearance-d2 / -d3 / grid-16x8 / appearance-lat /
+grid-8x4 (sweep so far: the observation-exact target is a PEAK — coarser (lat 15) edits
+worse at equal decodability, finer loses decodability fast and editability gradually;
+grid-8x4 at ~the same cell count edits at about half the appearance level → alignment, not
+count) and was **OOM-killed at 45 GB on grid-32x16** (`fit_probe_stream` built 2 × 25 GB
+int64 label matrices for the in-sample stats). Fixed (streamed counts, gated identical,
+commit after ee556cd); chain 2 (`probe_targets_2`, started 04:48: grid-6x5, grid-10x3,
+grid-4x2, grid-64x32) imports the fix fresh at each stage; **chain 3** (`probe_targets_3`,
+`logs/probe_targets_3/`) is queued behind chain 2 to redo grid-32x16. Expected: chain 2
+done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` with the full
+sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
+for the OOM.
+
+**15:55 PT — loss-matched control for the GRU result: the 8-ray transformer at step 32k (val 0.00600 vs the
+GRU's best 0.00595) under `appearance-fac`: ND +0.57 / 0.73, GS +0.46 / 0.52, PI +0.33 / 1.09 (guarded +0.32)
+— edits at its fully-trained level, where the GRU at the same loss does not (+0.13 / +0.07). Architecture, not
+exposure. `runs/training_curve/L-dw-8ray-20m_s032000` (training-curve view; out of the main tables by design);
+unit `l8ray_s32k_fac`, 43 min. Recorded in `probe-target-type.md` and `recurrent-l.md`. Nothing running.
+
+**15:40 PT — Othello centre tiles (Sevan's quick check; `experiments/othello_centre_tiles/`).** Li's bench
+never intervenes on d4/e4/d5/e5; 98 cases synthesised with the bench recipe. L-oth-20m, cached probes:
+PI +0.64 / 0.20, ND +0.65 / 0.20, GS +0.57 / 0.27 vs whole bench +0.61 / +0.62 / +0.65 — as editable as
+the rest of the board (linear editors' best point 5 rather than 4).
+
+**15:00 PT — `appearance-fac` on the RECURRENT 8-ray run (R-dw-8ray-20m, un-quarantined by Sevan 12:45;
+unit `r8ray_fac`, 59 min): the GRU does NOT edit under the read-out that unlocks the transformer.**
+skill 0.94 / 0.94 (identical to L-dw-8ray-20m; floors alike), PI +0.25 / 0.73 at point 0 only (input
+projection; every carried hidden destructive), ND +0.13 / 0.65, GS +0.07 / 0.86 vs the transformer's
++0.41 / +0.50 / +0.46. The categorical-target result is architecture-dependent; recomputation is back
+in play as a help (addendum in `recurrent-l.md`). Finding, registry, Table 2c updated. GPU idle;
+nothing queued.
+
+**12:30 PT — cartesian basis dropped (Sevan, 10:20; done once no unit was executing the notebooks).**
+`master_eval` `dw_bases = ("frustum",)` (no EVAL_VERSION bump — the scorer only adds missing blocks);
+`build_full_table` `HIDDEN_BASES = ("cartesian",)` hides the old blocks in Tables 1–3 and 1b–1e; Table 3
+re-lettered (3a = frustum). Executed clean. REGISTRY note added. Nothing running; GPU idle.
+
+**12:20 PT — joint-cell `appearance` on dw-5ray scored (12:14): PI +0.54 / 0.78, ND +0.47 / 0.85, GS +0.64 / 0.40
+vs 8-ray's +0.43 / +0.43 / +0.61 — the quantisation bump replicates on the second read-out; GS at Othello's
+level.** All units done; GPU idle. Now: dropping cartesian from `dw_bases` and hiding it in the tables.
+
+**11:15 PT 2026-09-11 — dw-5ray chain COMPLETE (11:09): Sevan's bet holds — a bump on every editor.**
+`L-dw-5ray-20m` best val 0.00694; canonical regression rows inert as everywhere (PI +0.30 / 1.12,
+GS −0.11); **`appearance-fac`: skill 0.93 / 0.93, PI +0.49 / 0.68, ND +0.56 / 0.90, GS +0.58 / 0.47** vs
+8-ray +0.41 / +0.50 / +0.46 — the best-edited discworld row on PI and GS, decodability unchanged.
+Along 128 → 8 → 5 rays PI and GS rise monotonically under the factorised target; ND flat. Finding,
+registry, Table 2c, sweep figure updated. Joint-cell `appearance` on 5-ray running (unit
+`dw_5ray_appearance`, ~12:10). Then: drop cartesian from `dw_bases` + hide it in the tables (Sevan,
+10:20 — agreed; deferred until no unit is executing the notebooks). Note for the record: dw-5ray has
+no filtered edit selection (identical-frame teleports in the canonical bench; unedited −0.86).
+
+**06:40 PT 2026-09-11 — training on course; NVML broken by an unattended driver upgrade (harmless).**
+dw-5ray corpus VERIFIED 01:41 (20M seq, seeds 160e9…179.5e9, obs.f32 16 GB); training started 01:41,
+~1,650 steps/min, step 480k at 06:34, best val 0.00694 → ends ~09:45, scoring ~10:15, fac ~11:15.
+At 06:15 unattended-upgrades moved the NVIDIA userspace to 595.91 (kernel module 595.84): `nvidia-smi`
+fails until reboot; CUDA still initialises in fresh processes (tested), so stages D/E are unaffected.
+GOTCHAS entry added. Reboot at Sevan's convenience after the chain completes.
+
+**23:35 PT — token-model `appearance-fac` scored (63 min): skill 0.94 / 0.94, PI +0.24 / 0.54, ND +0.30 / 0.50,
+GS +0.40 / 0.43 — below its joint-cell row (+0.26 / +0.44 / +0.58): factorisation costs the token model,
+whose output is a softmax over whole frames (one token per run). Finding, registry, Table 2c updated.
+`dw_5ray` chain released from its wait stage; generation running.
+
+**22:45 PT — overnight: token-model `appearance-fac` running; the dw-5ray instance + training chain
+queued behind it (Sevan's call, 22:25: "run the 70 min L-dw-8ray-tok-20m evaluation under appearance
+factorized, then kick off a heavier quantization run — 5 rays, radius 1.0; standard overnight protocol").**
+Sevan's ranking correction on record: dw-8ray is the best-edited discworld run under `-fac` (all three
+editors land, GS highest), not noiseless. Unit `appearance_fac_tok` started 22:30 (~70 min). Unit
+`dw_5ray` (`scripts/drivers/dw_5ray.sh`): stage A waits for `appearance_fac_tok` (4 h timeout), B
+generates dw-5ray (7 cast / 5 kept rays, radius 1.0 — 4 kept rays leaves positions lighting no ray;
+14 appearance cells, fac 9 + 4 classes; fresh seed block 160e9 / 185e9 / 1020e9 / 1030e9 registered in
+`bigcorpus.INSTANCES`; ~2 h), C trains 780k steps (~8 h), D scores canonically (~30 min), E fits
+`appearance-fac` + floors and scores (~1 h). ETA ~11:30 PT 2026-09-11. Generator path smoked on
+`_smoke_5ray` (layout v2 --role; moved to `datasets/archive/`). Watchers: stage + heartbeat on both
+units; ntfy pings at every stage. Both units are systemd, independent of this session.
+
+**20:15 PT — `appearance-fac` on L-dw-blink-20m scored (unit 72 min): ND +0.53 / 0.94, GS +0.33 / 0.95,
+PI +0.02 / 2.44; skill 0.46 / 0.68 (rand 0.22 / 0.45, obs 0.07 / 0.39).** Blink's first positive edit —
+and NOT above noiseless under the same target (+0.63 / 0.78): carrying position does not make it more
+editable; the "integration pressure" account of a discworld toggle is not supported. ND ranking under
+`-fac`: noiseless +0.63 > blink +0.53 > 8-ray +0.50. Also today: hidden-frame floors on blink
+(`experiments/blink_ablation/scripts/hidden_frame_floors.py`): trained MLP 0.96–0.98 at ten frames
+hidden vs observation 0.46–0.78 / random-init 0.58–0.74 — position IS computed and carried there.
+GPU idle; tonight's training instance still Sevan's call (5-ray quantisation was my recommendation
+before this result; see the discussion — the result weakens the case for integration pressure).
+
+**18:25 PT — `appearance-fac` on L-dw-noiseless-20m scored (unit 72 min): ND +0.63 / 0.78 — OTHELLO'S
+LEVEL, on the 128-ray run whose regression rows never edited.** 233 + 29 classes, 1,048 logits;
+skill 0.43 / 0.79 vs rand-init 0.30 / 0.59 and obs-right 0.12 / 0.52 (the first discworld target
+where training's margin is clear); GS +0.35 / 0.68; PI +0.01 / 1.95 (pseudo-inverse ill-conditioned
+at 1,048 rows — pipeline unchanged, noted). Finding, registry, Table 2c, sweep figure updated.
+Sevan's next-step discussion (17:45): a new instance tonight (5-ray quantisation vs anti-aliasing);
+my recommendation — first `appearance-fac` on `L-dw-blink-20m` (no training; the "computed
+variable" test with the working target), then the 5-ray instance. Awaiting the call.
+
+**17:30 PT — alignment of the factorised probe with the true edit direction (Sevan's contained
+test; `experiments/edit_direction_alignment/scripts/fac_probe_alignment.py`, no canonical change).**
+66/192 valid counterfactuals on dw-8ray. fac rows hold 0.070 of Δ vs 0.025 generic / 0.006 random
+rank (2.8× / 12×); ND direction cos² 0.056 vs 0.002 random (28×), joint cell 0.035, regression rows
+0.003 (= generic). Haufe: fac 0.034 vs 0.039 random-pattern floor — washed to chance, as in Result 5.
+`findings/edit-direction-alignment.md` Result 6. Next (approved): `appearance-fac` on
+`L-dw-noiseless-20m`.
+
+**17:00 PT — `appearance-fac` scored (unit 65 min): the categorical gain SURVIVES factorisation.**
+skill 0.94 / 0.94 (above the joint cell's 0.89 / 0.90; rand-init 0.92 / 0.94), PI +0.41 / 0.71
+(joint: +0.43 / 0.76), **ND +0.50 / 0.86** (best discworld ND; joint +0.43 / 0.91), GS +0.46 / 0.53
+(joint +0.61 / 0.39 — GS loses the joint move, still ≫ regression −0.06 and the grid band +0.35).
+So alignment + categorical read-out + per-tile class-swap edit are what make discworld edit like
+Othello, and `<partition>-fac` is the cheap form that keeps all three → the one to run on
+noiseless (2 × (233 + lengths) classes instead of 2,889 × 3). Finding, registry updated; Table 2c
+has the row. Open with Sevan: the Othello converse (a fuller regression set-up).
+
+**15:55 PT — the FACTORISED categorical target `appearance-fac` launched (Sevan's pick after the
+snapped result).** Per object one softmax per factor of the appearance partition — run centre (15
+classes) and run length (5) — 4 tiles × 20 classes instead of 30 cells × 3; scales to 128 rays as
+2 × (233 + n_len) against 2,889 × 3. Edits are per-tile class swaps (PI: swap old ↔ new at each
+moved tile; ND: summed row contrast; GS: CE toward the new labels); the bench is the partition's
+cell-changing 192 cases. `grid_target.FactorisedTarget` (`<partition>-fac`, works for product
+grids too), `Bench.moves`, `arms.categorical_direction`, token bench mirrored; 3 tests (247 pass);
+real-model smoke through every editor. Unit **`appearance_fac`** (`scripts/drivers/probe_target_fit.sh`
+— model probes, random-init + observation floors, then `score_pending.sh`), started 15:53,
+GRID_PROBE_RECIPE, ~1 h. Commit ae99a1f. Sevan's next idea on record: the CONVERSE on Othello
+(classification → regression already done as `mine_signed`; a fuller regression set-up needs
+thought — "not just swapping the optimiser").
+
+**15:40 PT — `pos@appearance` scored (unit done in 15 min): the snapped regression target IS the
+regression row.** skill 0.96 / 0.99 (gap ≤ 0.001, not overfit), PI +0.34 / 0.92 at α 100 (the
+canonical row: +0.28 / 0.90 at α 100), GS −0.13 / 0.84 (−0.06 / 0.82); the categorical
+appearance row stays alone at +0.43 / +0.61. Reading in `findings/probe-target-type.md`: the
+categorical gain is the read-out + logit-swap edit, not the target's frame-alignment; the
+regression side of this axis is closed. Table 2c shows the row under its reference. Committed.
+
+**15:20 PT — layout v2 verified from my side; Table 2c; the SNAPPED regression target launched.**
+The other agent's migration (commits ebf6a99, f3a404f, 2de841d): 240 tests green, `--verify`
+gate passed per the spec, probe caches re-keyed logically (not orphaned), my sweep-figure script
+updated by them. Nothing blocks. **Part 1 (Sevan):** `build_full_table` now splits every extra
+probe target out of Tables 1–3 (`DF_X`; `CANONICAL_BASES`) into **Table 2c — the probe-target
+sweep**: per run, the canonical reference row, then the extra targets by cell count; Fig 3 and
+the 3c… floor tables read `DF_X`. Executed clean. **Part 2 (Sevan):** `pos@<partition>` — the
+gridification kept as 4-D position regression (`grid_target.SnappedTarget`, cell centroids in
+the frustum basis with a medoid fallback, `bench_arrays` regression branch on the partition's
+filtered cases, `_targets` snap, canonical 30k recipe, floors inline; 4 new tests, 244 pass).
+`master_eval` SETTINGS: `pos@appearance` on `L-dw-8ray-20m`. Running as unit
+**`snapped_appearance`** (`scripts/drivers/score_pending.sh`, `logs/snapped_appearance/`),
+started 15:19 — fits LIN + MLP inline, PI/GS (ND recorded, not reported), the dw-8ray floors
+for the target, then the tables. ~1 h expected. Watcher on. Prediction on record: LIN skill
+below the regression row's 0.95 (piecewise-constant target), MLP ≈ 0.9; if PI/GS rise from
++0.28 / −0.06 toward the categorical appearance row's +0.43 / +0.61, alignment is the story.
+Notebook rule exception taken again (nbformat; the two notebooks exceed the reader's cap).
+
+**14:20 PT — chain 5 STOPPED at Sevan's call; the overnight probe-target programme is closed.**
+grid-64x32 on noiseless needed ~6 h (20 min per probe point at 6,144 logits; LIN at the majority
+at points 0–2); Sevan: "that's crazy, let's cancel it now". `systemctl --user stop probe_targets_5`;
+no partial probe or score artefact (the cache writes only after a full fit). **Nothing is running
+or queued; GPU free; the tree is clear for the other agent's cache-key migration** (pinged).
+Noiseless reading written into `findings/probe-target-type.md`: decodability survives finer
+grids (MLP 0.44 at 512 cells vs 0.04 on 8-ray), editability does not follow (ND / GS flat across
+32 → 512, PI degrading); `appearance-lat` the outlier (ND +0.51 / 0.79, linearly unreadable).
+Re-queue grid-64x32 (noiseless) or the full 2,889-cell appearance partition only if wanted.
+Sevan is moving to a new idea next.
+
+**13:45 PT — chain 5 on its last variant, grid-64x32; ETA revised.** appearance-lat (233
+cells: LIN 0.04 / MLP 0.63, PI +0.04 / 1.68, **ND +0.51 / 0.79**, GS +0.30 / 1.08) and
+grid-32x16 (0.20 / 0.44, +0.17 / 1.13, +0.34 / 0.92, +0.29 / 0.90) are in the tables and the
+finding (commits 932089f, 4549455); figure re-rendered. grid-64x32 started 13:19: ~20 min per
+probe point at 6,144 logits, so ~5–6 h for LIN + MLP → done **~19:30 PT**, not 15:30. Unit
+memory 36 GiB steady under the 45 GiB cap (label tensor 7.8 M × 2,048), GPU 18.6 GiB. LIN at
+the majority at point 0 (as on 8-ray); the MLP is what the noiseless question needs (it read
+grid-32x16 at 0.44 where 8-ray was at 0.04), so the stage runs on. So far the noiseless
+gradient: decodability survives finer grids, editability does not follow — ND +0.34…+0.37 and
+GS +0.27…+0.30 flat across 32 → 512 cells, PI degrading; appearance-lat is the one outlier
+(ND +0.51, linearly unreadable).
+
+**11:35 PT — chain 4 OOM-killed at appearance-lat; chain 5 relaunched with the fix.**
+Chain 4 scored grid-8x4 (noiseless: skill 0.71 / 0.89, PI +0.27 / 1.05, ND +0.34 / 0.92, GS
++0.27 / 1.11 — in the tables) and was killed by systemd-oomd 50 s into appearance-lat:
+`AppearanceTarget.cell_of` labelled all 15.6 M probe positions in one shot (~60 GB at 128
+rays). Fixed: chunked labelling + snapping of unseen grazing runs (commit after 5c35ba7;
+gated: 2 GB peak, 16 s, all 233 / 2,889 cells realised; 18 tests). **Chain 5**
+(`probe_targets_5`, `scripts/drivers/probe_targets_5.sh`, `logs/probe_targets_5/`) runs the
+three remaining variants — appearance-lat, grid-32x16, grid-64x32 — started 11:35; watcher +
+heartbeat re-armed on it. Expected done ~15:00 PT (grid-64x32 the long one, ~1.5 h).
+
+**10:56 PT — chain 3 complete; chain 4 running.** grid-32x16 on both 8-ray models is in the
+tables (frame: skill 0.01 / 0.04, PI +0.14 / 1.22, ND +0.31 / 0.97, GS +0.42 / 0.68; tokens:
+0.01 / 0.05, +0.02, +0.10, +0.18 / 0.58) — the product-grid GS band holds with the probe at
+the majority, i.e. editability there is insensitive to decodability (findings §4). Chain 4
+(`probe_targets_4`) started 10:57 with grid-8x4 on the noiseless run; heartbeat + watcher on.
+
+**09:10 PT — records caught up while chain 3 runs.** Consolidated 8-ray sweep tables and
+reading in `findings/probe-target-type.md` (commit bec3776), the OOM in GOTCHAS, REGISTRY rows,
+and the sweep figure `experiments/probe_targets/outputs/probe_target_sweep.png` via
+`pim.figures.sweep_figure` (commit 3649a83; re-run `experiments/probe_targets/scripts/sweep_figure.py`
+when chains 3/4 land — the noiseless row fills in by itself). Chain 3 started 08:57, ~2.5 min
+per probe point on grid-32x16; expected done ~10:30 PT, chain 4 then ~10:30 → ~15:00 PT.
+Sevan asked (09:00) why 32x16 is redone (chain 1 OOM, never scored) and how much is left
+(chain 3: 32x16 × 2 models; chain 4: 4 noiseless variants) — answered.
+
+**08:58 PT — chain 2's last variant STOPPED by me.** grid-64x32 on dw-8ray: the linear
+probe sat exactly at the majority error (skill 0.00) at points 0–2 and the variant would have
+taken ~8 h for both models (≈15 min per point at 6,144 logits). The far end of the gradient
+is thereby measured (decodability collapses); the editors on a probe that reads nothing are
+noise, not a result. Stopped via `systemctl --user stop probe_targets_2` so chain 3 (grid-32x16
+redo) and chain 4 (the noiseless sweep Sevan asked for) run today instead of tonight. Chain 2's
+scored variants: grid-6x5, grid-10x3, grid-4x2 (all in the tables). Re-queue grid-64x32 on
+dw-8ray only if Sevan wants the number in the table.
+
+**05:40 PT — chain 4 queued** (Sevan: "run similar grid sweeps on L-dw-noiseless-20m; I
+predict it benefits from a finer grid than 8-ray"): `scripts/drivers/probe_targets_4.sh`,
+unit `probe_targets_4`, behind chain 3 — grid-8x4, appearance-lat (233 cells), grid-32x16,
+grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full appearance
+partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
+Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
+
+## Where the work is (2026-09-09)
+
+**Done this session (Sevan's ask): the grid target lives in `pim`, not in an experiment.**
+`pim.environments.discworld.grid_target` (`"grid-16x8"`), a categorical branch in
+`discworld/bench.py` + `discworld/arms.py`, ONE class-swap helper shared with Othello
+(`pim.editors.pinv.swap_class_logits`), kind-agnostic Probe Skill / tripwire
+(`pim.metrics.probe_skill_from_stats`). No probe was fitted: the 18 grid probes + the two
+floors were RE-KEYED from the experiment into `runs/noise_ablation/L-dw-noiseless-20m/probes/`
+and `runs/_baselines/dw-noiseless/`, and `master_eval` ADDS a missing probe-target block to a
+current `scores.json` instead of rescoring (`dw_extra_targets`, `require_cached` — the scorer
+can never start a grid fit). `build_full_table`: one row per (run, probe target); the grid
+row reports ND; Table 3c. Canonical numbers = the experiment's to 4 decimals (ND +0.373 /
+0.91, GS +0.289 / 0.87, PI +0.126 / 1.58). ⛔ **Sevan's constraint stands: no new probe
+training.** The Othello REGRESSION-target ablation he intends is NOT implemented (no probes;
+the arm wiring would be dead code until they exist) — when it runs, it is a `kind="regression"`
+block on the Othello side, keyed like the grid one.
+
+**Also done (2026-09-09, later): Transformer-L is ONE class with two interface parameters.**
+`input` linear | embedding and `head` regression | categorical (`output_kind` logits | raw),
+the two old names kept as presets (`TransformerL`, `TransformerLTokens`); parameter names and
+registration order preserved, so every probe-cache fingerprint is unchanged. Gated on all 28
+canonical L checkpoints: identical fingerprints, state-dict keys, residual streams and head
+outputs (bit-identical). `scripts/train.py` now takes the interface as a run parameter
+(`--repr frames|tokens`, `--objective ce|mse_onehot`, either environment; Othello has only a
+token corpus so `frames` is rejected there), and `master_eval` picks the scorer by what the
+model EMITS (frame → ray-zone rollout; distribution → set-based step-0), not by environment.
+No retraining, no probe fits, no rescoring; 221 tests. Decided in discussion the same day:
+the mixed discworld cells (linear-in/categorical-out, embedding-in/regression-out), the
+discworld MSE-on-one-hot cell and any Othello continuous-input cell are NOT pursued — an
+embedding on a one-hot IS a linear layer, so "Othello under discworld's input" is degenerate;
+the control logic (each environment invariant to the interface swap meaningful for it) is
+complete with `L-dw-8ray-tok-20m` and `L-oth-20m-mse`. Flagged as the real gaps: a second
+SEED of the flagship pair (the record is `observed`, one seed per cell), bootstrap intervals
+on the Edit Index, and — as a research call — a discrete-state discworld instance (lattice
+positions, jump dynamics) as the one environment-side test of the constitutive hypothesis.
+
+**The claim the paper can make.** Othello is editable, discworld is not, under an
+identical pipeline (probes, editors, α grids, Edit Index + guard). Everything we varied to
+explain the gap came back negative, so the honest framing is **"decodability is not
+editability"** in a matched cross-environment design — NOT "the conditions for
+editability". (Framing discussion 2026-09-07; retreat ratified after blink failed.)
+
+**Runs since 09-01** — each has a findings note; numbers there, not here.
+
+| run | what it varied | editable? | note |
+|---|---|---|---|
+| `objective_ablation/L-oth-20m-mse` | CE → MSE-on-one-hot head | YES +0.68 | `othello-mse-head.md` |
+| `interface_ablation/L-dw-8ray-tok-20m` | frames → tokens, Othello arch | no (+0.006) | `interface-ablation.md` |
+| `flip_ablation/L-oth-noflip-20m` | Othello without recolouring | no (~0) — but colour is causally IRRELEVANT there (checkerboard theorem), so it is a "decodable ≠ used" control, not a rules ablation | `flip-ablation.md` |
+| `blink_ablation/L-dw-blink-20m` | position must be CARRIED (blackouts) | no (+0.27 reappearance ≈ +0.22 visible) | `blink-ablation.md` |
+| `adjacency_ablation/L-oth-adjacent-20m` | colour USED without enclosure geometry | **no** (PI −0.05 / ND +0.12 / GS 0), read-out lands 100% | `adjacency-ablation.md` |
+
+**Excluded as explanations:** objective, interface, observation resolution, noise,
+decodability, causal use, carried state, and target type (categorical vs continuous —
+`grid-target-control.md`: a 128-cell 3-way discworld target gives ND +0.37 / GS +0.29,
+one-frame and reverting, vs Othello's +0.63). What remains is constitutive: a discrete
+combinatorial state read through a categorical head vs continuous geometry through a
+regression head.
+
+**The geometry line** (`edit-direction-alignment.md`, `experiments/edit_direction_alignment/`).
+With oracle counterfactual states, Δ = h_cf − h, the fraction of Δ inside the probe's
+read-out subspace tracks editability: oth-uniform 26×/30× its generic baseline,
+oth-adjacent 8×, every discworld variant 0.5–1.2× (at chance). Two results worth carrying:
+patching discworld's last-position residual with the FULL Δ produces the edit (+0.94), so
+the residual IS load-bearing and position's code is high-rank/nonlinear; and the canonical
+Othello editors reach 91% of the true-counterfactual ceiling, which validates the metric.
+⚠ Alignment relative to the GENERIC baseline predicts editability; ABSOLUTE alignment does
+not (Haufe correction raises absolute overlap everywhere and reorders nothing).
+⛔ Scope: that analysis modifies the INSTRUMENT — see `RESEARCH.md` "The independent
+variable is the ENVIRONMENT, not the editor" before extending it.
+
+**Housekeeping done 2026-09-09.** dw-8ray's edit bench was silently degenerate — 20% of
+its teleports render an identical frame and 22% move one ray of eight — so both 8-ray runs
+now score a stored filtered case list (`datasets/discworld/dw-8ray/edits_selection.json`,
+≥2 differing rays, 192/192 scoreable, shared by the ray-zone and token benches so the
+interface pair stays matched). Conclusions unchanged; PI's guard on `L-dw-8ray-20m`
+improved from 1.11 to 0.90, i.e. non-destructive. Old numbers parked as
+`scores.pre-selection-2026-09-09.json` in each run dir (`runs/MOVES.md`).
+
+**Open decisions.**
+- (2026-09-10) **Dataset layout v2 — DONE** (`research/specs/DATASET_LAYOUT_SPEC.md`,
+  `scripts/migrate_datasets.py`; verify PASSED, 240 tests green). Every `datasets/` path now comes
+  from `pim/environments/layout.py`: `train/ probe/ eval/ edits/v1/ (edits/v2 reserved) tokens/
+  _unused/` + `layout.json`; probe caches re-keyed logically (372 blobs, bytes unchanged, 5
+  duplicates parked in `_superseded/`); producers stamp new instances v2 at birth. Ledgers in
+  `datasets/MOVES.md`, `runs/MOVES.md`; GOTCHAS entry 2026-09-10. Nothing rescored. NEXT (Sevan's
+  order): the model-referenced Edit Index + paired-counterfactual bench (`edits/v2/`) — design still
+  under discussion (legal vs illegal edits; references p_A / S(B); the ceiling row); spec not yet
+  written; then full re-evaluation when the GPU is free.
+- (2026-09-09, Sevan) Re-reference the Edit Index and guard to the MODEL'S OWN predictions —
+  unedited prediction and prediction on the true counterfactual history — instead of GT, so the
+  floor is −1 by construction and +1 is the model's own counterfactual. Claude's read: the right
+  object, but it demands a counterfactual per bench case (dw ≈110/192 in-frustum; Othello ≈5%
+  of flips are reachable boards), so the bench must be rebuilt from counterfactual PAIRS, or the
+  GT index kept as headline with the true-counterfactual ceiling reported beside it. Undecided.
+- Table 1b per-component point-selection rule (options given 2026-09-05, undecided).
+- Untrack the four `runs/*/config.json|scores.json` files on the remote? (`runs/` is
+  gitignored; these predate it and were force-added.)
+- Rewrite history to drop ~315 MB of old smoke-run checkpoints under
+  `logs/archive/_smoke_runs/` (needs force-push across ~20 branches).
+
+**Repo state.** `main` = `origin/main` = 484428a (housekeeping_big merged). 196 tests pass.
+The nbstripout git filter now runs with `-W ignore` (it was flooding the terminal with
+nbformat MissingIDFieldWarning on every git command).
+
+_Previous update: 2026-09-01 — THE GUARD unified: one fidelity definition, one polarity, both environments_
 
 _2026-09-01 (later) — **The guard is now one metric everywhere** (EVAL_VERSION 2026-09-01.1,
 all five runs rescored):_

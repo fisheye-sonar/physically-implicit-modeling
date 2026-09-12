@@ -26,7 +26,6 @@ construction — the vocabulary is built over every split).
 """
 from __future__ import annotations
 
-import json
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,6 +34,7 @@ import numpy as np
 import torch
 
 from pim.editors.grad_steer import build_edit_spec, make_intervention_hook
+from pim.editors.nanda import addition_delta
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
@@ -56,6 +56,13 @@ class TokenBench:
     zones: object             # ray zones (for the expected-frame bridge)
     vocab: FrameVocab
     n: int
+    # the probe target's KIND (2026-09-09), as on `bench.Bench`: "regression" — tgt holds
+    # values; "classification" — tgt holds (n, cells) long labels and `cells` the categorical
+    # MOVE per case ({"A", "B", "cls"} long tensors); `selection` = the scored case list
+    kind: str = "regression"
+    cells: dict | None = None
+    moves: dict | None = None              # factorised categorical target (see bench.Bench)
+    selection: dict | None = None
 
     @property
     def legal_pre(self) -> list[list[int]]:
@@ -71,7 +78,8 @@ selection_path = dwb.selection_path        # ONE selection per instance — see 
 
 def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
                      basis_name: str = "cartesian", data_dir: Path | None = None,
-                     select: "np.ndarray | None" = None, use_selection: bool = True) -> TokenBench:
+                     select: "np.ndarray | None" = None, use_selection: bool = True,
+                     instance: str | None = None) -> TokenBench:
     """The canonical edit set as tokens: context, the two worlds' frames at EF, targets.
 
     ⛔ CASE SELECTION (2026-09-08). Taking the first ``n`` cases wastes a large share of them:
@@ -83,14 +91,19 @@ def load_token_bench(vocab: FrameVocab, n: int = 192, target: str = "pos",
     scored. Pass ``select=`` to override, or ``use_selection=False`` for the old first-n bench.
     """
     a = dwb.bench_arrays(n, target, basis_name, data_dir, select=select,
-                         use_selection=use_selection)
+                         use_selection=use_selection, instance=instance)
     tokens = encode(a["obs"][:, :EF], vocab).astype(np.int64)
     post = encode(a["clean"][:, EF], vocab).astype(np.int64)
     pre = encode(a["zones"].gt_unedited, vocab).astype(np.int64)
     keep = (pre != post) & (pre != UNK) & (post != UNK) & (tokens != UNK).all(1)
-    return TokenBench(tokens, pre, post, keep, torch.from_numpy(a["y"]).float().to(DEV),
+    tgt = torch.from_numpy(a["y"]).to(DEV)
+    tgt = tgt.long() if a["kind"] == "classification" else tgt.float()
+    _long = lambda d: (None if d is None                                   # noqa: E731
+                       else {k: torch.from_numpy(v).long().to(DEV) for k, v in d.items()})
+    cells, moves = _long(a["cells"]), _long(a["moves"])
+    return TokenBench(tokens, pre, post, keep, tgt,
                       torch.from_numpy(a["change_mask"]).to(DEV), a["out_dims"], a["zones"],
-                      vocab, a["n"])
+                      vocab, a["n"], kind=a["kind"], cells=cells, moves=moves, selection=a["selection"])
 
 
 def frame_probs(outputs: torch.Tensor, kind: str = "logits") -> torch.Tensor:
@@ -173,32 +186,71 @@ def _write_hook(ell: int, h: torch.Tensor):
     return hook
 
 
+def _check_dims(tb: TokenBench, dims: str) -> None:
+    if tb.kind == "classification" and dwb.dim_idx(dims) is not None:
+        raise ValueError(f"dims={dims!r} is a regression dim set; a {tb.kind} bench takes 'all'")
+
+
 def pinv_arm(model, tb: TokenBench, probes: dict, alphas, uns: np.ndarray,
              space: str = "zspace", dims: str = "all") -> list[dict]:
-    """PI at ONE residual point, every point, α swept — ``arms.pinv_arm`` on tokens."""
+    """PI at ONE residual point, every point, α swept — ``arms.pinv_arm`` on tokens. On a
+    categorical target the PI target is the probe's own read-out with the two class swaps
+    (``arms.pinv_target``) and the landing check is ``arms.readout_landed``."""
+    from pim.environments.discworld.arms import pinv_target, readout_landed
+
+    _check_dims(tb, dims)
     idx = dwb.dim_idx(dims)
     x0 = residuals_last(model, tb)
     recs = []
     for ell, (probe, _) in probes.items():
         h0 = x0[ell]
-        step = pinv_step(h0, tb.tgt, probe, space=space, dims=idx)
-        err0 = readout_error(h0, tb.tgt, probe, dims=idx)
+        tgt = pinv_target(probe, h0, tb)
+        step = pinv_step(h0, tgt, probe, space=space, dims=idx)
+        if tb.kind == "classification":
+            before = {"readout_landed_before": readout_landed(h0, probe, tb)}
+            after = lambda h: {"readout_landed": readout_landed(h, probe, tb)}  # noqa: E731
+        else:
+            before = {"readout_err_before": readout_error(h0, tgt, probe, dims=idx)}
+            after = lambda h: {"readout_err_after": readout_error(h, tgt, probe, dims=idx)}  # noqa: E731
         for a in alphas:
             h = h0 + a * step
             probs = probs_at_edit(model, tb, hook=_write_hook(ell, h))
             recs.append({"editor": f"PI[{space}]", "point": int(ell), "alpha": float(a),
                          "dims": dims,
                          "write_ratio": float((a * step).norm(dim=1).div(h0.norm(dim=1)).mean()),
-                         "readout_err_before": err0,
-                         "readout_err_after": readout_error(h, tb.tgt, probe, dims=idx),
+                         **before, **after(h),
                          **scorecard(probs, tb, uns)})
+    return recs
+
+
+def nanda_arm(model, tb: TokenBench, probe, ell: int, alphas, uns: np.ndarray,
+              dims: str = "all") -> list[dict]:
+    """ND at one residual point, α swept, on a CATEGORICAL target only (the Othello form:
+    the probe row of (new cell, class) minus (old cell, class), per case). ND has no
+    regression form on discworld — see the registry."""
+    if tb.kind != "classification":
+        raise ValueError("ND is applicable on a categorical target only")
+    from pim.environments.discworld.arms import categorical_direction
+
+    _check_dims(tb, dims)
+    d = categorical_direction(probe, tb)
+    h0 = residuals_last(model, tb)[ell]
+    recs = []
+    for a in alphas:
+        h = h0 + addition_delta(h0, d, a)
+        probs = probs_at_edit(model, tb, hook=_write_hook(ell, h))
+        recs.append({"editor": "ND", "point": int(ell), "alpha": float(a), "dims": dims,
+                     "write_ratio": float(a), **scorecard(probs, tb, uns)})
     return recs
 
 
 def grad_steer_arm(model, tb: TokenBench, probes: dict, start_layers, alphas,
                    uns: np.ndarray, n_steps: int = 100, beta: float = 0.2,
                    dims: str = "all") -> list[dict]:
-    """GS from each start layer and every point after it — ``bench.grad_steer_arm`` on tokens."""
+    """GS from each start layer and every point after it — ``bench.grad_steer_arm`` on tokens.
+    On a categorical target the spec is Li's cross-entropy toward the bench's labels on the
+    changed cells (``build_edit_spec`` branches on the probe)."""
+    _check_dims(tb, dims)
     cm = dwb.restrict_mask(tb.change_mask, dims)
     x0 = residuals_last(model, tb)
     recs = []

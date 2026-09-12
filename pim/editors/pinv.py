@@ -151,6 +151,27 @@ def pinv_step(h0: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
 
 
 @torch.no_grad()
+def swap_class_logits(logits: torch.Tensor, tile: torch.Tensor, cls_a: torch.Tensor,
+                      cls_b: torch.Tensor) -> torch.Tensor:
+    """The categorical PI target: a classification probe's own read-out with, per sample,
+    the scores of two classes at ONE tile exchanged.
+
+    ``logits`` (B, d_out, C); ``tile``, ``cls_a``, ``cls_b`` (B,) long. Returns a copy.
+    This is the ONE place a "flip" is spelled: Othello swaps current ↔ target colour at the
+    intervened square; the discworld grid target (2026-09-09) swaps empty ↔ the object's
+    class at the old cell and again at the new cell. Both call this, so the two
+    environments' PI targets cannot drift apart.
+    """
+    out = logits.clone()
+    ar = torch.arange(out.shape[0], device=out.device)
+    sel = out[ar, tile]                                  # (B, C) — an indexed COPY
+    a, b = sel[ar, cls_a].clone(), sel[ar, cls_b].clone()
+    sel[ar, cls_a], sel[ar, cls_b] = b, a
+    out[ar, tile] = sel
+    return out
+
+
+@torch.no_grad()
 def readout_error(h: torch.Tensor, target: torch.Tensor, probe: WorldStateProbe,
                   dims=None) -> float:
     """Mean ‖probe(h) − target‖ in the probe's OUTPUT units — the landing check.

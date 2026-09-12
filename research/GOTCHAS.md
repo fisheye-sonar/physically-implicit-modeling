@@ -785,7 +785,9 @@ hides the same frames. Consequences worth knowing before reading numbers:
 ## 2026-09-08 — A categorical (grid) target puts discworld decodability on a HARSHER axis, not a lower one
 
 Re-expressing the discworld state as 128 cells × {empty, obj0, obj1} and fitting 3-way
-probes (experiments/grid_target_control) gives Probe Skill 0.71 (MLP) / 0.43 (LIN) where the
+probes (the `grid-16x8` probe target, `pim.environments.discworld.grid_target`; canonicalised
+2026-09-09 from experiments/grid_target_control, now the third block of
+`L-dw-noiseless-20m`'s scores.json) gives Probe Skill 0.71 (MLP) / 0.43 (LIN) where the
 regression probes report 0.996 / 0.96. That is not a worse read of the state: the regression
 probes' own predictions, mapped onto the same cells, score 0.31–0.45 and put a disc in its
 correct cell 66–72% of the time, against 84–86% for the direct grid probes. A depth bin is two
@@ -845,3 +847,96 @@ reading an interpolation or patch experiment, and never compare it across enviro
 ceilings differ (discworld's is +0.94). RESOLVED the same day: the low ceiling and the
 "editor beats the real thing" paradox were both caused by unvalidated swap-based
 counterfactuals — see the entry above.
+
+## 2026-09-10 — A wide categorical probe's "stats" can be the memory hog, not the fit
+
+`fit_probe_stream` used to materialise the train split's PREDICTED and TRUE labels as
+int64 arrays for the in-sample error and the majority baseline. At 512 tiles × 6.2M train
+rows that is two 25 GB arrays — the fit itself streams and needs ~3 GB — and the grid-32x16
+fit was OOM-killed at the unit's 45 GB cap (chain 1, 04:47). At 2048 tiles it would have
+been 100 GB. Symptom: a unit that dies WITHOUT a FAILED marker (`journalctl --user -u <unit>`
+shows `oom-kill`), while the per-point log stops mid-family. Fix: accumulate error counts,
+per-tile counts and class counts chunk by chunk (gated identical to the dense computation).
+Rule: anything that scales as rows × outputs must be streamed when either is large — the
+probe recipe's 7.8M rows make even int64 labels a 60 MB-per-output cost.
+
+Same lesson, second instance the same day (chain 4, 11:30): `AppearanceTarget.cell_of` ran
+the renderer's ray–disc test on all 15.6 M probe-corpus positions at once — fine at 8 rays
+(~4 GB), ~60 GB of float64 (positions × rays) intermediates at 128 rays; systemd-oomd killed
+the unit at a 35 GB peak, BELOW its 45 GB `MemoryMax` (oomd acts on memory pressure, not the
+cap — do not read "peak < MemoryMax" as "not an OOM"). Now chunked (2 GB peak, 16 s). The
+same instance also surfaced that a 128-ray disc can light a run the 500 × 500 dense sweep
+never saw (a grazing ray flipped by float32 rounding; 4 codes in 2 M positions) — such runs
+snap to the nearest realisable run instead of raising. Neither can happen on dw-8ray.
+
+## 2026-09-10 — Dataset layout v2: every `datasets/` path comes from `pim/environments/layout.py`
+
+Spec `research/specs/DATASET_LAYOUT_SPEC.md`; migration `scripts/migrate_datasets.py`
+(`--plan/--snapshot/--apply/--verify/--rollback`); log
+`research/scratch/2026-09-10-layout-migration-log.json`. Purely cosmetic: every file kept its
+inode, every cached probe its bytes, no score changed. What moved, and the traps around it:
+
+- The probe FIT corpus is `probe/probe_120k.h5` (was `probe/test.h5`) and `probe/probe_250k.h5`
+  (was `probe_250k/test.h5`). "test" never meant held-out there: the hold-out is an internal
+  seeded 80/20 split BY SEQUENCE inside the same file (`arms.fit_probes`). The held-out
+  sequences are `eval/test.h5` (waterfalls; never used to fit anything).
+- The edit bench is `edits/v1/edits.h5` (was `eval/edits.h5`); dw-8ray's case filter is
+  `edits/v1/selection.json` (was `edits_selection.json`). `edits/v2/` is RESERVED for the
+  paired-counterfactual bench — do not put anything else there.
+- **Probe cache keys are LOGICAL**: `data="discworld/<inst>"`, `split="probe_<size>"` — never a
+  filesystem path (a path in the key is how a dataset move would have orphaned all 394 cached
+  probes). 372 blobs were re-keyed in place; 5 pre-2026-09-01 relative-path duplicates are parked
+  under `<probes>/_superseded/`. A `data_dir=` argument still works everywhere: an instance's probe
+  directory maps onto the logical key (`layout.legacy_probe_key`), any other directory (a pilot)
+  keeps a path key. `probe_recipe` now returns `{"probe": {"instance", "size"}, ...}`, so a
+  scores.json written after 2026-09-10 records the corpus by name, not path.
+- Othello splits live in role directories: `train/train_20000000.npz`, `eval/test_10000.npz`,
+  `probe/probe_20000.npz`, `probe/probe_large_170000.npz` (+ label caches). The legacy 90k / 1M /
+  5M rungs are in `_unused/corpus/`: `train.py --limit 90000` now takes a PREFIX of the 20M corpus
+  (different games) — no canonical run uses `--limit`; the archived L90 runs trained on the moved
+  files, so reproducing one means pointing at `_unused/corpus/` explicitly.
+- `eval/val.h5` was NEVER the training validation set (that is the last tenth of the train
+  memmap); its only reader was the token-vocab builder. It and the 100-sample
+  `probe*/{train,val,edits}.h5` stubs are in `_unused/`. The token vocabulary was NOT rebuilt, and
+  every frame of the retired `val.h5` is in the stored vocab (0 UNK, verified by the gate).
+- `oth-uniform`'s bench is `edits/v1/cases_1001.pkl`, a cmp-verified copy of Li's vendored file
+  (still in git; the loader falls back to it when the copy is absent).
+- Producers write v2 directly — `generate_dataset.py --role probe|eval|edits --instance <inst>`,
+  `corpus.build`, `bigcorpus` — and stamp `layout.json` at birth (`layout.ensure_marker`), which
+  REFUSES an instance that still holds v1 files. A new instance therefore cannot be born in v1.
+- The notebook reader's 25k-token cap: `master_eval.ipynb` and `build_full_table.ipynb` exceed it
+  even with outputs stripped, so their 2026-09-10 cell edits had to be made with `nbformat`
+  (source-only cell replacement, unified diff printed in the session). This is the second time the
+  cap has blocked NotebookEdit on these two files (2026-09-10 morning was the first); splitting
+  them is the fix, not another workaround.
+
+## 2026-09-11 — `nvidia-smi: Driver/library version mismatch` mid-run is unattended-upgrades, not a crash
+
+At 06:15 an unattended apt upgrade moved the NVIDIA userspace libraries to 595.91 while the
+loaded kernel module stayed at 595.84 (`/proc/driver/nvidia/version`). From then on NVML —
+and so `nvidia-smi` and any heartbeat that shells out to it — fails with the mismatch message
+until the machine reboots. **CUDA itself keeps working**: the training process kept its
+context (steps advanced, 480k → …), and a FRESH Python process still initialised CUDA and ran
+an op, so the chain's later GPU stages (scoring, probe fits) were unaffected. Reading: the
+message means "reboot when convenient", never "the run died" — check the metrics file and
+`systemctl --user is-active <unit>` first. Heartbeats should read GPU state from `torch` or
+tolerate an empty `nvidia-smi` rather than treating its failure as the job's.
+
+
+## 2026-09-11 — The legal-mass filter for Othello counterfactuals is TOOTHLESS on adjacency instances; filter on ordinariness
+
+(Replaces an entry written earlier the same day that blamed the index's "dynamic range" — wrong,
+caught by Sevan.) The 2026-09-09 rule "keep a counterfactual history only if the model's legal
+mass on it is ≥ 0.99" screened swap-built histories on standard Othello (legal mass 0.845 vs
+0.994). On oth-adjacent and oth-adjacent-flip the models put legal mass 1.000 on essentially
+EVERY history, including off-distribution swaps, so the filter passes them and the "true
+counterfactual" scores +0.14 / +0.25 — below the editors — while a perfect predictor scores
++1.000 on the same cases. The tell: the model's rmse to uniform-over-its-own-legal-set on the
+kept counterfactuals was 3–4× its held-out value. Rules: (1) ALL exact one-tile counterfactual
+boards are swap-built in every Othello instance (0 substitutions of 900 reach the board), so the
+contaminant is always present; (2) screen on ORDINARINESS — rmse-to-own-uniform within the
+held-out 95th percentile for the same prefix length — not on legal mass
+(`experiments/adjacent_flip_ablation/scripts/honesty_check_v2.py`); (3) sanity-check any
+ceiling against the ideal distribution's score (+1.000) and the held-out deviation before
+interpreting it. With the right filter the ceilings agree across instances (+0.66 to +0.70) and
+the editors sit below them.

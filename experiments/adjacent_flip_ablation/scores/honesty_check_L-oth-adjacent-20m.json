@@ -1,0 +1,24 @@
+{
+ "run": "runs/adjacency_ablation/L-oth-adjacent-20m",
+ "instance": "oth-adjacent",
+ "n_cases": 52,
+ "unedited": -0.6463354558488323,
+ "ceiling_true_counterfactual": 0.25249417850155126,
+ "cf_mass_on_legal_post": 0.9996731281280518,
+ "editors": {
+  "PI": {
+   "point": 8,
+   "alpha": 5.0,
+   "edit_index_union": -0.08561428211629482,
+   "mass_on_legal_post": 0.9983923435211182,
+   "full_bench_edit_index_union": -0.05291433639571572
+  },
+  "ND": {
+   "point": 1,
+   "alpha": 2.0,
+   "edit_index_union": 0.21183910581096665,
+   "mass_on_legal_post": 0.9837032556533813,
+   "full_bench_edit_index_union": 0.11829169587970575
+  }
+ }
+}

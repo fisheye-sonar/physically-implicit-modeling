@@ -137,9 +137,26 @@ def tokens_and_labels(games: list[list[int]], flip: bool = True,
     return ProbeData(tokens, labels, mine, mask, lengths)
 
 
+REGRESSION_TARGETS = ("mine_signed",)   # probe targets fitted by regression, not 3-way CE
+
+
+def signed_mine(mine: np.ndarray) -> np.ndarray:
+    """The mine/theirs board as ONE SIGNED VALUE per tile: +1 mine, 0 blank, −1 theirs
+    (float32). The regression counterpart of the canonical categorical target (2026-09-09):
+    the same information in the same frame, read by a 64-output regression probe, so
+    "categorical vs regression probe target" can be tested on Othello the way the grid
+    target tests it on discworld. A flip is a sign change of one tile."""
+    return np.where(mine == MINE, 1.0, np.where(mine == THEIRS, -1.0, 0.0)).astype(np.float32)
+
+
 def flatten_rows(data: ProbeData, target: str = "state") -> tuple[np.ndarray, np.ndarray]:
-    """(row_index_of_sequence, positions) → the flat (activation, label) row layout."""
-    y = data.labels if target == "state" else data.mine
+    """(row_index_of_sequence, positions) → the flat (activation, label) row layout.
+    ``target``: "state" (absolute colour, 3-way), "mine" (mine/theirs, 3-way) or
+    "mine_signed" (mine/theirs as ±1/0, regression)."""
+    if target == "mine_signed":
+        y = signed_mine(data.mine)
+    else:
+        y = data.labels if target == "state" else data.mine
     seq_idx = np.repeat(np.arange(len(data.tokens))[:, None], data.tokens.shape[1], 1)
     return seq_idx[data.mask], y[data.mask]
 

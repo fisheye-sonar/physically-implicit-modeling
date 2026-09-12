@@ -79,10 +79,17 @@ _BLINK_RANGES = [(110_000_000_000, 130_000_000_000, "dw-blink train"),
                  (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
                  (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
                  (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")]
+# dw-5ray (2026-09-10 night): dw-8ray with 7 rays CAST, wall rays dropped -> 5 kept; radius 1.0
+# (the floor for this ray count: at 4 kept rays a reachable disc can light no ray)
+_RAYS_5 = ["--obs-res", "7", "--drop-edge-rays", "--radius", "1.0", "--max-edit-attempts", "2000"]
+_RAYS5_RANGES = [(160_000_000_000, 180_000_000_000, "dw-5ray train"),
+                 (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
+                 (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
+                 (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large")]
 _NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
                (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
                (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
-               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES
+               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES + _RAYS5_RANGES
 
 # ── the instance registry ─────────────────────────────────────────────────────
 # One entry per environment instance that owns a 20M streaming corpus. `forbidden`
@@ -151,20 +158,45 @@ INSTANCES = {
                       (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
                       (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
                       (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
-                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")],
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")] + _RAYS5_RANGES,
+    },
+    "dw-5ray": {  # dw-8ray with 5 usable rays (7 cast, wall rays dropped); radius 1.0 — the quantisation push
+        "base_seed": 160_000_000_000,
+        "obs_dim": 5,
+        "sim_flags": _COMMON_FLAGS + _RAYS_5 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"],
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (60_000_000_000, 80_000_000_000, "dw-8ray train"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (110_000_000_000, 130_000_000_000, "dw-blink train"),
+                      (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                      (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
+                      (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large"),
+                      (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
+                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large")],
     },
 }
 
 
 def instance_dir(inst: str) -> Path:
-    return REPO / "datasets" / "discworld" / inst
+    from pim.environments.layout import instance_root
+
+    return instance_root("discworld", inst)
 
 
 def train_dir(inst: str) -> Path:
-    d = instance_dir(inst) / "train"
-    if inst == "dw-pn04" and not d.exists():          # pre-move legacy location
-        return REPO / "datasets" / "20_dwscale_20m"
-    return d
+    from pim.environments.layout import train_dir as _train_dir
+
+    return _train_dir("discworld", inst)
 
 
 def _spec(inst: str) -> dict:
@@ -312,4 +344,8 @@ if __name__ == "__main__":
          "seed_stride": SEED_STRIDE, "sim_flags": SIM_FLAGS,
          "train_n": TRAIN_N, "val_n": VAL_N,
          "instance": INSTANCE, "n_frames": FRAMES, "obs_dim": OBS_RES}, indent=1))
+    # a new instance is born in layout v2 (research/specs/DATASET_LAYOUT_SPEC.md §4f)
+    from pim.environments.layout import ensure_marker
+
+    ensure_marker("discworld", INSTANCE)
     print("corpus complete", flush=True)

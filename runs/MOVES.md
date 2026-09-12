@@ -46,3 +46,55 @@
 - `runs/pipeline_smoke/` → `runs/_pipeline_smoke/` (underscore prefix = skipped by the master scan; these were 600-step pipeline tests, 0.077% of a canonical run, never interpretable as results)
 
 - 2026-09-09  runs/{ray_ablation/L-dw-8ray-20m,interface_ablation/L-dw-8ray-tok-20m,ray_ablation/_R-dw-8ray-20m}/scores.json -> scores.pre-selection-2026-09-09.json  (rescored on the filtered dw-8ray edit-case selection; old numbers kept for comparison)
+
+## 2026-09-09 — the grid probe target canonicalised (experiments/grid_target_control removed)
+Probe blobs were LOADED and RE-STORED under canonical cache keys (no refit); the source
+files were in the experiment's gitignored `probes/` dirs, which are gone with the folder.
+- `experiments/grid_target_control/probes/` (18 per-point fits, model `8e615e18076c`) →
+  `noise_ablation/L-dw-noiseless-20m/probes/probes_37be083f519e4f5f.pt` (LIN, points 0-8) and
+  `…/probes_d04c9d9450fedf73.pt` (MLP-128, points 0-8): target `grid-16x8`, 200k seq, 50 epochs
+- `experiments/grid_target_control/probes/` (18 random-init fits, model `a295a3758336` =
+  `random_init_model("transformer_l", seed 0)`) → `_baselines/dw-noiseless/probes/probes_4c7bd6cdc06de02e.pt`
+  (LIN) and `…/probes_b35092e3ec37f522.pt` (MLP)
+- `experiments/grid_target_control/probes/` (2 observation floors, right-aligned, 200k, 50 epochs) →
+  `_baselines/dw-noiseless/probes/probes_b19531c23a65e3cf.pt` (LIN), `…/probes_ec44d4ed567d5e2a.pt` (MLP);
+  their skills added to `_baselines/dw-noiseless/baselines.json` under `bases["grid-16x8"]`
+- `experiments/grid_target_control/_pn04_partial/probes/` (4 real fits on `L-dw-20m`, points 0-1 only;
+  the fit was stopped 2026-09-08) → `initial_othello_comparison/L-dw-20m/probes/probes_68d1ea01cd0fd06c.pt`
+  (LIN) and `…/probes_bde36cc476e7da5f.pt` (MLP), provenance marked `partial`. The four 2-epoch /
+  3k-sequence smoke fits beside them were not kept.
+- `experiments/grid_target_control/outputs/waterfall_grid_edits.png` →
+  `noise_ablation/L-dw-noiseless-20m/figures/waterfall_edits_grid-16x8_experiment-2026-09-08.png`
+- `runs/noise_ablation/L-dw-noiseless-20m/scores.json` gained the `grid-16x8` block (`blocks_added`
+  records the date and commit); nothing else in it changed.
+
+## Probe-cache re-key — 2026-09-10 (layout v2: cache keys name the corpus logically, `data=discworld/<inst>`, `split=probe_<size>`, instead of a filesystem path; bytes unchanged; full old→new list in `research/scratch/2026-09-10-layout-migration-log.json`)
+- `experiments/dw_tokens/obsfloor/probes`: 64 re-keyed
+- `runs/_architecture_gate/R-dw-20m/probes`: 4 re-keyed
+- `runs/_architecture_gate/R-dw-noiseless-20m/probes`: 4 re-keyed
+- `runs/_baselines/dw-8ray/probes`: 50 re-keyed
+- `runs/_baselines/dw-blink/probes`: 20 re-keyed
+- `runs/_baselines/dw-noiseless/probes`: 44 re-keyed
+- `runs/_baselines/dw-pn04/probes`: 40 re-keyed
+- `runs/_pipeline_smoke/S-dw-smoke/probes`: 4 re-keyed
+- `runs/_pipeline_smoke/dw-tok-smoke/probes`: 4 re-keyed
+- `runs/blink_ablation/L-dw-blink-20m/probes`: 4 re-keyed
+- `runs/initial_othello_comparison/L-dw-20m/probes`: 16 re-keyed, 4 relative-path duplicates parked in `_superseded/`
+- `runs/interface_ablation/L-dw-8ray-tok-20m/probes`: 24 re-keyed
+- `runs/noise_ablation/L-dw-noiseless-20m/probes`: 16 re-keyed, 1 relative-path duplicates parked in `_superseded/`
+- `runs/ray_ablation/L-dw-8ray-20m/probes`: 42 re-keyed
+- `runs/ray_ablation/_R-dw-8ray-20m/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s001000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s004000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s016000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s064000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s128000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s256000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s512000/probes`: 4 re-keyed
+- `runs/training_curve/L-dw-20m_s780000/probes`: 4 re-keyed
+
+## 2026-09-11 — R-dw-8ray-20m back in the record
+- `runs/ray_ablation/_R-dw-8ray-20m` → `runs/ray_ablation/R-dw-8ray-20m` (Sevan, by hand, 2026-09-11 ~12:45): the recurrent 8-ray run leaves quarantine so the factorised categorical target can be scored on it through the canonical scorer and land in the tables. Its `scores.json` (regression bases, eval 2026-09-01.4) and probes are unchanged.
+
+## 2026-09-09 (wsl-sevan)
+- `runs/smoke/` → `runs/_smoke/` — the 2026-09-09 pipeline-smoke runs (L-dw-smoke, L-oth-smoke) renamed under the `_` rule so master_eval/build_full_table skip them; nothing deleted.

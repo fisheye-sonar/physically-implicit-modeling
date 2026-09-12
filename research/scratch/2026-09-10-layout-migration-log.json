@@ -1,0 +1,4190 @@
+{
+ "applied": "2026-09-10 15:01:42",
+ "instances": {
+  "discworld/dw-8ray": {
+   "moves": [
+    [
+     "eval/dataset.json",
+     "edits/v1/edits.json"
+    ],
+    [
+     "eval/edits.h5",
+     "edits/v1/edits.h5"
+    ],
+    [
+     "edits_selection.json",
+     "edits/v1/selection.json"
+    ],
+    [
+     "eval/val.h5",
+     "_unused/eval/val.h5"
+    ],
+    [
+     "eval/train.h5",
+     "_unused/eval/train.h5"
+    ],
+    [
+     "probe/test.h5",
+     "probe/probe_120k.h5"
+    ],
+    [
+     "probe/dataset.json",
+     "probe/probe_120k.json"
+    ],
+    [
+     "probe/train.h5",
+     "_unused/probe/train.h5"
+    ],
+    [
+     "probe/val.h5",
+     "_unused/probe/val.h5"
+    ],
+    [
+     "probe/edits.h5",
+     "_unused/probe/edits.h5"
+    ],
+    [
+     "probe_250k/test.h5",
+     "probe/probe_250k.h5"
+    ],
+    [
+     "probe_250k/dataset.json",
+     "probe/probe_250k.json"
+    ],
+    [
+     "probe_250k/train.h5",
+     "_unused/probe_250k/train.h5"
+    ],
+    [
+     "probe_250k/val.h5",
+     "_unused/probe_250k/val.h5"
+    ],
+    [
+     "probe_250k/edits.h5",
+     "_unused/probe_250k/edits.h5"
+    ],
+    [
+     "tokens/probe.npy",
+     "_unused/tokens/probe.npy"
+    ],
+    [
+     "tokens/val.npy",
+     "_unused/tokens/val.npy"
+    ]
+   ],
+   "copies": [
+    [
+     "eval/dataset.json",
+     "eval/test.json"
+    ]
+   ]
+  },
+  "discworld/dw-blink": {
+   "moves": [
+    [
+     "eval/dataset.json",
+     "edits/v1/edits.json"
+    ],
+    [
+     "eval/edits.h5",
+     "edits/v1/edits.h5"
+    ],
+    [
+     "eval/val.h5",
+     "_unused/eval/val.h5"
+    ],
+    [
+     "eval/train.h5",
+     "_unused/eval/train.h5"
+    ],
+    [
+     "probe/test.h5",
+     "probe/probe_120k.h5"
+    ],
+    [
+     "probe/dataset.json",
+     "probe/probe_120k.json"
+    ],
+    [
+     "probe/train.h5",
+     "_unused/probe/train.h5"
+    ],
+    [
+     "probe/val.h5",
+     "_unused/probe/val.h5"
+    ],
+    [
+     "probe/edits.h5",
+     "_unused/probe/edits.h5"
+    ],
+    [
+     "probe_250k/test.h5",
+     "probe/probe_250k.h5"
+    ],
+    [
+     "probe_250k/dataset.json",
+     "probe/probe_250k.json"
+    ],
+    [
+     "probe_250k/train.h5",
+     "_unused/probe_250k/train.h5"
+    ],
+    [
+     "probe_250k/val.h5",
+     "_unused/probe_250k/val.h5"
+    ],
+    [
+     "probe_250k/edits.h5",
+     "_unused/probe_250k/edits.h5"
+    ]
+   ],
+   "copies": [
+    [
+     "eval/dataset.json",
+     "eval/test.json"
+    ]
+   ]
+  },
+  "discworld/dw-noiseless": {
+   "moves": [
+    [
+     "eval/dataset.json",
+     "edits/v1/edits.json"
+    ],
+    [
+     "eval/edits.h5",
+     "edits/v1/edits.h5"
+    ],
+    [
+     "eval/val.h5",
+     "_unused/eval/val.h5"
+    ],
+    [
+     "eval/train.h5",
+     "_unused/eval/train.h5"
+    ],
+    [
+     "probe/test.h5",
+     "probe/probe_120k.h5"
+    ],
+    [
+     "probe/dataset.json",
+     "probe/probe_120k.json"
+    ],
+    [
+     "probe/train.h5",
+     "_unused/probe/train.h5"
+    ],
+    [
+     "probe/val.h5",
+     "_unused/probe/val.h5"
+    ],
+    [
+     "probe/edits.h5",
+     "_unused/probe/edits.h5"
+    ],
+    [
+     "probe_250k/test.h5",
+     "probe/probe_250k.h5"
+    ],
+    [
+     "probe_250k/dataset.json",
+     "probe/probe_250k.json"
+    ],
+    [
+     "probe_250k/train.h5",
+     "_unused/probe_250k/train.h5"
+    ],
+    [
+     "probe_250k/val.h5",
+     "_unused/probe_250k/val.h5"
+    ],
+    [
+     "probe_250k/edits.h5",
+     "_unused/probe_250k/edits.h5"
+    ]
+   ],
+   "copies": [
+    [
+     "eval/dataset.json",
+     "eval/test.json"
+    ]
+   ]
+  },
+  "discworld/dw-pn04": {
+   "moves": [
+    [
+     "eval/dataset.json",
+     "edits/v1/edits.json"
+    ],
+    [
+     "eval/edits.h5",
+     "edits/v1/edits.h5"
+    ],
+    [
+     "eval/val.h5",
+     "_unused/eval/val.h5"
+    ],
+    [
+     "eval/train.h5",
+     "_unused/eval/train.h5"
+    ],
+    [
+     "probe/test.h5",
+     "probe/probe_120k.h5"
+    ],
+    [
+     "probe/dataset.json",
+     "probe/probe_120k.json"
+    ],
+    [
+     "probe/train.h5",
+     "_unused/probe/train.h5"
+    ],
+    [
+     "probe/val.h5",
+     "_unused/probe/val.h5"
+    ],
+    [
+     "probe/edits.h5",
+     "_unused/probe/edits.h5"
+    ],
+    [
+     "probe_250k/test.h5",
+     "probe/probe_250k.h5"
+    ],
+    [
+     "probe_250k/dataset.json",
+     "probe/probe_250k.json"
+    ],
+    [
+     "probe_250k/train.h5",
+     "_unused/probe_250k/train.h5"
+    ],
+    [
+     "probe_250k/val.h5",
+     "_unused/probe_250k/val.h5"
+    ],
+    [
+     "probe_250k/edits.h5",
+     "_unused/probe_250k/edits.h5"
+    ]
+   ],
+   "copies": [
+    [
+     "eval/dataset.json",
+     "eval/test.json"
+    ]
+   ]
+  },
+  "othello/oth-adjacent": {
+   "moves": [
+    [
+     "corpus/probe_20000.npz",
+     "probe/probe_20000.npz"
+    ],
+    [
+     "corpus/probe_20000_labels_20000.npz",
+     "probe/probe_20000_labels_20000.npz"
+    ],
+    [
+     "corpus/probe_large_170000.npz",
+     "probe/probe_large_170000.npz"
+    ],
+    [
+     "corpus/probe_large_170000_labels_170000.npz",
+     "probe/probe_large_170000_labels_170000.npz"
+    ],
+    [
+     "corpus/test_10000.npz",
+     "eval/test_10000.npz"
+    ],
+    [
+     "corpus/train_20000000.npz",
+     "train/train_20000000.npz"
+    ],
+    [
+     "edits/cases_1001.pkl",
+     "edits/v1/cases_1001.pkl"
+    ],
+    [
+     "edits/cases_1001.json",
+     "edits/v1/cases_1001.json"
+    ]
+   ],
+   "copies": []
+  },
+  "othello/oth-adjacent-flip": {
+   "moves": [],
+   "copies": []
+  },
+  "othello/oth-noflip": {
+   "moves": [
+    [
+     "corpus/probe_20000.npz",
+     "probe/probe_20000.npz"
+    ],
+    [
+     "corpus/probe_20000_labels_20000.npz",
+     "probe/probe_20000_labels_20000.npz"
+    ],
+    [
+     "corpus/probe_large_170000.npz",
+     "probe/probe_large_170000.npz"
+    ],
+    [
+     "corpus/probe_large_170000_labels_170000.npz",
+     "probe/probe_large_170000_labels_170000.npz"
+    ],
+    [
+     "corpus/test_10000.npz",
+     "eval/test_10000.npz"
+    ],
+    [
+     "corpus/train_20000000.npz",
+     "train/train_20000000.npz"
+    ],
+    [
+     "corpus/train_90000.npz",
+     "_unused/corpus/train_90000.npz"
+    ],
+    [
+     "edits/cases_1001.pkl",
+     "edits/v1/cases_1001.pkl"
+    ],
+    [
+     "edits/cases_1001.json",
+     "edits/v1/cases_1001.json"
+    ]
+   ],
+   "copies": []
+  },
+  "othello/oth-uniform": {
+   "moves": [
+    [
+     "corpus/probe_20000.npz",
+     "probe/probe_20000.npz"
+    ],
+    [
+     "corpus/probe_20000_labels_50.npz",
+     "_unused/corpus/probe_20000_labels_50.npz"
+    ],
+    [
+     "corpus/probe_large_170000.npz",
+     "probe/probe_large_170000.npz"
+    ],
+    [
+     "corpus/probe_large_170000_labels_170000.npz",
+     "probe/probe_large_170000_labels_170000.npz"
+    ],
+    [
+     "corpus/test_10000.npz",
+     "eval/test_10000.npz"
+    ],
+    [
+     "corpus/train_1000000.npz",
+     "_unused/corpus/train_1000000.npz"
+    ],
+    [
+     "corpus/train_20000000.npz",
+     "train/train_20000000.npz"
+    ],
+    [
+     "corpus/train_5000000.npz",
+     "_unused/corpus/train_5000000.npz"
+    ],
+    [
+     "corpus/train_90000.npz",
+     "_unused/corpus/train_90000.npz"
+    ],
+    [
+     "corpus/train_90000.npz.regen-dup",
+     "_unused/corpus/train_90000.npz.regen-dup"
+    ]
+   ],
+   "copies": [
+    [
+     "pim/environments/othello/vendor/intervention_benchmark.pkl",
+     "edits/v1/cases_1001.pkl"
+    ]
+   ]
+  }
+ },
+ "caches": [
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_0fb429e4f1c8449f.pt",
+   "new": "probes_14560b4e3673b657.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_128d661536744a11.pt",
+   "new": "probes_6eb6882566c14ca2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_149424799a405a8a.pt",
+   "new": "probes_c13d7670c1128ed6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_15411fd2c3071465.pt",
+   "new": "probes_b1c6444762130f8c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_1855fc8fc45984db.pt",
+   "new": "probes_b6a42b7973b02539.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_1e8c800c8e13dc48.pt",
+   "new": "probes_161dded809e65969.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_20139b6f7b94c47d.pt",
+   "new": "probes_85095dcdacfb0e8f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_22b93de115adf1fa.pt",
+   "new": "probes_a0a2a1f3000aab44.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_2441a9cc94a7d8e1.pt",
+   "new": "probes_606143b229ad90c4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_277ccd48e48e8d63.pt",
+   "new": "probes_c7185eb866d32367.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_3406131df94eacf4.pt",
+   "new": "probes_04876cb902eb13d8.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_3b86edc16580b7b6.pt",
+   "new": "probes_1124c31ff310ef8a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_418bdfab4e7c8363.pt",
+   "new": "probes_42ed9f84003cb9c5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_425ca5721a43057e.pt",
+   "new": "probes_f5515595759c94f5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_43380ea82983e687.pt",
+   "new": "probes_95f9e97a5a7f080b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_4559e63a6787fe39.pt",
+   "new": "probes_1e56a460268305c4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_465b55987db8d158.pt",
+   "new": "probes_91c6af188566f0a5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_4799ef3f912efe2b.pt",
+   "new": "probes_510c248afea19039.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_48230f5ed818f1c7.pt",
+   "new": "probes_1fc864f97f3a5c8c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_52766173cebd79f7.pt",
+   "new": "probes_1b86caf14cda0d89.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_5769e568afadf053.pt",
+   "new": "probes_0a8c66deec0da476.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_5a0c3adcaa16e1e0.pt",
+   "new": "probes_3f6485ed8a099f97.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_5cedd9d7b3198496.pt",
+   "new": "probes_ea54ebff832ad089.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_62c23e5324ca36a4.pt",
+   "new": "probes_46353597013c0686.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_6b2271e549ad19be.pt",
+   "new": "probes_691973a710a42698.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_6b3ccde51f9f379b.pt",
+   "new": "probes_45589b316f06eee1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_6d31e2a54e691d0b.pt",
+   "new": "probes_0c55a9b087615973.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_7c6059501c3e0eb0.pt",
+   "new": "probes_7da588ca0c356996.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_83409c95c042ab2b.pt",
+   "new": "probes_576d26f9fdcd6bfa.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_896be66ab2a51bf4.pt",
+   "new": "probes_7532e73daf318265.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_89c753ec47482080.pt",
+   "new": "probes_bef6d052a0ece45f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_8b2d4b2537f15b77.pt",
+   "new": "probes_8dc30d3a902cff15.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_90afc0774aadc77d.pt",
+   "new": "probes_e5c720cfdfad371b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_96e7e9f7405aaafb.pt",
+   "new": "probes_7fdd02a2143b47a1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_9a9be9867eb6ea8d.pt",
+   "new": "probes_e602b24d215c35e2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_9af37a6956dd08ca.pt",
+   "new": "probes_45dec3fe25a1e0a2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_9be845ef50358dc9.pt",
+   "new": "probes_69f62d48edab81f3.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_9e369a85f48dcbfc.pt",
+   "new": "probes_1f7a90d59682a229.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_a2c4e617f8a283e3.pt",
+   "new": "probes_c71bbb1a4b71eaad.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_a35db244afba0dd0.pt",
+   "new": "probes_07203f68b64966fb.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_abe933c3461b7feb.pt",
+   "new": "probes_c95b0126997af868.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_ac0ad765cf0aee82.pt",
+   "new": "probes_69d2c73419ead212.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_b1b2b087fae21065.pt",
+   "new": "probes_b33de826f4b1d9d4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_ba47c6b0e92c7234.pt",
+   "new": "probes_bdea8f6bcb69cf5f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_bc55465039968159.pt",
+   "new": "probes_d693617caaa9eff7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_bc5a7e32ddb9bc3b.pt",
+   "new": "probes_51b570f0785417ae.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_c24f7c11a3b7e13d.pt",
+   "new": "probes_9308a57c1b9f676c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_c883b485fd11bc33.pt",
+   "new": "probes_4ed1a2a826120d0b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_c929c7d3d1ee91ad.pt",
+   "new": "probes_fd2822bbe301b71f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_cb77e757cf04529c.pt",
+   "new": "probes_486b7f00c295da8e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_cdc39208f5697de4.pt",
+   "new": "probes_49ac99fc24757932.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_cf513c9926ed79fe.pt",
+   "new": "probes_30df2e1602f70db3.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_d0c10a3662372aaf.pt",
+   "new": "probes_3af25b47f83c821c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_d17943dccf805ab3.pt",
+   "new": "probes_84adfafb7ec7bfdd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_d39ac4d7cd027ffb.pt",
+   "new": "probes_22f49ebac8e62186.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_d87f9b89d447bccc.pt",
+   "new": "probes_1947546b483ee744.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_dbc1611fb0033ff1.pt",
+   "new": "probes_7dc1bb1b8ec24bc4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_dc9b5fbb6b19e37e.pt",
+   "new": "probes_74c2925b8a240a45.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_eec073fc07afd444.pt",
+   "new": "probes_6d0d60ee6f121436.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_efd19b3840ca13dd.pt",
+   "new": "probes_21f42d22c3b97eb4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_f1e72876b0a55c61.pt",
+   "new": "probes_5e50f58b5ae2f0d0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_f2a6d86d3195304f.pt",
+   "new": "probes_700b1ad96dc250f1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_f7b33afe022d92a2.pt",
+   "new": "probes_052e098701002ddf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "experiments/dw_tokens/obsfloor/probes",
+   "old": "probes_fb7a238f23afb88c.pt",
+   "new": "probes_4dc7e5d93b1e2af0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-20m/probes",
+   "old": "probes_5e2c4f92a09f1339.pt",
+   "new": "probes_877606d86ba1a970.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-20m/probes",
+   "old": "probes_85b08c0d19c33d36.pt",
+   "new": "probes_a97f5afd55c50453.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-20m/probes",
+   "old": "probes_8f25dbab9981fc3b.pt",
+   "new": "probes_9d56cf7978780f99.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-20m/probes",
+   "old": "probes_c1ea71e657192967.pt",
+   "new": "probes_cfe49f3f542e05df.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-noiseless-20m/probes",
+   "old": "probes_2b7f5ba42a0e71b9.pt",
+   "new": "probes_39b396df477f8d6f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-noiseless-20m/probes",
+   "old": "probes_5b10779814f34155.pt",
+   "new": "probes_ab3df3a41c92bc85.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-noiseless-20m/probes",
+   "old": "probes_92288c6b0aaf97ef.pt",
+   "new": "probes_5ea10a70194a9aec.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_architecture_gate/R-dw-noiseless-20m/probes",
+   "old": "probes_fc81ffcd98e72005.pt",
+   "new": "probes_39cbfa31c915d335.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_042c3edad47702eb.pt",
+   "new": "probes_183189dd814e7b17.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_0e66fcc2d2d687d5.pt",
+   "new": "probes_22099c98c1ff9ec5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_19a1a8b2f888bfcc.pt",
+   "new": "probes_81b3ed0d907de844.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_21579197f7a59ebd.pt",
+   "new": "probes_c50e2b17d717c48c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_23a2f777d4d723f2.pt",
+   "new": "probes_6a077e40e1a01515.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_2b75d7f71f9ae762.pt",
+   "new": "probes_ad84cf7b15185e9b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_4f25ee8a902f4443.pt",
+   "new": "probes_3e7f4b042a648048.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_51c721a611530b4e.pt",
+   "new": "probes_3f9f6b24981c499b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_521a8510c3094811.pt",
+   "new": "probes_fb6b394987857d2c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_54c5a5f6ac65dd3a.pt",
+   "new": "probes_da5e33f35b227a18.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_55977f32ec72fdda.pt",
+   "new": "probes_48cf7f207f8ff03e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_64a6fd5252cfb2db.pt",
+   "new": "probes_e52be768d999b00e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_676ab70d18a078bb.pt",
+   "new": "probes_090c542784ed9b43.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_75aa1ae3226fd032.pt",
+   "new": "probes_aaffe3d3a81799bf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_75d361b0b5fe6b62.pt",
+   "new": "probes_7ac7d72b68a5771b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_7650aa8b32c531df.pt",
+   "new": "probes_ee5ac6001ea4e5de.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_7ab43d2c62efe059.pt",
+   "new": "probes_2d67ced8301aacb9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_7d648bcb5a47b213.pt",
+   "new": "probes_3bff23133f8eb451.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_84ad0b5a9060d71b.pt",
+   "new": "probes_dd92c0c9fc4e6614.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_8c0dfeb667c358b0.pt",
+   "new": "probes_b3c92a07ea95d2d9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_9fff7c6ac5b9fc98.pt",
+   "new": "probes_6e75870055db96ac.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_a5616767b13bbf9e.pt",
+   "new": "probes_b96112eab08c7a1c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_a7aff3f105f3b479.pt",
+   "new": "probes_c38e32a0306595c2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_ad077e5314b93b16.pt",
+   "new": "probes_500c984405e67d45.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_b9aeed2c29cd1496.pt",
+   "new": "probes_ae4beb45d79f2239.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_bb3feff45a2aabbb.pt",
+   "new": "probes_40feb908a4358ece.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_bc7a4bc33af5b1e2.pt",
+   "new": "probes_071db99830f1afe6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_beb1054efa137bc1.pt",
+   "new": "probes_58800a8ccb66bcad.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_bfda5c69965be48f.pt",
+   "new": "probes_7e23563fc1defcbd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_c87559f28c31331f.pt",
+   "new": "probes_44e8df32d07d5887.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_c9f42d69d914ad3c.pt",
+   "new": "probes_d332e26a5787027a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_caf7523bba6692d2.pt",
+   "new": "probes_52bf4c5b15034e24.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d114864b6080d2c4.pt",
+   "new": "probes_b96d0ee23ff69029.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d129dfd60832edee.pt",
+   "new": "probes_1ea311e3f70224d9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d2647f585a0ab83d.pt",
+   "new": "probes_e81c875984323d20.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d466e1b333531596.pt",
+   "new": "probes_eab0ee0a8b7048cb.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d62b4455998c6ab2.pt",
+   "new": "probes_5b2845f733730d2a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d8536760b9dadc26.pt",
+   "new": "probes_455b93d1cf55d8a8.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_d8d48f0af362f6c7.pt",
+   "new": "probes_5179165d3b9c7681.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_dcf49033e1bcd7e0.pt",
+   "new": "probes_c3a09ae3bda3af96.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_e86854efab7e30f1.pt",
+   "new": "probes_0a2a136704b7e6be.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_e8a762e0a76c8b21.pt",
+   "new": "probes_344a8f28b29cf845.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_ed55450120670fac.pt",
+   "new": "probes_1119db8990f55f9c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_f2ac75209246aa57.pt",
+   "new": "probes_3b061e0d79524f7e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_f62179b48ef742fc.pt",
+   "new": "probes_a01b039cbe5588ae.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_fc6ddcda6f65511f.pt",
+   "new": "probes_dc560240ae0f3195.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_fdea5ccf40de4cf9.pt",
+   "new": "probes_79a34bc075e69fde.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_fe3f9cf411195ae6.pt",
+   "new": "probes_76be10edf824aa16.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_ff8a2ce5418b1434.pt",
+   "new": "probes_a2139792ce2ddeba.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-8ray/probes",
+   "old": "probes_fff100aa3c722af6.pt",
+   "new": "probes_c3d08c70c0f6322d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_0ba66dfdc1b244fc.pt",
+   "new": "probes_4c7a6e44d7e0492d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_13a791bb1efa838f.pt",
+   "new": "probes_53cad0a17c17843a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_1e1c5421ef222f92.pt",
+   "new": "probes_3397f3cf09a9f7b7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_21acd914a5e09d7c.pt",
+   "new": "probes_2dac75d6445938cf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_2bee53b6a14f60aa.pt",
+   "new": "probes_9fbc1b8a5f84d315.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_305531d4c463d455.pt",
+   "new": "probes_c8522a5f44c68d4b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_3aaab36d1d1e5f96.pt",
+   "new": "probes_3cde5578e02bf04f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_4a4e915c91eb0cbf.pt",
+   "new": "probes_3b9b082998c25cd3.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_571a1de85cffd6f9.pt",
+   "new": "probes_37c74565f6df5fe5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_5fd7f35f87d5d56a.pt",
+   "new": "probes_fd9014ee37db27a4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_657e4f5c9cb0616e.pt",
+   "new": "probes_fb231c471d7dbb58.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_66b0b5d10af6cb30.pt",
+   "new": "probes_aad2a9a6e2b43648.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_7eb0c3bd30fe401a.pt",
+   "new": "probes_b9c062098706c553.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_9eef677a0da7f68d.pt",
+   "new": "probes_8a36bbd714cdc76d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_a8e9b32a2137edb6.pt",
+   "new": "probes_43fce07552ada494.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe_250k",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_afe7549dc915d76d.pt",
+   "new": "probes_d812dedc515a417a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_b4a2b94647444e50.pt",
+   "new": "probes_815b64c66272d046.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_beaca8952dfab100.pt",
+   "new": "probes_516fcdb27ee3c741.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_ccffffa7cb8e36ac.pt",
+   "new": "probes_824c08dee6d48701.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-blink/probes",
+   "old": "probes_cd5e9828813625f6.pt",
+   "new": "probes_c44ec0e658fe6858.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_0d958652c957955d.pt",
+   "new": "probes_0abc5c699263aebb.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_0e338c3b0eecb204.pt",
+   "new": "probes_07244dd6430ad08f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_10bf1f22e2a881ce.pt",
+   "new": "probes_eb5e791af332a6ba.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_14decc8c7a37e70b.pt",
+   "new": "probes_545d6462006709e1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_200cac0e75a3bfb8.pt",
+   "new": "probes_9c605d16f9c1e79b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_203f8becc8c27203.pt",
+   "new": "probes_8af7e448039f07c1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_271e71000f538f99.pt",
+   "new": "probes_3b1336ccdd50d545.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_3952e9afc8b1fe22.pt",
+   "new": "probes_6a316416113dc239.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_3d06fb116f26eb7d.pt",
+   "new": "probes_dc2b687727d2bf41.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_3d66bc7b11cec8e5.pt",
+   "new": "probes_03a11d597e39352e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_45902b00506715d4.pt",
+   "new": "probes_1be8b2441c09db98.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_4714ff08f9a10073.pt",
+   "new": "probes_99cc4f79565d93bf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_4894e1e253931d95.pt",
+   "new": "probes_47fbe06c8d10c9a6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_4c7bd6cdc06de02e.pt",
+   "new": "probes_f43db9f134eea11b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_4f258dad37b78b28.pt",
+   "new": "probes_ae230c84c1af4a12.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_5521e415ada99da2.pt",
+   "new": "probes_b63440fd2f22deb6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_61d25cc59fa2552e.pt",
+   "new": "probes_dabea3b212b604fd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_6b649cdb7d9f3bf4.pt",
+   "new": "probes_5749b29ceda6e97d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_757553d81c905238.pt",
+   "new": "probes_4fc6ad16da704c9c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_782755d674ea1854.pt",
+   "new": "probes_6375e1c48b0ef686.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_79cdf51cabcdf582.pt",
+   "new": "probes_ac0c0699391931e5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_7d5d31a41e555c6a.pt",
+   "new": "probes_de4a3ac9080610d1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_7e36a52825afcabd.pt",
+   "new": "probes_a038471e721fc818.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_7fb2582dcf903119.pt",
+   "new": "probes_150683d7657556de.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_8382e4bb46ee1d5f.pt",
+   "new": "probes_c8b443ad043f83a6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_83a696412e8e8102.pt",
+   "new": "probes_481d3c8c484cf815.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_8a8f3d986e15bacb.pt",
+   "new": "probes_09379eb390820468.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_981c960eed073f33.pt",
+   "new": "probes_36d477470d01342c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_9ced6c5cb3c8047b.pt",
+   "new": "probes_92a0a87078b5c202.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_a0184cf988b0d7f6.pt",
+   "new": "probes_94350d67ba0ddcdf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_b19531c23a65e3cf.pt",
+   "new": "probes_260111aa09860e07.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_b35092e3ec37f522.pt",
+   "new": "probes_8e7629f3a4832886.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_b793ad2b4f9616ea.pt",
+   "new": "probes_c8dc393e7ea6d622.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_b8928b29b16cc15e.pt",
+   "new": "probes_b95c8a08be59c0fd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_b8fd9238c9594b03.pt",
+   "new": "probes_f8a3323246017e85.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_c6400b247dd3ef61.pt",
+   "new": "probes_3969463ba96f6839.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_d61b428e762b1655.pt",
+   "new": "probes_3893c2275be87cfb.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_e59d2872d0b45d0d.pt",
+   "new": "probes_83c477c1754cf8cd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_e9c387a9168b1ecd.pt",
+   "new": "probes_10724cb359e8e20f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_ec44d4ed567d5e2a.pt",
+   "new": "probes_4533d292d7edec0a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_f12c7230bac21fe3.pt",
+   "new": "probes_79b17581499f2748.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_f5b6e89846e9d40a.pt",
+   "new": "probes_fbbb5ee2b6aca936.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_f9d468400cb3ef98.pt",
+   "new": "probes_18181b374eaccfdf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-noiseless/probes",
+   "old": "probes_fde4efbc4ab71285.pt",
+   "new": "probes_c9de65d8f0c45b0a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_0bdb45d4b07b7d0e.pt",
+   "new": "probes_c769964d7957ef29.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_11c2c7d93565b7c2.pt",
+   "new": "probes_d308d3fcea40cb94.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_183e6be521a7cd8f.pt",
+   "new": "probes_0d462ba5bcc5b3a9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_1ab4523b8cac40bf.pt",
+   "new": "probes_bec5858826e57f7d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_1e20a0a0642ba32f.pt",
+   "new": "probes_4043e971904d4e7b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_1e32d63eed2e9f68.pt",
+   "new": "probes_9fedaff126605b61.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_36c1a7c1dca078fd.pt",
+   "new": "probes_13fd584d676366be.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_3c4b2bc546fe81ce.pt",
+   "new": "probes_0090113abcfb2bec.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_47af4247db7b7bdb.pt",
+   "new": "probes_1667b3f467e8346d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_48bf11640170eb7e.pt",
+   "new": "probes_5ccad1d9cb3b84f3.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_49bb598091b3492d.pt",
+   "new": "probes_a48e4f62325e5ec0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_49da96228bea14ab.pt",
+   "new": "probes_883369cf4e887c60.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_4b0524f37ca6dd1c.pt",
+   "new": "probes_ea81e62b48709016.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_4db32aebf014fe82.pt",
+   "new": "probes_65d1217363b7c555.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_5ce2ca1ec21bb90e.pt",
+   "new": "probes_0c6241c19a1d9885.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_5eda05b21ddee026.pt",
+   "new": "probes_5ff5e85938671519.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_75340e9b76d435cb.pt",
+   "new": "probes_5730f887d8f5fbb5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_75598920e2dbaa25.pt",
+   "new": "probes_cdc8a5273c2f87b1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_7bc405554db86902.pt",
+   "new": "probes_73170c83cb2f8303.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_7d3c98efc4775f14.pt",
+   "new": "probes_10e0e3b283dff6f0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_7e29a78279ca80b0.pt",
+   "new": "probes_10bedd67761a7dfd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_7f9605c86e887610.pt",
+   "new": "probes_a6894d2e4649655f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_932a080414714e79.pt",
+   "new": "probes_72edba941fc5bd40.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_96409d9eb4ff8d51.pt",
+   "new": "probes_995fc8eb0019a352.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_98488ed85a74eb74.pt",
+   "new": "probes_bad48bb72c46ec42.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_993fb5f5144115d6.pt",
+   "new": "probes_12bb6cf1ba40c43f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_995ddf9c2be29c69.pt",
+   "new": "probes_004b56a0d0c9440a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_99bf5bac680a1f5c.pt",
+   "new": "probes_0bb048f1755c43b6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_9d713550a0940393.pt",
+   "new": "probes_712404b4e7d02ec7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_9f13bbe5462b9194.pt",
+   "new": "probes_57ca98f70d9f9899.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_a11dd0d414083cba.pt",
+   "new": "probes_52565a314d822390.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_acffa4cce4fb9f4c.pt",
+   "new": "probes_2bccbd2d8d7a28e2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_ad392c64c1c313f1.pt",
+   "new": "probes_4a39c1d5c6acc08a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_ae86d06609af64d4.pt",
+   "new": "probes_65afc5e5ec59b420.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_e0217d66133b6ffe.pt",
+   "new": "probes_2a9ac49d254f845f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_e14c181abbaa8da2.pt",
+   "new": "probes_de2dcf14f6bdeab2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_e2e722fe91014c90.pt",
+   "new": "probes_33cdd2b4dd82450b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_ee228e158db3e7fb.pt",
+   "new": "probes_5e799896996c1bac.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_f0862d9c3da1808f.pt",
+   "new": "probes_c7d732fafab0d76f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_baselines/dw-pn04/probes",
+   "old": "probes_f0d4e4e146f8c471.pt",
+   "new": "probes_0bf9824049887f09.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/S-dw-smoke/probes",
+   "old": "probes_00f5d1269aef7246.pt",
+   "new": "probes_94fb11d22c933e2f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/S-dw-smoke/probes",
+   "old": "probes_320558dbb4217c1d.pt",
+   "new": "probes_58553f678e1a7c1a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/S-dw-smoke/probes",
+   "old": "probes_59d52258db2259e1.pt",
+   "new": "probes_8a73c8d4e06cd897.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/S-dw-smoke/probes",
+   "old": "probes_85bede22a649d244.pt",
+   "new": "probes_05e12b37b45c3a27.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/dw-tok-smoke/probes",
+   "old": "probes_09ca7d789acbeb84.pt",
+   "new": "probes_ee2151621874089d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/dw-tok-smoke/probes",
+   "old": "probes_a41b89937f836518.pt",
+   "new": "probes_d11bcb8f3a4607c9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/dw-tok-smoke/probes",
+   "old": "probes_b50891d88a771d31.pt",
+   "new": "probes_e568bee6ea14166b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/_pipeline_smoke/dw-tok-smoke/probes",
+   "old": "probes_eebf5748fd45f560.pt",
+   "new": "probes_f3b2e5bcd5b1a065.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/blink_ablation/L-dw-blink-20m/probes",
+   "old": "probes_0d0bdc7980a68969.pt",
+   "new": "probes_fc88a6401ca88174.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/blink_ablation/L-dw-blink-20m/probes",
+   "old": "probes_59e95d00836f655f.pt",
+   "new": "probes_41ab4f5a62c329c7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/blink_ablation/L-dw-blink-20m/probes",
+   "old": "probes_64ca5a75054ae5cb.pt",
+   "new": "probes_983e07c500324a77.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/blink_ablation/L-dw-blink-20m/probes",
+   "old": "probes_a8fad1d2462e03e3.pt",
+   "new": "probes_f806fb8876b600b6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-blink/probe",
+   "new_data": "discworld/dw-blink",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_06021f19393f2a2a.pt",
+   "new": "probes_98ab0c35f67855b7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_1942806888ab29c8.pt",
+   "new": "probes_75527d6ebbd3d6e5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_195de2c1126dcff7.pt",
+   "new": "probes_75527d6ebbd3d6e5.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "superseded",
+   "parked": "runs/initial_othello_comparison/L-dw-20m/probes/_superseded/probes_195de2c1126dcff7.pt"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_29c8050fc9c1540e.pt",
+   "new": "probes_993ea83310f349ce.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_327a674475cb0c71.pt",
+   "new": "probes_a2c5781079005a2e.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_3677b9243bbc5cb7.pt",
+   "new": "probes_c7c131d757ac3797.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_43f080c610309474.pt",
+   "new": "probes_22a4010c24777ad5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_4a7fc203533b8aff.pt",
+   "new": "probes_cc1e2f731cad9219.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_bdf40a4bf56cfaf6.pt",
+   "new": "probes_3987fdc98618ab17.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_60407b1b9045f7ae.pt",
+   "new": "probes_3987fdc98618ab17.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "superseded",
+   "parked": "runs/initial_othello_comparison/L-dw-20m/probes/_superseded/probes_60407b1b9045f7ae.pt"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_68d1ea01cd0fd06c.pt",
+   "new": "probes_8d822c7266e0f17a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_87c1669eb02ef6c6.pt",
+   "new": "probes_2ae77e51816dceca.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_a83c8bca30607b0c.pt",
+   "new": "probes_2ae77e51816dceca.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "superseded",
+   "parked": "runs/initial_othello_comparison/L-dw-20m/probes/_superseded/probes_a83c8bca30607b0c.pt"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_ebd9d9fc1b7558f7.pt",
+   "new": "probes_962c2e0e89cc335a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_8ddd7706e9960ec3.pt",
+   "new": "probes_962c2e0e89cc335a.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "superseded",
+   "parked": "runs/initial_othello_comparison/L-dw-20m/probes/_superseded/probes_8ddd7706e9960ec3.pt"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_ae34af4849cc3c10.pt",
+   "new": "probes_a1cfc60e9c767bea.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_bde36cc476e7da5f.pt",
+   "new": "probes_39920e15ae602daa.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe_250k",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_bef2c3313d82b93e.pt",
+   "new": "probes_ffff43cc0cd0f9f4.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_d93648ec9e28f784.pt",
+   "new": "probes_e82d9118b57d4657.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/initial_othello_comparison/L-dw-20m/probes",
+   "old": "probes_f56a7fa5bd4579b8.pt",
+   "new": "probes_80ecf5d112af1ca4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_01b59dc859d9ca79.pt",
+   "new": "probes_6fc3ccbb443c3173.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_0b2f79011b980163.pt",
+   "new": "probes_b1754e4c9f6273c4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_246fc4aec34443a7.pt",
+   "new": "probes_319ddb7467047f81.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_2b14771bade71b13.pt",
+   "new": "probes_a46b793171b6f60a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_2eb532fa614f5b4a.pt",
+   "new": "probes_d58c5ee435dceb6b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_43b0c0cb9b4de94d.pt",
+   "new": "probes_3d1cf745b6c39446.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_4cb61975f508df1f.pt",
+   "new": "probes_74fcab39b788dda1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_51f3e304e83ce973.pt",
+   "new": "probes_8765d37272f33a6a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_52e7134423af9ad3.pt",
+   "new": "probes_67c640ea30547707.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_570535dd8ef22878.pt",
+   "new": "probes_d4cbc40a595dedac.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_5b87ebeed57ceb52.pt",
+   "new": "probes_e760070dabcff4a4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_6b59131d06306f86.pt",
+   "new": "probes_c1bc71ac75fc32de.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_6b896b3fe011f4be.pt",
+   "new": "probes_354aefbbf9e4c1c9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_7959417268f34fee.pt",
+   "new": "probes_80a3847605d614d2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_7be9182b81cd2785.pt",
+   "new": "probes_5093be6304d7a805.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_96c33b904606cd92.pt",
+   "new": "probes_b9b85d2217d89bc5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_a866a29a2e29253b.pt",
+   "new": "probes_fa3b20e36f88a93f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_ae4847da66c48f89.pt",
+   "new": "probes_251c853e364d3780.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_c57ff437c6e2a9e3.pt",
+   "new": "probes_4f6d6cb322c075da.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_d008c091087e84a3.pt",
+   "new": "probes_022aa29f55acac02.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_d3e94ffd238301d8.pt",
+   "new": "probes_599065eb9cc41230.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_de17936071277951.pt",
+   "new": "probes_ca62001863d4e8af.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_e17257b94c018841.pt",
+   "new": "probes_e47ec3e7f628dd34.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/interface_ablation/L-dw-8ray-tok-20m/probes",
+   "old": "probes_ffd0ca91bc7e6b7b.pt",
+   "new": "probes_1a8363375cbacbd9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_312dc86102d3957b.pt",
+   "new": "probes_4fef424e5856726e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_37be083f519e4f5f.pt",
+   "new": "probes_a2e872e3d1b5032c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_392bb3e36e4aa405.pt",
+   "new": "probes_d12a071e2136090b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_38aa52c10a0bb593.pt",
+   "new": "probes_d12a071e2136090b.pt",
+   "live": false,
+   "old_data": "datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "superseded",
+   "parked": "runs/noise_ablation/L-dw-noiseless-20m/probes/_superseded/probes_38aa52c10a0bb593.pt"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_7d835e81f6fab631.pt",
+   "new": "probes_bac5dc2440a99417.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_80a8e1f172d329ce.pt",
+   "new": "probes_c7885913826af9f4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_9934886aee2e7b0f.pt",
+   "new": "probes_fba3d4b7de6966f2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_aadafd8ca628aa75.pt",
+   "new": "probes_d19678ec8158ae60.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_b0e6273a3abc8c21.pt",
+   "new": "probes_db60e29a952c619e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_c14878398418ef6e.pt",
+   "new": "probes_e9a694e40a5b31bf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_d04c9d9450fedf73.pt",
+   "new": "probes_e57b39eeda4e4c8b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_d53fd11e8e4ffa33.pt",
+   "new": "probes_bc0a2bb232adf768.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_d555e0a9539c9f58.pt",
+   "new": "probes_0a12795ce6a1c378.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_d55b6a5b5f0fb7d1.pt",
+   "new": "probes_30890c1370d49194.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_e444ac527cdf7dd7.pt",
+   "new": "probes_4aef2739f3e35d3e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_e82d6d8a53da14ee.pt",
+   "new": "probes_b98f6f1a0a05f733.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/noise_ablation/L-dw-noiseless-20m/probes",
+   "old": "probes_eebc4e46213e2873.pt",
+   "new": "probes_7d1f69c3a45be896.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-noiseless/probe_250k",
+   "new_data": "discworld/dw-noiseless",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_07673340e2dd295c.pt",
+   "new": "probes_6fc681ff6fbb2c31.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_1681e3c4ec6ee04a.pt",
+   "new": "probes_6f313778927d2c3f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_190d9b502c7f3491.pt",
+   "new": "probes_95ca9f385a1754c7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_1d5e31bdbbb31611.pt",
+   "new": "probes_d4286fee9d4a3c1f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_22c39c78c54f9c3c.pt",
+   "new": "probes_c580e905e3d78e33.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_29ac4a2634e91040.pt",
+   "new": "probes_cfb6fac482a8a600.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_2eacd01bad49148d.pt",
+   "new": "probes_5c9391df1906f69d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_35572f9c6f2829fc.pt",
+   "new": "probes_77a196afbd0ba13e.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_4d1b67a9884fca9b.pt",
+   "new": "probes_2f1b106e204ba0f0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_4d872ad3c5a3119f.pt",
+   "new": "probes_bd5ab93c54cf97d6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_55cf07482587a434.pt",
+   "new": "probes_24e1320499525b39.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_71d5f6a092840777.pt",
+   "new": "probes_272b130f10cecdf0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_8191fae5e57249da.pt",
+   "new": "probes_e52a89163ce759a2.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_8860b41982d480d3.pt",
+   "new": "probes_ba2a0adcaf0e8cdd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_8ac844b514981720.pt",
+   "new": "probes_105e51741b2ab991.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_8c82be0eac29af50.pt",
+   "new": "probes_27d51da27b91e441.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_9385369e71c0e129.pt",
+   "new": "probes_ba6b70942fdcc705.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_989c3c94310a5d5e.pt",
+   "new": "probes_1c8cc911601e1852.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_9d4412b95fed0203.pt",
+   "new": "probes_ccd788c2444ab7f4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_a691e93f02b76c69.pt",
+   "new": "probes_e02e82fb883f6dee.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_a880edfd402df53d.pt",
+   "new": "probes_f3cd921d18653dbd.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_a8eeb7ba905c86a8.pt",
+   "new": "probes_fbdb9bb8a9cd65bb.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_a9c9dc36d0a8f6f2.pt",
+   "new": "probes_09aa37ed0cac0e42.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_ac22dbf77b78c43c.pt",
+   "new": "probes_610f110ef7d27d64.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_aec671c4e3722f88.pt",
+   "new": "probes_34e56340b1294324.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_c5db6a6aa45c48c7.pt",
+   "new": "probes_0049ddea8d71f31c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_c8f74d2105027985.pt",
+   "new": "probes_f6c242ee2a1267bc.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_c9a8fdc6235b056a.pt",
+   "new": "probes_67880dc9ce58850c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_cff720ff902131f6.pt",
+   "new": "probes_d1a94817ad01a752.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_d0e26c0f0ed3ccc2.pt",
+   "new": "probes_a21b308cfec402a6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_d5a8e48fb6d94b0f.pt",
+   "new": "probes_75624d5fe2c7aa3c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_d7196b340f6a6c7b.pt",
+   "new": "probes_a8cfff5ca37bbfd4.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_dc9292b175470f32.pt",
+   "new": "probes_37bf7fb67f1ed9a9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_e050483eb162715d.pt",
+   "new": "probes_86b94a0f915419ff.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_e72ca03a24b73b1c.pt",
+   "new": "probes_3f313d2bacdd7a03.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_e95655a51bcb416e.pt",
+   "new": "probes_65709f371aeb5802.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_eb3834cfa25834d0.pt",
+   "new": "probes_e1d49eb6e52f3bc9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_ed6e12e55e6eef33.pt",
+   "new": "probes_52fa5773545957af.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_f48d0e2bf3495f25.pt",
+   "new": "probes_2b318bb9e4a16aac.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_f4d1ffd27d64ef1f.pt",
+   "new": "probes_6f9854adda63e6d8.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_f68245d37b29e187.pt",
+   "new": "probes_a339282b34aca33b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/L-dw-8ray-20m/probes",
+   "old": "probes_fecd1804c466d19e.pt",
+   "new": "probes_60db8eeb333e0286.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe_250k",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_250k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/_R-dw-8ray-20m/probes",
+   "old": "probes_354b78d80458da33.pt",
+   "new": "probes_2753e89ab48ac091.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/_R-dw-8ray-20m/probes",
+   "old": "probes_3a62b3b94c274b69.pt",
+   "new": "probes_5e0402547c0cb30b.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/_R-dw-8ray-20m/probes",
+   "old": "probes_703b7e53759648b2.pt",
+   "new": "probes_62808258cfca07b5.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/ray_ablation/_R-dw-8ray-20m/probes",
+   "old": "probes_f624525f5d84ed17.pt",
+   "new": "probes_3e59084527256710.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+   "new_data": "discworld/dw-8ray",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s001000/probes",
+   "old": "probes_499b5082157444bc.pt",
+   "new": "probes_291b04cce884407a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s001000/probes",
+   "old": "probes_c77b30c7b783c957.pt",
+   "new": "probes_ea94381fa73bc959.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s001000/probes",
+   "old": "probes_eeaefcb814c91f0d.pt",
+   "new": "probes_3857c0f863190b41.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s001000/probes",
+   "old": "probes_f54a5bb2bcc5943e.pt",
+   "new": "probes_85e009046a6319b6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s004000/probes",
+   "old": "probes_42d22275b6678370.pt",
+   "new": "probes_d8f5a3ffd7380956.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s004000/probes",
+   "old": "probes_71cdf7dfd041f6a0.pt",
+   "new": "probes_048cf9708b1c8fbf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s004000/probes",
+   "old": "probes_792886d010317a70.pt",
+   "new": "probes_6532f2c4b131f7cf.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s004000/probes",
+   "old": "probes_cbab700c7baa5fa1.pt",
+   "new": "probes_bb5987b871b8cf7f.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s016000/probes",
+   "old": "probes_0c227f8ebdedf84e.pt",
+   "new": "probes_9c3bd34608b33a0d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s016000/probes",
+   "old": "probes_106a711c4734bab9.pt",
+   "new": "probes_9da7a4cafcc729c7.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s016000/probes",
+   "old": "probes_6f42c8126c7885c6.pt",
+   "new": "probes_13dfcdd454c8ce91.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s016000/probes",
+   "old": "probes_7941d51f543facef.pt",
+   "new": "probes_02fe033a8dda8682.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s064000/probes",
+   "old": "probes_0c79eb4e9d1e9fd0.pt",
+   "new": "probes_d9d3b8037843ed70.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s064000/probes",
+   "old": "probes_7893c666eb87987f.pt",
+   "new": "probes_3f00c7b2401a5048.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s064000/probes",
+   "old": "probes_7e9f7577fc6bbf7b.pt",
+   "new": "probes_6ec1a5e06b48dece.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s064000/probes",
+   "old": "probes_b62b5c5c574bc98b.pt",
+   "new": "probes_c843d23a758a529d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s128000/probes",
+   "old": "probes_0a3f88a0b754b221.pt",
+   "new": "probes_da05283313f5a337.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s128000/probes",
+   "old": "probes_b652287ce7607124.pt",
+   "new": "probes_8dcaf681a83813c1.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s128000/probes",
+   "old": "probes_c8ddc09a9d4ff041.pt",
+   "new": "probes_e139276e8f1cf536.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s128000/probes",
+   "old": "probes_eb936c789cf7862d.pt",
+   "new": "probes_599116ae6d7a77d0.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s256000/probes",
+   "old": "probes_09fac0c44cf6cc59.pt",
+   "new": "probes_e3e0e9a729aa32b9.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s256000/probes",
+   "old": "probes_b2f407be377d3a3b.pt",
+   "new": "probes_3bc23fad3f9615a6.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s256000/probes",
+   "old": "probes_d22f0481bf9051fe.pt",
+   "new": "probes_031950e2272a227d.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s256000/probes",
+   "old": "probes_f0d4bd7656564bff.pt",
+   "new": "probes_25e73963ae2add4c.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s512000/probes",
+   "old": "probes_229f3b976df1dc5c.pt",
+   "new": "probes_dda06b8b1560b081.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s512000/probes",
+   "old": "probes_40647e03d0804538.pt",
+   "new": "probes_7cbdf78bd8e37a63.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s512000/probes",
+   "old": "probes_91e8b849fb340295.pt",
+   "new": "probes_2e552912a388d766.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s512000/probes",
+   "old": "probes_f3d1fa1cef2c2fd7.pt",
+   "new": "probes_5fd736235bb86a72.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s780000/probes",
+   "old": "probes_06909f0eb68179cb.pt",
+   "new": "probes_26c22ab1d477da7a.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s780000/probes",
+   "old": "probes_5da27f0c0f512e58.pt",
+   "new": "probes_83dbaf892cf4be06.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s780000/probes",
+   "old": "probes_5fdf3b489f564ce6.pt",
+   "new": "probes_45cbd2960e30d0ca.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  },
+  {
+   "dir": "runs/training_curve/L-dw-20m_s780000/probes",
+   "old": "probes_9da0f0ca0297a1b1.pt",
+   "new": "probes_7a712f5cf80207fe.pt",
+   "live": true,
+   "old_data": "/home/sevan/research/PIM/physically-implicit-modeling/datasets/discworld/dw-pn04/probe",
+   "new_data": "discworld/dw-pn04",
+   "new_split": "probe_120k",
+   "action": "rekeyed"
+  }
+ ]
+}

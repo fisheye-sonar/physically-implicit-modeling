@@ -96,6 +96,12 @@ def token_source(tok_np: np.ndarray, ln_np: np.ndarray, *, block: int, env: str,
             idx = tr_i[torch.randint(len(tr_i), (batch_size,), device=device, generator=gen)]
             yield (tok[idx], ln[idx])
 
+    def skip(n: int) -> None:
+        """Advance the stream by n batches without gathering them: one generator draw per
+        batch, exactly as ``batches`` makes — so a resumed run sees batch n+1 next."""
+        for _ in range(n):
+            torch.randint(len(tr_i), (batch_size,), device=device, generator=gen)
+
     @torch.no_grad()
     def validate(model) -> float:
         tot, cnt = 0.0, 0
@@ -116,7 +122,8 @@ def token_source(tok_np: np.ndarray, ln_np: np.ndarray, *, block: int, env: str,
                       steps_per_epoch=len(tr_i) / batch_size,
                       meta={"env": env, "n_total": n, "n_train": int(cut),
                             "n_val": int(n - cut), "objective": objective, "block": block,
-                            **(meta or {})})
+                            **(meta or {})},
+                      skip=skip)
 
 
 def othello_source(tok_np: np.ndarray, ln_np: np.ndarray, *, batch_size: int, seed: int,

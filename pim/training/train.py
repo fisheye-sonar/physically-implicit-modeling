@@ -73,6 +73,11 @@ class DataSource:
     validate      : (model) -> float, the val loss on a fixed protocol.
     steps_per_epoch : for the per-epoch checkpoint schedule.
     meta          : provenance recorded into config.json (env instance, split sizes…).
+    skip          : optional (n) -> None advancing the batch stream by n batches WITHOUT
+                    materialising them — what makes a resumed run reproduce an
+                    uninterrupted one batch for batch (2026-09-11). A source without it
+                    can still resume; its batch order after the resume then differs, and
+                    the loop records that in config.json.
     """
 
     batches: Iterator
@@ -80,6 +85,7 @@ class DataSource:
     validate: Callable
     steps_per_epoch: float
     meta: dict = field(default_factory=dict)
+    skip: Callable[[int], None] | None = None
 
 
 # ── the two objectives ───────────────────────────────────────────────────────
@@ -164,7 +170,8 @@ def _commit_sha() -> str:
 
 
 def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
-          arch: str, model_config: dict, device: str = "cuda", log=print) -> dict:
+          arch: str, model_config: dict, device: str = "cuda", log=print,
+          resume: bool = False) -> dict:
     """Run the canonical loop. Writes into ``run_dir``:
 
     config.json   arch, model, train, data meta, n_params, commit_sha
@@ -172,6 +179,17 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
                   nothing ties an artifact to the code that made it)
     metrics.jsonl one row per val pass
     best_model.pt / ckpt/step_*.pt   all stamped with ``arch`` for the registry
+    ckpt/latest.pt   the RESUMABLE state (model + optimizer + RNG + history), rewritten
+                  atomically at every val pass and at the end (2026-09-11)
+
+    ``resume=True`` continues a run from ``ckpt/latest.pt`` up to ``cfg.steps`` — which
+    may exceed the original, so a finished run can be EXTENDED. The step counter, the
+    warm-up / schedule, the checkpoint cadence, the best-val tracking and the elapsed
+    clock all continue; the batch stream is fast-forwarded through ``source.skip`` when
+    the source provides it, so the resumed run reproduces an uninterrupted one batch for
+    batch (token sources do; the discworld memmap stream does not — recorded in
+    config.json as ``batch_order_exact``). Without ``resume``, a run dir that already
+    holds ``latest.pt`` is refused rather than clobbered.
     """
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -180,6 +198,30 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
     model = model.to(device)
     n_par = sum(p.numel() for p in model.parameters())
     opt = torch.optim.AdamW(model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay)
+    latest = run_dir / "ckpt" / "latest.pt"
+    start_step, best, hist, t_off, resumed, exact = 1, float("inf"), [], 0.0, [], True
+    if latest.exists():
+        if not resume:
+            raise SystemExit(f"{run_dir} already holds a resumable training state ({latest.name}); "
+                             f"pass --resume to continue it, or choose a new --run-name")
+        ck = torch.load(latest, map_location=device, weights_only=False)
+        model.load_state_dict(ck["model_state"])
+        opt.load_state_dict(ck["optimizer_state"])
+        start_step, best, hist, t_off = int(ck["step"]) + 1, float(ck["best"]), list(ck["hist"]), float(ck["elapsed_s"])
+        torch.set_rng_state(ck["rng"]["torch"].cpu())
+        if ck["rng"].get("cuda") is not None and torch.cuda.is_available():
+            torch.cuda.set_rng_state_all([r.cpu() for r in ck["rng"]["cuda"]])
+        np.random.set_state(ck["rng"]["numpy"])
+        if source.skip is not None:
+            source.skip(int(ck["step"]))
+        else:
+            exact = False
+            log("  ⚠ source has no skip(): batch order after the resume differs from an uninterrupted run")
+        resumed = list(ck.get("resumed", [])) + [{"from_step": int(ck["step"]), "to_steps": cfg.steps,
+                                                  "at": time.strftime("%Y-%m-%d %H:%M"), "batch_order_exact": exact}]
+        log(f"{run_dir.name}: RESUMED at step {start_step:,} (best val so far {best:.6f}), training to {cfg.steps:,}")
+    elif resume:
+        log(f"{run_dir.name}: --resume given but no {latest.name} yet — starting fresh")
     sha = _commit_sha()
     (run_dir / "commit_sha").write_text(sha + "\n")
     (run_dir / "config.json").write_text(json.dumps({
@@ -187,6 +229,7 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
         "data": source.meta, "n_params": n_par, "commit_sha": sha,
         "steps_per_epoch": source.steps_per_epoch,
         "epochs": cfg.steps / source.steps_per_epoch,
+        **({"resumed": resumed} if resumed else {}),
     }, indent=2))
 
     def lr_at(step: int) -> float:
@@ -207,9 +250,27 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
                     "train_config": dataclasses.asdict(cfg),
                     "val_loss": va, "epoch": step / source.steps_per_epoch}, path)
 
-    best, hist, t0 = float("inf"), [], time.perf_counter()
+    def save_latest(step: int):
+        """The resumable state — written to a temp file and renamed, so a crash mid-write
+        leaves the previous latest.pt intact."""
+        (run_dir / "ckpt").mkdir(exist_ok=True)
+        tmp = latest.with_suffix(".tmp")
+        torch.save({"arch": arch, "step": step, "model_state": model.state_dict(),
+                    "optimizer_state": opt.state_dict(), "model_config": model_config,
+                    "train_config": dataclasses.asdict(cfg), "best": best, "hist": hist,
+                    "elapsed_s": t_off + time.perf_counter() - t0, "resumed": resumed,
+                    "rng": {"torch": torch.get_rng_state(),
+                            "cuda": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None,
+                            "numpy": np.random.get_state()}}, tmp)
+        tmp.replace(latest)
+
+    t0 = time.perf_counter()
+    if start_step > cfg.steps:
+        log(f"{run_dir.name}: already at step {start_step - 1:,} >= {cfg.steps:,}; nothing to do")
+        best_step = min(hist, key=lambda r: r["val_loss"])["step"] if hist else -1
+        return {"best_val": best, "best_step": best_step, "minutes": t_off / 60}
     model.train()
-    for step in range(1, cfg.steps + 1):
+    for step in range(start_step, cfg.steps + 1):
         for gp in opt.param_groups:
             gp["lr"] = cfg.lr * lr_at(step)
         batch = next(source.batches)
@@ -225,7 +286,7 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
             model.train()
             rec = {"step": step, "train_loss": float(loss.item()), "val_loss": float(va),
                    "lr": opt.param_groups[0]["lr"],
-                   "elapsed_s": round(time.perf_counter() - t0, 1)}
+                   "elapsed_s": round(t_off + time.perf_counter() - t0, 1)}
             hist.append(rec)
             with open(run_dir / "metrics.jsonl", "a") as f:
                 f.write(json.dumps(rec) + "\n")
@@ -233,8 +294,9 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
             if va < best:
                 best, mark = va, "  *"
                 save(run_dir / "best_model.pt", step, va)
+            save_latest(step)
             log(f"  step {step:>9,}/{cfg.steps:,}  train {loss.item():.6f}  "
-                f"val {va:.6f}{mark}  [{(time.perf_counter() - t0) / 60:.1f} min]")
+                f"val {va:.6f}{mark}  [{(t_off + time.perf_counter() - t0) / 60:.1f} min]")
 
         # checkpoints run on their OWN cadence, outside the val branch
         if step in ck_steps:
@@ -243,9 +305,10 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
                  hist[-1]["val_loss"] if hist else None)
             log(f"  [ckpt] step {step:,} (epoch {step / source.steps_per_epoch:.2f})")
 
+    save_latest(cfg.steps)
     best_step = min(hist, key=lambda r: r["val_loss"])["step"] if hist else -1
     out = {"best_val": best, "best_step": best_step,
-           "minutes": (time.perf_counter() - t0) / 60}
+           "minutes": (t_off + time.perf_counter() - t0) / 60}
     log(f"done {run_dir.name}: best val {best:.6f} at step {best_step:,}/{cfg.steps:,} "
         f"· {out['minutes']:.1f} min")
     return out

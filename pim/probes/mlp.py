@@ -71,13 +71,21 @@ def check_probe_sanity(lin: dict, mlp: dict, *, tol: float = 0.01, strict: bool 
     later.
 
     Returns a report dict (always); raises ``ProbeSanityError`` when ``strict``.
+
+    Kind-agnostic since 2026-09-09: the comparison is on **Probe Skill**
+    (``pim.metrics.probe_skill_from_stats`` — R² for a regression fit, 1 − err/majority-err
+    for a classification fit such as the discworld grid target), so one tripwire serves
+    both. The report's ``r2_*`` keys keep their names (they ARE R² on regression, where every
+    existing ``scores.json`` was written) and hold the skill on classification.
     """
+    from pim.metrics.decodability import insample_gap_from_stats, probe_skill_from_stats
+
     rows, bad = [], []
     for ell in sorted(set(lin) & set(mlp)):
         sl, sm = lin[ell][1], mlp[ell][1]
-        r_lin, r_mlp = float(sl["r2"]), float(sm["r2"])
-        gap_mlp = float(sm.get("r2_insample", np.nan)) - r_mlp
-        gap_lin = float(sl.get("r2_insample", np.nan)) - r_lin
+        r_lin, r_mlp = probe_skill_from_stats(sl), probe_skill_from_stats(sm)
+        gap_mlp = insample_gap_from_stats(sm)
+        gap_lin = insample_gap_from_stats(sl)
         row = {"point": ell, "r2_linear": r_lin, "r2_mlp": r_mlp,
                "mlp_minus_linear": r_mlp - r_lin,
                "insample_gap_mlp": gap_mlp, "insample_gap_linear": gap_lin}

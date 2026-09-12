@@ -97,12 +97,14 @@ DEV = "cuda" if torch.cuda.is_available() else "cpu"
 SPAN = 39
 
 
-def load_split(dd: Path, n_seq: int, basis: str, vocab: FrameVocab):
-    with h5py.File(dd / "test.h5", "r") as f:
+def load_split(inst: str, size: str, n_seq: int, basis: str, vocab: FrameVocab):
+    from pim.environments import layout          # layout v2 (2026-09-10): the corpus by name
+
+    with h5py.File(layout.probe_file("discworld", inst, size), "r") as f:
         obs = f["obs_intensity"][:n_seq].astype(np.float32)
         pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
         vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
-    sim = json.load(open(dd / "dataset.json"))["sim"]
+    sim = json.load(open(layout.probe_manifest("discworld", inst, size)))["sim"]
     bp, bv = _to_basis(pos, vel, sim, basis)
     y = np.concatenate([bp.reshape(n_seq, bp.shape[1], -1), bv.reshape(n_seq, bv.shape[1], -1)], -1)
     tok = encode(obs, vocab)
@@ -137,10 +139,12 @@ def main() -> None:
     store = ProbeCache(EXP / "probes")
     res = {"instance": a.instance, "vocab_size": int(V), "span": SPAN, "rows": [], "smoke": a.smoke}
 
-    corpora = [("30k", inst / "probe", a.n_seq, a.epochs), ("250k", inst / "probe_250k", a.n_large, a.epochs_large)]
+    from pim.environments import layout
+    corpora = [("30k", "120k", a.n_seq, a.epochs), ("250k", "250k", a.n_large, a.epochs_large)]
     for basis in ("cartesian", "frustum"):
-        for cname, dd, n_seq, epochs in corpora:
-            obs, tok, y = load_split(dd, n_seq, basis, vocab)
+        for cname, size, n_seq, epochs in corpora:
+            obs, tok, y = load_split(a.instance, size, n_seq, basis, vocab)
+            kdata, ksplit = layout.probe_key("discworld", a.instance, size)
             perm = np.random.default_rng(SEED).permutation(n_seq)
             tr, te = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
             yt = torch.from_numpy(y).float().to(DEV)
@@ -157,8 +161,8 @@ def main() -> None:
                     akey = {} if align == "left" else {"align": align}
                     hidden = None if family == "linear" else CANONICAL_HIDDEN
                     fname, prov = store.key(None, kind="observation_tokens", repr=repr_name, target="full",
-                                            n_seq=int(n_seq), split="test", family=family, basis=basis,
-                                            seed=SEED, span=SPAN, data=str(dd.resolve()), epochs=int(epochs),
+                                            n_seq=int(n_seq), split=ksplit, family=family, basis=basis,
+                                            seed=SEED, span=SPAN, data=kdata, epochs=int(epochs),
                                             vocab=int(V), affine="identity", solver="pinv_hermitian", smoke=bool(a.smoke),
                                             **akey)
                     hit = store.load(fname, prov, device=DEV)

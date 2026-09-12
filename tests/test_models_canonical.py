@@ -94,6 +94,59 @@ def test_tokens_models_refuse_rollout():
     m = TransformerSTokens(S_CFG, vocab=13)
     with pytest.raises(NotImplementedError):
         m.predict_step(None)
+    mL = TransformerLTokens(vocab=13, block_size=10, n_layer=1, n_head=2, n_embd=32)
+    with pytest.raises(NotImplementedError):
+        mL.predict_step(None)
+
+
+# ── ONE Transformer-L, two interface parameters (2026-09-09) ─────────────────
+
+
+def _keys(m):
+    return list(m.state_dict().keys())
+
+
+def test_transformer_l_presets_are_the_two_parameterisations():
+    """The named presets ARE the explicit (input, head) pairs — same parameters, same
+    state-dict keys in the same order (the probe cache fingerprints those)."""
+    reg = TransformerL(obs_res=16, block_size=10, n_layer=1, n_head=2, n_embd=32)
+    reg_x = TransformerL(obs_res=16, block_size=10, n_layer=1, n_head=2, n_embd=32,
+                         input="linear", head="regression")
+    tok = TransformerLTokens(vocab=13, block_size=10, n_layer=1, n_head=2, n_embd=32)
+    tok_x = TransformerL(vocab=13, block_size=10, n_layer=1, n_head=2, n_embd=32,
+                         input="embedding", head="categorical")
+    assert _keys(reg) == _keys(reg_x) and _keys(tok) == _keys(tok_x)
+    assert (reg.input, reg.head, reg.emits, reg.output_kind) == ("linear", "regression", "frame", None)
+    assert (tok.input, tok.head, tok.emits, tok.output_kind) == ("embedding", "categorical",
+                                                                 "distribution", "logits")
+    # the parameter names the cache keys depend on
+    assert {"encoder.weight", "encoder.bias", "decoder.weight", "decoder.bias"} <= set(_keys(reg))
+    assert not any(k.startswith("gpt.tok_emb") or k.startswith("gpt.head") for k in _keys(reg))
+    assert {"gpt.tok_emb.weight", "gpt.head.weight"} <= set(_keys(tok))
+    assert not any(k.startswith(("encoder", "decoder")) for k in _keys(tok))
+
+
+def test_transformer_l_mixed_interfaces_build_and_run():
+    torch.manual_seed(0)
+    a = TransformerL(obs_res=16, vocab=13, block_size=10, n_layer=1, n_head=2, n_embd=32,
+                     input="linear", head="categorical").eval()
+    b = TransformerL(obs_res=16, vocab=13, block_size=10, n_layer=1, n_head=2, n_embd=32,
+                     input="embedding", head="regression").eval()
+    with torch.no_grad():
+        assert a(torch.randn(2, 6, 16)).shape == (2, 6, 13)
+        assert b(torch.randint(0, 13, (2, 6))).shape == (2, 6, 16)
+    assert (a.emits, b.emits) == ("distribution", "frame")
+    with pytest.raises(NotImplementedError):
+        a.state_from_obs(torch.randn(2, 6, 16))
+    with pytest.raises(ValueError):
+        TransformerL(obs_res=16, block_size=10, n_layer=1, n_head=2, n_embd=32, output_kind="raw")
+
+
+def test_registry_builds_an_explicit_interface():
+    m = build("transformer_l", {"obs_res": 16, "vocab": 13, "block_size": 10, "n_layer": 1,
+                                "n_head": 2, "n_embd": 32, "input": "linear",
+                                "head": "categorical", "output_kind": "raw"})
+    assert isinstance(m, TransformerL) and m.emits == "distribution" and m.output_kind == "raw"
 
 
 def test_registry_builds_all_four():

@@ -34,3 +34,118 @@ that motivated the environment-instance manifests.
 - `runs/ours_on_othello/corpus/train_90000.npz` → `datasets/othello/oth-uniform/corpus/train_90000.npz`
 - (train_90000.npz existed in both — byte-identical, cmp-verified; the regenerated copy kept as train_90000.npz.regen-dup, the runs/ original is canonical)
 - `runs/ours_on_othello/corpus/` (now empty) removed
+
+## Layout v2 migration — 2026-09-10 (`scripts/migrate_datasets.py --apply`; spec `research/specs/DATASET_LAYOUT_SPEC.md`; log `research/scratch/2026-09-10-layout-migration-log.json`)
+# Role-named splits: train/ probe/ eval/ edits/v1/ ; dead files -> _unused/ (kept). Per instance:
+- `discworld/dw-8ray`:
+  - `eval/dataset.json` → `edits/v1/edits.json`
+  - `eval/edits.h5` → `edits/v1/edits.h5`
+  - `edits_selection.json` → `edits/v1/selection.json`
+  - `eval/val.h5` → `_unused/eval/val.h5`
+  - `eval/train.h5` → `_unused/eval/train.h5`
+  - `probe/test.h5` → `probe/probe_120k.h5`
+  - `probe/dataset.json` → `probe/probe_120k.json`
+  - `probe/train.h5` → `_unused/probe/train.h5`
+  - `probe/val.h5` → `_unused/probe/val.h5`
+  - `probe/edits.h5` → `_unused/probe/edits.h5`
+  - `probe_250k/test.h5` → `probe/probe_250k.h5`
+  - `probe_250k/dataset.json` → `probe/probe_250k.json`
+  - `probe_250k/train.h5` → `_unused/probe_250k/train.h5`
+  - `probe_250k/val.h5` → `_unused/probe_250k/val.h5`
+  - `probe_250k/edits.h5` → `_unused/probe_250k/edits.h5`
+  - `tokens/probe.npy` → `_unused/tokens/probe.npy`
+  - `tokens/val.npy` → `_unused/tokens/val.npy`
+  - copy `eval/dataset.json` → `eval/test.json`
+- `discworld/dw-blink`:
+  - `eval/dataset.json` → `edits/v1/edits.json`
+  - `eval/edits.h5` → `edits/v1/edits.h5`
+  - `eval/val.h5` → `_unused/eval/val.h5`
+  - `eval/train.h5` → `_unused/eval/train.h5`
+  - `probe/test.h5` → `probe/probe_120k.h5`
+  - `probe/dataset.json` → `probe/probe_120k.json`
+  - `probe/train.h5` → `_unused/probe/train.h5`
+  - `probe/val.h5` → `_unused/probe/val.h5`
+  - `probe/edits.h5` → `_unused/probe/edits.h5`
+  - `probe_250k/test.h5` → `probe/probe_250k.h5`
+  - `probe_250k/dataset.json` → `probe/probe_250k.json`
+  - `probe_250k/train.h5` → `_unused/probe_250k/train.h5`
+  - `probe_250k/val.h5` → `_unused/probe_250k/val.h5`
+  - `probe_250k/edits.h5` → `_unused/probe_250k/edits.h5`
+  - copy `eval/dataset.json` → `eval/test.json`
+- `discworld/dw-noiseless`:
+  - `eval/dataset.json` → `edits/v1/edits.json`
+  - `eval/edits.h5` → `edits/v1/edits.h5`
+  - `eval/val.h5` → `_unused/eval/val.h5`
+  - `eval/train.h5` → `_unused/eval/train.h5`
+  - `probe/test.h5` → `probe/probe_120k.h5`
+  - `probe/dataset.json` → `probe/probe_120k.json`
+  - `probe/train.h5` → `_unused/probe/train.h5`
+  - `probe/val.h5` → `_unused/probe/val.h5`
+  - `probe/edits.h5` → `_unused/probe/edits.h5`
+  - `probe_250k/test.h5` → `probe/probe_250k.h5`
+  - `probe_250k/dataset.json` → `probe/probe_250k.json`
+  - `probe_250k/train.h5` → `_unused/probe_250k/train.h5`
+  - `probe_250k/val.h5` → `_unused/probe_250k/val.h5`
+  - `probe_250k/edits.h5` → `_unused/probe_250k/edits.h5`
+  - copy `eval/dataset.json` → `eval/test.json`
+- `discworld/dw-pn04`:
+  - `eval/dataset.json` → `edits/v1/edits.json`
+  - `eval/edits.h5` → `edits/v1/edits.h5`
+  - `eval/val.h5` → `_unused/eval/val.h5`
+  - `eval/train.h5` → `_unused/eval/train.h5`
+  - `probe/test.h5` → `probe/probe_120k.h5`
+  - `probe/dataset.json` → `probe/probe_120k.json`
+  - `probe/train.h5` → `_unused/probe/train.h5`
+  - `probe/val.h5` → `_unused/probe/val.h5`
+  - `probe/edits.h5` → `_unused/probe/edits.h5`
+  - `probe_250k/test.h5` → `probe/probe_250k.h5`
+  - `probe_250k/dataset.json` → `probe/probe_250k.json`
+  - `probe_250k/train.h5` → `_unused/probe_250k/train.h5`
+  - `probe_250k/val.h5` → `_unused/probe_250k/val.h5`
+  - `probe_250k/edits.h5` → `_unused/probe_250k/edits.h5`
+  - copy `eval/dataset.json` → `eval/test.json`
+- `othello/oth-adjacent`:
+  - `corpus/probe_20000.npz` → `probe/probe_20000.npz`
+  - `corpus/probe_20000_labels_20000.npz` → `probe/probe_20000_labels_20000.npz`
+  - `corpus/probe_large_170000.npz` → `probe/probe_large_170000.npz`
+  - `corpus/probe_large_170000_labels_170000.npz` → `probe/probe_large_170000_labels_170000.npz`
+  - `corpus/test_10000.npz` → `eval/test_10000.npz`
+  - `corpus/train_20000000.npz` → `train/train_20000000.npz`
+  - `edits/cases_1001.pkl` → `edits/v1/cases_1001.pkl`
+  - `edits/cases_1001.json` → `edits/v1/cases_1001.json`
+- `othello/oth-adjacent-flip`:
+- `othello/oth-noflip`:
+  - `corpus/probe_20000.npz` → `probe/probe_20000.npz`
+  - `corpus/probe_20000_labels_20000.npz` → `probe/probe_20000_labels_20000.npz`
+  - `corpus/probe_large_170000.npz` → `probe/probe_large_170000.npz`
+  - `corpus/probe_large_170000_labels_170000.npz` → `probe/probe_large_170000_labels_170000.npz`
+  - `corpus/test_10000.npz` → `eval/test_10000.npz`
+  - `corpus/train_20000000.npz` → `train/train_20000000.npz`
+  - `corpus/train_90000.npz` → `_unused/corpus/train_90000.npz`
+  - `edits/cases_1001.pkl` → `edits/v1/cases_1001.pkl`
+  - `edits/cases_1001.json` → `edits/v1/cases_1001.json`
+- `othello/oth-uniform`:
+  - `corpus/probe_20000.npz` → `probe/probe_20000.npz`
+  - `corpus/probe_20000_labels_50.npz` → `_unused/corpus/probe_20000_labels_50.npz`
+  - `corpus/probe_large_170000.npz` → `probe/probe_large_170000.npz`
+  - `corpus/probe_large_170000_labels_170000.npz` → `probe/probe_large_170000_labels_170000.npz`
+  - `corpus/test_10000.npz` → `eval/test_10000.npz`
+  - `corpus/train_1000000.npz` → `_unused/corpus/train_1000000.npz`
+  - `corpus/train_20000000.npz` → `train/train_20000000.npz`
+  - `corpus/train_5000000.npz` → `_unused/corpus/train_5000000.npz`
+  - `corpus/train_90000.npz` → `_unused/corpus/train_90000.npz`
+  - `corpus/train_90000.npz.regen-dup` → `_unused/corpus/train_90000.npz.regen-dup`
+  - copy `pim/environments/othello/vendor/intervention_benchmark.pkl` → `edits/v1/cases_1001.pkl`
+
+## 2026-09-10 — dw-5ray generator smoke
+- `datasets/discworld/_smoke_5ray/` (layout-v2 `--role` smoke for the dw-5ray chain: 40 eval, 60 edits, 40 probe sequences at 7 cast / 5 kept rays, radius 1.0) → `datasets/archive/_smoke_5ray_2026-09-10/` — a smoke artefact, never read by code.
+
+## 2026-09-11 — oth-adjacent-flip pulled from the WSL remote (layout v1 there) and moved into layout v2 on arrival
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_20000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_20000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_20000_labels_20000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_20000_labels_20000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_large_170000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_large_170000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/probe_large_170000_labels_170000.npz` → `datasets/othello/oth-adjacent-flip/probe/probe_large_170000_labels_170000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/test_10000.npz` → `datasets/othello/oth-adjacent-flip/eval/test_10000.npz`
+  - `datasets/othello/oth-adjacent-flip/corpus/train_20000000.npz` → `datasets/othello/oth-adjacent-flip/train/train_20000000.npz`
+  - `datasets/othello/oth-adjacent-flip/edits/cases_1001.pkl` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.pkl`
+  - `datasets/othello/oth-adjacent-flip/edits/cases_1001.json` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.json`

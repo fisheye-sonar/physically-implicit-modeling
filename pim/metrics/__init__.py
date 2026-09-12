@@ -29,7 +29,9 @@ re-derive the formulas at a call site.
 """
 
 from pim.metrics.decodability import (
+    insample_gap_from_stats,
     probe_skill_classification,
+    probe_skill_from_stats,
     probe_skill_regression,
     r2,
     trivial_error_rate,
@@ -67,6 +69,8 @@ __all__ = [
     # decodability
     "probe_skill_regression",
     "probe_skill_classification",
+    "probe_skill_from_stats",
+    "insample_gap_from_stats",
     "trivial_error_rate",
     "r2",
     # discworld editability

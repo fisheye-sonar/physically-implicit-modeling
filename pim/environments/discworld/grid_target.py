@@ -1,0 +1,659 @@
+"""CATEGORICAL probe targets for discworld — the state as cells (Othello's shape of target).
+
+Othello's probe target is categorical (64 tiles × 3 classes); discworld's canonical one is
+continuous (positions, regressed). A categorical target re-expresses the discworld state as
+a set of cells, each labelled {0 empty, 1 centre of object 0 (bright), 2 centre of object 1
+(dim)} — the same shape as the Othello board probe — so the STATE side of the comparison
+can be tested with new probes on the same trained model. Two families, one interface:
+
+``GridTarget`` — ``"grid-<nu>x<nd>"`` (2026-09-08, canonicalised 2026-09-09 from
+``experiments/grid_target_control/scripts/grid.py``, formulas verbatim). A product grid in
+the frustum basis the canonical probes use: lateral ray coordinate u = x / (scale·y) in
+[-1, 1] and inverse depth 1/y, binned UNIFORMLY, so every cell is the same size in the
+observation's own coordinates (rays laterally, apparent width in depth — ``frustum.py``
+explains why depth enters the frame only as 1/y) and larger at the back in world space.
+16 × 8 = 128 cells kept the 128-ray noiseless instance at Othello's scale (384 logits); the
+observation-exact partition there would need 2,883 cells.
+
+``AppearanceTarget`` — ``"appearance"`` (2026-09-09). The observation-exact partition
+itself: two positions are in the same cell iff a single disc there LIGHTS THE SAME RAYS.
+With binary occupancy and a fixed reflectivity per object, a disc's appearance is a
+contiguous run of rays (first, last); lateral position sets the run's centre, depth its
+length. On dw-8ray (radius 1.0, 8 kept rays) exactly 30 runs are realisable over the
+reachable region (lengths 1–5; the empty appearance never occurs), i.e. 90 logits — the
+finest target a single frame can resolve, and the coarsest at which an edit is visible in
+the output. Cells are ray-based by construction and are NOT a product grid: a two-ray run
+spans depths ~6–11. Variants, for the resolution sweep:
+    ``"appearance-d<k>"``  each run cell split into k depth bands, uniform in 1/y over the
+                           depths that run occupies (does resolving MORE than the frame does
+                           help the editors? the model may carry depth from motion)
+    ``"appearance-lat"``   runs merged by CENTRE only (start + end), depth dropped — coarser
+                           than the observation resolves
+The realisable runs and their depth ranges come from a deterministic dense sweep of the
+reachable region with the analytic ray test (``covered_rays``, the renderer's own
+ray–disc intersection, gated equal to ``render_frame`` in tests).
+
+Both cover the REACHABLE region: with ``always_in_frustum`` a disc centre keeps a margin of
+one radius from every wall. Two objects can share a cell (the grid: only at the far plane,
+0.05% of frames; appearance on dw-8ray: 0.31%); the NEARER object's label wins, since it
+is the one the observation shows. ``label_frames`` reports how often that happens.
+
+⛔ An edit under any of these is a categorical MOVE — (old cell → empty, new cell → the
+object's class) — so a teleport that stays inside one cell is a no-op and is excluded from
+the bench (``pim.environments.discworld.bench.grid_selection``), and ND IS applicable (one
+fixed change per case), unlike on the regression target.
+"""
+from __future__ import annotations
+
+import functools
+import re
+from dataclasses import dataclass
+
+import numpy as np
+
+from pim.environments.discworld.frustum import lateral
+
+N_CLASSES = 3                  # empty / object 0 / object 1
+N_OBJ = 2
+_GRID = re.compile(r"^grid-(\d+)x(\d+)$")
+_APP = re.compile(r"^appearance(?:-d(\d+)|-(lat))?$")
+
+
+class CategoricalTarget:
+    """The interface every categorical target shares (``cell_of`` is the family-specific part)."""
+
+    n_classes = N_CLASSES
+
+    @property
+    def name(self) -> str:                       # pragma: no cover — abstract
+        raise NotImplementedError
+
+    def n_cells(self, sim: dict) -> int:         # pragma: no cover — abstract
+        raise NotImplementedError
+
+    def n_tiles_on(self, sim: dict) -> int:
+        """Width of the label vector the probe reads — the cells, unless a target says
+        otherwise (a factorised target reads N_OBJ × factors tiles over the same cells)."""
+        return self.n_cells(sim)
+
+    def n_classes_on(self, sim: dict) -> int:
+        """Classes per tile on this instance — the fixed {empty, obj 0, obj 1} unless a
+        target says otherwise (a factorised target's depends on the partition)."""
+        return self.n_classes
+
+    def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:   # pragma: no cover
+        """(..., 2) world positions → (...) int cell index in [0, n_cells)."""
+        raise NotImplementedError
+
+    def labels_from_cells(self, cells: np.ndarray, y_world: np.ndarray, sim: dict) -> np.ndarray:
+        """(..., N_OBJ) cells + (..., N_OBJ) depths → (..., G) uint8 labels, the nearer
+        object winning a shared cell."""
+        g = self.n_cells(sim)
+        lead = cells.shape[:-1]
+        lab = np.zeros(lead + (g,), dtype=np.uint8)
+        fl = lab.reshape(-1, g)
+        fc, fy = cells.reshape(-1, N_OBJ), y_world.reshape(-1, N_OBJ)
+        order = np.argsort(-fy, axis=1)                    # far first, so near overwrites
+        rows = np.arange(fl.shape[0])
+        for k in range(N_OBJ):
+            j = order[:, k]
+            fl[rows, fc[rows, j]] = (j + 1).astype(np.uint8)
+        return lab
+
+    def label_frames(self, pos: np.ndarray, sim: dict) -> tuple[np.ndarray, int]:
+        """(..., N_OBJ, 2) positions → (..., G) uint8 cell labels, nearer object winning a
+        shared cell. Also returns the number of (frame, cell) conflicts resolved that way."""
+        cells = self.cell_of(pos, sim)                     # (..., N_OBJ)
+        fc = cells.reshape(-1, N_OBJ)
+        conflicts = int((fc[:, 0] == fc[:, 1]).sum())
+        return self.labels_from_cells(cells, pos[..., 1], sim), conflicts
+
+    def edit_cells(self, pos: np.ndarray, edit_object: np.ndarray, ef: int,
+                   sim: dict) -> dict:
+        """Per case, the categorical MOVE a teleport asks for: ``A`` the edited object's
+        cell at frame ``ef − 1``, ``B`` its cell at ``ef``, ``cls`` its class (object + 1).
+        ``pos`` (N, T, N_OBJ, 2) post-edit positions, ``edit_object`` (N,). Returns
+        ``{"A", "B", "cls"}`` int64 arrays of shape (N,)."""
+        idx = np.arange(len(edit_object))
+        j = np.asarray(edit_object, dtype=int)
+        return {"A": self.cell_of(pos[idx, ef - 1, j], sim),
+                "B": self.cell_of(pos[idx, ef, j], sim),
+                "cls": (j + 1).astype(np.int64)}
+
+
+# ── the product grid ──────────────────────────────────────────────────────────
+
+
+@dataclass(frozen=True)
+class GridTarget(CategoricalTarget):
+    """One grid resolution: ``nu`` lateral × ``nd`` depth cells. Named ``grid-<nu>x<nd>``."""
+
+    nu: int = 16
+    nd: int = 8
+
+    @property
+    def name(self) -> str:
+        return f"grid-{self.nu}x{self.nd}"
+
+    @property
+    def g(self) -> int:
+        """Number of cells (independent of the instance)."""
+        return self.nu * self.nd
+
+    def n_cells(self, sim: dict) -> int:
+        return self.g
+
+    @classmethod
+    def parse(cls, target: str) -> "GridTarget | None":
+        """``"grid-16x8"`` → ``GridTarget(16, 8)``; any other target name → None."""
+        m = _GRID.match(str(target))
+        return cls(int(m.group(1)), int(m.group(2))) if m else None
+
+    def edges(self, sim: dict) -> tuple[np.ndarray, np.ndarray]:
+        """Bin edges in (normalised u, 1/y) over the reachable region."""
+        r = float(sim["radius"])
+        u = np.linspace(-1.0, 1.0, self.nu + 1)
+        d = np.linspace(1.0 / (float(sim["y_far"]) - r), 1.0 / (float(sim["y_near"]) + r),
+                        self.nd + 1)
+        return u, d
+
+    @staticmethod
+    def lateral_norm(pos: np.ndarray, sim: dict) -> np.ndarray:
+        """u' = u / (1 − r/(scale·y)): the ray coordinate rescaled by a centre's reach at
+        that depth, so u' = ±1 is a disc touching the frustum wall."""
+        scale = float(sim["x_far"]) / float(sim["y_far"])
+        r = float(sim["radius"])
+        reach = 1.0 - r / (scale * np.maximum(pos[..., 1], 1e-6))
+        return lateral(pos, sim) / np.maximum(reach, 1e-6)
+
+    def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        ue, de = self.edges(sim)
+        u = self.lateral_norm(pos, sim)
+        inv_y = 1.0 / np.maximum(pos[..., 1], 1e-6)
+        iu = np.clip(np.searchsorted(ue, u, side="right") - 1, 0, self.nu - 1)
+        idp = np.clip(np.searchsorted(de, inv_y, side="right") - 1, 0, self.nd - 1)
+        return (iu * self.nd + idp).astype(np.int64)
+
+    def cell_of_frustum(self, u: np.ndarray, inv_y: np.ndarray, sim: dict) -> np.ndarray:
+        """Cells from FRUSTUM-basis coordinates (u = x/(scale·y), 1/y) — e.g. a regression
+        probe's read-out — so a continuous prediction can be scored on the grid axis."""
+        ue, de = self.edges(sim)
+        scale = float(sim["x_far"]) / float(sim["y_far"])
+        r = float(sim["radius"])
+        reach = 1.0 - r * np.asarray(inv_y) / scale
+        un = np.asarray(u) / np.maximum(reach, 1e-6)
+        iu = np.clip(np.searchsorted(ue, un, side="right") - 1, 0, self.nu - 1)
+        idp = np.clip(np.searchsorted(de, inv_y, side="right") - 1, 0, self.nd - 1)
+        return (iu * self.nd + idp).astype(np.int64)
+
+    def cell_centre_world(self, cell: int, sim: dict) -> tuple[float, float]:
+        """Rough world coordinates of a cell centre (for labels / figures only)."""
+        ue, de = self.edges(sim)
+        iu, idp = divmod(int(cell), self.nd)
+        u = 0.5 * (ue[iu] + ue[iu + 1])
+        inv_y = 0.5 * (de[idp] + de[idp + 1])
+        y = 1.0 / inv_y
+        scale = float(sim["x_far"]) / float(sim["y_far"])
+        u = u * (1.0 - float(sim["radius"]) / (scale * y))       # undo the reach normalisation
+        return float(u * scale * y), float(y)
+
+
+CANONICAL = GridTarget(16, 8)
+
+
+# ── the appearance partition ──────────────────────────────────────────────────
+
+
+def covered_rays(pos: np.ndarray, sim: dict) -> np.ndarray:
+    """(..., 2) single-disc centres → (..., R_kept) bool: which KEPT rays that disc lights.
+
+    The renderer's own ray–disc test (``renderer.render_frame``): rays fan out with
+    directions ``(s·scale, 1)`` normalised, s uniform in [-1, 1] over ``obs_res`` rays; a
+    ray hits iff its discriminant is non-negative and the front intersection lies within
+    [y_near, y_far] (the near-plane clamp case never arises for an always-in-frustum disc,
+    whose centre keeps a margin of one radius). The two wall rays are dropped when the
+    instance asks for it (``drop_edge_rays``), exactly as the renderer does.
+    """
+    p = np.asarray(pos)
+    R = int(sim["obs_res"])
+    scale = float(sim["x_far"]) / float(sim["y_far"])
+    s = np.linspace(-1.0, 1.0, R)
+    dx, dy = s * scale, np.ones(R)
+    nrm = np.hypot(dx, dy)
+    dx, dy = dx / nrm, dy / nrm
+    cx, cy = p[..., 0:1], p[..., 1:2]                       # (..., 1), the caller's dtype
+    b = dx * cx + dy * cy                                   # (..., R) float64
+    # |c|² − r² in the POSITIONS' dtype, as the renderer computes it (float32 positions and
+    # radii give a float32 C) — a grazing ray can flip otherwise (1 in 12,000 on dw-noiseless)
+    r = np.asarray(sim["radius"], dtype=p.dtype if np.issubdtype(p.dtype, np.floating) else np.float64)
+    C = (cx ** 2 + cy ** 2 - r ** 2).astype(np.float64)
+    disc = b ** 2 - C
+    t_front = b - np.sqrt(np.maximum(disc, 0.0))
+    y_front = dy * t_front
+    hit = (disc >= 0) & (t_front > 1e-9) & (y_front >= float(sim["y_near"])) & (y_front <= float(sim["y_far"]))
+    return hit[..., 1:-1] if sim.get("drop_edge_rays", False) else hit
+
+
+def _sim_key(sim: dict) -> tuple:
+    return tuple(float(sim[k]) for k in ("radius", "y_near", "y_far", "x_far")) + \
+        (int(sim["obs_res"]), bool(sim.get("drop_edge_rays", False)))
+
+
+@functools.lru_cache(maxsize=None)
+def _runs_of(sim_key: tuple, n_side: int = 500):
+    """Deterministic dense sweep of the reachable region → the realisable (first, last)
+    runs in a fixed order, each with the depth range it occupies. Cached per geometry."""
+    r, y_near, y_far, x_far, R, drop = sim_key
+    sim = {"radius": r, "y_near": y_near, "y_far": y_far, "x_far": x_far, "obs_res": R,
+           "drop_edge_rays": drop}
+    scale = x_far / y_far
+    ys = np.linspace(y_near + r, y_far - r, n_side)
+    xs = np.linspace(-1.0, 1.0, n_side)
+    Y = np.repeat(ys[:, None], n_side, 1)
+    X = xs[None, :] * (scale * Y - r)                       # inside the reach at each depth
+    hit = covered_rays(np.stack([X, Y], -1), sim)          # (n, n, Rk)
+    first = hit.argmax(-1)
+    last = hit.shape[-1] - 1 - hit[..., ::-1].argmax(-1)
+    any_ = hit.any(-1)
+    assert any_.all(), "a reachable position lights no ray — the appearance partition needs r large enough"
+    assert (hit.sum(-1) == last - first + 1).all(), "non-contiguous run"
+    code = first * hit.shape[-1] + last
+    runs, depth = [], {}
+    for c in np.unique(code):
+        m = code == c
+        runs.append((int(c // hit.shape[-1]), int(c % hit.shape[-1])))
+        depth[runs[-1]] = (float(Y[m].min()), float(Y[m].max()))
+    runs.sort(key=lambda fl: (fl[1] - fl[0], fl[0]))        # short runs (far) first, then left→right
+    return tuple(runs), depth, hit.shape[-1]
+
+
+def _nearest_run(runs: tuple, f: int, la: int) -> int:
+    """Index of the realisable run nearest to (f, l): same centre first, then smallest
+    |Δf| + |Δl|, ties to the earlier run in cell order."""
+    best, key = 0, None
+    for i, (rf, rl) in enumerate(runs):
+        k = (abs((rf + rl) - (f + la)), abs(rf - f) + abs(rl - la))
+        if key is None or k < key:
+            best, key = i, k
+    return best
+
+
+@dataclass(frozen=True)
+class AppearanceTarget(CategoricalTarget):
+    """The observation-exact partition: cell = the run of rays a disc lights, optionally
+    split into ``depth_bands`` depth bands (uniform in 1/y within the run's depth range) or
+    merged by run centre (``lateral_only``)."""
+
+    depth_bands: int = 1
+    lateral_only: bool = False
+
+    @property
+    def name(self) -> str:
+        if self.lateral_only:
+            return "appearance-lat"
+        return "appearance" if self.depth_bands == 1 else f"appearance-d{self.depth_bands}"
+
+    @classmethod
+    def parse(cls, target: str) -> "AppearanceTarget | None":
+        m = _APP.match(str(target))
+        if not m:
+            return None
+        if m.group(2):
+            return cls(lateral_only=True)
+        return cls(depth_bands=int(m.group(1)) if m.group(1) else 1)
+
+    def runs(self, sim: dict) -> tuple:
+        """The realisable (first, last) runs on this instance, in cell order."""
+        return _runs_of(_sim_key(sim))[0]
+
+    def _centres(self, sim: dict) -> list[int]:
+        return sorted({f + la for f, la in self.runs(sim)})
+
+    def n_cells(self, sim: dict) -> int:
+        if self.lateral_only:
+            return len(self._centres(sim))
+        return len(self.runs(sim)) * self.depth_bands
+
+    # positions per chunk of the ray–disc test: (..., R) float64 intermediates at 128 rays
+    # are ~1 KB per position, so 2^18 positions ≈ 0.3 GB each; labelling the 15.6 M
+    # positions of the probe corpus in one shot was ~60 GB and OOM-killed a unit (2026-09-10)
+    CHUNK = 1 << 18
+
+    def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        p = np.asarray(pos, np.float64)
+        flat = p.reshape(-1, 2)
+        if flat.shape[0] <= self.CHUNK:
+            return self._cell_of_flat(flat, sim).reshape(p.shape[:-1])
+        out = np.concatenate([self._cell_of_flat(flat[i: i + self.CHUNK], sim)
+                              for i in range(0, flat.shape[0], self.CHUNK)])
+        return out.reshape(p.shape[:-1])
+
+    def _cell_of_flat(self, p: np.ndarray, sim: dict) -> np.ndarray:
+        runs, depth, rk = _runs_of(_sim_key(sim))
+        hit = covered_rays(p, sim)
+        first = hit.argmax(-1)
+        last = rk - 1 - hit[..., ::-1].argmax(-1)
+        code = first * rk + last
+        table = np.full(rk * rk, -1, np.int64)
+        for i, (f, la) in enumerate(runs):
+            table[f * rk + la] = i
+        run_idx = table[code]
+        if (run_idx < 0).any():
+            # A run the sweep did not see: a grazing ray flipped by float32 rounding, so the
+            # disc lights one ray more or fewer than any swept position (4 in 2 M positions
+            # on dw-noiseless; never on dw-8ray). Snap to the nearest realisable run.
+            miss = run_idx < 0
+            if not hit[miss].any(-1).all():
+                raise ValueError("a position lights no ray — outside the reachable region")
+            snapped = np.array([_nearest_run(runs, int(c // rk), int(c % rk))
+                                for c in np.unique(code[miss])])
+            lut = dict(zip(np.unique(code[miss]).tolist(), snapped.tolist()))
+            run_idx = run_idx.copy()
+            run_idx[miss] = [lut[int(c)] for c in code[miss]]
+            first = np.where(miss, np.array([runs[i][0] for i in run_idx]), first)
+            last = np.where(miss, np.array([runs[i][1] for i in run_idx]), last)
+        if self.lateral_only:
+            cen = {c: i for i, c in enumerate(self._centres(sim))}
+            ctab = np.full(2 * rk, -1, np.int64)
+            for c, i in cen.items():
+                ctab[c] = i
+            return ctab[first + last]
+        if self.depth_bands == 1:
+            return run_idx
+        # band by 1/y, uniform within the run's own depth range
+        lo = np.array([1.0 / depth[rn][1] for rn in runs])   # 1/ymax
+        hi = np.array([1.0 / depth[rn][0] for rn in runs])   # 1/ymin
+        inv_y = 1.0 / np.maximum(p[..., 1], 1e-6)
+        frac = (inv_y - lo[run_idx]) / np.maximum(hi[run_idx] - lo[run_idx], 1e-9)
+        band = np.clip((frac * self.depth_bands).astype(np.int64), 0, self.depth_bands - 1)
+        return run_idx * self.depth_bands + band
+
+
+def categorical_target(target: str) -> "CategoricalTarget | None":
+    """The categorical target a name denotes (``grid-…``, ``appearance…``, or either with
+    the ``-fac`` suffix — the factorised, object-indexed reading of the same partition), or
+    None for a regression target (``pos`` / ``full`` / ``pos@…``). Every branch in the
+    pipeline goes through this."""
+    return GridTarget.parse(target) or AppearanceTarget.parse(target) or _factorised_target(target)
+
+
+# ── the SNAPPED regression target: a categorical partition read as coordinates ────────
+#
+# ``"pos@<categorical>"`` / ``"full@<categorical>"`` (2026-09-10). The same gridification as a
+# categorical target, kept as the 4-D (or 8-D) REGRESSION task: every object's position is
+# replaced by the centre of the cell it is in, in the frustum basis, and the probe regresses
+# that. It isolates what the categorical rows changed — the target is now a piecewise-constant
+# function of position that the frame can express (its cells), while the probe, the editors
+# (PI through the pseudo-inverse, GS through the MSE spec) and the Edit Index are exactly the
+# regression pipeline's. ND stays ill-posed here (a continuous target), as on ``pos``.
+#
+# A cell's centre is its centroid in frustum coordinates (u, 1/y) under a uniform sweep of the
+# reachable region in world space; where that centroid falls outside its own cell (a
+# non-convex appearance cell), the sweep point of the cell nearest to it is used instead, so
+# a snapped value is always a realisable position inside the cell. An edit under a snapped
+# target is a MOVE between cell centres, so the bench keeps only teleports that change cell
+# (``bench.grid_selection`` with the underlying categorical target), exactly as the
+# categorical rows do — same 192 cases on the same instance.
+
+_SNAP = re.compile(r"^(pos|full)@(.+)$")
+
+
+def frustum_to_world(f: np.ndarray, sim: dict) -> np.ndarray:
+    """(..., 2) frustum coordinates (u = x/(scale·y), 1/y) → (..., 2) world (x, y): the
+    inverse of ``frustum.basis(..., depth="frustum")`` for the canonical inverse-depth axis."""
+    from pim.environments.discworld.frustum import CANONICAL_DEPTH, fov_scale
+
+    assert CANONICAL_DEPTH == "inv_y", "frustum_to_world inverts the inverse-depth axis only"
+    f = np.asarray(f, np.float64)
+    y = 1.0 / np.maximum(f[..., 1], 1e-9)
+    x = f[..., 0] * fov_scale(sim) * y
+    return np.stack([x, y], -1)
+
+
+def _numeric_sim_key(sim: dict) -> tuple:
+    return tuple((k, float(sim[k])) for k in sorted(sim) if isinstance(sim[k], (int, float, bool)))
+
+
+@functools.lru_cache(maxsize=None)
+def _centroids_of(target: "CategoricalTarget", sim_key: tuple, n_side: int = 500) -> np.ndarray:
+    """(G, 2) cell centres in frustum coordinates; see the module note above."""
+    from pim.environments.discworld.frustum import basis as fb
+
+    sim = dict(sim_key)
+    r, y_near, y_far = float(sim["radius"]), float(sim["y_near"]), float(sim["y_far"])
+    scale = float(sim["x_far"]) / y_far
+    ys = np.linspace(y_near + r, y_far - r, n_side)
+    xs = np.linspace(-1.0, 1.0, n_side)
+    Y = np.repeat(ys[:, None], n_side, 1)
+    X = xs[None, :] * (scale * Y - r)                        # the reachable region, uniformly
+    P = np.stack([X, Y], -1).reshape(-1, 2)
+    cells = target.cell_of(P, sim).reshape(-1)
+    F = fb(P, None, sim, depth="frustum")[0]                 # (n, 2) frustum coordinates
+    g = target.n_cells(sim)
+    count = np.bincount(cells, minlength=g).astype(np.float64)
+    if (count == 0).any():
+        raise ValueError(f"{target.name}: cells {np.where(count == 0)[0].tolist()} hold no swept "
+                         f"position — the sweep is too coarse for this partition")
+    cen = np.stack([np.bincount(cells, F[:, k], minlength=g) for k in range(2)], -1) / count[:, None]
+    back = target.cell_of(frustum_to_world(cen, sim), sim)
+    for c in np.where(back != np.arange(g))[0]:              # non-convex cell: use its medoid
+        idx = np.where(cells == c)[0]
+        cen[c] = F[idx[np.argmin(((F[idx] - cen[c]) ** 2).sum(-1))]]
+    return cen
+
+
+def _centroids(self, sim: dict) -> np.ndarray:
+    """(cells, 2) frustum-basis centre of every cell (cached per geometry)."""
+    return _centroids_of(self, _numeric_sim_key(sim))
+
+
+def _snap(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+    """(..., 2) world positions → (..., 2) FRUSTUM coordinates of the centre of each
+    position's cell — the snapped regression target."""
+    return self.centroids(sim)[self.cell_of(pos, sim)]
+
+
+CategoricalTarget.centroids = _centroids
+CategoricalTarget.snap = _snap
+
+
+@dataclass(frozen=True)
+class SnappedTarget:
+    """``<base>@<categorical>``: the regression target ``base`` (``pos`` — positions;
+    ``full`` — positions and velocities) with every position snapped to its cell centre
+    under ``cat``. Defined in the frustum basis, like the categorical targets."""
+
+    base: str
+    cat: CategoricalTarget
+
+    @property
+    def name(self) -> str:
+        return f"{self.base}@{self.cat.name}"
+
+    @classmethod
+    def parse(cls, target: str) -> "SnappedTarget | None":
+        m = _SNAP.match(str(target))
+        if not m:
+            return None
+        cat = categorical_target(m.group(2))
+        return cls(m.group(1), cat) if cat is not None else None
+
+    def n_cells(self, sim: dict) -> int:
+        return self.cat.n_cells(sim)
+
+    def snap(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        return self.cat.snap(pos, sim)
+
+
+def snapped_target(target: str) -> "SnappedTarget | None":
+    """The snapped regression target a name denotes (``pos@appearance``,
+    ``full@grid-16x8``), or None."""
+    return SnappedTarget.parse(target)
+
+
+def selection_target(target: str) -> "CategoricalTarget | None":
+    """The partition whose CELL CHANGE defines a genuine edit under ``target``: the
+    categorical target itself, the snapped target's partition, or None for a plain
+    regression target (every teleport counts)."""
+    cat = categorical_target(target)
+    if cat is not None:
+        return cat.cat if isinstance(cat, FactorisedTarget) else cat
+    sn = snapped_target(target)
+    return sn.cat if sn is not None else None
+
+
+def target_cells(target: str, sim: dict) -> int | None:
+    """How many cells a target's partition has on this instance (None for ``pos``/``full``)."""
+    sel = selection_target(target)
+    return None if sel is None else sel.n_cells(sim)
+
+
+# ── the FACTORISED categorical target: per object, one softmax per factor ─────────────
+#
+# ``"<partition>-fac"`` (2026-09-10, Sevan). The cell-indexed categorical target is Othello's
+# shape (a class per CELL: empty / object 0 / object 1). A factorised target is object-indexed
+# instead: for every object, one categorical variable per FACTOR of the partition — the
+# appearance partition factors as (run centre, run length): "which pixel the disc's centre is
+# in" and "how many rays wide it is"; a product grid as (lateral bin, depth bin). The probe
+# has N_OBJ × F tiles, each a softmax over ALL the factors' classes laid out side by side
+# (centre classes first, then length classes — every class index means one thing, so the
+# pooled majority baseline reads as it does on Othello; a tile's foreign classes are never
+# labelled). Same information as the partition, far fewer logits: 8-ray appearance is
+# 2 × (15 + 5) = 40 classes over 4 tiles against 30 × 3 = 90; 128-ray would be 2 × (233 + n_len)
+# against 2,889 × 3. An edit is a per-tile class change (old → new) on the edited object's
+# tiles whose class differs — PI swaps the two logits at each such tile, ND adds the row
+# contrast (new − old) summed over the moved tiles, GS asks cross-entropy toward the new
+# labels on those tiles. Genuine edits are the partition's cell-changing teleports (a factor
+# change ⇔ a cell change), so the bench is the same 192 cases as the partition's own row.
+
+_FAC = re.compile(r"^(.+)-fac$")
+
+
+def _grid_factors(self, cells: np.ndarray, sim: dict) -> np.ndarray:
+    """(...) cells → (..., 2) (lateral bin, depth bin)."""
+    iu, idp = np.divmod(np.asarray(cells, np.int64), self.nd)
+    return np.stack([iu, idp], -1)
+
+
+def _grid_factor_sizes(self, sim: dict) -> tuple[int, ...]:
+    return (self.nu, self.nd)
+
+
+GridTarget.factors_of = _grid_factors
+GridTarget.factor_sizes = _grid_factor_sizes
+GridTarget.factor_names = ("lateral", "depth")
+
+
+def _app_factor_tables(self, sim: dict) -> tuple[dict, dict]:
+    """{2·centre: class}, {length: class} over the realisable runs (compact, sorted)."""
+    runs = self.runs(sim)
+    centres = sorted({f + la for f, la in runs})
+    lengths = sorted({la - f + 1 for f, la in runs})
+    return ({c: i for i, c in enumerate(centres)}, {ln: i for i, ln in enumerate(lengths)})
+
+
+def _app_factors(self, cells: np.ndarray, sim: dict) -> np.ndarray:
+    """(...) cells → (..., 2) (centre class, length class). Only the plain partition
+    factorises this way (a depth band or a merged centre is not a run)."""
+    if self.depth_bands != 1 or self.lateral_only:
+        raise ValueError(f"{self.name} does not factorise into (centre, length)")
+    runs = np.asarray(self.runs(sim))                      # (G, 2)
+    ct, lt = self._factor_tables(sim)
+    c_cls = np.array([ct[f + la] for f, la in runs])
+    l_cls = np.array([lt[la - f + 1] for f, la in runs])
+    cells = np.asarray(cells, np.int64)
+    return np.stack([c_cls[cells], l_cls[cells]], -1)
+
+
+def _app_factor_sizes(self, sim: dict) -> tuple[int, ...]:
+    ct, lt = self._factor_tables(sim)
+    return (len(ct), len(lt))
+
+
+AppearanceTarget._factor_tables = _app_factor_tables
+AppearanceTarget.factors_of = _app_factors
+AppearanceTarget.factor_sizes = _app_factor_sizes
+AppearanceTarget.factor_names = ("centre", "length")
+
+
+@dataclass(frozen=True)
+class FactorisedTarget(CategoricalTarget):
+    """``<partition>-fac``: the partition's cells read as per-object categorical FACTORS."""
+
+    cat: CategoricalTarget = None
+
+    @property
+    def name(self) -> str:
+        return f"{self.cat.name}-fac"
+
+    @classmethod
+    def parse(cls, target: str) -> "FactorisedTarget | None":
+        m = _FAC.match(str(target))
+        if not m:
+            return None
+        cat = GridTarget.parse(m.group(1)) or AppearanceTarget.parse(m.group(1))
+        if cat is None or not hasattr(cat, "factors_of"):
+            return None
+        if isinstance(cat, AppearanceTarget) and (cat.depth_bands != 1 or cat.lateral_only):
+            return None                    # a depth band / merged centre is not a run
+        return cls(cat)
+
+    # the partition (for the resolution axis, the bench filter and the table's cell count)
+    def n_cells(self, sim: dict) -> int:
+        return self.cat.n_cells(sim)
+
+    def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        return self.cat.cell_of(pos, sim)
+
+    # the probe's shape
+    @property
+    def n_factors(self) -> int:
+        return len(self.cat.factor_names)
+
+    @property
+    def n_tiles(self) -> int:
+        return N_OBJ * self.n_factors
+
+    def n_tiles_on(self, sim: dict) -> int:
+        return self.n_tiles
+
+    def class_offsets(self, sim: dict) -> np.ndarray:
+        """Where each factor's classes start in the shared class axis."""
+        return np.concatenate([[0], np.cumsum(self.cat.factor_sizes(sim))[:-1]]).astype(np.int64)
+
+    def n_classes_on(self, sim: dict) -> int:
+        return int(sum(self.cat.factor_sizes(sim)))
+
+    def factor_labels(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        """(..., N_OBJ, 2) positions → (..., N_OBJ · F) class labels in the shared class
+        axis; tile ``F·j + f`` is object j's factor f."""
+        cells = self.cat.cell_of(pos, sim)                          # (..., N_OBJ)
+        fac = self.cat.factors_of(cells, sim) + self.class_offsets(sim)   # (..., N_OBJ, F)
+        return fac.reshape(*fac.shape[:-2], -1).astype(np.int64)
+
+    def label_frames(self, pos: np.ndarray, sim: dict) -> tuple[np.ndarray, int]:
+        """Labels are per OBJECT here, so two objects sharing a cell is not a conflict."""
+        return self.factor_labels(pos, sim), 0
+
+    def labels_from_cells(self, cells, y_world, sim):        # pragma: no cover
+        raise NotImplementedError("a factorised target labels objects, not cells")
+
+    def edit_cells(self, pos, edit_object, ef, sim):        # pragma: no cover
+        raise NotImplementedError("a factorised target's edit is `edit_moves`, not a cell pair")
+
+    def edit_moves(self, pos: np.ndarray, edit_object: np.ndarray, ef: int, sim: dict) -> dict:
+        """Per case, the edited object's tiles and their classes before (frame ``ef − 1``) and
+        after (frame ``ef``) the teleport: ``{"tile", "old", "new"}`` (N, F) int64. A tile
+        whose class does not change has ``new == old`` — the swap is a no-op there and the
+        change mask leaves it alone."""
+        j = np.asarray(edit_object, dtype=int)
+        idx = np.arange(len(j))
+        F = self.n_factors
+        before = self.factor_labels(pos[:, ef - 1], sim).reshape(len(j), N_OBJ, F)[idx, j]
+        after = self.factor_labels(pos[:, ef], sim).reshape(len(j), N_OBJ, F)[idx, j]
+        tile = (j[:, None] * F + np.arange(F)[None, :]).astype(np.int64)
+        return {"tile": tile, "old": before.astype(np.int64), "new": after.astype(np.int64)}
+
+
+def _factorised_target(target: str) -> "FactorisedTarget | None":
+    return FactorisedTarget.parse(target)

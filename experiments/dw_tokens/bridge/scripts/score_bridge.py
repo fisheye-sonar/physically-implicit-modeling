@@ -48,11 +48,15 @@ SETTINGS = {
 
 
 def cached_probes(model, run_dir: Path, inst: Path, basis: str, family: str, n_seq: int, vocab):
-    """The run's own probes, by the exact key master_eval used (model fingerprint + encoder tag)."""
+    """The run's own probes, by the exact key master_eval used (model fingerprint + encoder tag;
+    the corpus keyed LOGICALLY since layout v2, 2026-09-10)."""
+    from pim.environments import layout
+
     store = ProbeCache(run_dir / "probes")
     _, tag = token_encoder(vocab)
-    fname, prov = store.key(model, target="full", n_seq=int(n_seq), split="test", family=family,
-                            basis=basis, seed=dwb.SEED, data=str((inst / "probe").resolve()), encoder=tag)
+    data, split = layout.probe_key("discworld", Path(inst).name, "120k")
+    fname, prov = store.key(model, target="full", n_seq=int(n_seq), split=split, family=family,
+                            basis=basis, seed=dwb.SEED, data=data, encoder=tag)
     hit = store.load(fname, prov, device=DEV)
     if hit is None:
         sys.exit(f"probe cache MISS for {family}/{basis} under {run_dir / 'probes'} — refusing to refit")

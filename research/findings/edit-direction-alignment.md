@@ -84,6 +84,90 @@ against alignment as the explanation: at its best editing point adjacent has HIG
 alignment than standard Othello has at its best editing point (0.200 at pt 2 vs 0.146 at pt 4)
 and reaches +0.375 against +0.631. Matched alignment, half the editability.
 
+## Result 5 — the grid (classification) probes are the one above-chance discworld read-out
+
+`scripts/grid_probe_alignment.py`, same model / Δ / cases, 104 cell-changing cases; the
+subspace is the 6 rows ({empty, obj0, obj1} × the two cells that change) against the
+regression probes' 4 position rows:
+
+| probe target | rows | generic | ratio | Haufe | genH | ratio |
+|---|---|---|---|---|---|---|
+| grid 3-way (pt 5) | 0.057 | 0.025 | **2.3×** | 0.018 | 0.019 | 1.0× |
+| regression (pt 5) | 0.014 | 0.018 | 0.8× | 0.031 | 0.040 | 0.8× |
+
+Making the target categorical lifts a discworld read-out above chance for the first time —
+and Haufe then washes it back to chance, which is exactly the ordering its editability
+follows (ND +0.373 raw → +0.048 Haufe; `findings/grid-target-control.md`). 2.3× against
+Othello's 26× remains the gap.
+
+## Result 6 — the factorised categorical probe is the best-aligned discworld read-out yet, raw; Haufe washes it to chance again
+
+`scripts/fac_probe_alignment.py` (2026-09-10), `L-dw-8ray-20m`, the same oracle counterfactual
+(the edited object's trajectory shifted and re-rendered; Δ = h_cf − h at the last context
+position). On the 8-ray instance (radius 1.0) only **66 of 192** shifted trajectories stay
+inside the frustum and clear of the other disc; the shift changes the object's cell in all 66
+(its run centre in 66, its length in 32). Three read-outs on the same model and cases:
+
+| read-out (pt 5; pts 1–8 within ±0.005) | rows | Δ in rows | generic | random rank | ratio vs generic / random | Haufe | genH | randH |
+|---|---|---|---|---|---|---|---|---|
+| **appearance-fac** — (tile, old) + (tile, new) of the moved factors | 2–4 | **0.070** | 0.025 | 0.006 | **2.8× / 12×** | 0.034 | 0.023 | 0.039 |
+| appearance (joint cell) — {empty, obj0, obj1} × the two cells | 6 | 0.048 | 0.020 | — | 2.4× | 0.074 | 0.045 | — |
+| regression (full, frustum) — the 4 position rows | 4 | 0.003 | 0.003 | — | 1.0× | 0.078 | 0.090 | — |
+
+And the single ND write direction (target − current contrast) against Δ, cos²:
+
+| direction (pt 5) | raw | Haufe | random direction |
+|---|---|---|---|
+| **appearance-fac** (summed contrast over the moved factors) | **0.056** | 0.013 | 0.002 |
+| appearance (joint cell) | 0.035 | 0.007 | 0.002 |
+
+Point 0 (the input embedding) is the exception everywhere: fac rows 0.28 / generic 0.18, joint
+cell 0.57 / 0.30 — there the residual IS the frame, and the probes read it directly.
+
+**Reading.** The factorised probe's raw row space holds 2.8× the generic and 12× the
+random-rank share of the true displacement, and its one ND direction captures 5.6% of Δ's
+energy — 28× a random direction and 1.6× the joint cell's contrast. That is the ordering
+the editors follow (fac ND +0.50 > joint ND +0.43 ≫ regression, `probe-target-type.md`), so
+Result 5's pattern holds with the better-aligned probe: **raw alignment tracks editability;
+Haufe does not.** The Haufe patterns of the fac rows sit AT the random-pattern floor (0.034 vs
+0.039 — a random pattern subspace captures 4% of Δ because patterns concentrate in the
+residual's high-variance directions, and so does Δ by chance), and the Haufe ND direction loses
+three quarters of its overlap. Across the whole project no Haufe-corrected discworld subspace
+has ever risen above its own baseline; the raw categorical rows have, twice. The regression rows
+stay at the generic floor (0.003), as in Result 1. Absolute numbers remain small: 5–7% of Δ in
+the writable subspace against Othello's 19% (Result 1) — the categorical read-outs close part
+of the gap, not all of it.
+
+## Result 7 — oth-adjacent-flip: the least-aligned Othello model edits to (and past) its own ceiling (2026-09-11)
+
+`othello_alignment.py --run runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m` (+ extras in
+`experiments/adjacent_flip_ablation/scripts/`): 42 clean cases (90 exact boards of 900; cf legal
+mass 0.9997). Best point 1: rows **0.051** vs generic 0.012 (4.4×), Haufe 0.094 vs
+0.036 (2.6×); ND-direction cos² raw 0.013 / Haufe 0.096 / random 0.0016; ‖Δ‖/‖h‖ 0.43.
+Lower than oth-adjacent (0.077 / 8×, Haufe 0.236) on every measure, yet canonically more
+editable (ND +0.24 vs +0.12). Haufe-corrected edits: PI +0.291 / fid 0.53, ND +0.328 / fid 0.47
+(oth-adjacent: +0.270 / +0.375) — the correction pulls the two inert-ish models together and
+leaves them at half of standard Othello. Two things the extras add:
+
+1. **Selection bias in the Othello counterfactuals.** Exact one-tile-flipped boards are
+   reachable almost only for placement-parity tiles: 2/42 clean cases on the flip
+   instance had a tile that was ever recoloured (standard Othello 11/18). The alignment number for
+   the flip model is therefore about its LOOKUP copy of colour. In standard Othello, where the
+   split is readable, recoloured-tile cases are LESS aligned than parity-tile cases (rows
+   0.174 vs 0.211 at pt 5).
+2. **The legal-mass filter does not bite on adjacency instances — filter on ordinariness (corrected
+   the same day).** Every exact counterfactual board in all three instances is SWAP-built. The
+   ≥ 0.99 legal-mass screen that made Result 3 honest on standard Othello (16 of its 18 kept
+   cases are also ordinary) passes almost anything on the adjacency models, which put mass 1.000
+   on off-distribution histories; a first pass therefore reported ceilings of +0.14 (flip) and
+   +0.25 (adjacent) and an editor "above the ceiling". Screening on the model's rmse to
+   uniform-over-its-own-legal-set (≤ held-out 95th percentile at the same length) keeps
+   18 / 26 / 16 cases and gives ceilings **+0.655 / +0.679 / +0.697** (flip / adjacent /
+   standard) with the canonical ND at +0.359 / +0.206 / +0.520 below them (55% / 30% / 75%);
+   PI +0.073 / −0.079 / +0.247. Alignment on the ordinary subsets: rows 0.048 / 0.088 / 0.185,
+   full-probe Haufe 0.184 / 0.250 / 0.262 — same ordering as above.
+   `experiments/adjacent_flip_ablation/scripts/honesty_check_v2.py`; `GOTCHAS.md` 2026-09-11.
+
 ## Scope note
 
 ⛔ This analysis modifies the INSTRUMENT (write directions), which is outside the project's

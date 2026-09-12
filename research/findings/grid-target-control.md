@@ -16,9 +16,34 @@ shows no relocated disc. PI stays weak (+0.13 at fidelity 1.6). Decodability on 
 axis is lower than on the regression axis because the metric is harsher, not because the
 state is read worse: the direct grid probes beat the regression probes mapped onto cells.
 
+## Canonicalised (2026-09-09) — the grid is now a probe target of the canonical pipeline
+
+`experiments/grid_target_control/` was folded into `pim` and removed (Sevan's call: no new
+probe fits, integrate the existing ones). The grid is `pim.environments.discworld.grid_target`
+(`"grid-16x8"`, resolution in the name), the bench's categorical branch lives in
+`discworld/bench.py`, the three editors' categorical branches in `discworld/arms.py`, and the
+class swap PI uses is ONE helper shared with Othello (`pim.editors.pinv.swap_class_logits`).
+The 18 fitted probes were re-keyed (loaded and re-stored, not refitted) into
+`runs/noise_ablation/L-dw-noiseless-20m/probes/`; the random-init and observation floors into
+`runs/_baselines/dw-noiseless/probes/` + `baselines.json`. `master_eval` now scores the run's
+`grid-16x8` block (SETTINGS `dw_extra_targets`, extended α grids; probes `require_cached`) and
+`build_full_table` renders it as the run's third row, with ND reported and Table 3c for its
+floors. **The canonical numbers reproduce the experiment's to four decimals** (same
+selection: first 192 cell-changing cases, 6 dropped among the first 198): unedited −0.9316,
+PI pt 1 α 60 +0.1263 / fid 1.580 (read-out landed 66%), ND pt 3 α 8 +0.3728 / 0.915, GS pt 1
+α 0.75 +0.2886 / 0.871; skill LIN 0.434 (pt 1) / MLP 0.707 (pt 7); floors random-init
+0.322 / 0.582, observation (right-aligned, 200k) 0.051 / 0.545. Evidence is now
+`runs/noise_ablation/L-dw-noiseless-20m/scores.json["bases"]["grid-16x8"]` and the waterfall
+`…/figures/waterfall_edits_grid-16x8.png` (the experiment's own panel kept beside it as
+`waterfall_edits_grid-16x8_experiment-2026-09-08.png`). The Haufe follow-up moved to
+`experiments/edit_direction_alignment/scripts/haufe_edit_grid.py` (+ `scores/`). The
+`regression_to_cells` bridge and the 8×4 arm were not canonicalised; the original scripts and
+score JSONs are in git history before 2026-09-09 (`experiments/grid_target_control/`). The
+dw-pn04 partial probes (points 0–1 on `L-dw-20m`) sit in that run's `probes/`, marked partial.
+
 ## Setup
 
-- Grid (`experiments/grid_target_control/scripts/grid.py`): uniform in the frustum basis
+- Grid (`pim/environments/discworld/grid_target.py`, originally `experiments/grid_target_control/scripts/grid.py`): uniform in the frustum basis
   (normalised ray coordinate u′, inverse depth 1/y) over the reachable region, so every
   cell is the same size in the observation's own coordinates; 1.56% of cell entries are
   non-empty; the nearer object wins a shared cell (0.05% of frames). The
@@ -82,6 +107,17 @@ shallow read of the input — the same modest margins the regression axis shows 
 3. Together with blink (carried state), tokens (interface), MSE Othello (objective), 8-ray
    (resolution) and no-flip (decodability ≠ use): the target's type joins the list of
    differences that do not explain the gap.
+
+## Haufe-corrected write directions make this WORSE (2026-09-09)
+
+`scripts/haufe_edit_grid.py`. Editing through the same grid probes but along the Haufe
+activation patterns instead of the raw weight rows: **ND +0.373 → +0.048** (guarded −0.071),
+PI +0.126 → +0.115 (guarded +0.083 → +0.024). This is the only place the correction hurts,
+and it is predicted by the alignment measurement: the grid probes' RAW rows sit at 2.1–2.3×
+the generic baseline — the only above-chance read-out in any discworld variant — while their
+Haufe subspace sits at 0.9–1.0×, exactly chance (`findings/edit-direction-alignment.md`).
+Editability follows alignment RELATIVE to baseline, in both directions. The +0.373 ND result
+therefore stands as the best discworld edit obtained, and it comes from the plain probe rows.
 
 Caveats: the grid is one resolution (16 × 8); a coarser one (8 × 4, every cell ~4× larger
 and closer to the model's precision) is one environment variable away

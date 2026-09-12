@@ -84,11 +84,16 @@ def benchmark_from_cases(cases: list[dict], flip: bool = True, placement: str = 
 
 
 def cases_path(instance: str) -> Path:
-    """Where an instance's intervention cases live: Li's shipped pkl for oth-uniform, a
-    synthesised set (``synthesise_cases``) under the instance's dataset dir otherwise."""
-    if instance == "oth-uniform":
+    """Where an instance's intervention cases live: ``edits/v1/cases_1001.pkl`` under the
+    instance's dataset dir for EVERY instance (layout v2, 2026-09-10 — Li's shipped set is
+    copied there for oth-uniform, cmp-verified). Before the copy exists (a fresh clone
+    without datasets/, or layout v1) oth-uniform falls back to the vendored pkl in git."""
+    from pim.environments.layout import othello_cases_file
+
+    p = othello_cases_file(instance)
+    if instance == "oth-uniform" and not p.exists():
         return BENCHMARK_PKL
-    return _REPO / "datasets" / "othello" / instance / "edits" / "cases_1001.pkl"
+    return p
 
 
 def load_benchmark(instance: str = "oth-uniform") -> Benchmark:

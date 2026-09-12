@@ -49,6 +49,7 @@ ALPHAS = (0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 35.0, 
 
 inst = json.loads((RUN / "config.json").read_text())["data"]["instance"]
 root = Path("datasets/discworld") / inst
+from pim.environments import layout  # noqa: E402  (layout v2, 2026-09-10)
 model, info = load_checkpoint(RUN / "best_model.pt", device=dwb.DEV)
 NP, span = model.n_layers + 1, int(getattr(model, "state_span", 39))
 print(f"{RUN}  basis={BASIS}  n_seq={N_SEQ}  val {info.val_loss:.5f}  points {NP}", flush=True)
@@ -66,11 +67,11 @@ for ell in range(NP):
 del lin
 
 # ── probe corpus, exactly as fit_probes loads it ──────────────────────────────────────
-with h5py.File(root / "probe" / "test.h5", "r") as f:
+with h5py.File(layout.probe_file("discworld", inst, "120k"), "r") as f:
     obs = f["obs_intensity"][:N_SEQ].astype(np.float32)
     pos = f["positions"][:N_SEQ, :, :dwb.N_OBJ, :].astype(np.float32)
     vel = f["velocities"][:N_SEQ, :, :dwb.N_OBJ, :].astype(np.float32)
-sim = json.load(open(root / "probe" / "dataset.json"))["sim"]
+sim = json.load(open(layout.probe_manifest("discworld", inst, "120k")))["sim"]
 bp, bv = dwb._to_basis(pos, vel, sim, BASIS)
 y = np.concatenate([bp.reshape(N_SEQ, bp.shape[1], -1), bv.reshape(N_SEQ, bv.shape[1], -1)], -1)
 obs, y = obs[:, :span], y[:, :span]
@@ -104,9 +105,10 @@ results = {"run": str(RUN), "basis": BASIS, "n_seq": N_SEQ, "target": TARGET,
 for ell in range(NP):
     t0 = time.time()
     fname, prov = STORE.key(model, kind="nullspace_cascade", target=TARGET, n_seq=N_SEQ,
-                            split="test", basis=BASIS, seed=dwb.SEED, point=ell,
+                            split=layout.probe_key("discworld", inst, "120k")[1], basis=BASIS,
+                            seed=dwb.SEED, point=ell,
                             max_iter=MAX_ITER, r2_stop=R2_STOP, space="zspace",
-                            data=str((root / "probe").resolve()))
+                            data=layout.probe_key("discworld", inst, "120k")[0])
     hit = STORE.load(fname, prov, device="cpu")
     if hit is not None:
         casc, mu, sd = hit["cascade"], hit["mu"], hit["sd"]

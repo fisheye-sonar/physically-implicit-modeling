@@ -12,7 +12,7 @@ ping() { curl -sS --max-time 20 -H "Title: $1" -H "Tags: ${3:-information_source
 stage() { echo "=== [$(date '+%F %T')] STAGE $* ===" | tee -a "$LOGS/driver.log"; }
 fail() { ping "PIM capacity sweep FAILED: $1" "$2" warning; echo "FAILED: $1" >> "$LOGS/driver.log"; exit 1; }
 
-test -f datasets/discworld/dw-pn04/probe_250k/test.h5 || fail "corpus" "discworld probe_250k missing"
+test -f datasets/discworld/dw-pn04/probe/probe_250k.h5 || fail "corpus" "discworld probe_250k missing"
 ping "PIM capacity sweep: started" "widths LIN,16,64,128,512,1024,2048 x trained/random-init/observation; discworld (250k seq) then Othello (170k games). ~4 h."
 for env in discworld othello; do
   stage "$env"

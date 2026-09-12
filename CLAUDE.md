@@ -91,11 +91,18 @@ bash harness/check.sh
 ## 5. Where things live
 
 - **The registry of canonical objects** → `research/REGISTRY.md` (start here)
-- Environment instances → `datasets/<class>/<instance>/`; legacy datasets in
-  `datasets/archive/`. ⛔ `instance.json` there is a HAND-WRITTEN summary for humans —
-  never read by code, never a source of truth. The machine-written contracts are
-  `train/corpus.json` (written by `bigcorpus.verify()`) and each split's `config_json`
-  HDF5 attribute / `dataset.json` (written by `generate_dataset.py`).
+- Environment instances → `datasets/<class>/<instance>/`, **layout v2** (2026-09-10,
+  `research/specs/DATASET_LAYOUT_SPEC.md`): `train/` (the corpus), `probe/` (probe FIT
+  corpora — `probe_120k.h5` / `probe_250k.h5` on discworld, `probe_<n>.npz` on Othello; the
+  hold-out is an internal 80/20 split by sequence), `eval/` (held-out sequences: `test.h5` /
+  `test_<n>.npz`), `edits/v1/` (the current edit bench), `edits/v2/` (reserved), `tokens/`,
+  `_unused/` (files nothing reads — kept). `layout.json` marks an instance as v2. ⛔ **Every
+  path under `datasets/` is built by `pim/environments/layout.py`** — never spell one at a
+  call site; probe caches are keyed by `layout.probe_key`, not by a path. Legacy datasets in
+  `datasets/archive/`. ⛔ `instance.json` is a HAND-WRITTEN summary for humans — never read
+  by code, never a source of truth. The machine-written contracts are `train/corpus.json`
+  (written by `bigcorpus.verify()`) and each split's `config_json` HDF5 attribute / the
+  `.json` manifest beside it (written by `generate_dataset.py`).
 - Runs → `runs/<topic>/<run>/` (checkpoints, `config.json`, `commit_sha`,
   `metrics.jsonl`, `probes/`, `scores.json`); pre-cleanup runs in `runs/archive/`
 - ⛔ **`runs/` holds TRAINED RUNS AND NOTHING ELSE.** One directory per trained model,
