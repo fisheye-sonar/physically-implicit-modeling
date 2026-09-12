@@ -18,4 +18,11 @@ data build on the remote, trains, scores). Then the same INLP + K-copy edits
 dropout run. Second run when a GPU frees: standard Othello without dropout (the positive
 prediction); third: the flip model.
 
-**Status.** Launched 2026-09-11 evening on wsl-sevan (unit `oth_adjacent_nodrop`).
+**Status (2026-09-12): DONE.** Trained 21:47 → 10:39 PDT on wsl-sevan (12.5 h, 390k steps, best val 2.4357 at 385k; the
+dropout run: 2.435). INLP + K-copy edits (`scores/inlp_othello_L-oth-adjacent-nodrop-390k.json`, figure
+`outputs/inlp_dropout_vs_nodropout.png`): copies per tile pts 1–8 **283 / 227 / 187 / 161 / 150 / 148 / 146 / 162** vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — MORE redundant
+without the regulariser; K ≤ 16 edits inert at every point; best guarded +0.450 / fid 0.37 (pt1, K=128) vs
++0.472 / 0.47. The fused code is the adjacency rule's. Write-up: `research/findings/adjacent-flip-ablation.md`
+§Dropout ablation; `inlp-redundancy.md` entry. Canonical scores: master_eval on the remote (REGISTRY row).
+⚠ Lab-GPU note: the INLP script's moment accumulation is now chunked — the desktop holds ~11 GB of the 5090 and the
+un-chunked version OOM'd (surfacing as the NVML assert while the driver mismatch awaits a reboot).
