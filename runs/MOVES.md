@@ -95,3 +95,6 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 
 ## 2026-09-11 — R-dw-8ray-20m back in the record
 - `runs/ray_ablation/_R-dw-8ray-20m` → `runs/ray_ablation/R-dw-8ray-20m` (Sevan, by hand, 2026-09-11 ~12:45): the recurrent 8-ray run leaves quarantine so the factorised categorical target can be scored on it through the canonical scorer and land in the tables. Its `scores.json` (regression bases, eval 2026-09-01.4) and probes are unchanged.
+
+## 2026-09-09 (wsl-sevan)
+- `runs/smoke/` → `runs/_smoke/` — the 2026-09-09 pipeline-smoke runs (L-dw-smoke, L-oth-smoke) renamed under the `_` rule so master_eval/build_full_table skip them; nothing deleted.
