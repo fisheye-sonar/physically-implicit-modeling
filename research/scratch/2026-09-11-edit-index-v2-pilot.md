@@ -145,3 +145,33 @@ occupancy change; more = recolourings added by the flip rule):
   read per magnitude bin (or at matched small magnitude across instances) rather than
   pooled: standard Othello's 2-tile bin (+0.65) and noflip's 2-tile edits (+0.58) are the
   like-for-like comparison, and both edit; the adjacency instances at 2 tiles do not.
+
+## Addendum 2 — is PI's flat +0.1 a wiring bug? (`scripts/pi_check.py`)
+
+**Wiring: exact.** On Li's shipped single-flip cases the pilot's multi-tile PI and ND hooks
+reproduce the canonical `linear_arm` to the last bit (EI +0.6079 / +0.6218, max |Δprob| = 0).
+
+**Two-tile paired edits on standard Othello (32 cases; every one is a vacate + an occupy,
+BLANK↔MINE/THEIRS — no colour flip among them).** PI sweep with the read-out landing rate:
+
+| PI point | α 0.5 | α 1 | α 2 | α 3 (canonical) | α 5 |
+|---|---|---|---|---|---|
+| 3 | −0.47 (0%) | +0.16 (100%) | +0.17 | +0.08 · guard 1.75 | +0.05 |
+| **4** | −0.22 (0%) | **+0.37 · guard 0.57 (100%)** | +0.20 · 1.12 | +0.13 · 1.75 | +0.06 · 2.7 |
+| 5 | −0.02 (0%) | +0.28 (100%) | +0.11 | +0.06 | +0.04 |
+| ND pt 4 α 0.35 | | **+0.64 · guard 0.27 (landed 88%)** | | | |
+
+- PI's pooled +0.12 was an **α mis-tune**: the canonical α = 3 (tuned on one-tile flips)
+  overshoots a two-tile occupancy edit (guard 1.75 = destructive). At α = 1 PI reaches
+  +0.37 with guard 0.57 — real, non-destructive, and still well short of ND's +0.64 and of
+  PI's own +0.61 on single flips.
+- The read-out LANDS in 100 % of cases from α = 1 on, at every point, while the output moves
+  only partway: the occupancy edit is another `readable ≠ grabbable` case. ND lands the
+  read-out less often (88 %) and edits more. A plausible reason, untested: occupancy is
+  recoverable from the move tokens themselves (a square is occupied iff its move was
+  played), so a write that vacates a square fights the input evidence in a way a recolouring
+  does not.
+- Consequence for the redesign: arms must be re-tuned per edit type / magnitude; the
+  pooled table's PI row is not comparable to the single-flip number. The by-magnitude
+  figure's PI line (+0.08…+0.15) is the mis-tuned α and should be redrawn with a per-bin
+  sweep.
