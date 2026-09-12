@@ -163,17 +163,18 @@ to measure that spread, the replicate is a full run directory beside its parent,
 `<parent>__seed<k>`, whose config carries a `replicate` block naming the parent, the seed and
 the step budget (the trainer writes it from `--replicate-of`). A checkpoint of the parent laid
 out at the replicates' budget is the seed-0 member of the set and is marked as such. Replicates
-are scored by the canonical scorer exactly like any run — same probes, same editors, their
-extra targets listed under their own key — so their numbers are on the record. They are
+are scored by the canonical pipeline exactly like any run — same measurements, same
+settings, listed under their own key — so their numbers are on the record. They are
 **never table rows**: the tables pool the replicate set per (parent, quantity) into the parent
 row's ± (standard deviation, n − 1), and print n and the step budget beside it. Two spreads
-are kept apart and labelled: the RUN-seed spread (re-training) and the PROBE-seed spread
-(re-fitting the probe; the probe seed is part of the probe cache key, so every seed's probes
-persist beside the canonical seed-0 set, and the spread is written into the run's own
-variance file). Half-budget replicates are legitimate where the loss and the editors have
-plateaued by then — check the training-curve record first — and the parent's own checkpoint at
-that budget must join the set so seed 0 is compared at equal training. A replicate that
-changes anything but the seed is not a replicate; it is a new run with its own row.
+are kept apart and labelled: the RUN-seed spread (re-training the model) and the
+MEASUREMENT-seed spread (re-fitting whatever is fitted on top of the model; that seed is part
+of the fitted artefact's cache key, so every seed's fits persist beside the canonical seed-0
+set, and the spread is written into the run's own variance file). Half-budget replicates are
+legitimate where the loss and the downstream metrics have plateaued by then — check the
+training-curve record first — and the parent's own checkpoint at that budget must join the set
+so seed 0 is compared at equal training. A replicate that changes anything but the seed is not
+a replicate; it is a new run with its own row.
 
 ## Local instantiations (this project — not portable)
 
