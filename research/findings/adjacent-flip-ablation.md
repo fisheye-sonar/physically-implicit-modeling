@@ -285,8 +285,82 @@ Status `observed` (one seed; 300 + 300 cases; α ≤ 8 / 2). Probes persisted un
 `probes/L-oth-adjacent-flip-20m/masked_{canonical,large}/`; scores
 `scores/masked_probes_L-oth-adjacent-flip-20m_{canonical,large}.json`; logs `logs/adjacent_flip_ablation/masked_probes_*.log`.
 
+## INLP: how many linear copies of a tile's colour, and does writing all of them edit? (2026-09-11, `scripts/inlp_othello.py`)
+
+Sevan's test of the materialisation theory ("a variable with many downstream consumers is
+materialised once as a shared, linearly readable copy; a variable with few is fused into its
+consumers' local computations; only the former is editable"): per-tile iterative nullspace
+projection on colour. Target: each tile's colour as ±1 on the rows where it is occupied, in
+the canonical probe standardisation; closed-form min-norm least squares from moment matrices
+(float64). **Per-tile cascade**: 64 independent deflations, rank 1 per iteration, to
+exhaustion (held-out R² < 0.02) — the number of orthogonal linear copies of ONE tile's colour.
+Matched random-direction control (flat throughout). **Whole-subspace cascade**: every
+iteration removes the union of the 64 fitted directions. Editability: write the case's tile
+through its first K cascade probes (each orthogonal read-out stepped to the flipped sign,
+summed, × α; `exact`, or `shrink` — each probe's target shrunk toward the tile mean by its R²,
+as `pim.editors.nullspace.multiprobe_delta`), canonical 1001 cases, canonical scorecard +
+guard, points 1–5, K ∈ {1…128}. 20k probe games, sequence hold-out, seed 0.
+
+**Copies of one tile's colour (mean over tiles of iterations to exhaustion), points 1…8:**
+
+| model | canonical editability | copies per tile, pts 1–8 | iterations to halve, pt 4 | whole-subspace: iterations to halve R² / rank at exhaustion, pt 4 |
+|---|---|---|---|---|
+| L-oth-20m (standard) | PI +0.61 / ND +0.62 | 48 / 41 / 36 / 32 / 29 / 27 / 24 / 28 | 14 | 4 / 448 |
+| **L-oth-adjacent-flip-20m** | PI +0.17 / ND +0.24 | 75 / 52 / 47 / 47 / 49 / 49 / 51 / 54 | 16 | 5 / 448 |
+| L-oth-adjacent-20m | PI −0.05 / ND +0.12 | 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 | 19 | 7 / 488 |
+
+The prediction holds at every depth, and the ordering is the editability ordering: the
+standard model's colour is carried by ~30 orthogonal directions from point 3 on (its curve
+turns steep after the first 2–3 deflations late in the network — a few dominant copies with a
+thin tail); the flip model by ~50; oth-adjacent by ~85–90 after a point-1 value of 232, where
+nearly the whole residual (488 of 512 dims) carries the parity lookup. On the flip model the
+least-squares colour direction scores NEGATIVE R² on recoloured tiles at point 1 (−0.33) and
+only 0.28–0.36 from point 3: the regression, like the classification probe, reads the
+placement parity.
+
+**Writing K orthogonal copies (best guarded Edit Index, shrink mode; unedited -0.71 / -0.70 / -0.68):**
+
+| model, point | K=1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 |
+|---|---|---|---|---|---|---|---|---|
+| standard, pt 4 | +0.17 | +0.39 | +0.51 | +0.60 | **+0.65** | +0.60 | +0.60 | +0.60 |
+| standard, pt 3 | -0.33 | +0.12 | +0.36 | +0.47 | +0.55 | +0.48 | +0.46 | +0.46 |
+| flip, pt 2 | -0.41 | -0.27 | +0.03 | **+0.23** | +0.21 | +0.13 | -0.36 | -0.36 |
+| flip, pt 3 | -0.61 | -0.30 | -0.19 | **+0.24** | +0.22 | -0.27 | -0.24 | -0.24 |
+| adjacent, pt 1 | -0.68 | -0.68 | -0.68 | -0.68 | -0.64 | -0.26 | +0.28 | **+0.39** |
+| adjacent, pt 2 | -0.56 | -0.65 | -0.61 | -0.46 | +0.11 | +0.35 | **+0.47** | +0.33 |
+
+Best guarded arm per model: standard **+0.646 / fid 0.21** (pt4, K=16); flip **+0.244 / 0.78** (pt3, K=8);
+adjacent **+0.472 / 0.47** (pt2, K=64). Exact solving of the weak tail probes is destructive (adjacent
+pt 2: exact K=128 +0.20 / fid 1.32 vs shrink +0.33; standard pt 4 exact K=64 +0.42 vs shrink +0.60) — the
+R²-shrinkage is required, as the discworld INLP found.
+
+**Reading.** Three results. (1) *The causal weight sits on different copies.* On standard
+Othello the first two orthogonal copies already carry most of the edit (K=2 → +0.39 at pt 4;
+K=8 → +0.60 ≈ the canonical editors; K=16 → +0.65, the highest Edit Index on this model), and
+writing more degrades. On oth-adjacent the first 8 copies carry NOTHING (Edit Index at the
+unedited floor at every point), and the edit appears only when 32–64 copies are written
+together: **+0.47 / fid 0.47 at pt 2, K=64** — the instance filed as inert becomes editable to
+three quarters of Othello's level by writing every linear copy of the same variable at once.
+That is the fused-code prediction confirmed by intervention: no single copy is the consumers'
+input; their sum is. (2) *Materialisation follows fan-out, as the copy counts say* — 30 vs 50
+vs 85–232 in the editability order — but "a single register" is too strong even for standard
+Othello: its colour lives in ~30 directions with 2–3 dominant ones, not one. The operative
+property is concentration, not uniqueness. (3) *The flip model is the odd one out on the
+causal side*: intermediate copy count, but writing more copies does not lift it past its
+canonical level (+0.24 at K=8, degrading beyond) — consistent with the masked-probe result that
+its recoloured-tile colour is decodable and inert: the copies the cascade finds are the parity
+lookup, and the computed colour is not among the linearly writable ones. (4) *The editable
+window is the same as the splice result*: adjacent edits at points 1–2 only, standard at 3–5 —
+where the last-position residual is load-bearing AND the state is still an intermediate, not
+the finished legality answer.
+
+Status `observed` (single seed per model; 20k games; canonical α grid, top of grid reached on
+several arms). Cascades and bases persisted per point under `probes/<run>/inlp/cascade_pt*.pt`;
+scores `scores/inlp_othello_<run>.json`; logs `logs/adjacent_flip_ablation/inlp_othello_*.log`.
+
 ## Log
 
+- **2026-09-12 (early)** — INLP (`observed`): copies of a tile's colour 30 (standard) / 50 (flip) / 85–232 (adjacent), the editability ordering; writing 32–64 copies at once makes oth-adjacent editable (+0.47 / 0.47) where 1–8 copies do nothing; standard edits from K=2 and peaks at K=16 (+0.65); the flip model saturates at K=8 (+0.24). Materialisation-follows-fan-out supported; "single register" too strong.
 - **2026-09-11 (late night)** — masked probes: a flipped-row probe halves the decoding error on recoloured tiles and edits them WORSE (ND −0.27 vs +0.08); the parity-only probe edits best of all (+0.28 on parity tiles); the flip bit is 78% decodable and inert. The computed colour has no linear causal handle; every landing edit runs through the placement-parity lookup direction. Hypothesis "the probe was the limitation" refuted.
 - **2026-09-11 (night)** — flipped tiles: decoded worse (9–28% vs 4–7% error), edited worse (ND +0.09 vs +0.22 guarded), computed later (pt 3–4); legality degrades mildly with flips. Follow-up: a flipped-row probe.
 - **2026-09-11 (evening)** — presence edits (`observed`): standard Othello +0.447 / 0.37 (reproduced); oth-adjacent and oth-adjacent-flip NOT presence-editable (best guarded −0.12 and +0.05; destructive past that); removal > add on the flip model. Overturns the 2026-09-07 "consumed variable is editable" reading.

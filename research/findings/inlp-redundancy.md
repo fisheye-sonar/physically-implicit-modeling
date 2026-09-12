@@ -77,3 +77,16 @@ Together with `decodability-baselines.md` (an untrained network already supports
 present before training, and causally inert under every linear write tried.
 
 Related: `editability.md`, `decodability-baselines.md`, `state-geometry.md`.
+
+
+## 2026-09-12 — Othello: copy counts order the models by editability, and writing all copies rescues oth-adjacent
+
+`experiments/adjacent_flip_ablation/scripts/inlp_othello.py` (per-tile colour cascades, ±1 on occupied
+rows, closed-form; K-probe writes with the R²-shrink of `multiprobe_delta`). Copies of one tile's colour
+(iterations to exhaustion, pts 1–8): standard Othello 48 / 41 / 36 / 32 / 29 / 27 / 24 / 28; oth-adjacent-flip 75 / 52 / 47 / 47 / 49 / 49 / 51 / 54;
+oth-adjacent 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83. Edits: standard already moves at K=2 and peaks at K=16 (+0.646 / fid 0.21,
+pt 4); oth-adjacent's first 8 copies are inert everywhere and 64 copies at pt 2 give +0.472 / 0.47
+(canonical ND +0.12); the flip model saturates at K=8 (+0.244). Unlike discworld (this file, top), where
+writing the whole linear code changed nothing that mattered, on Othello's adjacency instance it is the whole
+code that carries the edit — the fused-code prediction of the materialisation theory. Full tables and reading:
+`adjacent-flip-ablation.md` §INLP.

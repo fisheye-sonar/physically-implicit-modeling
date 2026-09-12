@@ -65,3 +65,7 @@ addendum in `flip-ablation.md`.
 ## Masked probes (2026-09-11) — DONE
 
 `scripts/masked_probes.py --data canonical|large`: canonical classification fit with a per-(row, tile) loss weight (`all` / `flipped+blank` / `parity+blank`) + a 2-class flip-bit probe; held-out error by tile class; canonical PI/ND through each probe on 300 flipped-tile + 300 parity-tile cases at every point. Result: the flipped-row probe decodes recoloured tiles at 7% (vs 9–13%) and edits them worse (ND guarded −0.27 vs +0.08); the parity-only probe edits best (+0.28 / 0.60 on parity tiles); flip-bit edits inert. The computed colour is decodable and causally inert at the last position. Probes under `probes/<run>/masked_*/`; `scores/masked_probes_*.json`; finding section "Masked probes".
+
+## INLP (2026-09-12) — DONE
+
+`scripts/inlp_othello.py --run …` on all three Othello runs: per-tile colour cascades (±1 on occupied rows, closed-form, random control, whole-subspace variant) at all 9 points + K-copy edits (exact / R²-shrink) at points 1–5. Copies per tile pts 1–8: standard 48 / 41 / 36 / 32 / 29 / 27 / 24 / 28; flip 75 / 52 / 47 / 47 / 49 / 49 / 51 / 54; adjacent 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83. Best guarded edits: standard +0.646/0.21 (K=16), adjacent +0.472/0.47 (K=64), flip +0.244/0.78 (K=8). Cascades under `probes/<run>/inlp/`; `scores/inlp_othello_*.json`; finding section "INLP". ⚠ Run one model at a time: three concurrent float64 jobs OOM'd the 32 GB card, surfacing as the NVML internal assert (driver mismatch pending reboot).
