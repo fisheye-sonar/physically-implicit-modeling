@@ -940,3 +940,13 @@ held-out 95th percentile for the same prefix length — not on legal mass
 ceiling against the ideal distribution's score (+1.000) and the held-out deviation before
 interpreting it. With the right filter the ceilings agree across instances (+0.66 to +0.70) and
 the editors sit below them.
+
+## 2026-09-11 — a discworld training unit sitting AT its memory cap is page cache, not a leak
+
+The trainer memory-maps the 20M-sequence `obs.f32` (16–410 GB), so the unit's `MemoryCurrent`
+climbs to `MemoryMax` and stays there while `memory.stat` shows ~0.2 GiB `anon` and the rest
+`file` / `file_mapped`; `memory.events` counts `max` hits (reclaim) with `oom_kill 0`. That is
+the cgroup reclaiming file pages, which costs read bandwidth, not correctness. Read
+`anon` before worrying — a unit that is really leaking shows anon growing toward the cap.
+Measured on `seed_variance` (45 GiB cap: anon 0.2, file 43.6, oom_kill 0, training advancing).
+
