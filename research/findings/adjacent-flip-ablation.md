@@ -389,8 +389,7 @@ point 1 only (point 2 tops out at +0.15 vs the dropout run's +0.47), consistent 
 consolidation across depth. Status `observed` (one seed; 390k steps vs 780k — the copy-count
 gap would have to reverse with more training to change the reading, and the dropout run's own
 counts were flat from point 4). Figure `experiments/dropout_ablation/outputs/inlp_dropout_vs_nodropout.png`;
-scores `experiments/dropout_ablation/scores/`. Canonical scores of the run (master_eval on the remote): see the
-REGISTRY row.
+scores `experiments/dropout_ablation/scores/`. Canonical scores (master_eval): CE 2.436 (Bayes 2.433), legal mass 0.999; skill LIN 0.979 / MLP 0.981 (dropout run 0.988 / 0.990; observation floor 0.988); unedited -0.655; PI -0.302 / fid 1.07, ND +0.042 / 2.96, GS +0.001 / 7.76 (dropout run: PI −0.05 / 2.31, ND +0.12 / 1.05, GS +0.00 / 5.73); mine_signed skill 0.821 / 0.902, ND -0.029 / 2.66. The canonical editors are exactly as inert without dropout as with it; probe skill is a hair LOWER (0.979 vs 0.988), so dropout was not what made colour linearly readable either.
 
 ## Log
 

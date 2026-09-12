@@ -23,6 +23,6 @@ dropout run: 2.435). INLP + K-copy edits (`scores/inlp_othello_L-oth-adjacent-no
 `outputs/inlp_dropout_vs_nodropout.png`): copies per tile pts 1–8 **283 / 227 / 187 / 161 / 150 / 148 / 146 / 162** vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — MORE redundant
 without the regulariser; K ≤ 16 edits inert at every point; best guarded +0.450 / fid 0.37 (pt1, K=128) vs
 +0.472 / 0.47. The fused code is the adjacency rule's. Write-up: `research/findings/adjacent-flip-ablation.md`
-§Dropout ablation; `inlp-redundancy.md` entry. Canonical scores: master_eval on the remote (REGISTRY row).
+§Dropout ablation; `inlp-redundancy.md` entry. Canonical scores: CE 2.436 (Bayes 2.433), legal mass 0.999; skill LIN 0.979 / MLP 0.981 (dropout run 0.988 / 0.990; observation floor 0.988); unedited -0.655; PI -0.302 / fid 1.07, ND +0.042 / 2.96, GS +0.001 / 7.76 (dropout run: PI −0.05 / 2.31, ND +0.12 / 1.05, GS +0.00 / 5.73); mine_signed skill 0.821 / 0.902, ND -0.029 / 2.66 — canonically inert, as with dropout.
 ⚠ Lab-GPU note: the INLP script's moment accumulation is now chunked — the desktop holds ~11 GB of the 5090 and the
 un-chunked version OOM'd (surfacing as the NVML assert while the driver mismatch awaits a reboot).
