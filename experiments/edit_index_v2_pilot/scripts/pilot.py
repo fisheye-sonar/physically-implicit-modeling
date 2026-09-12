@@ -258,7 +258,7 @@ def run_discworld(name: str, run_rel: str, env: str, block: str) -> dict:
         filters["model_separation"] = int(keep.sum())
         guard_v1 = lambda pr, kp: move_fidelity_ratio(pr[kp], p_a[kp], [[int(t)] for t in tb.post_tok[kp]])  # noqa: E731
         kind = "dist"
-    keep_idx = np.where(keep)[0][:N_TARGET]
+    keep_idx = np.where(keep)[0][: (N_TARGET if N_TARGET > 0 else None)]
     keep_final = np.zeros(n, bool); keep_final[keep_idx] = True
     filters["scored"] = int(keep_final.sum())
     res = score_block(pred, p_a, p_b, ref_a, ref_b, supp, keep_final, kind, guard_v1)
@@ -462,11 +462,19 @@ def run_othello(name: str, run_rel: str, block: str) -> dict:
     keep = normal & enough
     filters = {**pair_log, "model_normal_both": int(normal.sum()), "model_separation": int((normal & enough).sum()),
                "legal_mass_a": _summ(mass_a), "legal_mass_b": _summ(mass_b)}
-    keep_idx = np.where(keep)[0][:N_TARGET]
+    keep_idx = np.where(keep)[0][: (N_TARGET if N_TARGET > 0 else None)]     # N_TARGET <= 0: every valid case
     keep_final = np.zeros(n, bool); keep_final[keep_idx] = True
     filters["scored"] = int(keep_final.sum())
     guard_v1 = lambda pr, kp: move_fidelity_ratio(pr[kp], p_a[kp], [lb[i] for i in np.where(kp)[0]])  # noqa: E731
     res = score_block(pred, p_a, p_b, ref_a, ref_b, supp, keep_final, "dist", guard_v1)
+    # per scored case: the edit magnitude (tiles changed), for the by-magnitude view
+    res["per_case"] = {"n_changed": [pairs[i]["n_changed"] for i in keep_idx],
+                       "n_colour": [pairs[i]["n_colour"] for i in keep_idx],
+                       "j": [pairs[i]["j"] for i in keep_idx],
+                       "ceiling_v1": edit_index_per_case(p_b, ref_b, ref_a, supp)[keep_final].tolist(),
+                       "guard_v2_per_case": {ed: (_rmse_all(pr[keep_final], p_b[keep_final]) /
+                                                  np.maximum(_rmse_all(p_a[keep_final], p_b[keep_final]), 1e-12)).tolist()
+                                             for ed, pr in pred.items()}}
     # the canonical legal-set index on the same cases, for the record (same numbers as ei_v1)
     for ed, pr in pred.items():
         res["editors"][ed]["ei_legal_union"] = float(np.nanmean(edit_index_legal(pr, la, lb, "union")[keep_final]))

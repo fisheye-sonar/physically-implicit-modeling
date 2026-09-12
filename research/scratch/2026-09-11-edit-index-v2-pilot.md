@@ -116,3 +116,32 @@ model's. Not in `pim.metrics`; no REGISTRY row; nothing canonical changed.
   score. The noflip result says the legal/illegal split is itself a finding.
 - Re-tune PI/ND α for multi-tile Othello edits before reading point 2 as a fact.
 - Magnitude-stratified rerun (tiles changed 2 / 3–4 / 5+) on oth-uniform.
+
+## Addendum (same night) — standard Othello by edit magnitude, all 513 valid pairs
+
+`scripts/by_magnitude.py`, `scores/all_cases/L-oth-20m*.json`, `outputs/oth_uniform_by_magnitude.png`.
+Same canonical single-flip arms, every valid pair, binned by tiles changed (2 = the pure
+occupancy change; more = recolourings added by the flip rule):
+
+| tiles | n | ceiling v1 | PI v2 / v1 (g2) | ND v2 / v1 (g2) | GS v2 / v1 (g2) |
+|---|---|---|---|---|---|
+| 2 | 31 | +0.78 | +0.13 / +0.13 (1.67) | **+0.65 / +0.55 (0.08)** | +0.63 / +0.56 (0.14) |
+| 3 | 48 | +0.80 | +0.08 / +0.08 (1.67) | −0.03 / −0.03 (0.75) | +0.67 / +0.60 (0.11) |
+| 4 | 133 | +0.80 | +0.11 / +0.11 (1.48) | −0.19 / −0.18 (0.85) | +0.66 / +0.61 (0.15) |
+| 5 | 122 | +0.80 | +0.12 / +0.12 (1.41) | −0.22 / −0.21 (0.88) | +0.59 / +0.55 (0.19) |
+| 6 | 86 | +0.79 | +0.13 / +0.12 (1.36) | −0.33 / −0.32 (0.93) | +0.63 / +0.57 (0.18) |
+| 7+ | 93 | +0.80 | +0.15 / +0.15 (1.28) | −0.36 / −0.34 (0.93) | +0.59 / +0.56 (0.21) |
+
+- **At the smallest realisable edit (2 tiles) standard Othello reads as on the single flips:**
+  ND +0.65 / GS +0.63, guards 0.08–0.14. The "PI/ND collapse" in the 48-case table was a
+  magnitude effect: ND is a fixed-size step in one summed direction, and it decays
+  monotonically as recolourings are added (+0.65 → −0.36); GS descends and is flat in magnitude
+  (+0.59…+0.67); PI is flat and LOW at every magnitude (+0.08…+0.15, guard > 1) — its
+  single-flip α does not transfer to an occupancy edit even at 2 tiles, so PI needs its own
+  re-tune before it is read.
+- The ceiling is flat (+0.78…+0.80): magnitude does not change how well the model predicts
+  the counterfactual world, only how well a fixed write reaches it.
+- This is the magnitude figure the redesign called for, and it says the headline should be
+  read per magnitude bin (or at matched small magnitude across instances) rather than
+  pooled: standard Othello's 2-tile bin (+0.65) and noflip's 2-tile edits (+0.58) are the
+  like-for-like comparison, and both edit; the adjacency instances at 2 tiles do not.
