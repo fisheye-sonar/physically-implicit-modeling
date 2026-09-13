@@ -10,6 +10,18 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-12 — `nvidia-smi` can be broken while the GPU is fine (driver/library mismatch)
+
+After a driver package update the user-space `nvidia-smi` (595.91) no longer matches the loaded
+kernel module (595.84) until a reboot — "Failed to initialize NVML: Driver/library version
+mismatch" — while torch still sees the RTX 5090 and trains normally (`torch.cuda.is_available()`,
+`torch.cuda.mem_get_info()`). Consequences: a heartbeat must not depend on `nvidia-smi` (read GPU
+memory from torch, or skip it, and the unit's memory from `systemctl --user show <unit> -p
+MemoryCurrent`); "nvidia-smi fails" is NOT evidence that the GPU is down; and do not reboot under a
+running unit to "fix" it. Seen 2026-09-12 evening before the overnight chain; torch verified first.
+
+---
+
 ### 2026-09-01 — ND (Nanda direction addition) is ill-posed for a continuous target
 
 Nanda's method is **one fixed direction, one swept scalar**. That is coherent on Othello,

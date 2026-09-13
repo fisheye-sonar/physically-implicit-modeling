@@ -3,7 +3,45 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE and recorded (first section); before that 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped_
+_Last updated: 2026-09-12 20:05 PT — OVERNIGHT CHAIN RUNNING (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+## ⏳ OVERNIGHT CHAIN 2026-09-12 20:00 PT → ~2026-09-13 evening — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU)
+
+**Sevan's order (2026-09-12 evening):** profile H (power dome, (1 − u²)²) for the anti-aliased
+instance; "kick off the big run now, observe all typical overnight protocol". Launched:
+
+- **`dw_smooth_gen`** (`scripts/drivers/dw_smooth_gen.sh`, MemoryMax 40G, logs
+  `logs/smooth_ablation/dw_smooth_gen/`): dw-smooth eval / edits / probe 120k / probe 250k (done
+  19:56–19:59) → 20M corpus (started 19:59, ~1 h) → edit selection (1000 cases, ≥ 2 rays).
+- **`rescore_protocol`** (`scripts/drivers/rescore_2026-09-12.sh`, MemoryMax 45G, logs
+  `logs/rescore_2026-09-12/`): stage 0 waits for the gen unit (≤ 3 h) → 1 `train.py --smoke` on
+  dw-smooth (`runs/_pipeline_smoke/dw-smooth-smoke`) → 2 master_eval (EVERY discworld run at
+  `2026-09-12.2`, every Othello run at `2026-09-12.1`, ~9–11 h) → 3 Table 3 alignment refresh →
+  4 Haufe editability (`table3_haufe_edit.json`) → 5 test_loss → 6 both table notebooks
+  [ping RESCORE DONE, ~07:00–09:00] → 7 train `smooth_ablation/L-dw-smooth-20m` 780k (~8 h) →
+  8 appearance-fac probes + random-init + observation floors → 9 master_eval (new run) →
+  10 test_loss + tables [ping ALL DONE, ~16:30–18:30 2026-09-13].
+- Monitors armed in the orchestrator session: stage watcher (both driver logs + unit states, every
+  60 s) and a 30-min heartbeat (stage, scored-file count, unit memory, disk, training metrics).
+  `nvidia-smi` is broken (driver/library mismatch, GOTCHAS 2026-09-12); torch verified the GPU first.
+- **Landed before launch (this commit):** `SimConfig.soft_shading="power"` + `soft_profile_power`
+  in both renderer backends (`soft_render._profile`; default bit-identical; 4 new/extended tests),
+  `sim_config_from` + `generate_dataset.py` passthrough, `bigcorpus` instance `dw-smooth`
+  (seed blocks 200e9 / 225e9 / 1040e9 / 1050e9, forbidden everywhere), master_eval
+  `dw_extra_targets` + `build_full_tables` long list gain the smooth run, `score_pending.sh`
+  repointed at the renamed table notebooks, REGISTRY instance + run rows, `instance.json`.
+- Smoke evidence: a 128-seq legacy suite with the power flags re-renders bit-exactly (float32)
+  through BOTH config paths; lit runs carry ~33 distinct values (the dome); 13/13 soft-render
+  tests pass; the driver passes `bash -n`; the gen unit's first three stages ran clean.
+
+**When it finishes:** read `logs/rescore_2026-09-12/headline.txt` + the ALL DONE ping; compare
+against the parked pre-rescore scores (`scores.pre-alignment-2026-09-12.json` etc.); update the
+findings banners, REGISTRY run rows (numbers), `findings/probe-target-type.md` for dw-smooth;
+move `runs/_pipeline_smoke/dw-smooth-smoke` artefacts as usual; commit; recap for Sevan.
+**If a stage fails:** the ping carries the log tail; fix forward and relaunch under the same unit
+name (`--collect`); stages 0–1 and the gen stages are idempotent (present files are skipped;
+corpus shards resume via `_done_NNN`).
+
 
 ## oth-adjacent-flip chain on the WSL remote — DONE 2026-09-11 04:22 PT (`experiments/adjacent_flip_ablation/drivers/oth_adjacent_flip.sh`, unit `oth_adjacent_flip` on wsl-sevan)
 

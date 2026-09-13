@@ -30,12 +30,17 @@ The four knobs, and what each one is for
     Makes the render **continuous** in position. Does *not* change the flat
     interior, so on its own it should not move the geometry result.
 
-``soft_shading`` (``"flat"`` | ``"lambert"``)
+``soft_shading`` (``"flat"`` | ``"lambert"`` | ``"power"``)
     ``"lambert"`` multiplies reflectivity by ``|n·d|`` — the cosine between the
     surface normal at the hit point and the ray — which for a circle works out to
     ``sqrt(1 − (perp/r)²)``. This is the knob that **changes the structure**: a
     curved profile has nonzero derivative at *every* ray the object covers, not
-    just at its edges.
+    just at its edges. ``"power"`` (2026-09-12, the ``dw-smooth`` instance)
+    multiplies by ``(1 − (perp/r)²) ** soft_profile_power`` instead — the smooth
+    dome profile baked into the disc (p = 0.5 IS lambert; p = 2 is dw-smooth's
+    choice, chosen from `experiments/antialias_pilot` as profile H). It goes to zero
+    at the silhouette, so with ``soft_edge = 0`` the image is continuous in position
+    without any edge sigmoid.
 
 ``soft_psf_sigma`` (rays, 0 = none)
     Gaussian point-spread function, i.e. a sensor blur, applied as a fixed linear
@@ -123,6 +128,24 @@ def blur_matrix(obs_res: int, sigma: float) -> np.ndarray:
 # ── NumPy backend (dataset generation; the "standard simulator" control) ──────
 
 
+def _profile(cos_n_d, shading: str, cfg: SimConfig):
+    """The disc's radial intensity profile as a multiplier on reflectivity, from the
+    hit-point cosine ``cos_n_d = sqrt(1 - u^2)`` (``u`` = perp / r, clamped to [0, 1]).
+    Works on NumPy arrays and torch tensors alike (only ``**`` is used).
+
+    flat     1                       (the original plateau)
+    lambert  cos_n_d                  = (1 - u^2)^0.5
+    power    cos_n_d ** (2 p)         = (1 - u^2)^p,  p = cfg.soft_profile_power
+    """
+    if shading == "lambert":
+        return cos_n_d
+    if shading == "power":
+        return cos_n_d ** (2.0 * float(getattr(cfg, "soft_profile_power", 2.0)))
+    if shading == "flat":
+        return 1.0
+    raise ValueError(f"unknown soft_shading {shading!r}")
+
+
 def render_frame_soft(
     positions: np.ndarray,
     radii: np.ndarray,
@@ -166,7 +189,7 @@ def render_frame_soft(
     signed = radii[None, :] - np.sqrt(perp2)
     cos_n_d = sq / np.maximum(radii[None, :], _EPS)
     alpha = gate * (_sigmoid(signed / edge) if edge > 0 else (signed > 0))
-    shade = reflectivities[None, :] * (cos_n_d if shading == "lambert" else 1.0)
+    shade = reflectivities[None, :] * _profile(cos_n_d, shading, cfg)
 
     dt = t_eff[..., None, :] - t_eff[..., :, None]
     front = _sigmoid(dt / temp) if temp > 0 else (dt > 0).astype(float)
@@ -254,7 +277,7 @@ def render_frame_torch(positions, radii, reflectivities, cfg: SimConfig):
     signed = radii[..., None, :] - torch.sqrt(perp2 + _EPS)
     alpha = gate * (torch.sigmoid(signed / edge) if edge > 0 else (signed > 0).to(dt_))
     cos_n_d = sq / torch.clamp(radii[..., None, :].expand_as(sq), min=_EPS)
-    shade = reflectivities[..., None, :] * (cos_n_d if shading == "lambert" else 1.0)
+    shade = reflectivities[..., None, :] * _profile(cos_n_d, shading, cfg)
 
     d_t = t_eff[..., None, :] - t_eff[..., :, None]
     front = torch.sigmoid(d_t / temp) if temp > 0 else (d_t > 0).to(dt_)

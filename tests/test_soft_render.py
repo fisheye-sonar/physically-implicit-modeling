@@ -59,9 +59,10 @@ def test_soft_edge_converges_to_hard():
     assert errs[-1] < 1e-3
 
 
-def test_numpy_and_torch_backends_agree():
+@pytest.mark.parametrize("shading", ["lambert", "power"])
+def test_numpy_and_torch_backends_agree(shading):
     """The two implementations are written out separately; pin them together."""
-    cfg = _cfg(soft_edge=0.05, soft_shading="lambert", soft_psf_sigma=1.0)
+    cfg = _cfg(soft_edge=0.05, soft_shading=shading, soft_psf_sigma=1.0)
     npy = render_frame_soft(POS, RADII, REFL, cfg)[2]
     tor = render_frame_torch(
         torch.tensor(POS, dtype=torch.float64),
@@ -186,3 +187,41 @@ def test_soft_occlusion_recovers_hard_ordering(temp):
         _cfg(soft_edge=0.05, soft_shading="lambert", soft_occlusion_temp=temp),
     )[2]
     assert np.abs(out - base).max() < 0.05
+
+
+def test_power_profile_is_the_dome():
+    """The "power" profile (dw-smooth, 2026-09-12) is (1 - u^2)^p on the disc, u = perp / r,
+    zero at the silhouette; p = 0.5 reproduces lambert exactly. Hard edge, one disc dead ahead,
+    so every lit ray's perpendicular offset is known in closed form."""
+    one_pos, one_r, one_refl = np.array([[0.0, 7.5]]), np.array([0.5]), np.array([0.8])
+    cfg = SimConfig(n_objects=1, obs_res=128, obs_noise_std=0.0,
+                    soft_shading="power", soft_profile_power=2.0)
+    assert soft_enabled(cfg)
+    o = render_frame_soft(one_pos, one_r, one_refl, cfg)[2]
+    from pim.environments.discworld.soft_render import _ray_dirs
+    dx, dy = _ray_dirs(cfg)
+    perp = np.abs(dx * one_pos[0, 1] - dy * one_pos[0, 0])       # |d x c| for unit d
+    u2 = np.clip((perp / one_r[0]) ** 2, 0.0, 1.0)
+    expect = np.where(perp < one_r[0], one_refl[0] * (1.0 - u2) ** 2, 0.0)
+    assert np.abs(o - expect).max() < 1e-9
+    assert o.max() > 0.7 * one_refl[0] and (o > 0).sum() >= 3     # a real dome, not a sliver
+    lam = render_frame_soft(one_pos, one_r, one_refl,
+                            SimConfig(n_objects=1, obs_res=128, obs_noise_std=0.0, soft_shading="lambert"))[2]
+    half = render_frame_soft(one_pos, one_r, one_refl,
+                             SimConfig(n_objects=1, obs_res=128, obs_noise_std=0.0,
+                                       soft_shading="power", soft_profile_power=0.5))[2]
+    assert np.abs(lam - half).max() < 1e-12
+
+
+def test_power_profile_round_trips_through_a_dataset_config():
+    """The knob must survive config_json -> SimConfig -> renderer, or the bench's reference
+    renders would silently fall back to the flat disc (the failure that would invalidate every
+    dw-smooth edit score)."""
+    import dataclasses, json
+    from pim.metrics.zone_editability import sim_config_from
+    cfg = SimConfig(n_objects=2, obs_res=128, obs_noise_std=0.0,
+                    soft_shading="power", soft_profile_power=2.0)
+    sim = json.loads(json.dumps(dataclasses.asdict(cfg)))
+    back = sim_config_from(sim, n_obj=2)
+    assert back.soft_shading == "power" and back.soft_profile_power == 2.0
+    assert np.array_equal(render_frame(POS, RADII, REFL, back)[2], render_frame(POS, RADII, REFL, cfg)[2])
