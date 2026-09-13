@@ -36,12 +36,8 @@ nb()    { ( cd "$ROOT/notebooks" && "$PY" "$ROOT/.pim/bin/jupyter-nbconvert" --t
 
 ping "PIM rescore: chain started" "1 dw-5ray fac floors → 2 master_eval (both envs, 1000-case benches; ~9-11 h) → 3 alignment refresh → 4 Haufe editability → 5 test loss → 6 tables." rocket
 
-stage "1 dw-5ray appearance-fac floors"
-"$PY" -W ignore scripts/fit_probes.py --run ray_ablation/L-dw-5ray-20m --target appearance-fac --random-init \
-    > "$LOGS/fit_5ray_fac_random.log" 2>&1 || fail "5ray random-init floor" "$(tail -15 "$LOGS/fit_5ray_fac_random.log")"
-"$PY" -W ignore scripts/fit_probes.py --run ray_ablation/L-dw-5ray-20m --target appearance-fac --observation \
-    > "$LOGS/fit_5ray_fac_obs.log" 2>&1 || fail "5ray observation floor" "$(tail -15 "$LOGS/fit_5ray_fac_obs.log")"
-ping "PIM rescore: 5-ray floors DONE" "$(grep -h 'skill' "$LOGS"/fit_5ray_fac_*.log | tail -4)"
+# (stage 1, the dw-5ray floors, was dropped 2026-09-12 evening: runs/_baselines/dw-5ray/baselines.json
+#  already carries frustum + appearance + appearance-fac — the probe-target chain computed them.)
 
 stage "2 master_eval (both environments)"
 nb master_eval master_eval

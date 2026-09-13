@@ -392,7 +392,8 @@ def tables_components(F: Frames, above_floor: bool = False):
             continue
         D = P[list(COMPONENTS)].values.astype(float)
         if above_floor:
-            D = D - np.stack([_rand_perdim(F, r.instance, r.arch, fam.lower()) for r in P.itertuples()])
+            famkey = {"LIN": "linear", "MLP": "mlp"}[fam]          # the probe family as the cache names it
+            D = D - np.stack([_rand_perdim(F, r.instance, r.arch, famkey) for r in P.itertuples()])
         fig, ax = plt.subplots(figsize=(8.6, 0.52 * len(P) + 1.5))
         heat(ax, D, list(COMPONENTS), _mark(F, P["run"]), fmt="+.3f",
              cmap="RdYlGn" if above_floor else "Greens", vmin=-1.0 if above_floor else 0.0, vmax=1.0,
