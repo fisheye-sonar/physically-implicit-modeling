@@ -21,6 +21,13 @@ instance; "kick off the big run now, observe all typical overnight protocol". La
   [ping RESCORE DONE, ~07:00–09:00] → 7 train `smooth_ablation/L-dw-smooth-20m` 780k (~8 h) →
   8 appearance-fac probes + random-init + observation floors → 9 master_eval (new run) →
   10 test_loss + tables [ping ALL DONE, ~16:30–18:30 2026-09-13].
+- **Progress (2026-09-13 01:20 PT):** gen unit DONE 22:03 (corpus VERIFIED 20M / 0 dup / 24 ranges; selection
+  1000/1000, every teleport changes ≥ 9 rays); smoke-train OK 22:04; master_eval 22:04 → 00:55 (2 h 51 min,
+  all 33 runs at the new versions — far under the 9–11 h budget); alignment refresh, Haufe, test loss, tables
+  DONE 00:58 (**RESCORE DONE pinged**). Stage 7 training started 00:58 → ETA ~09:00; ALL DONE ~10:30–11:00.
+  Draft reading of the rescore: `scratch/2026-09-13-protocol-rescore.md` (discworld: nothing moves; Othello:
+  symdiff lowers floors to ≈ −0.93…−0.98 and lifts standard Othello to +0.72…+0.83, ordering unchanged; Haufe
+  helps only oth-adjacent and, slightly, the discworld regression blocks).
 - Monitors armed in the orchestrator session: stage watcher (both driver logs + unit states, every
   60 s) and a 30-min heartbeat (stage, scored-file count, unit memory, disk, training metrics).
   `nvidia-smi` is broken (driver/library mismatch, GOTCHAS 2026-09-12); torch verified the GPU first.
