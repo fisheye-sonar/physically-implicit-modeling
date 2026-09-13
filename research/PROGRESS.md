@@ -3,9 +3,9 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-12 20:05 PT — OVERNIGHT CHAIN RUNNING (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+_Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
 
-## ⏳ OVERNIGHT CHAIN 2026-09-12 20:00 PT → ~2026-09-13 evening — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU)
+## ✅ OVERNIGHT CHAIN 2026-09-12 20:00 → 2026-09-13 11:10 PT — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU) — DONE
 
 **Sevan's order (2026-09-12 evening):** profile H (power dome, (1 − u²)²) for the anti-aliased
 instance; "kick off the big run now, observe all typical overnight protocol". Launched:
@@ -41,7 +41,18 @@ instance; "kick off the big run now, observe all typical overnight protocol". La
   through BOTH config paths; lit runs carry ~33 distinct values (the dome); 13/13 soft-render
   tests pass; the driver passes `bash -n`; the gen unit's first three stages ran clean.
 
-**When it finishes:** read `logs/rescore_2026-09-12/headline.txt` + the ALL DONE ping; compare
+**DONE 11:10 PT (chain complete, unit ended with its marker; both monitors stopped).** Stage 7 training 00:58 → 09:35
+(516 min; slowed 27 → 20 steps/s 03:23–05:00 while the OTHER session ran `inlp_othello.py` on the nodrop-20m
+extension — not touched); stage 8 fac probes + floors 09:35 → 10:46; stage 9 scoring 10:46 → 11:10; tables rebuilt.
+**Result: `L-dw-smooth-20m` predicts 18× better than dw-noiseless (val 5.9e-5 vs 1.06e-3) and edits WORSE** —
+frustum PI +0.11 / 2.62 (noiseless +0.23 / 1.54), appearance-fac ND +0.38 (noiseless +0.61); decodability unchanged
+in kind (MLP ≈ 1.0 on trained and random-init). `findings/smooth-ablation.md` (observed), REGISTRY run row, scratch
+note completed. Smoke run stays in `runs/_pipeline_smoke/dw-smooth-smoke` (the smoke topic). Recorded in commit.
+**Open after the chain:** waterfall panel for dw-smooth's frustum PI arm; decide whether dw-smooth enters the paper
+shortlist (long list only now); findings banners for the OTHELLO numbers (symdiff headline; floors now ≈ −0.93…−0.98,
+standard Othello best arms +0.72…+0.83) still quote the pre-protocol union numbers — sweep owed; Table 3 Haufe
+columns filled (after-Haufe hurts categorical PI; helps oth-adjacent).
+**(Original wrap-up plan follows.)** read `logs/rescore_2026-09-12/headline.txt` + the ALL DONE ping; compare
 against the parked pre-rescore scores (`scores.pre-alignment-2026-09-12.json` etc.); update the
 findings banners, REGISTRY run rows (numbers), `findings/probe-target-type.md` for dw-smooth;
 move `runs/_pipeline_smoke/dw-smooth-smoke` artefacts as usual; commit; recap for Sevan.
@@ -73,7 +84,8 @@ legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewri
 **INLP (2026-09-12 early, `scripts/inlp_othello.py`):** copies of a tile's colour 30 / 50 / 85–232 (standard / flip / adjacent) = the editability ordering; writing 64 copies at once edits oth-adjacent to +0.47 / 0.47 where single copies do nothing; standard peaks at K=16 (+0.65); flip saturates at K=8 (+0.24). Vocabulary: materialised vs fused variable (compiler sense); materialisation follows fan-out.
 **Dropout ablation (2026-09-11 evening):** `scripts/train.py` gained `--resume` (exact continuation from `ckpt/latest.pt`, incl. optimizer/RNG/history; extendable; token sources fast-forward the batch stream so a resumed run reproduces an uninterrupted one — `tests/test_training_resume.py`) and `--dropout`. `L-oth-adjacent-nodrop-390k` launching on wsl-sevan (unit `oth_adjacent_nodrop`; oth-adjacent data built there from scratch in layout v2): dropout 0, 390k steps (~13 h on the 4090), then INLP + K-copy edits vs the dropout run. `experiments/dropout_ablation/`.
 **Dropout ablation DONE (2026-09-12 ~12:00):** `L-oth-adjacent-nodrop-390k` trained (12.5 h, same optimum); INLP copies per tile 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — MORE redundant without it; K ≤ 16 edits inert; best K-copy edit +0.45 / 0.37. The fused code is the rule's. Canonical master_eval scores on the remote pending at write time; run dir pulled to the lab box.
-**Extension in flight (2026-09-12 12:04 →):** `dropout_ablation/L-oth-adjacent-nodrop-20m` = the no-dropout run continued 390k → 780k via `--resume` under a new name (the 390k dir stays as the scored snapshot), unit `oth_adjacent_nodrop_ext` on wsl-sevan, driver `experiments/dropout_ablation/drivers/oth_adjacent_nodrop_extend.sh` (scp'd to the remote — the lab tree is on `new_metrics`, the remote on the old branch); ETA ~02:00 PDT 2026-09-13, then INLP vs the 390k and dropout runs (does the long weak tail prune with training?).
+**Extension DONE (2026-09-13 03:21):** `dropout_ablation/L-oth-adjacent-nodrop-20m` = the no-dropout run continued 390k → 780k via `--resume` (interrupted once at 400k when a Microsoft Store WSL update shut the VM down; resumed exactly; the keepalive task is now a self-restarting loop). INLP copies per tile 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 vs 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 at 390k and 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — the tail prunes 10–20 % with doubled training but stays 1.2–1.6× the dropout run's; K-copy edit curves unchanged (K ≤ 16 inert; +0.42 at pt 1, K=128); canonical PI −0.21 / ND +0.05 / GS inert, skill 0.973 / 0.978. The redundancy is the regime's steady state. Run dir + scores pulled to the lab box; `experiments/dropout_ablation/scripts/inlp_compare.py` builds the N-run comparison figures/tables from the score files. Written up in `findings/adjacent-flip-ablation.md` §Dropout ablation → Extension.
+**Dropout 0.3 in flight (2026-09-13 03:22 →):** `dropout_ablation/L-oth-adjacent-drop03-390k` (Sevan's ask: the other direction), unit `oth_adjacent_drop03` on wsl-sevan, driver `experiments/dropout_ablation/drivers/oth_adjacent_drop03.sh` (queued behind the extension via a wait stage; smoke `runs/_smoke/L-oth-smoke-drop03` on the remote); 390k resumable steps, ETA training ≈ 16:00 PDT, scored ≈ 17:30; then INLP vs dropout 0 / 0.1.
 **Still open:** the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 

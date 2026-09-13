@@ -118,4 +118,13 @@ Best arm per editor, Edit Index (guard). Skill = max over points, LIN / MLP.
   blocks the Haufe direction HURTS PI — dw-5ray +0.51 → +0.24, dw-8ray +0.38 → +0.20, 8ray-tok +0.23 → +0.12 —
   and leaves the two near-zero blocks (noiseless, blink) at zero. To be read against Table 3's alignment rows.
 
-_Written by the orchestrator at 01:05 PT while `L-dw-smooth-20m` trains (stage 7); dw-smooth's rows land when the chain completes._
+## dw-smooth (chain stages 7–10, done 11:10 PT)
+
+| block | skill LIN / MLP | unedited | PI | ND | GS |
+|---|---|---|---|---|---|
+| L-dw-smooth-20m · frustum | 0.98 / 1.00 | −0.971 | +0.109 (2.62) | −0.092 (1.09) | −0.024 (1.16) |
+| L-dw-smooth-20m · appearance-fac | 0.55 / 0.68 | −0.972 | +0.001 (2.67) | +0.376 (0.94) | +0.317 (0.80) |
+
+Reading in `findings/smooth-ablation.md`: predicts 18× better than dw-noiseless, edits worse on both targets.
+
+_Written by the orchestrator 2026-09-13 01:05 PT (rescore part) and 11:30 PT (dw-smooth part)._
