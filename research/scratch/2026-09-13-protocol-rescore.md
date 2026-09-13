@@ -95,13 +95,18 @@ Best arm per editor, Edit Index (guard). Skill = max over points, LIN / MLP.
 | blink_ablation/L-dw-blink-20m | frustum | +0.210 / 1.54 | +0.256 / 1.35 (α 60) | +0.045 |
 | blink_ablation/L-dw-blink-20m | appearance-fac | +0.006 / 2.26 | +0.006 / 2.26 (α 100) | +0.000 |
 
-## Reading (draft, 01:20 PT — to be checked against the tables in the morning)
+## Reading (draft, 01:05 PT — to be checked against the tables in the morning)
 
-- **Discworld: the protocol change does not move any conclusion.** Unedited floors and best arms are within a
-  few hundredths of the parked numbers on every regression block; the categorical blocks move by ≤ 0.05.
-  PI ≈ +0.2…+0.3 on the regression target with guards > 1 (except the 8-ray family); GS ≤ 0 everywhere on the
-  regression target; ND remains the best categorical editor. The 1000-case selected bench and the 192-case
-  first-block bench agree — the old bench was not the reason for any number.
+- **Discworld: the protocol change does not move any conclusion.** Unedited floors shift by ≤ 0.03 (the
+  bench changed: 1000 selected cases vs the first 192); best PI and GS on the regression blocks stay within
+  ~0.05 of the parked numbers; the categorical blocks move by ≤ 0.09, the largest drops on the token model's
+  GS (appearance +0.58 → +0.49, appearance-d2 +0.59 → +0.52) and on dw-blink's appearance-fac GS (+0.33 → +0.26);
+  ND on the regression target — ill-posed there (GOTCHAS 2026-09-01) — moves by up to −0.11 as its guard
+  collapses from ~3 to ~1.3 under the shared alpha grid. PI ≈ +0.2…+0.3 on the regression target with guards
+  > 1 (except the 8-ray family, ≈ 0.9–1.0); GS ≤ 0 everywhere on the regression target; ND remains the best
+  categorical editor; dw-5ray's appearance blocks are still the most editable discworld blocks (GS +0.60 / +0.64).
+  The 1000-case selected bench and the 192-case first-block bench agree — the old bench was not the reason
+  for any number.
 - **Othello: the symmetric-difference headline lowers every unedited floor to ≈ −0.93…−0.98 (union −0.66…−0.82)
   and raises the standard-Othello best arms to +0.72…+0.83 (union +0.55).** The ORDERING is unchanged:
   standard ≈ MSE-objective ≫ adjacent-flip > adjacent ≈ nodrop-390k > noflip. oth-noflip stays non-editable
@@ -109,6 +114,8 @@ Best arm per editor, Edit Index (guard). Skill = max over points, LIN / MLP.
   oth-adjacent-flip is the partially editable one (PI +0.35 / 0.83, ND +0.32 / 0.61).
 - **Haufe correction (Table 3):** no gain where PI is already aligned (standard Othello +0.82 → +0.81, MSE
   +0.85 → +0.83, noflip stays negative); a real gain on oth-adjacent (+0.18 → +0.47 but guard 1.86) and small
-  gains on the discworld regression blocks (+0.03…+0.05, guards ~1.1–1.5); the categorical PI blocks do not move.
+  gains on the discworld regression blocks (+0.03…+0.05, guards ~0.8–1.5); on the categorical (appearance-fac)
+  blocks the Haufe direction HURTS PI — dw-5ray +0.51 → +0.24, dw-8ray +0.38 → +0.20, 8ray-tok +0.23 → +0.12 —
+  and leaves the two near-zero blocks (noiseless, blink) at zero. To be read against Table 3's alignment rows.
 
-_Written by the orchestrator at 01:20 PT while `L-dw-smooth-20m` trains (stage 7); dw-smooth's rows land when the chain completes._
+_Written by the orchestrator at 01:05 PT while `L-dw-smooth-20m` trains (stage 7); dw-smooth's rows land when the chain completes._
