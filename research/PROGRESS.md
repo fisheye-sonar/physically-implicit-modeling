@@ -343,6 +343,23 @@ grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full a
 partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
 Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
 
+## 2026-09-12 (evening) — ONE EDIT PROTOCOL built; tables rebuilt as a module; overnight rescore QUEUED (not launched)
+
+Sevan's spec, all done except what is queued: **benches** — Othello 1000 single-tile flips at a fixed 20-move
+prefix per instance from a dedicated `edits` index range (old cases in `_unused/`); discworld 1000-case
+selections (≥ 2 differing rays) on all five instances (`scripts/make_edit_selection.py`); **protocol** — full-state
+writes only, shared α grids + GS layers, `EVAL_VERSION_BY_ENV` dw 2026-09-12.2 / oth 2026-09-12.1; **Othello
+headline = symmetric difference** (union kept). **Tables**: `pim/figures/tables.py` + `notebooks/build_paper_tables.ipynb`
+(shortlist) / `build_full_tables.ipynb` (long list, renamed from build_full_table) — Table 1 = decodability with floors
+(right-aligned obs, listed archs only), 1b–1e per-cell optima, 2 (+2b arms as an image), 2c gridified only coarse→fine,
+**Table 3 alignment** (worker: `experiments/edit_direction_alignment/scores/table3_alignment.json`, all 16 rows;
+PI-after-Haufe columns blank), **Table 4 test loss vs Bayes floor** (`experiments/bayes_floor`), Table 5 seed
+replicates; Fig 1 (paper only, L-oth-20m + L-dw-20m, zigzag fixed), Fig 2 capacity; old Fig 3 and tables 3d/3j/3l/3m/3n
+dropped. Both notebooks execute clean on the CURRENT scores (old benches, new headline) — they refresh after the rescore.
+**QUEUED — `scripts/drivers/rescore_2026-09-12.sh`** (launch: see its header; ~9–11 h GPU): 5-ray fac floors →
+master_eval both envs → Table 3 alignment refresh → Haufe editability (`table3_haufe_edit.py`, smoked OK) → test loss →
+both notebooks. Anti-aliasing instance: NOT started (Sevan holding). GPU is free right now.
+
 ## 2026-09-12 — METRICS COMMITTED; discworld RESCORED under the pre-dynamics target — nothing moved (branch `new_metrics`)
 
 Sevan's decisions: (1) the Edit Index keeps the SIMULATOR references (Bayes-optimal given the exact state; the

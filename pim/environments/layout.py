@@ -43,7 +43,8 @@ CLASSES = ("discworld", "othello")
 DEFAULT_INSTANCE = {"discworld": "dw-pn04", "othello": "oth-uniform"}
 DW_PROBE_SIZES = ("120k", "250k")
 # othello split name -> its role directory (v2); every split lived in corpus/ under v1
-OTH_ROLE = {"train": "train", "test": "eval", "probe": "probe", "probe_large": "probe"}
+OTH_ROLE = {"train": "train", "test": "eval", "probe": "probe", "probe_large": "probe",
+            "edits": "edits"}          # the GAMES the edit cases are cut from (2026-09-12)
 EDITS_VERSIONS = ("v1", "v2")
 
 __all__ = [
@@ -173,12 +174,12 @@ def edits_dir(cls: str, inst: str, version: str = "v1") -> Path:
     return instance_root(_check(cls), inst) / "edits" / version
 
 
-def edits_file(cls: str, inst: str, version: str = "v1", n_cases: int = 1001) -> Path:
+def edits_file(cls: str, inst: str, version: str = "v1", n_cases: int = 1000) -> Path:
     d = edits_dir(cls, inst, version)
     return d / "edits.h5" if cls == "discworld" else d / f"cases_{n_cases}.pkl"
 
 
-def edits_manifest(cls: str, inst: str, version: str = "v1", n_cases: int = 1001) -> Path:
+def edits_manifest(cls: str, inst: str, version: str = "v1", n_cases: int = 1000) -> Path:
     d = edits_dir(cls, inst, version)
     return d / (f"cases_{n_cases}.json" if cls == "othello" else "edits.json")
 
@@ -199,7 +200,10 @@ def othello_split_file(inst: str, name: str, n: int) -> Path:
     return othello_split_dir(inst, name) / f"{name}_{n}.npz"
 
 
-def othello_cases_file(inst: str, n_cases: int = 1001, version: str = "v1") -> Path:
+def othello_cases_file(inst: str, n_cases: int = 1000, version: str = "v1") -> Path:
+    """The instance's canonical edit cases (2026-09-12: 1000 single-tile flips at a fixed
+    20-move prefix, cut from the instance's own `edits` games; Li's shipped 1001 stayed
+    canonical for oth-uniform until this date and remains the appendix anchor in `pim/…/vendor`)."""
     return edits_file("othello", inst, version, n_cases)
 
 

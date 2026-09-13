@@ -20,6 +20,7 @@ from pim.environments.othello.bench import (
     benchmark_from_cases,
     case_targets,
     load_benchmark,
+    load_li_benchmark,
 )
 from pim.environments.othello.data import (
     CENTRE,

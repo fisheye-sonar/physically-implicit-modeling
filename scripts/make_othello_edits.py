@@ -27,22 +27,30 @@ from pim.environments.othello.data import canonical_vocab  # noqa: E402
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--instance", required=True)
-    ap.add_argument("--n", type=int, default=1001)
+    ap.add_argument("--n", type=int, default=1000)
+    ap.add_argument("--length", type=int, default=20,
+                    help="the FIXED prefix length every case is cut at (2026-09-12: 20 moves — the "
+                         "discworld bench edits at a fixed frame too; 0 = Li's 5-30 length mix)")
     ap.add_argument("--seed", type=int, default=0)
     a = ap.parse_args()
     t0 = time.time()
-    tok, ln = oc.load(oc.build(only=("test",), instance=a.instance, log=lambda s: None)["test"])
+    # the instance's own EDITS games — an index range disjoint from train, the gates' test
+    # split and both probe corpora (corpus.EDITS_LO; generated here if absent, seconds)
+    tok, ln = oc.load(oc.build(only=("edits",), instance=a.instance, log=lambda s: None)["edits"])
     itos = {v: k for k, v in canonical_vocab().items()}
     hist = [[int(itos[int(t)]) for t in row[:L]] for row, L in zip(tok, ln)]
-    cases, manifest = synthesise_cases(hist, a.n, shipped_length_distribution(), seed=a.seed,
-                                       **oc.rules_of(a.instance))
+    lengths = {a.length: a.n} if a.length else shipped_length_distribution()
+    cases, manifest = synthesise_cases(hist, a.n, lengths, seed=a.seed, **oc.rules_of(a.instance))
     layout.ensure_marker("othello", a.instance)              # a new instance is born in layout v2
     out = layout.edits_dir("othello", a.instance, "v1")
     out.mkdir(parents=True, exist_ok=True)
     with open(out / f"cases_{a.n}.pkl", "wb") as f:
         pickle.dump(cases, f)
-    manifest.update({"instance": a.instance, "source": f"{a.instance} TEST split ({len(hist)} games, "
-                     f"index range [{oc.TEST_LO}, {oc.TEST_LO + oc.TEST_N}))",
+    manifest.update({"instance": a.instance, "source": f"{a.instance} EDITS split ({len(hist)} games, "
+                     f"index range [{oc.EDITS_LO}, {oc.EDITS_LO + oc.EDITS_N}))",
+                     "prefix_length": a.length or "Li's 5-30 mix",
+                     "recipe": "one occupied non-centre tile recoloured; rejected if the legal set is "
+                               "unchanged or empty (bench.synthesise_cases)",
                      "minutes": round((time.time() - t0) / 60, 1)})
     (out / f"cases_{a.n}.json").write_text(json.dumps(manifest, indent=1))
     print(f"wrote {len(cases)} cases -> {out / f'cases_{a.n}.pkl'}  [{manifest['minutes']} min]")

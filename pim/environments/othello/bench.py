@@ -97,13 +97,22 @@ def cases_path(instance: str) -> Path:
 
 
 def load_benchmark(instance: str = "oth-uniform") -> Benchmark:
-    """The instance's 1001 intervention cases, grouped into equal-length buckets: Li et
-    al.'s shipped set for oth-uniform, the synthesised set for any other instance, both
-    replayed with the instance's rules."""
+    """The instance's CANONICAL edit cases (2026-09-12: 1000 single-tile flips at a fixed
+    20-move prefix, cut from the instance's own edits games — `scripts/make_othello_edits.py`),
+    grouped into equal-length buckets and replayed with the instance's rules. Li's shipped
+    1001 are `load_li_benchmark()` — the appendix anchor to their published numbers."""
     from pim.environments.othello.corpus import rules_of
 
     with open(cases_path(instance), "rb") as f:
         return benchmark_from_cases(pickle.load(f), **rules_of(instance))
+
+
+def load_li_benchmark() -> Benchmark:
+    """Li et al.'s shipped 1001 intervention cases (`vendor/intervention_benchmark.pkl`,
+    prefixes of 5–30 moves, standard rules) — the anchor to their §4 numbers, kept beside
+    the canonical bench since 2026-09-12, never mixed with it."""
+    with open(BENCHMARK_PKL, "rb") as f:
+        return benchmark_from_cases(pickle.load(f))
 
 
 def shipped_length_distribution() -> dict[int, int]:

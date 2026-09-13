@@ -225,7 +225,7 @@ call site.
 | **Edit Index (ray-zone)** (discworld frame models) | `zone_editability.py::edit_index` — the formula in `edit_index.py` with the two clean renders as references and the differing rays as support; (d_uned − d_edit)/(d_uned + d_edit) on the differing rays | +1 = the edited world, −1 = the unedited; effective range ≈ +0.82…−0.80 because scoring is against the clean render. ⛔ The WRITE TARGET is the PRE-dynamics state (2026-09-12): `pos[EF] − v·dt` for the edited object, the current state for the rest — the state whose next frame is the reference; before that date the target was the post-dynamics state, one step ahead of any write (a perfect edit capped at +0.70 on 128 rays; GOTCHAS 2026-09-12). Both references are the simulator's predictions from the exact state, deliberately (decided 2026-09-12 after the model-referenced pilot; GOTCHAS) |
 | zone RMSEs, scorecard | `zone_editability.py` — target / ghost / collateral / edit-frame | absolute, in intensity units |
 | **fidelity ratio** (THE guard) | `zone_editability.py::fidelity_ratio` (discworld) · `set_editability.py::move_fidelity_ratio` (Othello) | ONE definition and polarity in both environments since 2026-09-01: `RMSE(edited prediction, edited-world GT) / RMSE(unsteered prediction, same GT)`, **at the edit step only**. **>1 = the edit degraded the model rather than steering it**; no success claim survives that. It is the ABSOLUTE counterpart to the Edit Index, which is *relative* and so scores a wrecked output mildly positive when it lands marginally nearer the edited world. Discworld: whole frame. Othello: all 64 squares (never the union support — the guard must see collateral damage outside the edit's own zone) |
-| **Edit Index (legal-set)** | `set_editability.py::edit_index_legal` — the same formula (`edit_index.py`) with uniform-over-SET reference worlds and the union (headline) or symdiff of the two sets as support | two clients: **Othello** (sets = legal moves before/after the flip; the uniform reference is exact — the generator IS uniform) and **discworld frames-as-tokens models** (sets = the ONE frame each world renders at the edit frame, wired by `environments/discworld/token_bench.py`; +1 = the edited world's frame, −1 = the unedited one; the bridge `zone_edit_index_expected` scores the expected frame on the ray-zone construction and rides along, never as the headline) |
+| **Edit Index (legal-set)** | `set_editability.py::edit_index_legal` — the same formula (`edit_index.py`) with uniform-over-SET reference worlds and the SYMMETRIC DIFFERENCE of the two sets as support (**the Othello headline since 2026-09-12** — the squares whose legality the edit changed, the analogue of discworld's differing rays; the union variant is still computed and stored as a diagnostic — on it the 1/‖L‖ renormalisation of the shared squares compresses the scale by a per-instance amount, floors −0.68…−0.82 vs −0.90…−0.97 under symdiff) | two clients: **Othello** (sets = legal moves before/after the flip; the uniform reference is exact — the generator IS uniform) and **discworld frames-as-tokens models** (sets = the ONE frame each world renders at the edit frame, wired by `environments/discworld/token_bench.py`; +1 = the edited world's frame, −1 = the unedited one; the bridge `zone_edit_index_expected` scores the expected frame on the ray-zone construction and rides along, never as the headline) |
 | Li error / legal mass | `set_editability.py` | their §4.2 metric, kept under their name — the anchor to Li et al.'s published numbers (null 2.68 → 0.12), never structural. ⚠ `li_error_vs_pre` is a DIAGNOSTIC, not the guard: it is one half of the pair the Edit Index is already built from, and "higher is better" only holds up to the pre→post separation (2.763 on `L-oth-20m`) — beyond that means drifting away from BOTH worlds |
 | gates | `environments/othello/arms.py::gates` | legal mass, top-1, CE with the **exact** Bayes floors (bayes_ce = E[log‖legal‖]) |
 
@@ -238,6 +238,29 @@ Reporting traps (carried from METRICS_AND_EDITORS.md): (a) aggregate probe R² i
 variance-weighted — position dominates velocity ~1000:1; quote per-dim; (b) fidelity
 ratio cannot see a destructive edit on its own — read it WITH collateral; (c) the EI
 scale is ≈ +0.82…−0.80, not ±1 (clean-render reference vs noisy-trained model).
+
+## Edit benches — one protocol (2026-09-12)
+
+Every run is scored on ITS instance's bench, 1000 cases, ONE edit at a FIXED position, the FULL
+state written (everything not edited held at its current read-out), shared α grids and GS start
+layers (`master_eval` cell [2]: `ALPHA_CAT`, `ALPHA_REG`, `GS_LAYERS`). Othello: one occupied
+non-centre tile recoloured at a 20-move prefix, cases cut from the instance's own `edits` games
+(`corpus.EDITS_LO`, disjoint from train/test/probe; `scripts/make_othello_edits.py`;
+`edits/v1/cases_1000.pkl`). Li's shipped 1001 stay in `pim/environments/othello/vendor/` as the
+appendix anchor. Discworld: the edits split's teleports at frame 20, the write target the
+PRE-dynamics state, the bench = `edits/v1/selection.json` — the first 1000 cases whose two
+renders differ on ≥ 2 rays (blackouts excluded on dw-blink; token vocabulary respected on
+dw-8ray) — `scripts/make_edit_selection.py`. Pre-2026-09-12 benches: 192 discworld cases / Li's
+1001 (uniform) or 1001 synthesised at Li's 5–30 length mix (variants), parked in `_unused/`.
+
+## Tables and figures
+
+| object | definition | notes |
+|---|---|---|
+| **master tables** | `pim/figures/tables.py` — `collect(runs_oth, runs_dw)` → `Frames`; one function per table (`table_decodability`, `tables_components`, `table_editability`, `table_arms`, `table_gridified`, `table_alignment`, `table_bayes`, `table_seed_variance`) and figure (`fig_training_curve`, `fig_capacity`) | selection and drawing only — no metric math. Called by `notebooks/build_paper_tables.ipynb` (shortlist) and `build_full_tables.ipynb` (long list), which differ only in the run lists at their top. Per-cell decodability = each cell's own optimum over residual points; Othello editability = symmetric difference; heavy rule between the environments |
+| waterfall panel | `pim/figures/waterfall_grid` (`research/specs/WATERFALL_SPEC.md`) | the canonical qualitative panel |
+| Table 3 inputs | `experiments/edit_direction_alignment/scripts/table3_alignment.py` → `scores/table3_alignment.json`; `table3_haufe_edit.py` → `scores/table3_haufe_edit.json` | alignment of the true counterfactual Δ with the probe rows (± Haufe, ± generic) and PI through the Haufe directions, at the best PI point |
+| Table 4 inputs | `experiments/bayes_floor/scripts/test_loss.py` → `scores/test_loss.json` | test-set loss vs the state-oracle / exact Bayes floor |
 
 ## Canonical runs
 
@@ -274,6 +297,6 @@ output); one-off experiment artifacts go to `outputs/`.
 `notebooks/master_eval.ipynb` scores every run under `runs/**` (excluding `archive/` and
 `_`-prefixed topics) the identical way — **no metric math in the notebook**; every number
 is a call into `pim.*` — and writes `scores.json` into the run dir, stamped with
-`EVAL_VERSION` (bump it to force a rescore). `notebooks/build_full_table.ipynb` renders
+`EVAL_VERSION` (bump it to force a rescore). `notebooks/build_full_tables.ipynb` renders
 the one master table from those files. The evaluation settings (probe corpus sizes, α
 grids) live in master_eval cell [2] and are recorded into every `scores.json`.

@@ -995,3 +995,28 @@ the ratio. Replacing both references with the model's own predictions changed th
 ≤ 0.03 on every noiseless and Othello condition (`scratch/2026-09-11-edit-index-v2-pilot.md`),
 so the symmetric simulator references stay. The noisy instance (dw-pn04, floor −0.70) is the
 one place the clean render is not the Bayes mean — the mean-reference spec's subject.
+
+## 2026-09-12 (evening) — ONE edit protocol; the tables are a module; Othello reads symmetric difference
+
+- **Benches.** Every instance has its own 1000-case bench at a FIXED edit position (discworld frame
+  20; Othello a 20-move prefix). Othello cases are cut from a dedicated `edits` index range
+  ([93M, 93M+10k); `corpus.EDITS_LO`) so they are disjoint from train, the gates' test split and
+  both probe corpora — check `verify_splits` before trusting any new range. Discworld benches are a
+  SELECTION (`edits/v1/selection.json`, ≥ 2 differing rays); `bench_arrays(use_selection=False)` is
+  the unfiltered pool. The old benches (192 cases; Li's 1001; the 5–30 length mix) live in
+  `_unused/` and their numbers are NOT comparable — editability varies with the edit position
+  (+0.8 at moves 4–8 → +0.35 at 40–55) and with the case filter.
+- **Full-state writes only.** `dw_edit_dims = ("all",)`: the "pos" dim set (position rows written,
+  velocity read-outs left free) was a partial write with no Othello analogue. Pre-2026-09-12
+  discworld PI numbers quoted the better of the two dim sets; many were "pos".
+- **Shared α grids and GS start layers** (`ALPHA_CAT`, `ALPHA_REG`, `GS_LAYERS` in master_eval
+  cell [2]). GS is the cost driver: arms × 100 descent steps × 1000 cases.
+- **Othello headline = symmetric difference** (REGISTRY, Edit Index legal-set row). Both indices
+  are in every arm record; tables read `edit_index_symdiff`, the scorer's `best` still picks by
+  union — `pim.figures.tables._best_by` re-picks per editor by symdiff from `arms`.
+- **The tables are `pim/figures/tables.py`**; the notebooks only set run lists. Editing a table
+  means editing the module (and its test, `tests/test_tables_module.py`), then re-executing BOTH
+  notebooks. Run names in the lists are exact directory names (`L-oth-20m-mse`, `L-oth-adjacent-20m`).
+- **Tonight's queued run** is `scripts/drivers/rescore_2026-09-12.sh` (launch instructions in its
+  header). Until it runs, every table shows the OLD benches' numbers under the NEW headline
+  construction; scores.json files stamped `2026-09-12.*` are the new protocol.

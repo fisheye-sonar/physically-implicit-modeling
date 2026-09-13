@@ -59,7 +59,9 @@ python scripts/train.py --env discworld --arch transformer_l \
 
 # score every unscored run + the master table
 jupyter nbconvert --to notebook --execute --inplace notebooks/master_eval.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/build_full_table.ipynb
+jupyter nbconvert --to notebook --execute --inplace notebooks/build_paper_tables.ipynb   # the shortlist
+jupyter nbconvert --to notebook --execute --inplace notebooks/build_full_tables.ipynb    # the long list
+# (both are thin callers of pim/figures/tables.py; the run lists at the top of each are the only knobs)
 
 # data generation
 python scripts/generate_dataset.py <dir> --n-train 100000 --n-workers 8   # discworld
@@ -111,8 +113,9 @@ bash harness/check.sh
   `logs/<name>/`; `logs/` holds LOGS ONLY. A stray `.log` or a `probe_cache/`
   beside the run directories is how `runs/` became a junkyard once already
   (cleared 2026-09-01).
-- Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run table →
-  `notebooks/build_full_table.ipynb`
+- Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run tables →
+  `notebooks/build_paper_tables.ipynb` (shortlist) and `build_full_tables.ipynb` (long list),
+  both rendering through `pim/figures/tables.py`
 - Experiments — the quarantined workspace: scripts, drivers, data, outputs, scores,
   probes, one folder per experiment → `experiments/<name>/`; generic run-queue
   infrastructure only → `scripts/drivers/`

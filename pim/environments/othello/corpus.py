@@ -94,6 +94,9 @@ PROBE_LO, PROBE_N = 91_000_000, 20_000
 # 5x the canonical probe rows, so wide probes are data-limited by width, not memorisation.
 # A fresh disjoint index range; the canonical probe split is untouched.
 PROBE_LARGE_LO, PROBE_LARGE_N = 92_000_000, 170_000
+# edits (2026-09-12): the games the canonical edit cases are cut from — a range of their own,
+# so the bench is disjoint from train, the gates' test split and both probe corpora.
+EDITS_LO, EDITS_N = 93_000_000, 10_000
 
 # The ladder. Every rung runs the SAME number of optimiser steps; only the pool differs.
 LADDER = {"M": 90_000, "L1": 1_000_000, "L2": 5_000_000, "D": 20_000_000}
@@ -185,7 +188,7 @@ def build(n_train: int = LADDER["D"], log=print, only: tuple[str, ...] | None = 
     flip, placement = flip_of(instance), placement_of(instance)
     out = {}
     plan = [("train", TRAIN_LO, n_train), ("test", TEST_LO, TEST_N), ("probe", PROBE_LO, PROBE_N),
-            ("probe_large", PROBE_LARGE_LO, PROBE_LARGE_N)]
+            ("probe_large", PROBE_LARGE_LO, PROBE_LARGE_N), ("edits", EDITS_LO, EDITS_N)]
     if only is not None:
         plan = [x for x in plan if x[0] in only]
     for name, lo, n in plan:
