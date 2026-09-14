@@ -121,3 +121,6 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 - `training_curve/L-dw-20m_s512000/scores.json` → `training_curve/L-dw-20m_s512000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
 - `training_curve/L-dw-20m_s780000/scores.json` → `training_curve/L-dw-20m_s780000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
 - `training_curve/L-dw-8ray-20m_s032000/scores.json` → `training_curve/L-dw-8ray-20m_s032000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+
+## 2026-09-12
+- copy `runs/dropout_ablation/L-oth-adjacent-nodrop-390k/` (checkpoints, config, metrics; NOT scores.json / probes) → `runs/dropout_ablation/L-oth-adjacent-nodrop-20m/` — the no-dropout run continued to 780k under a new name; the 390k dir stays as the scored snapshot
