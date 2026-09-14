@@ -70,7 +70,7 @@ def _parse():
     p.add_argument("--limit", type=int, default=None,
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
-                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink; "
+                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink | dw-5ray | dw-smooth; "
                         "othello: oth-uniform | oth-noflip | oth-adjacent | oth-adjacent-flip). "
                         "Default: the env's canonical instance.")
     # the interface — see the module docstring
@@ -90,6 +90,10 @@ def _parse():
     p.add_argument("--ckpt-base", type=int, default=1_000)
     p.add_argument("--val-every", type=int, default=5_000)
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--replicate-of", default=None, metavar="TOPIC/RUN",
+                   help="mark this run as a seed replicate of a canonical run (config.json gets a "
+                        "`replicate` block; the tables fold it into the parent's ± column instead of a "
+                        "row). Name the run <parent>__seed<k>.")
     p.add_argument("--smoke", action="store_true",
                    help="tiny cadence overrides for an end-to-end pipeline check")
     p.add_argument("--resume", action="store_true",
@@ -209,7 +213,10 @@ def main() -> None:
                               meta=meta)
 
     model = build_model(arch, mc)
-    train(model, source, cfg, run_dir, arch=arch, model_config=mc, device=DEV, resume=a.resume)
+    extra = ({"replicate": {"of": a.replicate_of, "seed": a.seed, "steps": a.steps}}
+             if a.replicate_of else None)
+    train(model, source, cfg, run_dir, arch=arch, model_config=mc, device=DEV, resume=a.resume,
+          extra_config=extra)
 
 
 if __name__ == "__main__":

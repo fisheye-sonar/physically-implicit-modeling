@@ -3,7 +3,63 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE and recorded (first section); before that 2026-09-10 ~16:00 PT — dataset layout v2 migrated and verified; probe-target chains 3–5 done/stopped_
+_Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+## ✅ OVERNIGHT CHAIN 2026-09-12 20:00 → 2026-09-13 11:10 PT — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU) — DONE
+
+**Sevan's order (2026-09-12 evening):** profile H (power dome, (1 − u²)²) for the anti-aliased
+instance; "kick off the big run now, observe all typical overnight protocol". Launched:
+
+- **`dw_smooth_gen`** (`scripts/drivers/dw_smooth_gen.sh`, MemoryMax 40G, logs
+  `logs/smooth_ablation/dw_smooth_gen/`): dw-smooth eval / edits / probe 120k / probe 250k (done
+  19:56–19:59) → 20M corpus (started 19:59, ~1 h) → edit selection (1000 cases, ≥ 2 rays).
+- **`rescore_protocol`** (`scripts/drivers/rescore_2026-09-12.sh`, MemoryMax 45G, logs
+  `logs/rescore_2026-09-12/`): stage 0 waits for the gen unit (≤ 3 h) → 1 `train.py --smoke` on
+  dw-smooth (`runs/_pipeline_smoke/dw-smooth-smoke`) → 2 master_eval (EVERY discworld run at
+  `2026-09-12.2`, every Othello run at `2026-09-12.1`, ~9–11 h) → 3 Table 3 alignment refresh →
+  4 Haufe editability (`table3_haufe_edit.json`) → 5 test_loss → 6 both table notebooks
+  [ping RESCORE DONE, ~07:00–09:00] → 7 train `smooth_ablation/L-dw-smooth-20m` 780k (~8 h) →
+  8 appearance-fac probes + random-init + observation floors → 9 master_eval (new run) →
+  10 test_loss + tables [ping ALL DONE, ~16:30–18:30 2026-09-13].
+- **Progress (2026-09-13 01:05 PT):** gen unit DONE 22:03 (corpus VERIFIED 20M / 0 dup / 24 ranges; selection
+  1000/1000, every teleport changes ≥ 9 rays); smoke-train OK 22:04; master_eval 22:04 → 00:55 (2 h 51 min,
+  all 33 runs at the new versions — far under the 9–11 h budget); alignment refresh, Haufe, test loss, tables
+  DONE 00:58 (**RESCORE DONE pinged**). Stage 7 training started 00:58 → ETA ~09:00; ALL DONE ~10:30–11:00.
+  Draft reading of the rescore: `scratch/2026-09-13-protocol-rescore.md` (discworld: nothing moves; Othello:
+  symdiff lowers floors to ≈ −0.93…−0.98 and lifts standard Othello to +0.72…+0.83, ordering unchanged; Haufe
+  helps only oth-adjacent and, slightly, the discworld regression blocks).
+- Monitors armed in the orchestrator session: stage watcher (both driver logs + unit states, every
+  60 s) and a 30-min heartbeat (stage, scored-file count, unit memory, disk, training metrics).
+  `nvidia-smi` is broken (driver/library mismatch, GOTCHAS 2026-09-12); torch verified the GPU first.
+- **Landed before launch (this commit):** `SimConfig.soft_shading="power"` + `soft_profile_power`
+  in both renderer backends (`soft_render._profile`; default bit-identical; 4 new/extended tests),
+  `sim_config_from` + `generate_dataset.py` passthrough, `bigcorpus` instance `dw-smooth`
+  (seed blocks 200e9 / 225e9 / 1040e9 / 1050e9, forbidden everywhere), master_eval
+  `dw_extra_targets` + `build_full_tables` long list gain the smooth run, `score_pending.sh`
+  repointed at the renamed table notebooks, REGISTRY instance + run rows, `instance.json`.
+- Smoke evidence: a 128-seq legacy suite with the power flags re-renders bit-exactly (float32)
+  through BOTH config paths; lit runs carry ~33 distinct values (the dome); 13/13 soft-render
+  tests pass; the driver passes `bash -n`; the gen unit's first three stages ran clean.
+
+**DONE 11:10 PT (chain complete, unit ended with its marker; both monitors stopped).** Stage 7 training 00:58 → 09:35
+(516 min; slowed 27 → 20 steps/s 03:23–05:00 while the OTHER session ran `inlp_othello.py` on the nodrop-20m
+extension — not touched); stage 8 fac probes + floors 09:35 → 10:46; stage 9 scoring 10:46 → 11:10; tables rebuilt.
+**Result: `L-dw-smooth-20m` predicts 18× better than dw-noiseless (val 5.9e-5 vs 1.06e-3) and edits WORSE** —
+frustum PI +0.11 / 2.62 (noiseless +0.23 / 1.54), appearance-fac ND +0.38 (noiseless +0.61); decodability unchanged
+in kind (MLP ≈ 1.0 on trained and random-init). `findings/smooth-ablation.md` (observed), REGISTRY run row, scratch
+note completed. Smoke run stays in `runs/_pipeline_smoke/dw-smooth-smoke` (the smoke topic). Recorded in commit.
+**Open after the chain:** waterfall panel for dw-smooth's frustum PI arm; decide whether dw-smooth enters the paper
+shortlist (long list only now); findings banners for the OTHELLO numbers (symdiff headline; floors now ≈ −0.93…−0.98,
+standard Othello best arms +0.72…+0.83) still quote the pre-protocol union numbers — sweep owed; Table 3 Haufe
+columns filled (after-Haufe hurts categorical PI; helps oth-adjacent).
+**(Original wrap-up plan follows.)** read `logs/rescore_2026-09-12/headline.txt` + the ALL DONE ping; compare
+against the parked pre-rescore scores (`scores.pre-alignment-2026-09-12.json` etc.); update the
+findings banners, REGISTRY run rows (numbers), `findings/probe-target-type.md` for dw-smooth;
+move `runs/_pipeline_smoke/dw-smooth-smoke` artefacts as usual; commit; recap for Sevan.
+**If a stage fails:** the ping carries the log tail; fix forward and relaunch under the same unit
+name (`--collect`); stages 0–1 and the gen stages are idempotent (present files are skipped;
+corpus shards resume via `_done_NNN`).
+
 
 ## oth-adjacent-flip chain on the WSL remote — DONE 2026-09-11 04:22 PT (`experiments/adjacent_flip_ablation/drivers/oth_adjacent_flip.sh`, unit `oth_adjacent_flip` on wsl-sevan)
 
@@ -27,6 +83,9 @@ legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewri
 **Masked probes (2026-09-11 late, `scripts/masked_probes.py`):** flipped-row colour probe reads recoloured tiles at 7% error and edits them WORSE than the canonical probe (ND −0.27 vs +0.08); parity-only probe edits best (+0.28); flip-bit probe 78% decodable, inert. Computed colour = decodable + causally inert at the last position (the discworld pattern inside Othello); the register theory now needs "writable" as a separate property.
 **INLP (2026-09-12 early, `scripts/inlp_othello.py`):** copies of a tile's colour 30 / 50 / 85–232 (standard / flip / adjacent) = the editability ordering; writing 64 copies at once edits oth-adjacent to +0.47 / 0.47 where single copies do nothing; standard peaks at K=16 (+0.65); flip saturates at K=8 (+0.24). Vocabulary: materialised vs fused variable (compiler sense); materialisation follows fan-out.
 **Dropout ablation (2026-09-11 evening):** `scripts/train.py` gained `--resume` (exact continuation from `ckpt/latest.pt`, incl. optimizer/RNG/history; extendable; token sources fast-forward the batch stream so a resumed run reproduces an uninterrupted one — `tests/test_training_resume.py`) and `--dropout`. `L-oth-adjacent-nodrop-390k` launching on wsl-sevan (unit `oth_adjacent_nodrop`; oth-adjacent data built there from scratch in layout v2): dropout 0, 390k steps (~13 h on the 4090), then INLP + K-copy edits vs the dropout run. `experiments/dropout_ablation/`.
+**Dropout ablation DONE (2026-09-12 ~12:00):** `L-oth-adjacent-nodrop-390k` trained (12.5 h, same optimum); INLP copies per tile 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — MORE redundant without it; K ≤ 16 edits inert; best K-copy edit +0.45 / 0.37. The fused code is the rule's. Canonical master_eval scores on the remote pending at write time; run dir pulled to the lab box.
+**Extension DONE (2026-09-13 03:21):** `dropout_ablation/L-oth-adjacent-nodrop-20m` = the no-dropout run continued 390k → 780k via `--resume` (interrupted once at 400k when a Microsoft Store WSL update shut the VM down; resumed exactly; the keepalive task is now a self-restarting loop). INLP copies per tile 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 vs 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 at 390k and 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — the tail prunes 10–20 % with doubled training but stays 1.2–1.6× the dropout run's; K-copy edit curves unchanged (K ≤ 16 inert; +0.42 at pt 1, K=128); canonical PI −0.21 / ND +0.05 / GS inert, skill 0.973 / 0.978. The redundancy is the regime's steady state. Run dir + scores pulled to the lab box; `experiments/dropout_ablation/scripts/inlp_compare.py` builds the N-run comparison figures/tables from the score files. Written up in `findings/adjacent-flip-ablation.md` §Dropout ablation → Extension.
+**Dropout 0.3 in flight (2026-09-13 03:22 →):** `dropout_ablation/L-oth-adjacent-drop03-390k` (Sevan's ask: the other direction), unit `oth_adjacent_drop03` on wsl-sevan, driver `experiments/dropout_ablation/drivers/oth_adjacent_drop03.sh` (queued behind the extension via a wait stage; smoke `runs/_smoke/L-oth-smoke-drop03` on the remote); 390k resumable steps, ETA training ≈ 16:00 PDT, scored ≈ 17:30; then INLP vs dropout 0 / 0.1.
 **Still open:** the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 
@@ -111,6 +170,34 @@ grid-4x2, grid-64x32) imports the fix fresh at each stage; **chain 3** (`probe_t
 done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` with the full
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
+
+**12:15 PT 2026-09-12 — seed-variance pilot CLOSED (stopped after the canonical run's probe seeds, Sevan's call;
+my ETA had slipped 08:00 → 18:00 because the probe refits ran at all 9 points and each seed re-collects its
+stack — recorded).** Probe seeds: skill 0.9587 ± 0.0006 (20 seeds, regression) / 0.4319 ± 0.0007 (6, fac); same best
+point every seed; ND +0.505 ± 0.000, PI ±0.001; the across-points profile reproduces seed for seed (SD of the
+per-seed spread 0.006 / 0.0002). Training seed: Edit Index SD 0.005–0.017; guard SD up to 0.15. Tables rebuilt by
+hand: ± cells in Tables 1–2 for the noiseless row (n = 3), Table 4a/4b. `findings/seed-variance.md` complete.
+Nothing running.
+
+**09:15 PT 2026-09-12 — seed-variance: run-seed half in.** Two 390k replicates + the seed-0 422k checkpoint,
+pooled n = 3: decodability SD ≤ 0.005; Edit Index SD 0.005–0.017 on every editor / target (fac ND +0.624 ±
+0.017, fac GS +0.322 ± 0.014); the GUARD is where the spread lives (GS fid 0.68–1.09, SD 0.15). Half budget
+vs full: same size as the seed spread. `findings/seed-variance.md` drafted; probe-seed stage running
+(3 runs × ~2 h) → ~15:00 PT.
+
+**23:00 PT 2026-09-11 — seed-variance pilot launched (Sevan: "retrain L-dw-noiseless-20m twice at half the steps,
+refit a ton of linear probes, report fluctuation; replicates as ± not rows").** Decisions: pool seed 0 (as the
+run's own 421,875-step checkpoint, matched budget) with the two 390k replicates, n = 3, SD; probe refits at
+every point, each seed's own best point reported alongside the seed-0 point, plus the spread across points
+per seed. Code: `fit_probes(seed=)` (key already carried the seed; seed 0 keys unchanged), `train.py
+--replicate-of` → `config.json["replicate"]`, `build_full_table` folds replicates into ± cells of Tables 1/2 +
+Table 4 (run-seed and probe-seed spread), `experiments/seed_variance/scripts/{probe_seeds,layout_checkpoint_replicate}.py`,
+driver `scripts/drivers/seed_variance.sh`. Smoked (train --smoke with the flag; probe_seeds --smoke; layout;
+tables with zero replicates); 248 tests. Unit `seed_variance` started 22:59: train seed 1 (~4 h) → seed 2
+(~4 h) → score + fac ×3 (~2 h) → probe seeds ×3 (~2 h each: 20 regression + 6 factorised, the latter 16 min
+a seed) → tables. Honest ETA **~15:00 PT 2026-09-12** (the factorised probe seeds dominate; trim to 4 seeds
+if wanted — decide at stage E). Watchers + heartbeat armed; pings per stage. Convention written into
+`harness/WORKFLOW.md`, REGISTRY, `experiments/seed_variance/README.md`.
 
 **15:55 PT — loss-matched control for the GRU result: the 8-ray transformer at step 32k (val 0.00600 vs the
 GRU's best 0.00595) under `appearance-fac`: ND +0.57 / 0.73, GS +0.46 / 0.52, PI +0.33 / 1.09 (guarded +0.32)
@@ -312,6 +399,51 @@ unit `probe_targets_4`, behind chain 3 — grid-8x4, appearance-lat (233 cells),
 grid-64x32 on the noiseless run (~40 min each, one model, no floors); the full appearance
 partition there (2,889 cells) is left out (22 GB label tensor). Expected done ~14:30 PT.
 Heartbeat now follows whichever of chains 2/3 is active; each chain has its own watcher.
+
+## 2026-09-12 (evening) — ONE EDIT PROTOCOL built; tables rebuilt as a module; overnight rescore QUEUED (not launched)
+
+Sevan's spec, all done except what is queued: **benches** — Othello 1000 single-tile flips at a fixed 20-move
+prefix per instance from a dedicated `edits` index range (old cases in `_unused/`); discworld 1000-case
+selections (≥ 2 differing rays) on all five instances (`scripts/make_edit_selection.py`); **protocol** — full-state
+writes only, shared α grids + GS layers, `EVAL_VERSION_BY_ENV` dw 2026-09-12.2 / oth 2026-09-12.1; **Othello
+headline = symmetric difference** (union kept). **Tables**: `pim/figures/tables.py` + `notebooks/build_paper_tables.ipynb`
+(shortlist) / `build_full_tables.ipynb` (long list, renamed from build_full_table) — Table 1 = decodability with floors
+(right-aligned obs, listed archs only), 1b–1e per-cell optima, 2 (+2b arms as an image), 2c gridified only coarse→fine,
+**Table 3 alignment** (worker: `experiments/edit_direction_alignment/scores/table3_alignment.json`, all 16 rows;
+PI-after-Haufe columns blank), **Table 4 test loss vs Bayes floor** (`experiments/bayes_floor`), Table 5 seed
+replicates; Fig 1 (paper only, L-oth-20m + L-dw-20m, zigzag fixed), Fig 2 capacity; old Fig 3 and tables 3d/3j/3l/3m/3n
+dropped. Both notebooks execute clean on the CURRENT scores (old benches, new headline) — they refresh after the rescore.
+**QUEUED — `scripts/drivers/rescore_2026-09-12.sh`** (launch: see its header; ~9–11 h GPU): 5-ray fac floors →
+master_eval both envs → Table 3 alignment refresh → Haufe editability (`table3_haufe_edit.py`, smoked OK) → test loss →
+both notebooks. Anti-aliasing instance: NOT started (Sevan holding). GPU is free right now.
+
+## 2026-09-12 — METRICS COMMITTED; discworld RESCORED under the pre-dynamics target — nothing moved (branch `new_metrics`)
+
+Sevan's decisions: (1) the Edit Index keeps the SIMULATOR references (Bayes-optimal given the exact state; the
+model-referenced v2 is dropped — pilot: ≤ 0.03 change, magnitude entanglement); (2) **the discworld write target
+is the PRE-dynamics state** — `pos[EF] − v·dt` for the edited object, the current state for the rest — because the
+probe reads the state of the LAST consumed frame and the model's output is one dynamics step ahead (GOTCHAS
+2026-09-12; commit b7f741f; test `tests/test_bench_target_alignment.py`). Probes and Othello untouched.
+**DONE:** all 19 discworld runs rescored (`EVAL_VERSION_BY_ENV['discworld'] = 2026-09-12.1`, unit
+`rescore_dw_alignment`, 65 min), tables rebuilt. **Result: every block within ≤ 0.06 of its pre-fix value
+(median 0.005), floors identical, no conclusion changed** — the offset only matters near the ceiling and no editor
+is near it (`scratch/2026-09-12-alignment-rescore.md`). Pre-fix scores parked as
+`scores.pre-alignment-2026-09-12.json`; every finding quoting discworld editor numbers carries a one-line banner.
+The pre-run prediction ("128-ray numbers up modestly") was wrong. NEXT: write-up; the no-flip realisable-edit
+result (pilot) as a separate legal-vs-illegal finding if wanted; ceiling row per run (cheap) if wanted.
+
+## 2026-09-11 (night) — PILOT: the model-referenced Edit Index on paired counterfactuals (branch `new_metrics`)
+
+`research/scratch/2026-09-11-edit-index-v2-pilot.md`; `experiments/edit_index_v2_pilot/`. Nine
+conditions × 48 cases × one canonical arm per editor. **v2 ≈ v1 (±0.03) on every frame / Othello
+row** — the reference change alone moves nothing on these near-Bayes models (token model +0.04..+0.10).
+What moves is the EDIT TYPE: realisable (paired-history) edits are 2-tile occupancy changes on the
+no-flip / adjacency instances and ~5-tile changes on standard Othello. **⭐ oth-noflip becomes
+EDITABLE (ND +0.58, guard 0.27) on realisable edits** — the canonical bench asked it for an
+impossible one-tile recolouring; the adjacency instances stay inert on the same edits. Standard
+Othello: GS +0.68 holds, PI/ND collapse at their single-flip arms (not re-tuned). Discworld unchanged.
+Sevan sleeps on the metric decision (v2 vs p_A + S(B)); next: magnitude-stratified rerun, α re-tune
+for multi-tile Othello edits, then the `edits/v2/` spec.
 
 ## Where the work is (2026-09-09)
 

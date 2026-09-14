@@ -154,6 +154,7 @@ def sim_config_from(sim: dict, n_obj: int):
         always_in_frustum=False,
         soft_edge=sim.get("soft_edge", 0.0),
         soft_shading=sim.get("soft_shading", "flat"),
+        soft_profile_power=sim.get("soft_profile_power", 2.0),   # dw-smooth (2026-09-12)
         soft_psf_sigma=sim.get("soft_psf_sigma", 0.0),
         soft_occlusion_temp=sim.get("soft_occlusion_temp", 0.0),
         omni2d=sim.get("omni2d", False),

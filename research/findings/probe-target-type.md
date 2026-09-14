@@ -1,5 +1,8 @@
 # Probe-target type — regression vs categorical, both directions (2026-09-09 → 10, overnight)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Status: `observed` (2026-09-10 04:47 PT — the chain `scripts/drivers/probe_targets.sh`,
 unit `probe_targets`, logs `logs/probe_targets/`, completed every stage except the last
 sweep variant, `grid-32x16`, on which it was OOM-killed at the 45 GB cap; nothing partial

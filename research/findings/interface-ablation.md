@@ -1,5 +1,8 @@
 # Interface ablation: discworld frames as tokens through the Othello model (L-dw-8ray-tok-20m)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Date** 2026-09-06 · **Instance** `dw-8ray` (unchanged; frames tokenised —
 `datasets/discworld/dw-8ray/tokens/`, 422-token vocabulary = 421 realisable 8-ray patterns
 + UNK) · **Run** `runs/interface_ablation/L-dw-8ray-tok-20m` (`TransformerLTokens(422, 39)`:

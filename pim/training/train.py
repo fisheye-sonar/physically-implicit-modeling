@@ -171,7 +171,7 @@ def _commit_sha() -> str:
 
 def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
           arch: str, model_config: dict, device: str = "cuda", log=print,
-          resume: bool = False) -> dict:
+          resume: bool = False, extra_config: dict | None = None) -> dict:
     """Run the canonical loop. Writes into ``run_dir``:
 
     config.json   arch, model, train, data meta, n_params, commit_sha
@@ -230,6 +230,9 @@ def train(model, source: DataSource, cfg: TrainConfig, run_dir: str | Path, *,
         "steps_per_epoch": source.steps_per_epoch,
         "epochs": cfg.steps / source.steps_per_epoch,
         **({"resumed": resumed} if resumed else {}),
+        # `replicate` (2026-09-11): this run is a SEED REPLICATE of a canonical run —
+        # {"of": "<topic>/<run>", "seed", "steps"}; the tables fold it into its parent's ± column
+        **(extra_config or {}),
     }, indent=2))
 
     def lr_at(step: int) -> float:

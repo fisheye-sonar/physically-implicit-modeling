@@ -98,3 +98,26 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 
 ## 2026-09-09 (wsl-sevan)
 - `runs/smoke/` → `runs/_smoke/` — the 2026-09-09 pipeline-smoke runs (L-dw-smoke, L-oth-smoke) renamed under the `_` rule so master_eval/build_full_table skip them; nothing deleted.
+
+## Pre-alignment discworld scores parked — 2026-09-12
+# The write target became the PRE-dynamics state (bench.bench_arrays; GOTCHAS 2026-09-12); every discworld run is
+# rescored under EVAL_VERSION_BY_ENV['discworld'] = 2026-09-12.1. The scores before the fix are kept beside the new ones:
+- `blink_ablation/L-dw-blink-20m/scores.json` → `blink_ablation/L-dw-blink-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `initial_othello_comparison/L-dw-20m/scores.json` → `initial_othello_comparison/L-dw-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `interface_ablation/L-dw-8ray-tok-20m/scores.json` → `interface_ablation/L-dw-8ray-tok-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `noise_ablation/L-dw-noiseless-20m/scores.json` → `noise_ablation/L-dw-noiseless-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `noise_ablation/L-dw-noiseless-20m__seed0_s421875/scores.json` → `noise_ablation/L-dw-noiseless-20m__seed0_s421875/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `noise_ablation/L-dw-noiseless-20m__seed1/scores.json` → `noise_ablation/L-dw-noiseless-20m__seed1/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `noise_ablation/L-dw-noiseless-20m__seed2/scores.json` → `noise_ablation/L-dw-noiseless-20m__seed2/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `ray_ablation/L-dw-5ray-20m/scores.json` → `ray_ablation/L-dw-5ray-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `ray_ablation/L-dw-8ray-20m/scores.json` → `ray_ablation/L-dw-8ray-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `ray_ablation/R-dw-8ray-20m/scores.json` → `ray_ablation/R-dw-8ray-20m/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s001000/scores.json` → `training_curve/L-dw-20m_s001000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s004000/scores.json` → `training_curve/L-dw-20m_s004000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s016000/scores.json` → `training_curve/L-dw-20m_s016000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s064000/scores.json` → `training_curve/L-dw-20m_s064000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s128000/scores.json` → `training_curve/L-dw-20m_s128000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s256000/scores.json` → `training_curve/L-dw-20m_s256000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s512000/scores.json` → `training_curve/L-dw-20m_s512000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-20m_s780000/scores.json` → `training_curve/L-dw-20m_s780000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)
+- `training_curve/L-dw-8ray-20m_s032000/scores.json` → `training_curve/L-dw-8ray-20m_s032000/scores.pre-alignment-2026-09-12.json` (copy; the original is overwritten by the rescoring)

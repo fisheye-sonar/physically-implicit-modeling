@@ -120,16 +120,21 @@ class SimConfig:
     #   soft_edge          silhouette softness in world units (0 = hard indicator).
     #                      Makes the render CONTINUOUS in position.
     #   soft_shading       "flat" (constant reflectivity across the disc, the
-    #                      original) or "lambert" (x |n.d| = sqrt(1-(perp/r)^2)).
+    #                      original), "lambert" (x |n.d| = sqrt(1-(perp/r)^2)), or
+    #                      "power" (x (1-(perp/r)^2)^soft_profile_power — the smooth
+    #                      dome baked into the disc; dw-smooth, 2026-09-12).
     #                      This is the knob that makes the object's image CURVED,
     #                      so its derivative is nonzero across the whole object
     #                      instead of only at the two silhouette edges.
+    #   soft_profile_power exponent p of the "power" profile (p = 0.5 is lambert;
+    #                      p = 2 is the dw-smooth dome). Ignored unless "power".
     #   soft_psf_sigma     Gaussian sensor blur along the ray axis, in rays.
     #   soft_occlusion_temp  temperature of the soft depth ordering; > 0 replaces
     #                      the nearest-hit argmin with a differentiable blend and
     #                      makes the whole renderer autograd-traceable.
     soft_edge: float = 0.0
-    soft_shading: Literal["flat", "lambert"] = "flat"
+    soft_shading: Literal["flat", "lambert", "power"] = "flat"
+    soft_profile_power: float = 2.0
     soft_psf_sigma: float = 0.0
     soft_occlusion_temp: float = 0.0
 

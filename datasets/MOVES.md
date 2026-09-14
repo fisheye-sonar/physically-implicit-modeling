@@ -149,3 +149,10 @@ that motivated the environment-instance manifests.
   - `datasets/othello/oth-adjacent-flip/corpus/train_20000000.npz` → `datasets/othello/oth-adjacent-flip/train/train_20000000.npz`
   - `datasets/othello/oth-adjacent-flip/edits/cases_1001.pkl` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.pkl`
   - `datasets/othello/oth-adjacent-flip/edits/cases_1001.json` → `datasets/othello/oth-adjacent-flip/edits/v1/cases_1001.json`
+
+## Othello edit benches replaced — 2026-09-12
+# One recipe for every instance: 1000 single-tile flips at a FIXED 20-move prefix, cut from the instance's own
+# `edits` games (a new index range [93M, 93M+10k), disjoint from train / test / probe). Li's shipped 1001 stays in
+# git as the appendix anchor (pim/environments/othello/vendor/intervention_benchmark.pkl).
+- `othello/<inst>/edits/v1/cases_1001.{pkl,json}` → `othello/<inst>/_unused/edits_v1_cases_1001/` (all four instances)
+- new: `othello/<inst>/edits/edits_10000.npz` (the games), `othello/<inst>/edits/v1/cases_1000.{pkl,json}`

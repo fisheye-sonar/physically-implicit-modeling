@@ -1,5 +1,8 @@
 # Grid-target control — a categorical discworld state is not what Othello has (2026-09-08)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Question.** Othello's probe target is categorical (64 tiles × 3 classes); discworld's is
 continuous. Is that the difference that makes Othello editable? Control: re-express the
 discworld state as a 16 × 8 grid of cells, each {empty, centre of object 0, centre of

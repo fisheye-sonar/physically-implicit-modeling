@@ -113,7 +113,7 @@ stage "D score + tables (GPU)"
     --execute --inplace master_eval.ipynb --ExecutePreprocessor.timeout=14400 ) \
   > "$LOGS/d_score.log" 2>&1 || fail "D scoring" "$(tail -20 "$LOGS/d_score.log")"
 ( cd "$ROOT/notebooks" && "$PY" "$ROOT/.pim/bin/jupyter-nbconvert" --to notebook \
-    --execute --inplace build_full_table.ipynb ) \
+    --execute --inplace build_full_tables.ipynb ) \
   > "$LOGS/d_table.log" 2>&1 || fail "D table" "$(tail -20 "$LOGS/d_table.log")"
 
 SCORES=$ROOT/runs/$RUN_TOPIC/$RUN_NAME/scores.json

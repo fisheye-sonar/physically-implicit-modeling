@@ -1,5 +1,8 @@
 # Recurrent-L: carried writes into a GRU's only state edit no better — recomputation is not the gate
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Status:** measured 2026-09-02. `runs/architecture_gate/R-dw-20m` — a stacked GRU, 4 × 1024,
 25.46M params (parameter-matched to Transformer-L's 25.37M), the matched recipe (780k steps,
 batch 256, lr 1e-3 constant, wd 1e-4, clip 1, seed 0) on the canonical noisy instance
