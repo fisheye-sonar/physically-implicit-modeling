@@ -220,6 +220,22 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 — scoring audit (Sevan: are the remote dropout runs comparable; is everything on disk current?).**
+Every non-quarantined run is at the current version (discworld 2026-09-12.2, Othello 2026-09-12.1) on the
+standardised bench (Othello: 1000 flips at a 20-move prefix from the instance's own edits games; discworld:
+the instance's ≥2-differing-rays selection, 1000 cases, dims "all"), floors complete for every (instance,
+arch, target) at b4. The four `dropout_ablation` runs (imported from the WSL box) were SCORED HERE (local
+probe_dir, current version, mine_signed present, checkpoints + metrics intact) → directly comparable.
+⚠ Their baseline is the CANONICAL dropout: Transformer-L's class default is 0.1 (no `dropout` key in the
+older configs), so the sweep reads 0.0 (nodrop) / 0.1 (L-oth-adjacent-20m) / 0.3 / 0.7 — `nodrop-20m` is a
+regime change, not a replicate of the canonical run (PI −0.05 vs +0.18). Gaps: (1) `ray_ablation/R-dw-8ray-20m`
+was re-quarantined to `_R-dw-8ray-20m` with no ledger entry, and its 2026-09-12.2 scores hold only the
+frustum block — the recurrent `appearance-fac` result in `probe-target-type.md` / `recurrent-l.md` is at the
+OLD protocol (Sevan's call: un-quarantine + rescore fac, 2 min with cached probes, or mark old-protocol);
+(2) `_architecture_gate/R-dw-*` at 2026-09-01.4 (quarantined; recurrent finding's numbers are old-protocol);
+(3) regression blocks recorded `bench_selection: None` while the selection WAS applied — fixed in
+`bench_arrays` (record only; fills on the next rescoring); (4) three never-fitted `grid-64x32` requests removed.
+
 **2026-09-14 — replicate machinery made generic (Sevan: "make those changes; guard by default, override
 available").** (1) `master_eval`: a replicate inherits its parent's extra targets (`extra_targets_of`); the
 three hand entries removed. (2) `pim.figures.tables.pool_replicates`: pooled per (parent, basis) at a
