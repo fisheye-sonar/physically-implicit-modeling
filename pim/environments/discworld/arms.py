@@ -180,7 +180,11 @@ def fit_probes(model, target: str = "pos", n_seq: int = 30_000, split: str = "te
     """
     store = ProbeCache(_require_cache_dir(cache_dir))
     grid = categorical_target(target)
-    if (grid is not None or snapped_target(target) is not None) and basis_name != "frustum":
+    # A categorical target's labels come from world positions — the basis only names the
+    # block (and the cache key), so any basis is allowed (2026-09-13: dw-8ray-obs5 scores its
+    # categorical probes beside a CARTESIAN regression block). The SNAPPED target is the one
+    # genuinely defined in the frustum basis (cell centres in frustum coordinates).
+    if snapped_target(target) is not None and basis_name != "frustum":
         raise ValueError(f"{target} is defined in the frustum basis, got basis {basis_name!r}")
     # The corpus is keyed LOGICALLY (layout.probe_key) since 2026-09-10 — a path in the
     # key is how a relative/absolute spelling once fitted every probe twice (2026-09-01),
