@@ -27,3 +27,6 @@ curve to R² < 0.4 and < 0.05 at points 1–8, plus copies per variable to exhau
 - Claude: 8-ray is at least as redundant as noiseless and smooth (the 2026-09-04 whole-probe cascade on this run
   found 29–40 probes vs 15–20 on L-dw-20m, position read-outs above 0.8 for eight deflations); appearance-fac
   copies about equal to the position variables' (run centre ≈ quantised lateral position, run length ≈ quantised depth).
+- Addendum 16:40 (Sevan adds `L-dw-5ray-20m` appearance-fac; the 5-ray full state is added as its own baseline): Sevan —
+  5-ray appearance-fac is MEANINGFULLY less redundant (less certain now about 8-ray appearance-fac). Claude — unchanged:
+  5-ray full state at least as redundant as noiseless; 5-ray appearance-fac about equal to 5-ray's own position variables.

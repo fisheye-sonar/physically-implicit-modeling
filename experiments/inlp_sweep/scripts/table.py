@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 SC = Path(__file__).resolve().parents[1] / "scores"
-ORDER = [("L-dw-noiseless-20m", ""), ("L-dw-8ray-20m", ""), ("L-dw-smooth-20m", ""), ("L-dw-8ray-tok-20m", ""), ("L-dw-noiseless-20m", "_fac"), ("L-dw-8ray-20m", "_fac")]
+ORDER = [("L-dw-noiseless-20m", ""), ("L-dw-8ray-20m", ""), ("L-dw-smooth-20m", ""), ("L-dw-8ray-tok-20m", ""), ("L-dw-noiseless-20m", "_fac"), ("L-dw-8ray-20m", "_fac"), ("L-dw-5ray-20m", ""), ("L-dw-5ray-20m", "_fac")]
 def cell(r): return "—" if r is None else f"{r['edit_index']:+.2f} / {r['fidelity_ratio']:.2f}"
 def lst(d, key, fmt=lambda x: str(x)):
     v = [d["points"].get(str(p), {}).get(key) for p in range(1, 9)]

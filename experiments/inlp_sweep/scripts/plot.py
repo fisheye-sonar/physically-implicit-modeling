@@ -5,8 +5,8 @@ from pathlib import Path
 import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt, numpy as np
 EXP = Path(__file__).resolve().parents[1]; SC = EXP / "scores"; OUT = EXP / "outputs"; OUT.mkdir(exist_ok=True)
-ORDER = [("L-dw-noiseless-20m", ""), ("L-dw-8ray-20m", ""), ("L-dw-smooth-20m", ""), ("L-dw-8ray-tok-20m", ""), ("L-dw-noiseless-20m", "_fac"), ("L-dw-8ray-20m", "_fac")]
-LABEL = {"L-dw-noiseless-20m": "dw-noiseless", "L-dw-8ray-20m": "dw-8ray", "L-dw-smooth-20m": "dw-smooth", "L-dw-8ray-tok-20m": "dw-8ray, token model"}
+ORDER = [("L-dw-noiseless-20m", ""), ("L-dw-8ray-20m", ""), ("L-dw-smooth-20m", ""), ("L-dw-8ray-tok-20m", ""), ("L-dw-noiseless-20m", "_fac"), ("L-dw-8ray-20m", "_fac"), ("L-dw-5ray-20m", ""), ("L-dw-5ray-20m", "_fac")]
+LABEL = {"L-dw-noiseless-20m": "dw-noiseless", "L-dw-8ray-20m": "dw-8ray", "L-dw-smooth-20m": "dw-smooth", "L-dw-8ray-tok-20m": "dw-8ray, token model", "L-dw-5ray-20m": "dw-5ray"}
 def panel(ax, d, title):
     P = d["points"]; cm = plt.get_cmap("Blues")
     for k in sorted(P, key=int):
