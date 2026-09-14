@@ -98,3 +98,6 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 
 ## 2026-09-09 (wsl-sevan)
 - `runs/smoke/` → `runs/_smoke/` — the 2026-09-09 pipeline-smoke runs (L-dw-smoke, L-oth-smoke) renamed under the `_` rule so master_eval/build_full_table skip them; nothing deleted.
+
+## 2026-09-12
+- copy `runs/dropout_ablation/L-oth-adjacent-nodrop-390k/` (checkpoints, config, metrics; NOT scores.json / probes) → `runs/dropout_ablation/L-oth-adjacent-nodrop-20m/` — the no-dropout run continued to 780k under a new name; the 390k dir stays as the scored snapshot
