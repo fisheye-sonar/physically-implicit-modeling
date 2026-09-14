@@ -127,4 +127,13 @@ Best arm per editor, Edit Index (guard). Skill = max over points, LIN / MLP.
 
 Reading in `findings/smooth-ablation.md`: predicts 18× better than dw-noiseless, edits worse on both targets.
 
-_Written by the orchestrator 2026-09-13 01:05 PT (rescore part) and 11:30 PT (dw-smooth part)._
+## dw-8ray-obs5 (2026-09-14 07:29 PT)
+
+| block | skill LIN / MLP | unedited | PI | ND | GS |
+|---|---|---|---|---|---|
+| L-dw-8ray-obs5-20m · cartesian | 0.98 / 1.00 | −0.889 | +0.189 (1.60) | −0.126 (1.41) | −0.065 (1.10) |
+| L-dw-8ray-obs5-20m · appearance-fac (per view, 110 cl.) | 0.96 / 0.99 | −0.885 | +0.161 (1.52) | +0.418 (1.06) | +0.371 (0.62) |
+
+Reading in `findings/observer-ablation.md`: more decodable, less editable; on dw-smooth's numbers.
+
+_Written by the orchestrator 2026-09-13 01:05 PT (rescore), 11:30 PT (dw-smooth), 2026-09-14 08:00 PT (obs5)._

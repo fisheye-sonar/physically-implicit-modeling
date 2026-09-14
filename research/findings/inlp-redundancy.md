@@ -98,3 +98,16 @@ code that carries the edit — the fused-code prediction of the materialisation 
 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout 0.1; K-copy edits unchanged in shape (K ≤ 16 inert; K=64 +0.28, K=128 +0.44 at
 pt 1 vs +0.28 / +0.39). The residual-stream regulariser was compressing the colour code, not inflating it.
 `adjacent-flip-ablation.md` §Dropout ablation.
+
+**2026-09-13 — dropout 0.3 arm and a correction of wording.** `dropout_ablation/L-oth-adjacent-drop03-390k` (dropout 0.3,
+390k, same optimum): copies per tile pts 1–8 **185 / 137 / 115 / 101 / 97 / 90 / 87 / 86** — monotone at point 1 across the
+rates (283 → 232 → 185 for dropout 0 → 0.1 → 0.3), level with 0.1 from point 4; cascades at 0.3 are plateau-then-cliff at
+every point. On the same run the canonical PI (+0.172 / fid 1.04) and ND (+0.159 / 0.73) editors land inside the guard for
+the first time on oth-adjacent. The 2026-09-12 phrase above, "compressing the colour code", is too strong: the participation
+ratio of the standardised residual covariance at point 1 RISES with dropout (44 / 81 / 84 for 0 / 0.1 / 0.3;
+`experiments/dropout_ablation/scripts/covariance_dim.py`), so dropout decorrelates the stream rather than compressing it,
+and the first colour directions cost LESS R² to remove with dropout (10 % / 3 % / 6 % for the first 8), i.e. they are
+redundant sufficient copies, not additive correlates. What dropout removes is the long tail of weak, additive colour
+correlates; what it leaves is a block of individually sufficient copies — the code the editors can move. Extension of the
+no-dropout run to 780k (`L-oth-adjacent-nodrop-20m`): 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 — the tail prunes 10–20 %
+with doubled training and stays 1.2–1.6× the dropout run's. `adjacent-flip-ablation.md` §Dropout ablation → Dropout 0.3.

@@ -3,9 +3,9 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+_Last updated: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
 
-## ⏳ dw-8ray-obs5 chain — LAUNCHED 2026-09-13 17:55 PT, unit `dw_8ray_obs5` (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
+## ✅ dw-8ray-obs5 chain — 2026-09-13 17:50 → 2026-09-14 07:29 PT, unit `dw_8ray_obs5` — DONE (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
 
 Sevan: "launch the whole thing now" (N = 5, otherwise dw-8ray's setup; discs may be invisible to some observers).
 Stages: B generate (eval/edits/probes + 20M corpus, 128 GB memmap, ~3 h) → B' smoke-train → C train 780k (~8 h)
@@ -25,6 +25,15 @@ OK; **training started 21:55** (ETA ~06:00). **Scorer smoke PASSED 22:10 and the
 more fix: `arms.fit_probes` refused categorical targets in any basis but frustum (the guard now covers only the
 snapped target, whose cell centres ARE frustum coordinates). Stage D will run fac probes (`--basis cartesian`) →
 master_eval (cartesian regression block + fac) → tables; ALL DONE ~07:30.
+**DONE 07:29 (chain complete with marker; monitors stopped).** Training 21:55 → 05:51 (476 min; val 0.00302 vs
+dw-8ray 0.00574); stage D fac probes + floors 05:51 → 07:05; master_eval + tables → 07:29. **Result: five observers
+make the categorical read-out MORE decodable (MLP 0.99) and LESS editable — appearance-fac PI +0.16 / ND +0.42 /
+GS +0.37 vs dw-8ray's +0.38 / +0.49 / +0.46; cartesian regression block inert (PI +0.19 / 1.60). Lands on
+dw-smooth's numbers.** `findings/observer-ablation.md` (observed), REGISTRY run row, run added to
+`build_full_tables`. Post-chain fix: the baselines cell hardwired basis "frustum" for categorical floors → the
+obs5 fac floors were fitted but not recorded; now `basis0 = dw_bases_for(inst)[0]`, master_eval rerun (skips all
+runs; adds the floor block), tables re-executed. **Open:** waterfall; N = 1 on the circle (arena vs observers
+control); second seed; whether obs5 enters the paper shortlist.
 **Owed while it runs (original list, kept for the record):** (1) master_eval per-instance
 regression basis — dw-8ray-obs5 scores the **Cartesian** block, not frustum (also the baselines cell);
 (2) the **per-observer factorised appearance target** in `grid_target.py` — for `n_observers > 1` the
