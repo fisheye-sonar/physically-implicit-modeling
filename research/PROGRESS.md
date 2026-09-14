@@ -220,6 +220,21 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 (evening) — INVERSE PROBE COMPLETE on twelve runs (batches 2–3: adjacent-flip, L-dw, smooth,
+blink, 8-ray token model, obs5, no-flip, 5-ray).** Every discworld instance edits through the state → latent
+write inside the guard: 5-ray +0.87 / 0.24, 8-ray +0.83 / 0.28, blink +0.67, smooth +0.67, noiseless +0.66,
+8-ray-tok +0.66 (frame-set EI), L-dw +0.65, obs5 +0.61 (cartesian) — canonical PI ≤ +0.26 on all of them.
+Othello under the fixed write follows the flipping toggle: standard +0.88, adjacent-flip +0.81 / 0.35
+(canonical +0.35), adjacent +0.41 / 0.97 at point 1 only, no-flip nothing (control by the checkerboard
+theorem — landing 0.00–0.03, the probe reads colour off occupancy; my "no-flip fails" prediction was right
+for a reason that makes it uninformative). Retrieval edits on discworld (+0.30 to +0.69), never on Othello.
+Sevan challenged the "lookup vs computed" account of the adjacent failure — discworld position is a lookup
+too and edits — and it is withdrawn; the replacement hypothesis (is the fact available from context
+positions other than the one written) and its test (write at every context position on adjacent) are
+recorded in `findings/inverse-probe.md` reading 6, UNTESTED, held at Sevan's request until agreed.
+`adjacency-ablation.md` reading 3 carries a dated addendum (discworld clause contradicted). Scores:
+`experiments/inverse_probe/scores/*_mirror128.json`; table printer `scripts/table.py`.
+
 **2026-09-14 — inverse probe on `L-oth-adjacent-20m` (Sevan): the state → latent write does NOT edit the
 adjacency model** — overwrite +0.00 / 1.48, delta's only guard-passing arm +0.41 / 0.97 (pt 1), deeper points
 destructive (guards 2–8), retrieval inert — although the board explains 97–98% of its residual (an input

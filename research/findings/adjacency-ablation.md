@@ -53,6 +53,14 @@ the trained model (colour must be computed through the flips).
    The no-flip presence edits (+0.39) are the one datum that does not fit cleanly and must be
    kept in view.
 
+   *Addendum 2026-09-14 (inverse probe).* The discworld clause of reading 3 is contradicted: a
+   map fitted state → residual (`findings/inverse-probe.md`) edits the regression state of
+   every discworld instance at +0.61 to +0.87 inside the guard, so those states are NOT "a copy
+   the renderer does not read"; the probe-derived write was the wrong write. It also fails on
+   oth-adjacent (landing 0.93–0.97, output unmoved), so reading 2 stands as the working account,
+   but "lookup" cannot be what separates adjacent from discworld — discworld position is a
+   lookup too. The refinement under discussion is in the inverse-probe finding, reading 6.
+
 Caveats: 1001 synthesised cases; GS only at the canonical grid (its best is at fidelity 5.7,
 pure destruction, so a wider grid cannot rescue it); "landed" is the linear probe's own
 reading, the MLP was not checked.

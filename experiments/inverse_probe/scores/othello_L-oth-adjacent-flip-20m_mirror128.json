@@ -1,0 +1,1175 @@
+{
+ "run": "adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+ "n_games": 20000,
+ "rows": 1180000,
+ "hidden": 128,
+ "epochs": 200,
+ "k": 10,
+ "unedited": {
+  "li_error_vs_post": 4.306,
+  "li_error_vs_pre": 0.006,
+  "edit_index_union": -0.6465925500776302,
+  "edit_index_symdiff": -0.9637233047339564,
+  "legal_mass": 0.9712355732917786,
+  "n_scored": 1000
+ },
+ "canonical": {
+  "PI": {
+   "edit_index": 0.34828150228910865,
+   "fidelity_ratio": 0.8348098969852271
+  },
+  "ND": {
+   "edit_index": 0.32061622577907756,
+   "fidelity_ratio": 0.6092149097575006
+  },
+  "GS": {
+   "edit_index": 0.1384214274617898,
+   "fidelity_ratio": 1.7503633946142492
+  }
+ },
+ "points": {
+  "0": {
+   "g_r2_heldout": 0.31095227469639597,
+   "g_r2_insample": 0.31514465221183385,
+   "g_rmse": 1.9748986959457397,
+   "arms": {
+    "overwrite": {
+     "edit_index": -0.7334757031157406,
+     "edit_index_union": -0.5014214435773232,
+     "fidelity_ratio": 1.336442050783306,
+     "write_ratio": 0.8822168707847595,
+     "landed_tile": 0.328,
+     "board_agreement": 0.78521875
+    },
+    "mean_overwrite": {
+     "edit_index": 0.4159792020334174,
+     "edit_index_union": 0.07160521913978724,
+     "fidelity_ratio": 2.6414405534419023,
+     "write_ratio": 0.978644847869873,
+     "landed_tile": 0.089,
+     "board_agreement": 0.647640625
+    },
+    "nn_overwrite": {
+     "edit_index": -0.6379084190674283,
+     "edit_index_union": -0.44494142498812533,
+     "fidelity_ratio": 1.4746732468884467,
+     "write_ratio": 0.9501808285713196,
+     "landed_tile": 0.083,
+     "board_agreement": 0.735046875
+    },
+    "delta@0.25": {
+     "edit_index": -0.9636740195033389,
+     "edit_index_union": -0.6466281529244614,
+     "fidelity_ratio": 0.9999852869325173,
+     "write_ratio": 0.04224469140172005,
+     "landed_tile": 0.199,
+     "board_agreement": 0.7041875
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9636877867168926,
+     "edit_index_union": -0.6466154563856296,
+     "fidelity_ratio": 0.9999388320929116,
+     "write_ratio": 0.05463865399360657,
+     "landed_tile": 0.105,
+     "board_agreement": 0.703421875
+    },
+    "delta@0.5": {
+     "edit_index": -0.9636266279177103,
+     "edit_index_union": -0.6466451799845784,
+     "fidelity_ratio": 0.9999708194161679,
+     "write_ratio": 0.08448939025402069,
+     "landed_tile": 0.313,
+     "board_agreement": 0.707265625
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.9636558936106547,
+     "edit_index_union": -0.6466150116222669,
+     "fidelity_ratio": 0.9998930091790722,
+     "write_ratio": 0.10927730798721313,
+     "landed_tile": 0.129,
+     "board_agreement": 0.706828125
+    },
+    "delta@1": {
+     "edit_index": -0.9633444873089624,
+     "edit_index_union": -0.6465531217108488,
+     "fidelity_ratio": 0.9998180698470338,
+     "write_ratio": 0.1689787656068802,
+     "landed_tile": 0.349,
+     "board_agreement": 0.709140625
+    },
+    "nn_delta@1": {
+     "edit_index": -0.9635140796761581,
+     "edit_index_union": -0.6458351638296681,
+     "fidelity_ratio": 1.0006361886166948,
+     "write_ratio": 0.21855461597442627,
+     "landed_tile": 0.145,
+     "board_agreement": 0.709140625
+    },
+    "delta@1.5": {
+     "edit_index": -0.9591068091039546,
+     "edit_index_union": -0.6438115971204624,
+     "fidelity_ratio": 0.998010527068788,
+     "write_ratio": 0.25346818566322327,
+     "landed_tile": 0.35,
+     "board_agreement": 0.709234375
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.9413943194035436,
+     "edit_index_union": -0.6358515287465212,
+     "fidelity_ratio": 1.037547839717738,
+     "write_ratio": 0.3278319239616394,
+     "landed_tile": 0.149,
+     "board_agreement": 0.708
+    },
+    "delta@2": {
+     "edit_index": -0.9353601672690577,
+     "edit_index_union": -0.628791917805024,
+     "fidelity_ratio": 1.0122596729893938,
+     "write_ratio": 0.33795756101608276,
+     "landed_tile": 0.347,
+     "board_agreement": 0.70871875
+    },
+    "nn_delta@2": {
+     "edit_index": -0.9030664598718715,
+     "edit_index_union": -0.6145130846365755,
+     "fidelity_ratio": 1.111909433025746,
+     "write_ratio": 0.43710923194885254,
+     "landed_tile": 0.145,
+     "board_agreement": 0.70571875
+    },
+    "delta@3": {
+     "edit_index": -0.8253413657961961,
+     "edit_index_union": -0.5626336280720673,
+     "fidelity_ratio": 1.0664408242391052,
+     "write_ratio": 0.5069363713264465,
+     "landed_tile": 0.344,
+     "board_agreement": 0.706625
+    },
+    "nn_delta@3": {
+     "edit_index": -0.8056730727606177,
+     "edit_index_union": -0.559856808500589,
+     "fidelity_ratio": 1.2536601114755608,
+     "write_ratio": 0.6556638479232788,
+     "landed_tile": 0.154,
+     "board_agreement": 0.697765625
+    }
+   }
+  },
+  "1": {
+   "g_r2_heldout": 0.6572202436899782,
+   "g_r2_insample": 0.6588107030320329,
+   "g_rmse": 51.428955078125,
+   "arms": {
+    "overwrite": {
+     "edit_index": -0.7260832196484044,
+     "edit_index_union": -0.4838344054374743,
+     "fidelity_ratio": 1.0759767711751986,
+     "write_ratio": 0.6144383549690247,
+     "landed_tile": 0.516,
+     "board_agreement": 0.92628125
+    },
+    "mean_overwrite": {
+     "edit_index": 0.227112174213789,
+     "edit_index_union": 0.04171230294470879,
+     "fidelity_ratio": 2.0943286983905667,
+     "write_ratio": 0.8304045796394348,
+     "landed_tile": 0.31,
+     "board_agreement": 0.190796875
+    },
+    "nn_overwrite": {
+     "edit_index": -0.7097804183911849,
+     "edit_index_union": -0.47278515054627673,
+     "fidelity_ratio": 1.302502487448785,
+     "write_ratio": 0.6864442229270935,
+     "landed_tile": 0.18,
+     "board_agreement": 0.8711875
+    },
+    "delta@0.25": {
+     "edit_index": -0.9635321737802771,
+     "edit_index_union": -0.6464559512173657,
+     "fidelity_ratio": 0.999917458852781,
+     "write_ratio": 0.039652422070503235,
+     "landed_tile": 0.056,
+     "board_agreement": 0.96096875
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9634139230302796,
+     "edit_index_union": -0.6463671885773568,
+     "fidelity_ratio": 0.9997699057937576,
+     "write_ratio": 0.04583820700645447,
+     "landed_tile": 0.037,
+     "board_agreement": 0.954359375
+    },
+    "delta@0.5": {
+     "edit_index": -0.9633866410015732,
+     "edit_index_union": -0.6463950857940007,
+     "fidelity_ratio": 0.9998614882756737,
+     "write_ratio": 0.07930483669042587,
+     "landed_tile": 0.142,
+     "board_agreement": 0.960703125
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.963306893711917,
+     "edit_index_union": -0.6462544097324401,
+     "fidelity_ratio": 0.9996305604124377,
+     "write_ratio": 0.09167641401290894,
+     "landed_tile": 0.06,
+     "board_agreement": 0.94490625
+    },
+    "delta@1": {
+     "edit_index": -0.954734504275644,
+     "edit_index_union": -0.6417654327461912,
+     "fidelity_ratio": 0.9967738239208913,
+     "write_ratio": 0.15860968828201294,
+     "landed_tile": 0.476,
+     "board_agreement": 0.95784375
+    },
+    "nn_delta@1": {
+     "edit_index": -0.9625409334299273,
+     "edit_index_union": -0.6451890098801951,
+     "fidelity_ratio": 0.9993806023471549,
+     "write_ratio": 0.18335282802581787,
+     "landed_tile": 0.128,
+     "board_agreement": 0.931640625
+    },
+    "delta@1.5": {
+     "edit_index": -0.9076342677078437,
+     "edit_index_union": -0.6147535984797522,
+     "fidelity_ratio": 0.9777381907621335,
+     "write_ratio": 0.23791451752185822,
+     "landed_tile": 0.646,
+     "board_agreement": 0.95040625
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.9490171695743714,
+     "edit_index_union": -0.6343316938924065,
+     "fidelity_ratio": 1.0042203375352028,
+     "write_ratio": 0.2750292122364044,
+     "landed_tile": 0.178,
+     "board_agreement": 0.915375
+    },
+    "delta@2": {
+     "edit_index": -0.7847728894307482,
+     "edit_index_union": -0.53468087806927,
+     "fidelity_ratio": 0.9239964473214982,
+     "write_ratio": 0.3172193765640259,
+     "landed_tile": 0.737,
+     "board_agreement": 0.939453125
+    },
+    "nn_delta@2": {
+     "edit_index": -0.9010200186762534,
+     "edit_index_union": -0.5984144168674854,
+     "fidelity_ratio": 1.0152216220357064,
+     "write_ratio": 0.36670565605163574,
+     "landed_tile": 0.213,
+     "board_agreement": 0.89771875
+    },
+    "delta@3": {
+     "edit_index": -0.30166104877597055,
+     "edit_index_union": -0.20581233174480576,
+     "fidelity_ratio": 0.7335499325547296,
+     "write_ratio": 0.47582903504371643,
+     "landed_tile": 0.805,
+     "board_agreement": 0.910875
+    },
+    "nn_delta@3": {
+     "edit_index": -0.7789289809068517,
+     "edit_index_union": -0.5088151398746443,
+     "fidelity_ratio": 1.0838326839889747,
+     "write_ratio": 0.5500584244728088,
+     "landed_tile": 0.238,
+     "board_agreement": 0.865453125
+    }
+   }
+  },
+  "2": {
+   "g_r2_heldout": 0.8881015713365956,
+   "g_r2_insample": 0.8893312287232192,
+   "g_rmse": 72.53308868408203,
+   "arms": {
+    "overwrite": {
+     "edit_index": -0.5291026004818647,
+     "edit_index_union": -0.35621617478485945,
+     "fidelity_ratio": 0.8420374998439322,
+     "write_ratio": 0.3807480037212372,
+     "landed_tile": 0.58,
+     "board_agreement": 0.988203125
+    },
+    "mean_overwrite": {
+     "edit_index": -0.12351299376012521,
+     "edit_index_union": 0.008806063827814842,
+     "fidelity_ratio": 5.268226286088972,
+     "write_ratio": 0.6506272554397583,
+     "landed_tile": 0.31,
+     "board_agreement": 0.232921875
+    },
+    "nn_overwrite": {
+     "edit_index": -0.6951344504666481,
+     "edit_index_union": -0.26103044208549986,
+     "fidelity_ratio": 1.2683485920749757,
+     "write_ratio": 0.48154279589653015,
+     "landed_tile": 0.149,
+     "board_agreement": 0.886359375
+    },
+    "delta@0.25": {
+     "edit_index": -0.9622982898728327,
+     "edit_index_union": -0.6455122918204989,
+     "fidelity_ratio": 0.9993028681206595,
+     "write_ratio": 0.031816087663173676,
+     "landed_tile": 0.034,
+     "board_agreement": 0.974
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9631150737124461,
+     "edit_index_union": -0.6460299676161613,
+     "fidelity_ratio": 0.999619220334225,
+     "write_ratio": 0.03437023237347603,
+     "landed_tile": 0.024,
+     "board_agreement": 0.973625
+    },
+    "delta@0.5": {
+     "edit_index": -0.951886558815029,
+     "edit_index_union": -0.638907446639869,
+     "fidelity_ratio": 0.9951313643108928,
+     "write_ratio": 0.06363216787576675,
+     "landed_tile": 0.106,
+     "board_agreement": 0.9746875
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.9621996178666442,
+     "edit_index_union": -0.6449951516073342,
+     "fidelity_ratio": 0.9991592829314832,
+     "write_ratio": 0.06874046474695206,
+     "landed_tile": 0.046,
+     "board_agreement": 0.972109375
+    },
+    "delta@1": {
+     "edit_index": -0.7405467945114678,
+     "edit_index_union": -0.4968635941795795,
+     "fidelity_ratio": 0.9115094777172605,
+     "write_ratio": 0.1272643357515335,
+     "landed_tile": 0.481,
+     "board_agreement": 0.97925
+    },
+    "nn_delta@1": {
+     "edit_index": -0.9438033863465528,
+     "edit_index_union": -0.6279608219416525,
+     "fidelity_ratio": 0.9929744408253619,
+     "write_ratio": 0.1374809294939041,
+     "landed_tile": 0.114,
+     "board_agreement": 0.9636875
+    },
+    "delta@1.5": {
+     "edit_index": -0.29467211857709613,
+     "edit_index_union": -0.20307347334024853,
+     "fidelity_ratio": 0.726963652782387,
+     "write_ratio": 0.19089652597904205,
+     "landed_tile": 0.777,
+     "board_agreement": 0.981328125
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.8765537781522287,
+     "edit_index_union": -0.5714644380102913,
+     "fidelity_ratio": 0.9850300889552759,
+     "write_ratio": 0.20622140169143677,
+     "landed_tile": 0.197,
+     "board_agreement": 0.949703125
+    },
+    "delta@2": {
+     "edit_index": 0.12838550880646882,
+     "edit_index_union": 0.08728024590169221,
+     "fidelity_ratio": 0.5455630798655506,
+     "write_ratio": 0.254528671503067,
+     "landed_tile": 0.88,
+     "board_agreement": 0.978625
+    },
+    "nn_delta@2": {
+     "edit_index": -0.7608946528012138,
+     "edit_index_union": -0.47797455855994575,
+     "fidelity_ratio": 0.9888054128618681,
+     "write_ratio": 0.2749618589878082,
+     "landed_tile": 0.232,
+     "board_agreement": 0.93290625
+    },
+    "delta@3": {
+     "edit_index": 0.5425484239515688,
+     "edit_index_union": 0.3688783040745675,
+     "fidelity_ratio": 0.37685175641358337,
+     "write_ratio": 0.3817930519580841,
+     "landed_tile": 0.912,
+     "board_agreement": 0.96675
+    },
+    "nn_delta@3": {
+     "edit_index": -0.5428580957301693,
+     "edit_index_union": -0.3153868793725753,
+     "fidelity_ratio": 1.0775174692044625,
+     "write_ratio": 0.41244280338287354,
+     "landed_tile": 0.247,
+     "board_agreement": 0.89765625
+    }
+   }
+  },
+  "3": {
+   "g_r2_heldout": 0.9489104084969927,
+   "g_r2_insample": 0.9500552908555061,
+   "g_rmse": 91.53438568115234,
+   "arms": {
+    "overwrite": {
+     "edit_index": -0.08337380589676,
+     "edit_index_union": -0.057825801427864386,
+     "fidelity_ratio": 0.652982984645544,
+     "write_ratio": 0.27599573135375977,
+     "landed_tile": 0.731,
+     "board_agreement": 0.99090625
+    },
+    "mean_overwrite": {
+     "edit_index": 0.002409868635276757,
+     "edit_index_union": 0.01968296297069812,
+     "fidelity_ratio": 3.0814814106434154,
+     "write_ratio": 0.5636484622955322,
+     "landed_tile": 0.309,
+     "board_agreement": 0.231484375
+    },
+    "nn_overwrite": {
+     "edit_index": -0.5257153017146027,
+     "edit_index_union": -0.08543391918230785,
+     "fidelity_ratio": 1.640104079077703,
+     "write_ratio": 0.3900151252746582,
+     "landed_tile": 0.136,
+     "board_agreement": 0.883328125
+    },
+    "delta@0.25": {
+     "edit_index": -0.958889161876311,
+     "edit_index_union": -0.6434251606120608,
+     "fidelity_ratio": 0.9975757186453902,
+     "write_ratio": 0.031852368265390396,
+     "landed_tile": 0.02,
+     "board_agreement": 0.980125
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9625345198061029,
+     "edit_index_union": -0.6454633187907637,
+     "fidelity_ratio": 0.9993609711155038,
+     "write_ratio": 0.02949194423854351,
+     "landed_tile": 0.009,
+     "board_agreement": 0.979875
+    },
+    "delta@0.5": {
+     "edit_index": -0.8889566989964891,
+     "edit_index_union": -0.5972825381657215,
+     "fidelity_ratio": 0.9704403518648321,
+     "write_ratio": 0.0637047290802002,
+     "landed_tile": 0.059,
+     "board_agreement": 0.98065625
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.9569652698197353,
+     "edit_index_union": -0.6408297672617553,
+     "fidelity_ratio": 0.997089721667444,
+     "write_ratio": 0.05898388847708702,
+     "landed_tile": 0.017,
+     "board_agreement": 0.979078125
+    },
+    "delta@1": {
+     "edit_index": -0.38332294230460456,
+     "edit_index_union": -0.2656774654986179,
+     "fidelity_ratio": 0.7644574261687127,
+     "write_ratio": 0.1274094581604004,
+     "landed_tile": 0.587,
+     "board_agreement": 0.987859375
+    },
+    "nn_delta@1": {
+     "edit_index": -0.8879292349517016,
+     "edit_index_union": -0.5761718741094568,
+     "fidelity_ratio": 0.9810250286726446,
+     "write_ratio": 0.11796777695417404,
+     "landed_tile": 0.103,
+     "board_agreement": 0.974734375
+    },
+    "delta@1.5": {
+     "edit_index": 0.21646351273266853,
+     "edit_index_union": 0.1570136482990912,
+     "fidelity_ratio": 0.4976189515136643,
+     "write_ratio": 0.19111418724060059,
+     "landed_tile": 0.837,
+     "board_agreement": 0.989
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.737432713061891,
+     "edit_index_union": -0.4485126724093245,
+     "fidelity_ratio": 0.9852106533231072,
+     "write_ratio": 0.17695166170597076,
+     "landed_tile": 0.168,
+     "board_agreement": 0.96315625
+    },
+    "delta@2": {
+     "edit_index": 0.5687563510481014,
+     "edit_index_union": 0.3965402093655541,
+     "fidelity_ratio": 0.3520933848967081,
+     "write_ratio": 0.2548189163208008,
+     "landed_tile": 0.922,
+     "board_agreement": 0.985203125
+    },
+    "nn_delta@2": {
+     "edit_index": -0.5970359887085555,
+     "edit_index_union": -0.33428369291745164,
+     "fidelity_ratio": 1.0477102874897297,
+     "write_ratio": 0.23593555390834808,
+     "landed_tile": 0.204,
+     "board_agreement": 0.94603125
+    },
+    "delta@3": {
+     "edit_index": 0.8088698216190666,
+     "edit_index_union": 0.5086183982015955,
+     "fidelity_ratio": 0.35237996493613316,
+     "write_ratio": 0.38222837448120117,
+     "landed_tile": 0.931,
+     "board_agreement": 0.97084375
+    },
+    "nn_delta@3": {
+     "edit_index": -0.4005502379617616,
+     "edit_index_union": -0.19527883246507866,
+     "fidelity_ratio": 1.2724759669414598,
+     "write_ratio": 0.35390332341194153,
+     "landed_tile": 0.245,
+     "board_agreement": 0.91215625
+    }
+   }
+  },
+  "4": {
+   "g_r2_heldout": 0.9582622569214323,
+   "g_r2_insample": 0.9592087305843416,
+   "g_rmse": 118.2753677368164,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.5578517994500166,
+     "edit_index_union": 0.37891322985201104,
+     "fidelity_ratio": 0.3883858578435842,
+     "write_ratio": 0.28459906578063965,
+     "landed_tile": 0.795,
+     "board_agreement": 0.985609375
+    },
+    "mean_overwrite": {
+     "edit_index": -0.03209600611065165,
+     "edit_index_union": 0.025205044462096624,
+     "fidelity_ratio": 2.655199750502184,
+     "write_ratio": 0.5848222374916077,
+     "landed_tile": 0.301,
+     "board_agreement": 0.2816875
+    },
+    "nn_overwrite": {
+     "edit_index": -0.4406936624819873,
+     "edit_index_union": -0.041148358139865795,
+     "fidelity_ratio": 2.07031907764236,
+     "write_ratio": 0.40524032711982727,
+     "landed_tile": 0.138,
+     "board_agreement": 0.87840625
+    },
+    "delta@0.25": {
+     "edit_index": -0.9263851893431343,
+     "edit_index_union": -0.6234194853462975,
+     "fidelity_ratio": 0.9842379787238971,
+     "write_ratio": 0.0457192063331604,
+     "landed_tile": 0.008,
+     "board_agreement": 0.9815625
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9602459565450011,
+     "edit_index_union": -0.6421227318955196,
+     "fidelity_ratio": 0.9985884470768523,
+     "write_ratio": 0.03161685913801193,
+     "landed_tile": 0.002,
+     "board_agreement": 0.981484375
+    },
+    "delta@0.5": {
+     "edit_index": -0.6433158908552197,
+     "edit_index_union": -0.43335758135068525,
+     "fidelity_ratio": 0.8742339522969763,
+     "write_ratio": 0.0914384126663208,
+     "landed_tile": 0.06,
+     "board_agreement": 0.981984375
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.943054655771924,
+     "edit_index_union": -0.6220383577204902,
+     "fidelity_ratio": 0.9948162151597971,
+     "write_ratio": 0.06323371827602386,
+     "landed_tile": 0.01,
+     "board_agreement": 0.980796875
+    },
+    "delta@1": {
+     "edit_index": 0.2717687637363917,
+     "edit_index_union": 0.18679049920319357,
+     "fidelity_ratio": 0.4948396486582969,
+     "write_ratio": 0.1828768253326416,
+     "landed_tile": 0.637,
+     "board_agreement": 0.987375
+    },
+    "nn_delta@1": {
+     "edit_index": -0.8156884697130743,
+     "edit_index_union": -0.4889076661846466,
+     "fidelity_ratio": 0.9942095946342828,
+     "write_ratio": 0.12646743655204773,
+     "landed_tile": 0.086,
+     "board_agreement": 0.975890625
+    },
+    "delta@1.5": {
+     "edit_index": 0.6574509518837285,
+     "edit_index_union": 0.45553093361927843,
+     "fidelity_ratio": 0.34829048649969757,
+     "write_ratio": 0.2743152678012848,
+     "landed_tile": 0.863,
+     "board_agreement": 0.98115625
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.6616241383452678,
+     "edit_index_union": -0.34668138404489673,
+     "fidelity_ratio": 1.0726787344738482,
+     "write_ratio": 0.1897011697292328,
+     "landed_tile": 0.173,
+     "board_agreement": 0.963296875
+    },
+    "delta@2": {
+     "edit_index": 0.730798554365238,
+     "edit_index_union": 0.48528904475781665,
+     "fidelity_ratio": 0.3768561575632706,
+     "write_ratio": 0.3657536506652832,
+     "landed_tile": 0.909,
+     "board_agreement": 0.9699375
+    },
+    "nn_delta@2": {
+     "edit_index": -0.5130749625694923,
+     "edit_index_union": -0.23961543269798471,
+     "fidelity_ratio": 1.1988685666791201,
+     "write_ratio": 0.25293487310409546,
+     "landed_tile": 0.21,
+     "board_agreement": 0.9453125
+    },
+    "delta@3": {
+     "edit_index": 0.6477460782753853,
+     "edit_index_union": 0.3641200836799479,
+     "fidelity_ratio": 0.8227360944127533,
+     "write_ratio": 0.5486305356025696,
+     "landed_tile": 0.897,
+     "board_agreement": 0.945046875
+    },
+    "nn_delta@3": {
+     "edit_index": -0.3306035995099459,
+     "edit_index_union": -0.13332749938576965,
+     "fidelity_ratio": 1.4911763609892905,
+     "write_ratio": 0.3794023394584656,
+     "landed_tile": 0.247,
+     "board_agreement": 0.9070625
+    }
+   }
+  },
+  "5": {
+   "g_r2_heldout": 0.9588523886657764,
+   "g_r2_insample": 0.959524133448465,
+   "g_rmse": 137.59146118164062,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6641475033680296,
+     "edit_index_union": 0.34534637310798255,
+     "fidelity_ratio": 0.5142631965545195,
+     "write_ratio": 0.2979021370410919,
+     "landed_tile": 0.734,
+     "board_agreement": 0.971421875
+    },
+    "mean_overwrite": {
+     "edit_index": -0.09468604906297895,
+     "edit_index_union": 0.027651025753433728,
+     "fidelity_ratio": 2.56877859763385,
+     "write_ratio": 0.6084800362586975,
+     "landed_tile": 0.264,
+     "board_agreement": 0.4861875
+    },
+    "nn_overwrite": {
+     "edit_index": -0.3823447269268258,
+     "edit_index_union": -0.014443922093628069,
+     "fidelity_ratio": 3.1722207174768755,
+     "write_ratio": 0.4260557293891907,
+     "landed_tile": 0.12,
+     "board_agreement": 0.866796875
+    },
+    "delta@0.25": {
+     "edit_index": -0.6574907700922134,
+     "edit_index_union": -0.4306059539557609,
+     "fidelity_ratio": 0.8779527472193214,
+     "write_ratio": 0.054978854954242706,
+     "landed_tile": 0.007,
+     "board_agreement": 0.9808125
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.9257362702580803,
+     "edit_index_union": -0.5885609448204493,
+     "fidelity_ratio": 0.9937379113930793,
+     "write_ratio": 0.03348659351468086,
+     "landed_tile": 0.004,
+     "board_agreement": 0.980625
+    },
+    "delta@0.5": {
+     "edit_index": -0.4062928534990784,
+     "edit_index_union": -0.281498750314008,
+     "fidelity_ratio": 0.803719088975275,
+     "write_ratio": 0.10995770990848541,
+     "landed_tile": 0.06,
+     "board_agreement": 0.980828125
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.8274573115004464,
+     "edit_index_union": -0.44509522964142434,
+     "fidelity_ratio": 1.028369007044311,
+     "write_ratio": 0.06697318702936172,
+     "landed_tile": 0.011,
+     "board_agreement": 0.979984375
+    },
+    "delta@1": {
+     "edit_index": 0.5627021850341118,
+     "edit_index_union": 0.35689365157973335,
+     "fidelity_ratio": 0.4318309669485641,
+     "write_ratio": 0.21991543471813202,
+     "landed_tile": 0.554,
+     "board_agreement": 0.98225
+    },
+    "nn_delta@1": {
+     "edit_index": -0.6635377988170421,
+     "edit_index_union": -0.2464497353167569,
+     "fidelity_ratio": 1.2773249783462377,
+     "write_ratio": 0.13394637405872345,
+     "landed_tile": 0.091,
+     "board_agreement": 0.9741875
+    },
+    "delta@1.5": {
+     "edit_index": 0.6976629774138657,
+     "edit_index_union": 0.4497255771733642,
+     "fidelity_ratio": 0.6290370977932727,
+     "write_ratio": 0.32987311482429504,
+     "landed_tile": 0.837,
+     "board_agreement": 0.973578125
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.5410171053136273,
+     "edit_index_union": -0.15667542435313858,
+     "fidelity_ratio": 1.6002347019416518,
+     "write_ratio": 0.20091953873634338,
+     "landed_tile": 0.157,
+     "board_agreement": 0.959734375
+    },
+    "delta@2": {
+     "edit_index": 0.567215340064115,
+     "edit_index_union": 0.3400152769021705,
+     "fidelity_ratio": 1.1862658777321127,
+     "write_ratio": 0.43983086943626404,
+     "landed_tile": 0.896,
+     "board_agreement": 0.9600625
+    },
+    "nn_delta@2": {
+     "edit_index": -0.450863649460912,
+     "edit_index_union": -0.11356704260383348,
+     "fidelity_ratio": 1.9094794719554034,
+     "write_ratio": 0.2678927481174469,
+     "landed_tile": 0.202,
+     "board_agreement": 0.940453125
+    },
+    "delta@3": {
+     "edit_index": 0.40321483868192615,
+     "edit_index_union": 0.17293562517634342,
+     "fidelity_ratio": 3.492509649575114,
+     "write_ratio": 0.6597462296485901,
+     "landed_tile": 0.889,
+     "board_agreement": 0.9315
+    },
+    "nn_delta@3": {
+     "edit_index": -0.31430361817146907,
+     "edit_index_union": -0.07600080337493927,
+     "fidelity_ratio": 2.4648055758408502,
+     "write_ratio": 0.40183907747268677,
+     "landed_tile": 0.233,
+     "board_agreement": 0.898234375
+    }
+   }
+  },
+  "6": {
+   "g_r2_heldout": 0.9628738613115794,
+   "g_r2_insample": 0.963884157413331,
+   "g_rmse": 138.94451904296875,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.4787341246451581,
+     "edit_index_union": 0.0986737837273565,
+     "fidelity_ratio": 1.3438770976710301,
+     "write_ratio": 0.2921709418296814,
+     "landed_tile": 0.694,
+     "board_agreement": 0.9734375
+    },
+    "mean_overwrite": {
+     "edit_index": -0.12724201086411838,
+     "edit_index_union": 0.029800644086268747,
+     "fidelity_ratio": 2.590352406847219,
+     "write_ratio": 0.5966091156005859,
+     "landed_tile": 0.241,
+     "board_agreement": 0.54778125
+    },
+    "nn_overwrite": {
+     "edit_index": -0.3653140289945032,
+     "edit_index_union": -0.009032076003207797,
+     "fidelity_ratio": 3.853351043722671,
+     "write_ratio": 0.4165381193161011,
+     "landed_tile": 0.12,
+     "board_agreement": 0.862625
+    },
+    "delta@0.25": {
+     "edit_index": -0.5212706271537924,
+     "edit_index_union": -0.3005399923104543,
+     "fidelity_ratio": 0.8566783596080358,
+     "write_ratio": 0.05344567075371742,
+     "landed_tile": 0.011,
+     "board_agreement": 0.9794375
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.8451146023701247,
+     "edit_index_union": -0.39735281880097617,
+     "fidelity_ratio": 1.0557177127963435,
+     "write_ratio": 0.03264909237623215,
+     "landed_tile": 0.004,
+     "board_agreement": 0.97946875
+    },
+    "delta@0.5": {
+     "edit_index": -0.37898659353087,
+     "edit_index_union": -0.20870687150874676,
+     "fidelity_ratio": 0.9251731126239631,
+     "write_ratio": 0.10689133405685425,
+     "landed_tile": 0.067,
+     "board_agreement": 0.979453125
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.7083751382062817,
+     "edit_index_union": -0.222967286508333,
+     "fidelity_ratio": 1.3491187415515333,
+     "write_ratio": 0.0652981847524643,
+     "landed_tile": 0.012,
+     "board_agreement": 0.978328125
+    },
+    "delta@1": {
+     "edit_index": 0.3863636275844192,
+     "edit_index_union": 0.1849260767713594,
+     "fidelity_ratio": 0.9723600794929301,
+     "write_ratio": 0.2137826830148697,
+     "landed_tile": 0.514,
+     "board_agreement": 0.98078125
+    },
+    "nn_delta@1": {
+     "edit_index": -0.562992081795384,
+     "edit_index_union": -0.11190721069399127,
+     "fidelity_ratio": 2.2733858145075097,
+     "write_ratio": 0.1305963695049286,
+     "landed_tile": 0.086,
+     "board_agreement": 0.972046875
+    },
+    "delta@1.5": {
+     "edit_index": 0.44484951436697645,
+     "edit_index_union": 0.20359805901420205,
+     "fidelity_ratio": 2.5034955530404415,
+     "write_ratio": 0.32067403197288513,
+     "landed_tile": 0.765,
+     "board_agreement": 0.972140625
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.4860302000174299,
+     "edit_index_union": -0.08083883651261314,
+     "fidelity_ratio": 3.203782493650163,
+     "write_ratio": 0.1958945393562317,
+     "landed_tile": 0.164,
+     "board_agreement": 0.957984375
+    },
+    "delta@2": {
+     "edit_index": 0.37014917577794304,
+     "edit_index_union": 0.13225738614555774,
+     "fidelity_ratio": 3.905857220474211,
+     "write_ratio": 0.427565336227417,
+     "landed_tile": 0.834,
+     "board_agreement": 0.959375
+    },
+    "nn_delta@2": {
+     "edit_index": -0.43303662463373144,
+     "edit_index_union": -0.06806053853531441,
+     "fidelity_ratio": 3.9760728511199783,
+     "write_ratio": 0.2611927390098572,
+     "landed_tile": 0.207,
+     "board_agreement": 0.93834375
+    },
+    "delta@3": {
+     "edit_index": 0.3251030148722565,
+     "edit_index_union": 0.06951795799376902,
+     "fidelity_ratio": 6.105314915132624,
+     "write_ratio": 0.6413480639457703,
+     "landed_tile": 0.857,
+     "board_agreement": 0.93328125
+    },
+    "nn_delta@3": {
+     "edit_index": -0.34965356616305093,
+     "edit_index_union": -0.056272027625104956,
+     "fidelity_ratio": 5.075373053378652,
+     "write_ratio": 0.3917890787124634,
+     "landed_tile": 0.229,
+     "board_agreement": 0.8986875
+    }
+   }
+  },
+  "7": {
+   "g_r2_heldout": 0.9615766639858166,
+   "g_r2_insample": 0.9625682753329601,
+   "g_rmse": 148.28599548339844,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.36923326273369717,
+     "edit_index_union": 0.0463449115392613,
+     "fidelity_ratio": 1.7399296892388625,
+     "write_ratio": 0.275302916765213,
+     "landed_tile": 0.717,
+     "board_agreement": 0.968390625
+    },
+    "mean_overwrite": {
+     "edit_index": -0.1225825276702006,
+     "edit_index_union": 0.030405628892706642,
+     "fidelity_ratio": 2.581643856094958,
+     "write_ratio": 0.5632239580154419,
+     "landed_tile": 0.241,
+     "board_agreement": 0.54778125
+    },
+    "nn_overwrite": {
+     "edit_index": -0.3640037189729444,
+     "edit_index_union": -0.008168787464751253,
+     "fidelity_ratio": 4.044856567236026,
+     "write_ratio": 0.3913331627845764,
+     "landed_tile": 0.117,
+     "board_agreement": 0.86271875
+    },
+    "delta@0.25": {
+     "edit_index": -0.48882092595148485,
+     "edit_index_union": -0.2816213305073264,
+     "fidelity_ratio": 0.8587353525851092,
+     "write_ratio": 0.0504048727452755,
+     "landed_tile": 0.011,
+     "board_agreement": 0.97925
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7734670952500958,
+     "edit_index_union": -0.2715761003540537,
+     "fidelity_ratio": 1.1803347665614605,
+     "write_ratio": 0.030705977231264114,
+     "landed_tile": 0.004,
+     "board_agreement": 0.97934375
+    },
+    "delta@0.5": {
+     "edit_index": -0.3769531594781225,
+     "edit_index_union": -0.20035806001136522,
+     "fidelity_ratio": 0.9579229860465449,
+     "write_ratio": 0.100809745490551,
+     "landed_tile": 0.071,
+     "board_agreement": 0.97915625
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.6415566573499406,
+     "edit_index_union": -0.14179833044141005,
+     "fidelity_ratio": 1.7174345045122836,
+     "write_ratio": 0.06141195073723793,
+     "landed_tile": 0.012,
+     "board_agreement": 0.978140625
+    },
+    "delta@1": {
+     "edit_index": 0.3195243430726476,
+     "edit_index_union": 0.11562859623634535,
+     "fidelity_ratio": 1.177412404528395,
+     "write_ratio": 0.201619490981102,
+     "landed_tile": 0.512,
+     "board_agreement": 0.980375
+    },
+    "nn_delta@1": {
+     "edit_index": -0.5214643233825675,
+     "edit_index_union": -0.0777251689589306,
+     "fidelity_ratio": 3.0324306102381953,
+     "write_ratio": 0.12282390147447586,
+     "landed_tile": 0.082,
+     "board_agreement": 0.97171875
+    },
+    "delta@1.5": {
+     "edit_index": 0.34420562957190254,
+     "edit_index_union": 0.10535363955260162,
+     "fidelity_ratio": 4.282039446813497,
+     "write_ratio": 0.30242919921875,
+     "landed_tile": 0.775,
+     "board_agreement": 0.97178125
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.4704246040848103,
+     "edit_index_union": -0.061565840272026925,
+     "fidelity_ratio": 4.204174134374182,
+     "write_ratio": 0.1842358559370041,
+     "landed_tile": 0.162,
+     "board_agreement": 0.957828125
+    },
+    "delta@2": {
+     "edit_index": 0.32658860549019164,
+     "edit_index_union": 0.07292135541780043,
+     "fidelity_ratio": 6.103384080226307,
+     "write_ratio": 0.403238981962204,
+     "landed_tile": 0.857,
+     "board_agreement": 0.958390625
+    },
+    "nn_delta@2": {
+     "edit_index": -0.4377380731031628,
+     "edit_index_union": -0.05533199060270528,
+     "fidelity_ratio": 5.111101488370956,
+     "write_ratio": 0.24564781785011292,
+     "landed_tile": 0.209,
+     "board_agreement": 0.93784375
+    },
+    "delta@3": {
+     "edit_index": 0.32195131806316396,
+     "edit_index_union": 0.050019986669157766,
+     "fidelity_ratio": 7.243667051136576,
+     "write_ratio": 0.6048583984375,
+     "landed_tile": 0.861,
+     "board_agreement": 0.931375
+    },
+    "nn_delta@3": {
+     "edit_index": -0.38329683002970355,
+     "edit_index_union": -0.050204851305099184,
+     "fidelity_ratio": 6.297276455860801,
+     "write_ratio": 0.3684717118740082,
+     "landed_tile": 0.228,
+     "board_agreement": 0.89875
+    }
+   }
+  },
+  "8": {
+   "g_r2_heldout": 0.9678121041173976,
+   "g_r2_insample": 0.9687308243814747,
+   "g_rmse": 159.94679260253906,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.2855031019949817,
+     "edit_index_union": 0.02890467343244137,
+     "fidelity_ratio": 1.9278600414990112,
+     "write_ratio": 0.24968242645263672,
+     "landed_tile": 0.706,
+     "board_agreement": 0.967
+    },
+    "mean_overwrite": {
+     "edit_index": -0.13145207468904518,
+     "edit_index_union": 0.02915880458081415,
+     "fidelity_ratio": 2.6819086401432726,
+     "write_ratio": 0.4978301227092743,
+     "landed_tile": 0.241,
+     "board_agreement": 0.54778125
+    },
+    "nn_overwrite": {
+     "edit_index": -0.3629443105414284,
+     "edit_index_union": -0.00809487952682899,
+     "fidelity_ratio": 4.073403652704547,
+     "write_ratio": 0.3416937291622162,
+     "landed_tile": 0.119,
+     "board_agreement": 0.8628125
+    },
+    "delta@0.25": {
+     "edit_index": -0.4877611522235536,
+     "edit_index_union": -0.27158627609061603,
+     "fidelity_ratio": 0.8696302713941583,
+     "write_ratio": 0.044431544840335846,
+     "landed_tile": 0.011,
+     "board_agreement": 0.979375
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7433545671314687,
+     "edit_index_union": -0.22525687723457397,
+     "fidelity_ratio": 1.2600690566401704,
+     "write_ratio": 0.026822252199053764,
+     "landed_tile": 0.004,
+     "board_agreement": 0.97921875
+    },
+    "delta@0.5": {
+     "edit_index": -0.38246628114477027,
+     "edit_index_union": -0.18655273344727835,
+     "fidelity_ratio": 0.9851193149144006,
+     "write_ratio": 0.08886308968067169,
+     "landed_tile": 0.081,
+     "board_agreement": 0.979234375
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.6125948583755008,
+     "edit_index_union": -0.11704432929382753,
+     "fidelity_ratio": 1.9008083115143546,
+     "write_ratio": 0.05364450439810753,
+     "landed_tile": 0.013,
+     "board_agreement": 0.97803125
+    },
+    "delta@1": {
+     "edit_index": 0.25463363398110106,
+     "edit_index_union": 0.08196972502848436,
+     "fidelity_ratio": 1.334540862449168,
+     "write_ratio": 0.17772617936134338,
+     "landed_tile": 0.515,
+     "board_agreement": 0.97934375
+    },
+    "nn_delta@1": {
+     "edit_index": -0.4999595419996849,
+     "edit_index_union": -0.06813586598822342,
+     "fidelity_ratio": 3.324924152901712,
+     "write_ratio": 0.10728900879621506,
+     "landed_tile": 0.082,
+     "board_agreement": 0.97171875
+    },
+    "delta@1.5": {
+     "edit_index": 0.3256895962484765,
+     "edit_index_union": 0.08399245006198995,
+     "fidelity_ratio": 4.929410125370285,
+     "write_ratio": 0.2665892541408539,
+     "landed_tile": 0.768,
+     "board_agreement": 0.970671875
+    },
+    "nn_delta@1.5": {
+     "edit_index": -0.4574628156776042,
+     "edit_index_union": -0.05645645949205382,
+     "fidelity_ratio": 4.519600231764325,
+     "write_ratio": 0.1609335094690323,
+     "landed_tile": 0.162,
+     "board_agreement": 0.957859375
+    },
+    "delta@2": {
+     "edit_index": 0.323290469723966,
+     "edit_index_union": 0.06179216980179744,
+     "fidelity_ratio": 6.460784374902489,
+     "write_ratio": 0.35545235872268677,
+     "landed_tile": 0.851,
+     "board_agreement": 0.95665625
+    },
+    "nn_delta@2": {
+     "edit_index": -0.4318360396419441,
+     "edit_index_union": -0.052129001730022904,
+     "fidelity_ratio": 5.413627082416562,
+     "write_ratio": 0.21457801759243011,
+     "landed_tile": 0.203,
+     "board_agreement": 0.938265625
+    },
+    "delta@3": {
+     "edit_index": 0.3243747349735231,
+     "edit_index_union": 0.04701011414310882,
+     "fidelity_ratio": 7.164053300881582,
+     "write_ratio": 0.5331785082817078,
+     "landed_tile": 0.843,
+     "board_agreement": 0.92521875
+    },
+    "nn_delta@3": {
+     "edit_index": -0.39580452432822916,
+     "edit_index_union": -0.04875380808395114,
+     "fidelity_ratio": 6.547490550909048,
+     "write_ratio": 0.3218670189380646,
+     "landed_tile": 0.232,
+     "board_agreement": 0.899171875
+    }
+   }
+  }
+ }
+}
