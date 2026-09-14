@@ -1,25 +1,25 @@
 # Table 3 — alignment of the true edit displacement with the probe's row subspace
 
-Generated 2026-09-12 19:02 by `scripts/table3_alignment.py`. One residual point per row: the best PI arm's point from the run's `scores.json`. Fractions are ‖Q Qᵀ Δ‖² / ‖Δ‖² in the probe's z-space, mean over cases; `generic` replaces Δ by the displacement to an unrelated kept case (fixed-point-free permutation, seed 0); `Haufe` uses the rows of A = Σ Wᵀ (W Σ Wᵀ)⁻¹ instead of W (Σ over 2000 held-out sequences). `rows` = mean number of probe rows the edit changes per case. No editability here.
+Generated 2026-09-13 00:56 by `scripts/table3_alignment.py`. One residual point per row: the best PI arm's point from the run's `scores.json`. Fractions are ‖Q Qᵀ Δ‖² / ‖Δ‖² in the probe's z-space, mean over cases; `generic` replaces Δ by the displacement to an unrelated kept case (fixed-point-free permutation, seed 0); `Haufe` uses the rows of A = Σ Wᵀ (W Σ Wᵀ)⁻¹ instead of W (Σ over 2000 held-out sequences). `rows` = mean number of probe rows the edit changes per case. No editability here.
 
 | run | target | point | n cases | rows | rows frac | rows generic | ratio | Haufe frac | Haufe generic | ratio |
 |---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | initial_othello_comparison/L-oth-20m | mine/theirs | 4 | 576 | 10.1 | 0.303 | 0.048 | 6.3x | 0.356 | 0.067 | 5.3x |
 | objective_ablation/L-oth-20m-mse | mine/theirs | 4 | 528 | 10.1 | 0.350 | 0.055 | 6.4x | 0.380 | 0.067 | 5.6x |
-| flip_ablation/L-oth-noflip-20m | mine/theirs | 8 | 689 | 4.0 | 0.074 | 0.009 | 8.1x | 0.142 | 0.033 | 4.4x |
-| adjacency_ablation/L-oth-adjacent-20m | mine/theirs | 8 | 699 | 4.0 | 0.119 | 0.006 | 18.3x | 0.367 | 0.043 | 8.6x |
+| flip_ablation/L-oth-noflip-20m | mine/theirs | 3 | 689 | 4.0 | 0.316 | 0.029 | 10.9x | 0.055 | 0.018 | 3.1x |
+| adjacency_ablation/L-oth-adjacent-20m | mine/theirs | 1 | 699 | 4.0 | 0.335 | 0.024 | 14.3x | 0.379 | 0.046 | 8.3x |
 | adjacent_flip_ablation/L-oth-adjacent-flip-20m | mine/theirs | 2 | 641 | 4.7 | 0.337 | 0.022 | 15.4x | 0.266 | 0.029 | 9.2x |
 | initial_othello_comparison/L-dw-20m | frustum | 2 | 99 | 2.0 | 0.010 | 0.009 | 1.1x | 0.036 | 0.028 | 1.3x |
-| noise_ablation/L-dw-noiseless-20m | frustum | 1 | 110 | 2.0 | 0.006 | 0.005 | 1.1x | 0.025 | 0.022 | 1.1x |
+| noise_ablation/L-dw-noiseless-20m | frustum | 2 | 110 | 2.0 | 0.007 | 0.006 | 1.2x | 0.016 | 0.015 | 1.1x |
 | noise_ablation/L-dw-noiseless-20m | appearance-fac | 1 | 110 | 3.7 | 0.048 | 0.020 | 2.4x | 0.017 | 0.016 | 1.0x |
-| ray_ablation/L-dw-8ray-20m | frustum | 3 | 66 | 2.0 | 0.002 | 0.001 | 1.1x | 0.056 | 0.033 | 1.7x |
+| ray_ablation/L-dw-8ray-20m | frustum | 2 | 66 | 2.0 | 0.001 | 0.001 | 1.1x | 0.055 | 0.036 | 1.5x |
 | ray_ablation/L-dw-8ray-20m | appearance-fac | 1 | 82 | 3.0 | 0.066 | 0.031 | 2.2x | 0.043 | 0.035 | 1.2x |
-| interface_ablation/L-dw-8ray-tok-20m | frustum | 5 | 66 | 2.0 | 0.001 | 0.002 | 0.9x | 0.036 | 0.028 | 1.3x |
+| interface_ablation/L-dw-8ray-tok-20m | frustum | 6 | 66 | 2.0 | 0.002 | 0.002 | 0.9x | 0.044 | 0.035 | 1.2x |
 | interface_ablation/L-dw-8ray-tok-20m | appearance-fac | 2 | 82 | 3.0 | 0.074 | 0.022 | 3.4x | 0.098 | 0.048 | 2.0x |
 | ray_ablation/L-dw-5ray-20m | frustum | 4 | 60 | 2.0 | 0.001 | 0.001 | 1.1x | 0.097 | 0.059 | 1.6x |
-| ray_ablation/L-dw-5ray-20m | appearance-fac | 2 | 79 | 3.1 | 0.074 | 0.033 | 2.2x | 0.085 | 0.045 | 1.9x |
+| ray_ablation/L-dw-5ray-20m | appearance-fac | 1 | 79 | 3.1 | 0.104 | 0.049 | 2.1x | 0.063 | 0.043 | 1.5x |
 | blink_ablation/L-dw-blink-20m | frustum | 2 | 105 | 2.0 | 0.011 | 0.007 | 1.5x | 0.026 | 0.018 | 1.4x |
-| blink_ablation/L-dw-blink-20m | appearance-fac | 7 | 100 | 3.7 | 0.075 | 0.029 | 2.6x | 0.009 | 0.009 | 1.0x |
+| blink_ablation/L-dw-blink-20m | appearance-fac | 4 | 100 | 3.7 | 0.069 | 0.028 | 2.4x | 0.009 | 0.010 | 0.9x |
 
 ## Counterfactual and case counts per row
 

@@ -12,9 +12,9 @@
  "adjacent_flip_ablation/L-oth-adjacent-flip-20m": {
   "env": "othello",
   "instance": "oth-adjacent-flip",
-  "test_loss": 2.3006938307058906,
+  "test_loss": 2.3006938337025034,
   "bayes_floor": 2.2954605721627837,
-  "excess": 0.005233258543106967,
+  "excess": 0.005233261539719702,
   "n_sequences": 10000,
   "unit": "CE (nats/move)",
   "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
@@ -32,9 +32,9 @@
  "dropout_ablation/L-oth-adjacent-nodrop-390k": {
   "env": "othello",
   "instance": "oth-adjacent",
-  "test_loss": 2.435649118483227,
+  "test_loss": 2.4356491188985667,
   "bayes_floor": 2.432635694729183,
-  "excess": 0.003013423754044009,
+  "excess": 0.0030134241693837716,
   "n_sequences": 10000,
   "unit": "CE (nats/move)",
   "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
@@ -318,5 +318,25 @@
   "n_sequences": 10000,
   "unit": "CE (nats/move)",
   "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "dropout_ablation/L-oth-adjacent-nodrop-20m": {
+  "env": "othello",
+  "instance": "oth-adjacent",
+  "test_loss": 2.4350062625147397,
+  "bayes_floor": 2.432635694729183,
+  "excess": 0.0023705677855567764,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "smooth_ablation/L-dw-smooth-20m": {
+  "env": "discworld",
+  "instance": "dw-smooth",
+  "test_loss": 5.9166380303213375e-05,
+  "bayes_floor": 0.0,
+  "excess": 5.9166380303213375e-05,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
  }
 }

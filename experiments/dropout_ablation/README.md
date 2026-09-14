@@ -28,3 +28,19 @@ without the regulariser; K ≤ 16 edits inert at every point; best guarded +0.45
 un-chunked version OOM'd (surfacing as the NVML assert while the driver mismatch awaits a reboot).
 
 **Extension (2026-09-12 12:04 →).** `drivers/oth_adjacent_nodrop_extend.sh`: the 390k resumable state copied into `L-oth-adjacent-nodrop-20m` (without scores/probes) and continued to 780k with `--resume`; the 390k dir remains the scored snapshot. Question for the 780k INLP: does the long, weak tail of colour copies (no-dropout's 150–280 vs dropout's 85–230) prune with more training, or is it the no-dropout regime's steady state?
+
+**Third arm (2026-09-13 00:35 →, queued behind the extension).** `L-oth-adjacent-drop03-390k`: the same
+recipe at `--dropout 0.3` for 390k steps (resumable), asked for by Sevan after the no-dropout result — does
+MORE dropout prune the colour copies or spread them further, and does single-probe editability move?
+Driver `drivers/oth_adjacent_drop03.sh` (unit `oth_adjacent_drop03` on wsl-sevan): stage W waits for the
+extension unit to exit, then trains and scores. 200-step smoke of the configuration: `runs/_smoke/L-oth-smoke-drop03`
+on the remote (config records `dropout: 0.3`; stopped after the first validation pass to spare the shared GPU).
+Then INLP + K-copy edits against the 0 / 0.1 runs.
+
+**Extension DONE (2026-09-13 03:21).** `L-oth-adjacent-nodrop-20m` at 780k: INLP copies per tile **272 / 210 / 158 / 132 / 122 / 119 / 118 / 137**
+(390k: 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162; dropout 0.1: 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83) — the tail prunes 10–20 % with doubled
+training and stays 1.2–1.6× the dropout run's; K-copy edit curves unchanged (K ≤ 16 inert; best guarded +0.422 / 0.42 at pt 1, K=128); canonical
+val 2.4351, skill 0.973 / 0.978, PI −0.206 / 1.22, ND +0.053 / 2.95, GS inert. Scores `scores/inlp_othello_L-oth-adjacent-nodrop-20m.json`; figures
+`outputs/inlp_compare_copies_dropout0_390k_vs_780k.png`, `outputs/inlp_compare_r2_dropout0_390k_vs_780k.png` from `scripts/inlp_compare.py`
+("label=score.json" per run — the same script will take the dropout-0.3 arm as a fourth line). INLP ran 96 min on the lab 5090 while it shared
+the card with a discworld training job (26 min alone for the dropout run).

@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-# ── L-oth-adjacent-nodrop-390k: Transformer-L on oth-adjacent with DROPOUT 0 (2026-09-11) ──
+# ── L-oth-adjacent-drop03-390k: Transformer-L on oth-adjacent with DROPOUT 0.3 (2026-09-13) ──
 #
-# The dropout ablation for the materialisation theory: minGPT's dropout 0.1 on the embedding,
-# attention and residual paths rewards writing a variable in many directions, so part of the
-# 85–90 orthogonal colour copies on oth-adjacent (and the K=64 rescue) may be a regulariser
-# effect rather than the adjacency rule's fused computation. Identical to
-# adjacency_ablation/L-oth-adjacent-20m except: --dropout 0, and 390k steps (half; Othello
-# editability is at ~95% of its 780k value by then — findings/training-curve.md — and the run
-# is RESUMABLE, so it can be extended to 780k later with --resume --steps 780000).
+# Third arm of the dropout ablation. Dropout 0 (L-oth-adjacent-nodrop-390k) made the colour
+# code MORE redundant (283/227/187… orthogonal copies vs 232/138/99… at the class default 0.1)
+# and left oth-adjacent canonically inert. This run asks the other direction: does dropout 0.3
+# prune the copies or spread them further, and does single-probe editability move at all?
+# Identical to adjacency_ablation/L-oth-adjacent-20m except --dropout 0.3 and 390k steps
+# (matching the nodrop snapshot; resumable, so extend later with --resume --steps 780000).
 #
 # Stages (each gated on the previous one; a failed stage pings and stops):
-#   W  wait for the oth-adjacent data build (corpus + cases + labels) to complete
-#   C  GPU  train 390k steps, dropout 0, resumable                            (~12.5 h on the 4090)
-#   D  GPU  master_eval (scores + oth-adjacent floors) + build_full_table + curves
+#   W  wait for the GPU: unit oth_adjacent_nodrop_ext (the 780k extension) must have exited
+#   C  GPU  train 390k steps, dropout 0.3, resumable                          (~13 h on the 4090)
+#   D  GPU  master_eval (scores) + build_full_table
 # Launch (on wsl-sevan):
-#   systemd-run --user --unit=oth_adjacent_nodrop -p MemoryMax=40G --collect --working-directory=$PWD \
-#       /usr/bin/bash -c 'bash experiments/dropout_ablation/drivers/oth_adjacent_nodrop.sh > logs/dropout_ablation/L-oth-adjacent-nodrop-390k/unit.log 2>&1'
+#   systemd-run --user --unit=oth_adjacent_drop03 -p MemoryMax=40G --collect --working-directory=$PWD \
+#       /usr/bin/bash -c 'bash experiments/dropout_ablation/drivers/oth_adjacent_drop03.sh >> logs/dropout_ablation/L-oth-adjacent-drop03-390k/unit.log 2>&1'
 # Relaunch after an interruption: the same command — training continues from ckpt/latest.pt.
 set -u
 cd "$(dirname "$0")/../../.." || exit 1
@@ -24,11 +23,12 @@ PY=$ROOT/.pim/bin/python
 export PYTHONPATH=$ROOT
 NT=https://ntfy.sh/swirling-tornado-ai691k
 TOPIC=dropout_ablation
-NAME=L-oth-adjacent-nodrop-390k
+NAME=L-oth-adjacent-drop03-390k
 INST=oth-adjacent
 STEPS=390000
+DROPOUT=0.3
+WAIT_UNIT=oth_adjacent_nodrop_ext
 LOGS=$ROOT/logs/$TOPIC/$NAME
-BUILD_LOG=$ROOT/logs/dropout_ablation/build_oth_adjacent.log
 mkdir -p "$LOGS"
 echo $$ > "$LOGS/driver.pid"
 ping() { curl -sS --max-time 20 -H "Title: $1" -H "Tags: ${3:-information_source}" \
@@ -36,20 +36,20 @@ ping() { curl -sS --max-time 20 -H "Title: $1" -H "Tags: ${3:-information_source
 stage() { echo "=== [$(date '+%F %T')] STAGE $* ===" | tee -a "$LOGS/driver.log"; }
 fail() { ping "PIM $NAME FAILED: $1" "$2" warning; echo "FAILED: $1" >> "$LOGS/driver.log"; exit 1; }
 
-ping "PIM $NAME: chain started" "oth-adjacent, dropout 0, $STEPS steps (resumable) -> score -> tables. ~13 h on the 4090."
+[ -f "$ROOT/datasets/othello/$INST/train/train_20000000.npz" ] || fail "preflight" "train_20000000.npz missing"
+[ -f "$ROOT/datasets/othello/$INST/edits/v1/cases_1001.pkl" ] || fail "preflight" "cases_1001.pkl missing"
 
-stage "W wait for the oth-adjacent data build"
-for i in $(seq 1 240); do
-  grep -q "data build complete" "$BUILD_LOG" 2>/dev/null && break
-  grep -q -E "Traceback|Error" "$BUILD_LOG" 2>/dev/null && fail "W data build" "$(tail -5 "$BUILD_LOG")"
+stage "W wait for unit $WAIT_UNIT to exit (GPU handoff)"
+for i in $(seq 1 720); do                      # up to 12 h
+  systemctl --user is-active --quiet "$WAIT_UNIT" || break
   sleep 60
 done
-grep -q "data build complete" "$BUILD_LOG" || fail "W data build" "timed out waiting 4 h for $BUILD_LOG"
-[ -f "$ROOT/datasets/othello/$INST/train/train_20000000.npz" ] || fail "W data build" "train_20000000.npz missing"
-[ -f "$ROOT/datasets/othello/$INST/edits/v1/cases_1001.pkl" ] || fail "W data build" "cases_1001.pkl missing"
+systemctl --user is-active --quiet "$WAIT_UNIT" && fail "W wait" "$WAIT_UNIT still active after 12 h"
+sleep 30                                       # let its CUDA context release
+ping "PIM $NAME: chain started" "oth-adjacent, dropout $DROPOUT, $STEPS steps (resumable) -> score -> tables. ~13 h on the 4090."
 
-stage "C train (GPU) $TOPIC/$NAME  dropout 0  steps $STEPS"
-"$PY" -u scripts/train.py --env othello --instance "$INST" --arch transformer_l --dropout 0 \
+stage "C train (GPU) $TOPIC/$NAME  dropout $DROPOUT  steps $STEPS"
+"$PY" -u scripts/train.py --env othello --instance "$INST" --arch transformer_l --dropout "$DROPOUT" \
     --topic "$TOPIC" --run-name "$NAME" --steps "$STEPS" --resume \
     >> "$LOGS/c_train.log" 2>&1 || fail "C training" "$(tail -20 "$LOGS/c_train.log")"
 ping "PIM $NAME: training DONE" "$(grep -E '^done|best' "$LOGS/c_train.log" | tail -2)
