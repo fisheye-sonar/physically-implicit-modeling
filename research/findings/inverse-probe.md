@@ -1,6 +1,6 @@
 # Inverse probe — a learned state → latent map edits BOTH environments, better than any probe-derived write (2026-09-14)
 
-**Status:** measured 2026-09-14 on `L-oth-20m`, `L-dw-noiseless-20m`, `L-dw-8ray-20m`
+**Status:** measured 2026-09-14 on `L-oth-20m`, `L-oth-adjacent-20m`, `L-dw-noiseless-20m`, `L-dw-8ray-20m`
 (`experiments/inverse_probe/`; units `inverse_probe_oth`, `inverse_probe_dw`, `inverse_probe_mirror`;
 minutes of compute per run). An INSTRUMENT experiment — it changes the write, not the
 environment — quoted beside the canonical editors, never in their place.
@@ -40,11 +40,13 @@ higher; its files are kept (`*_h1024e40.json`) and not quoted.
 | run (bench) | unedited | **overwrite** | **delta** (best α) | **retrieval overwrite** | **retrieval delta** (best α) | canonical PI | canonical ND | canonical GS | state explains h (R², pts 1–8) |
 |---|---|---|---|---|---|---|---|---|---|
 | `L-oth-20m` (1000 flips) | −0.93 | +0.81 / 0.38 (pt 5) | **+0.88 / 0.23** (pt 4, α 3) | +0.04 / 2.54 | +0.15 / 1.34 | +0.82 / 0.30 | +0.72 / 0.31 | +0.83 / 0.28 | 0.68–0.88 |
+| `L-oth-adjacent-20m` (1000 flips) | −0.96 | +0.00 / 1.48 (pt 3); guarded −0.03 / 0.74 | +0.50 / 1.12 (pt 1, α 2); **guarded +0.41 / 0.97** | −0.15 / 4.40 | −0.03 / 1.70 | +0.18 / 3.69 | +0.49 / 1.98 | −0.16 / 6.68 | 0.85–0.98 |
 | `L-dw-noiseless-20m` (1000 teleports, frustum) | −0.93 | +0.60 / 0.34 (pt 6) | **+0.66 / 0.46** (pt 5, α 3) | +0.40 / 0.65 (pt 6) | +0.38 / 0.76 (pt 5) | +0.23 / 1.54 | n/a | −0.08 / 1.07 | 0.29–0.35 |
 | `L-dw-8ray-20m` (1000 teleports, frustum) | −0.90 | +0.73 / 0.27 (pt 5) | **+0.84 / 0.28** (pt 1–2, α 3) | +0.63 / 0.43 (pt 7) | +0.68 / 0.50 (pt 2) | +0.26 / 0.99 | n/a | −0.03 / 0.90 | 0.37–0.57 |
 
-Every inverse-map arm above passes the guard (fidelity < 1) except Othello's retrieval forms,
-which do not edit at all. Per point (`scores/*_mirror128.json`): on Othello the effect is
+Every inverse-map arm above passes the guard (fidelity < 1) except on `L-oth-adjacent-20m`
+(where only the delta's guarded arm, +0.41 / 0.97 at point 1, does — every deeper point is
+destructive, guards 2–8) and Othello's retrieval forms, which do not edit at all. Per point (`scores/*_mirror128.json`): on Othello the effect is
 confined to points 3–6 and peaks at 4–5, exactly where PI and ND edit; on noiseless it is
 positive at every point from 1 on and flat from point 3; on 8-ray it is positive at EVERY
 point including the input embedding (overwrite +0.70 / 0.29 at point 0), peaks for the delta
@@ -79,7 +81,21 @@ at points 1–3 and for the overwrite at 5.
    PI (+0.82), ND (+0.72) and GS (+0.83) — with the same 128-unit hidden layer the canonical
    MLP probe uses. Width mattered only at the deeper points (6–8), where the 128-map explains
    less of the residual and its edits fall with it.
-5. **What this does to the project's negative.** "Discworld position is decodable but not
+5. **The environment toggle survives the instrument change — `L-oth-adjacent-20m` (added at
+   Sevan's request).** On the adjacency model the board explains 97–98% of the residual from
+   point 2 on (colour there is an input lookup: the placing move's parity), so g is nearly an
+   identity on the board code — and writing it does NOT edit: overwrite +0.00 at guard 1.5,
+   the delta's only guard-passing arm +0.41 / 0.97 at point 1 (the same point and level as the
+   canonical ND's +0.49 / 1.98 without the destruction), every deeper point destructive
+   (guards 2–8), retrieval inert. Standard Othello, where the board explains LESS of the
+   residual (0.8), edits at +0.88. So the inverse map is ordered by the same environment
+   property that orders the canonical editors — flipping on / off — and the ordering is
+   sharper, not weaker, under the better write: the conditional mean of the residual given
+   the board is the board's code on both models, and the model that consumes that code to
+   compute legality moves with it while the model that reads colour off the input token does
+   not. This is the cleanest evidence so far that what the environment does to editability is
+   a property of how the model USES the state, not of how any editor writes it.
+6. **What this does to the project's negative.** "Discworld position is decodable but not
    editable" was true of the probe-derived writes. The state-conditional mean is an editor
    built from the same data, the same architecture and the same held-out discipline as the
    probe, and it edits discworld's regression state at +0.66 to +0.84. The open question
@@ -97,7 +113,7 @@ the whole pre- and post-edit STATE per case, more than PI/ND see (the tile flip 
 dims), which is part of the construction and part of the caveat; no waterfall yet for the
 discworld writes (`pim.figures.waterfall_grid` on the delta arm is the natural next figure).
 
-Provenance: `experiments/inverse_probe/scores/{othello_L-oth-20m,discworld_L-dw-noiseless-20m,discworld_L-dw-8ray-20m}_mirror128.json`
+Provenance: `experiments/inverse_probe/scores/{othello_L-oth-20m,othello_L-oth-adjacent-20m,discworld_L-dw-noiseless-20m,discworld_L-dw-8ray-20m}_mirror128.json`
 (every arm, every point), `logs/inverse_probe/`; scripts `experiments/inverse_probe/scripts/{othello,discworld}_inverse.py`.
 The first Othello launch failed on a 4 GB broadcast in the retrieval search (its OOM path trips
 the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.

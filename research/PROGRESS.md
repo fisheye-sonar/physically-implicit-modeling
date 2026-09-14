@@ -220,6 +220,12 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 — inverse probe on `L-oth-adjacent-20m` (Sevan): the state → latent write does NOT edit the
+adjacency model** — overwrite +0.00 / 1.48, delta's only guard-passing arm +0.41 / 0.97 (pt 1), deeper points
+destructive (guards 2–8), retrieval inert — although the board explains 97–98% of its residual (an input
+lookup). Standard Othello edits at +0.88 with R² 0.8. The flipping toggle orders the inverse-map editor as it
+orders the canonical ones: the environment effect survives the instrument change (finding, reading 5).
+
 **2026-09-14 (afternoon) — INVERSE PROBE, all three runs, mirrored map (128 hidden, 200 epochs — Sevan): the
 state → latent write EDITS DISCWORLD's regression state.** Best arms (EI / guard): Othello delta +0.88 / 0.23
 (canonical best +0.83); noiseless delta +0.66 / 0.46, overwrite +0.60 / 0.34 (canonical PI +0.23 / 1.54, GS
