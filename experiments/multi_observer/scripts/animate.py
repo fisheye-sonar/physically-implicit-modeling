@@ -87,7 +87,8 @@ def draw(cfg: SimConfig, scene, inten, ids, tag: str, fps: int = 8):
             ax.plot([o[0], far[0]], [o[1], far[1]], color=colours[k], lw=0.6, alpha=0.35)
     ax.set_xlim(c[0] - 0.5 * (cfg.y_near + cfg.y_far) - 0.8, c[0] + 0.5 * (cfg.y_near + cfg.y_far) + 0.8)
     ax.set_ylim(c[1] - 0.5 * (cfg.y_near + cfg.y_far) - 0.8, c[1] + 0.5 * (cfg.y_near + cfg.y_far) + 0.8)
-    ax.set_aspect("equal"); ax.set_title(f"{tag}: {N} observers on the ring, circular arena (r = {Rc:g}), discs r = {cfg.radius:g}")
+    ax.set_aspect("equal")
+    ax.set_title(f"{tag}: {N} observers on the ring, circular arena (r = {Rc:g}), discs r = {cfg.radius:g}")
     discs = [ax.add_patch(plt.Circle(scene.positions[0, i], cfg.radius, color=obj_col[i], alpha=0.85)) for i in range(2)]
     trails = [ax.plot([], [], "-", color=obj_col[i], lw=1, alpha=0.6)[0] for i in range(2)]
     ttl = ax.text(0.02, 0.98, "", transform=ax.transAxes, va="top", fontsize=10)
@@ -156,9 +157,7 @@ def main():
         draw(cfg, scene, inten, ids, tag, fps=a.fps)
         contact_sheet(cfg, scene, inten, tag)
         vis = (ids.reshape(cfg.n_frames, a.n_observers, -1) >= 0).any(-1)   # (T, N) observer sees anything
-        print(f"{tag}: obs dim {obs_dim(cfg)}
-        fraction of (frame, observer) pairs seeing ≥1 disc: {vis.mean():.2f}
-        "
+        print(f"{tag}: obs dim {obs_dim(cfg)}; P(observer sees >= 1 disc) {vis.mean():.2f}; "
               f"frames where some observer sees nothing: {(~vis).any(1).mean():.2f}  -> {OUT / tag}.{{mp4,gif}}")
 
 
