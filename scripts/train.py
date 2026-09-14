@@ -70,7 +70,7 @@ def _parse():
     p.add_argument("--limit", type=int, default=None,
                    help="train on the first N sequences of the pool (data-scale axis)")
     p.add_argument("--instance", default=None,
-                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink | dw-5ray | dw-smooth; "
+                   help="environment instance (discworld: dw-pn04 | dw-noiseless | dw-8ray | dw-blink | dw-5ray | dw-smooth | dw-8ray-obs5; "
                         "othello: oth-uniform | oth-noflip | oth-adjacent | oth-adjacent-flip). "
                         "Default: the env's canonical instance.")
     # the interface — see the module docstring

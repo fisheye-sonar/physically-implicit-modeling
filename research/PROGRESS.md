@@ -5,7 +5,23 @@
 
 _Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
 
-## Multi-observer discworld — implemented 2026-09-13 afternoon, NOT yet an instance
+## ⏳ dw-8ray-obs5 chain — LAUNCHED 2026-09-13 17:55 PT, unit `dw_8ray_obs5` (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
+
+Sevan: "launch the whole thing now" (N = 5, otherwise dw-8ray's setup; discs may be invisible to some observers).
+Stages: B generate (eval/edits/probes + 20M corpus, 128 GB memmap, ~3 h) → B' smoke-train → C train 780k (~8 h)
+→ W wait for `experiments/multi_observer/SCORER_READY` (≤ 12 h, hourly warning pings) → D appearance-fac probes
+(`--basis cartesian`) + floors → master_eval → test loss → full tables → ALL DONE (~05:30 2026-09-14).
+**Owed while it runs (the marker is touched only when both are done and smoked):** (1) master_eval per-instance
+regression basis — dw-8ray-obs5 scores the **Cartesian** block, not frustum (also the baselines cell);
+(2) the **per-observer factorised appearance target** in `grid_target.py` — for `n_observers > 1` the
+factorisation is (centre, length) per observer per disc (5 × 20 classes per disc; the joint cell is NOT
+enumerated); with one observer it must reproduce dw-8ray's `appearance-fac` labels exactly (test);
+`master_eval dw_extra_targets` gains `"observer_ablation/L-dw-8ray-obs5-20m": ("appearance-fac",)`.
+Smoke before launch: 64-seq suite with the flags re-renders bit-exactly through both config paths, discs inside
+the circle every frame, ray zones build on the 40-entry frames (~10 differing entries per case, all observers
+involved). Storage: ~150 GB (378 GB free before). Monitors armed in the orchestrator session.
+
+## Multi-observer discworld — implemented 2026-09-13 afternoon (superseded by the launch above)
 
 Sevan's last control before writing: N observers on a ring about the frustum's depth midpoint,
 discs confined to the circle tangent to every near/far plane. Landed as `pim/environments/discworld/observers.py`
