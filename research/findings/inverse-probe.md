@@ -221,6 +221,37 @@ Scripts: `othello_inverse.py --cases last-tile` (+ `--recon-only`), `othello_las
 `logs/inverse_probe/mirror128_*_lasttile.log`, `*_recon.log`, and (both GS runs, the unit's
 quoting dropped the run name) `mirror128__lasttile_gs.log`.
 
+## dw-blink by subset — the write does not care whether the frame ends a blink (2026-09-14 evening, Sevan's question)
+
+Same g (mirrored map, fitted on the blink probe corpus WITHOUT a visibility input), same four
+forms, the bench restricted to two populations of the 20k edits split, canonical PI / GS
+re-searched on each (PI 9 points × 16 α, GS 5 layer sets × 10 α; the subset construction is
+`experiments/blink_ablation/scripts/subset_editability.py`'s):
+
+- **reappearance** — the edited object is hidden through the last context frame (EF−1) and
+  visible at the edit frame: the write lands on the frame that ENDS its blink; 642 cases
+  (all available), staleness 1–12 hidden frames (112 at the 12-frame cap);
+- **visible** — neither object hidden at any frame from the start of the context through the
+  end of the 15-step scored rollout; 630 cases (all available).
+
+| `L-dw-blink-20m` | n | unedited | overwrite | delta | retrieval overwrite | retrieval delta | canonical PI | canonical GS | R² (pts 1–8) |
+|---|---|---|---|---|---|---|---|---|---|
+| all cases (canonical bench) | 1000 | −0.92 | +0.52 / 0.44 | +0.67 / 0.38 | +0.34 / 0.68 | +0.35 / 0.75 | +0.21 / 1.54 | −0.09 / 0.97 | 0.28–0.36 |
+| reappearance | 642 | −0.85 | +0.53 / 0.39 | **+0.69 / 0.39** | +0.35 / 0.69 | +0.36 / 0.73 | +0.24 / 1.57 (guarded +0.09 / 0.92) | −0.04 / 0.97 | 0.28–0.36 |
+| visible | 630 | −0.93 | +0.53 / 0.38 | **+0.67 / 0.43** | +0.34 / 0.67 | +0.34 / 0.77 | +0.21 / 1.56 (guarded −0.03 / 0.95) | −0.13 / 1.01 | 0.28–0.36 |
+
+The two populations are indistinguishable on every column, and match the whole bench. Per
+point the profiles coincide too (delta positive from point 1, peaking at points 3–6 at
++0.60–0.69 on both; overwrite negative at points 0–1 and +0.46–0.53 from point 4 on both).
+Whether the model reads the edited object's position off the current frame (visible) or
+carries it through a blackout of up to 12 frames and is about to see it again (reappearance),
+the state-conditional mean moves the output by the same amount, and the canonical editors fail
+by the same amount. The caveat that g has no visibility input — g(s) averages hidden and
+visible frames at a state, ~84 % visible — would have biased the reappearance row down if it
+mattered; it did not show. Scores `scores/discworld_L-dw-blink-20m_mirror128_sel-{reappearance,visible}.json`;
+`discworld_inverse.py --select … --canonical-on-subset`; `blink_subset_table.py`; driver
+`drivers/blink_subsets.sh`; unit `inverse_probe_blink_subsets`.
+
 Caveats: one seed of g and one α grid (0.25 … 3; several discworld deltas peak at the top of it,
 so their best may be slightly under-read); k = 10 unswept; the inverse write sees the whole pre-
 and post-edit STATE per case, more than PI / ND see (the tile flip / the teleport dims), which is

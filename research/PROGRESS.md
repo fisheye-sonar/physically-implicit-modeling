@@ -220,6 +220,13 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 (late) — inverse probe on dw-blink by subset (Sevan): reappearance frames edit exactly like visible
+frames.** Reappearance (edited object hidden through EF−1, visible at EF; 642 cases, staleness 1–12) delta
++0.69 / 0.39, overwrite +0.53 / 0.39; visible (no blink on either object through the 15-step rollout; 630 cases)
++0.67 / 0.43, +0.53 / 0.38; canonical PI re-searched on each +0.24 / 1.57 vs +0.21 / 1.56, GS ≤ 0 on both. Per-point
+profiles coincide. Carried-through-blackout position and frame-readable position are equally writable by the
+state-conditional mean. `findings/inverse-probe.md` "dw-blink by subset".
+
 **2026-09-14 (late) — the adjacent failure put to Sevan's two tests; the positional/bypass hypothesis is
 NOT supported, the generalisation reading stands.** (1) Last-tile cases (the just-placed disc recoloured — the
 only tile whose square and colour both enter through the written position; adjacent 864 / standard 792):

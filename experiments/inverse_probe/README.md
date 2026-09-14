@@ -42,3 +42,9 @@ g(s_pre), no edit: adjacent's output preserved at every point through 5 (guard 1
 standard's damaged except at points 4–5 (reconstruction guard 1.2–2.2 vs 5–16). Adjacent's output is a function of the board on reachable
 boards; the failure is off-manifold (Sevan's generalisation reading). `--cases last-tile`,
 `--recon-only`, `othello_lasttile_gs.py`, `lasttile_table.py`; finding section "The two tests".
+
+**dw-blink by subset (2026-09-14 evening, Sevan).** Reappearance (the edited object hidden through the
+last context frame, visible at the edit frame; 642 cases) vs visible (no blink on either object through
+the 15-step rollout; 630 cases): delta +0.69 / 0.39 vs +0.67 / 0.43, overwrite +0.53 on both, retrieval
++0.35 on both, canonical PI +0.24 / 1.57 vs +0.21 / 1.56 — indistinguishable, and equal to the whole bench.
+`discworld_inverse.py --select {reappearance,visible} --canonical-on-subset`; `blink_subset_table.py`.

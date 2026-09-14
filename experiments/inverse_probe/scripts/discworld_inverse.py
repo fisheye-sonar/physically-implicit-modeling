@@ -38,6 +38,10 @@ ap.add_argument("--points", type=int, nargs="*", default=None)
 ap.add_argument("--smoke", action="store_true")
 ap.add_argument("--tag", default="", help="suffix for the scores file (e.g. mirror128)")
 ap.add_argument("--basis", default="auto", help="frustum | cartesian | auto (= the run's canonical regression block)")
+ap.add_argument("--select", choices=("none", "reappearance", "visible"), default="none",
+                help="dw-blink subsets (2026-09-14, Sevan): reappearance = the edited object hidden through EF-1 and visible at EF "
+                     "(the last context frame ends its blink); visible = neither object hidden at any frame through EF+K_ROLL")
+ap.add_argument("--canonical-on-subset", action="store_true", help="re-run canonical PI and GS on the selected cases (the run's own α grids)")
 a = ap.parse_args()
 t0 = time.time()
 run = REPO / "runs" / a.run
@@ -67,7 +71,27 @@ print(f"{a.run} ({inst}, basis {BASIS}): {n_seq} sequences × {T} frames = {len(
       f"hidden {a.hidden}, epochs {a.epochs}, k {a.k}", flush=True)
 
 # ── the bench: s_pre (frustum full state at EF−1), s_post (the pre-dynamics target, dims all)
-b = dwb.load_bench(model, n=50 if a.smoke else S["dw_bench_n"], target="full", basis_name=BASIS, instance=inst)
+select = None; subset_info = None
+if a.select != "none":
+    # the same subset construction as experiments/blink_ablation/scripts/subset_editability.py
+    with h5py.File(layout.edits_file("discworld", inst), "r") as f:
+        ve = f["blink_visible"][:, :, :N_OBJ].astype(bool); eobj_all = f["edit_object"][:].astype(int)
+        assert int(f["edit_frame"][0]) == EF
+    M = len(eobj_all); ar_ = np.arange(M); vis_e = ve[ar_, :, eobj_all]; vis_o = ve[ar_, :, 1 - eobj_all]
+    stale = np.zeros(M, int)
+    for i in range(M):
+        t = EF - 1
+        while t >= 0 and not vis_e[i, t]:
+            stale[i] += 1; t -= 1
+    if a.select == "reappearance":
+        cand = np.where((stale >= 1) & vis_e[:, EF])[0]
+    else:
+        cand = np.where(vis_e[:, : EF + K_ROLL + 1].all(1) & vis_o[:, : EF + K_ROLL + 1].all(1))[0]
+    select = cand[: (50 if a.smoke else S["dw_bench_n"])]
+    subset_info = {"name": a.select, "available": int(len(cand)), "n": int(len(select)),
+                   "staleness_hist": {int(kk): int(c) for kk, c in zip(*np.unique(stale[select], return_counts=True))}}
+    print(f"subset {a.select}: {len(select)} of {len(cand)} available cases; staleness {subset_info['staleness_hist']}", flush=True)
+b = dwb.load_bench(model, n=50 if a.smoke else S["dw_bench_n"], target="full", basis_name=BASIS, instance=inst, select=select)
 bp, bv = dwb._to_basis(b.pos[:, EF - 1], b.vel[:, EF - 1], b.sim, BASIS)
 s_pre = np.concatenate([bp.reshape(b.n, -1), bv.reshape(b.n, -1)], 1).astype(np.float32)
 s_post = b.tgt.cpu().numpy().astype(np.float32)
@@ -77,8 +101,24 @@ u = dwa.unsteered(model, b)
 canon = _bases[BASIS]["best"]
 print(f"bench: {b.n} cases · unedited {u['edit_index']:+.3f} · canonical PI {canon['PI']['edit_index']:+.3f}/{canon['PI']['fidelity_ratio']:.2f}  "
       f"GS {canon['GS']['edit_index']:+.3f}/{canon['GS']['fidelity_ratio']:.2f}", flush=True)
-lin = None if a.smoke else {e: p for e, (p, _) in dwa.fit_probes(model, target="full", family="linear", basis_name=BASIS,
-                                                                    cache_dir=run / "probes", log=None, require_cached=True, **recipe).items()}
+lin_full = None if a.smoke else dwa.fit_probes(model, target="full", family="linear", basis_name=BASIS,
+                                                cache_dir=run / "probes", log=None, require_cached=True, **recipe)
+lin = None if lin_full is None else {e: p for e, (p, _) in lin_full.items()}
+canon_on_cases = None
+if a.canonical_on_subset and not a.smoke:
+    mlp_full = dwa.fit_probes(model, target="full", family="mlp", basis_name=BASIS, cache_dir=run / "probes", log=None, require_cached=True, **recipe)
+    rows = dwa.pinv_arm(model, b, lin_full, S["dw_alpha_pi"], space="zspace", dims="all")
+    rows += dwa.grad_steer_arm(model, b, mlp_full, S["gs_layers"], S["dw_alpha_gs"], n_steps=S["dw_gs_steps"], beta=S["dw_gs_beta"], dims="all")
+    for r in rows:
+        r["fidelity_ratio"] = dwa.fidelity_ratio(r, u)
+    canon_on_cases = {}
+    for ed in ("PI", "GS"):
+        sub = [{k: v for k, v in r.items() if np.isscalar(v)} for r in rows if str(r["editor"]).startswith(ed)]
+        best = max(sub, key=lambda r: r["edit_index"]); guarded = [r for r in sub if r["fidelity_ratio"] < 1]
+        canon_on_cases[ed] = {"best": best, "best_guarded": max(guarded, key=lambda r: r["edit_index"]) if guarded else None, "arms": sub}
+        print(f"canonical {ed} on subset: best {best['edit_index']:+.3f}/{best['fidelity_ratio']:.2f} (pt {best.get('point', best.get('layer'))}, α {best['alpha']})"
+              + (f"; guarded {canon_on_cases[ed]['best_guarded']['edit_index']:+.3f}/{canon_on_cases[ed]['best_guarded']['fidelity_ratio']:.2f}" if guarded else "; nothing under the guard")
+              + f"  [{(time.time() - t0) / 60:.1f} min]", flush=True)
 Xpre_t, Xpost_t = (torch.from_numpy(x).to(DEV) for x in (s_pre, s_post))
 
 def nn_mean(X_train_t, H_train_t, x_query_t, k):
@@ -106,6 +146,7 @@ def run_arm(ell, h0, h_new):
 out = {"run": a.run, "instance": inst, "basis": BASIS, "n_seq": n_seq, "rows": int(len(X_all)), "hidden": a.hidden, "epochs": a.epochs, "k": a.k,
        "unedited": {k: v for k, v in u.items() if isinstance(v, (int, float))},
        "canonical": {e: {"edit_index": canon[e]["edit_index"], "fidelity_ratio": canon[e]["fidelity_ratio"]} for e in ("PI", "GS")},
+       "subset": subset_info, "n_cases": int(b.n), "canonical_on_cases": canon_on_cases,
        "points": {}}
 points = a.points if a.points is not None else ([1] if a.smoke else list(range(NP)))
 sdir = REPO / ".scratch"; sdir.mkdir(exist_ok=True)
@@ -140,6 +181,6 @@ for ell in points:
     print(f"pt {ell}: g R² {st['r2']:+.3f} | overwrite {f(arms['overwrite'])} | mean-h {f(arms['mean_overwrite'])} | "
           f"nn-overwrite {f(arms['nn_overwrite'])} | {best_d} {f(arms[best_d])} | {best_n} {f(arms[best_n])}  [{(time.time() - t0) / 60:.1f} min]", flush=True)
     del H, H_tr_t, X_tr_t; torch.cuda.empty_cache()
-tag = a.run.split("/")[-1] + (f"_{a.tag}" if a.tag else "") + ("_smoke" if a.smoke else "")
+tag = a.run.split("/")[-1] + (f"_{a.tag}" if a.tag else "") + (f"_sel-{a.select}" if a.select != "none" else "") + ("_smoke" if a.smoke else "")
 (REPO / "experiments/inverse_probe/scores" / f"discworld_{tag}.json").write_text(json.dumps(out, indent=1, default=float))
 print("wrote", f"experiments/inverse_probe/scores/discworld_{tag}.json", f"[{(time.time() - t0) / 60:.1f} min]")
