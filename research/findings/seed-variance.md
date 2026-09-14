@@ -41,10 +41,12 @@ joint cell vs factorised), what is the seed-to-seed spread? Two sources, measure
    are 0.005–0.017 across every editor and both targets. The half-budget 780k-vs-390k
    difference (seed 0 at 780k vs its own 422k checkpoint) is of the same size as the seed
    spread: +0.628 vs +0.614 on ND, 0.786 vs 0.775 on MLP skill.
-2. **The guard is where the variance lives.** GS's fidelity ratio ranges 0.68–1.09 across the
-   set (SD 0.15) while its Edit Index sits at 0.31–0.35; PI's guard on the regression target
-   ranges 1.80–2.23. A one-seed row can therefore land on either side of the guard at its best
-   arm without the index moving — read guard verdicts near 1.0 as ±0.15.
+2. **The guard moves more than the index, on the arms that fail it.** The regression PI
+   guard ranges 1.54–2.13 across the set (SD 0.18) while its index sits at 0.21–0.23; the
+   editors that pass the guard hold it tightly (factorised ND 0.80–0.83, GS 0.71–0.80). So a
+   one-seed guard verdict on a FAILING arm is soft by ±0.2, a passing one is firm to ±0.03.
+   (Before the 2026-09-12 rescoring, GS's guard on this target had spanned 0.68–1.09 across
+   the same seeds — a reminder that a guard near 1.0 is the least stable number in a row.)
 3. **What this licenses.** Contrasts of ≥ 0.05 on the Edit Index between runs of this family
    are outside the seed spread (≈ 3 SD); the joint-cell vs factorised GS difference on 8-ray
    (+0.61 vs +0.46) and the 5-ray vs 8-ray bump (+0.58 vs +0.46 on GS, +0.49 vs +0.41 on PI)
