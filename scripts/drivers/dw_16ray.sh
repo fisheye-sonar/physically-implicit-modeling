@@ -91,6 +91,17 @@ fi
 "$PY" -m pim.environments.discworld.bigcorpus "$INST" \
     > "$LOGS/b3_corpus.log" 2>&1 || fail "B3 20M corpus" "$(tail -20 "$LOGS/b3_corpus.log")"
 
+# B4: the canonical edit-case SELECTION (2026-09-12 rule, every instance): the first 1000 cases whose two
+# clean renders at the edit frame differ on >= 2 rays -> edits/v1/selection.json (the bench every scorer uses).
+# (Added 2026-09-14 14:10 after launch — the 5-ray template predates the rule; on the live run this step was
+#  executed by hand at 14:08 while stage C trained, so the file was in place long before stage D.)
+if [ ! -f "$INST_DIR/edits/v1/selection.json" ]; then
+  "$PY" scripts/make_edit_selection.py --instance "$INST" --n 1000 --pool 4000 --min-rays 2 \
+      > "$LOGS/b4_selection.log" 2>&1 || fail "B4 edit selection" "$(tail -15 "$LOGS/b4_selection.log")"
+else
+  echo "  edit selection already present — skipping" | tee -a "$LOGS/driver.log"
+fi
+
 ping "PIM dw-16ray: generation DONE" \
 "$(grep -E 'VERIFIED|corpus complete' "$LOGS/b3_corpus.log" | tail -2)
 Starting the 780k-step training (~10.5 h on the 4090)." rocket
