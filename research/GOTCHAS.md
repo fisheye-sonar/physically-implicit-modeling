@@ -10,6 +10,21 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-13 — Three position samplers, not one: adding a spatial rule must reach all of them
+
+`sim.sample_position` (initial conditions; "THE draw order every generator uses") is NOT the only
+place a disc position is drawn: `edits_dataset._sample_in_frustum` draws the TELEPORT target for
+the edit bench, and `interactive.py` has its own move guard. The multi-observer arena
+(`SimConfig.region="circle"`, 2026-09-13) was wired into the simulator's sampler and into
+`fully_in_frustum` (the shared containment test) and passed its smoke — then the 10k edit split
+died on 1 seed in ~1,500: teleport targets were still drawn from observer 0's frustum and the
+circle test rejected them, starving the search where the other disc sat near the centre (and,
+worse, silently biasing every accepted teleport to the frustum ∩ circle overlap). Fixed in
+`_sample_in_frustum` (commit 53af51c; `tests/test_observers.py`). If you add a region, a boundary
+or a margin rule: grep for every `rng.uniform` on x/y, not just the one with the docstring.
+
+---
+
 ### 2026-09-12 — `nvidia-smi` can be broken while the GPU is fine (driver/library mismatch)
 
 After a driver package update the user-space `nvidia-smi` (595.91) no longer matches the loaded

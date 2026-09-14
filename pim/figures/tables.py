@@ -28,6 +28,12 @@ REPO = Path(__file__).resolve().parents[2]
 EDITORS = ("PI", "ND", "GS")
 COMPONENTS = ("o1·x", "o1·y", "o2·x", "o2·y", "o1·vx", "o1·vy", "o2·vx", "o2·vy")
 CANONICAL = {"discworld": "frustum", "othello": "mine/theirs"}
+
+
+def reg_key(bases: dict) -> str:
+    """A discworld run's REGRESSION block: frustum, or cartesian when that is the only one
+    (dw-8ray-obs5, several observers, 2026-09-13 — the frustum basis is observer-0-relative)."""
+    return "frustum" if "frustum" in bases else "cartesian"
 OTH_EI = "edit_index_symdiff"            # the Othello headline construction (2026-09-12)
 RULE, RULE_ENV = "#172239", "#000000"
 ARCH_LABEL = {"transformer_l": "L", "transformer_s": "S", "recurrent_l": "R",
@@ -62,8 +68,9 @@ def _arm_str(a: dict | None) -> str:
     return (f"{a['dims']}·" if "dims" in a else "") + f"pt{a['point']}·α{a['alpha']:g}"
 
 
-def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str) -> dict:
+def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical: bool | None = None) -> dict:
     row = {**base, "basis": key, "kind": kind,
+           "canonical": (key == CANONICAL[base["env"]]) if canonical is None else canonical,
            "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),
            "tripwire": T.get("probe_sanity", {}).get("n_violations", 0),
            "unedited": T["unedited"].get(ei_key, T["unedited"].get("edit_index", np.nan))}
@@ -96,13 +103,11 @@ class Frames:
 
     @property
     def canonical(self) -> pd.DataFrame:
-        m = [b == CANONICAL[e] for b, e in zip(self.df["basis"], self.df["env"])]
-        return self.df[m].reset_index(drop=True)
+        return self.df[self.df["canonical"]].reset_index(drop=True)
 
     @property
     def extra(self) -> pd.DataFrame:
-        m = [b != CANONICAL[e] for b, e in zip(self.df["basis"], self.df["env"])]
-        return self.df[m].reset_index(drop=True)
+        return self.df[~self.df["canonical"]].reset_index(drop=True)
 
     @property
     def archs(self) -> dict:
@@ -144,12 +149,16 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
                 for key, T in s.get("bases", {}).items():
                     rows.append(_block_row(base, key, T, OTH_EI, T.get("kind", "regression")))
             else:
+                # a cartesian block is a legacy record beside a frustum block (hidden since
+                # 2026-09-11) — but THE regression block on an instance scored in cartesian
+                # (dw-8ray-obs5, several observers, 2026-09-13), so it shows when frustum is absent
+                rk = reg_key(s["bases"])
                 for key, T in s["bases"].items():
-                    if key == "cartesian":
+                    if key == "cartesian" and rk != "cartesian":
                         continue
                     kind = T.get("kind", "regression")
-                    rows.append(_block_row(base, key, T, "edit_index", kind))
-                    if kind == "regression" and key == "frustum":
+                    rows.append(_block_row(base, key, T, "edit_index", kind, canonical=(key == rk)))
+                    if kind == "regression" and key == rk:
                         for fam, k in (("linear", "LIN"), ("mlp", "MLP")):
                             pp = np.array([p[:len(COMPONENTS)] for p in T[f"probe_perdim_{fam}"]], float)
                             perdim.append({"run": name, "env": env, "arch": s["arch"], "instance": s["instance"],
@@ -163,7 +172,7 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
                     "probe_skill_mlp": rs["probe_skill"].get("mine|mlp|sequence", [np.nan]),
                     "unedited": rs["unedited"], "best": rs["best"], "arms": rs["arms"]}}
                 for key, T in blocks.items():
-                    if key == "cartesian":
+                    if key == "cartesian" and "frustum" in blocks:
                         continue
                     r = _block_row({**base, "run": rp.parts[-2]}, key, T,
                                    "edit_index" if env == "discworld" else OTH_EI, T.get("kind", "classification"))
@@ -321,7 +330,8 @@ def table_decodability(F: Frames, tag: str = "1"):
     for env in ("othello", "discworld"):
         for inst in dict.fromkeys(C[C["env"] == env]["instance"]):
             b = F.base.get(inst)
-            bkey = CANONICAL[env]
+            bkey = CANONICAL[env] if env == "othello" else reg_key(
+                (b or {}).get("archs", {}).get(next(iter((b or {}).get("archs", {})), ""), {}).get("bases", {}))
             archs = [a for a in dict.fromkeys(C[C["instance"] == inst]["arch"])]
             block = []
             if b and archs and bkey in b["archs"].get(archs[0], {}).get("bases", {}):
@@ -492,7 +502,7 @@ def table_alignment(F: Frames, tag: str = "3",
     H = {(r["run"].split("/")[-1], r["target"]): r for r in json.loads(haufe_path.read_text())} if haufe_path.exists() else {}
     rows = []
     for r in F.df.to_dict("records"):
-        if r["basis"] not in (CANONICAL[r["env"]], "appearance-fac"):
+        if not r["canonical"] and r["basis"] != "appearance-fac":
             continue
         a, h = A.get((r["run"], r["basis"]), {}), H.get((r["run"], r["basis"]), {})
         rows.append({"env": r["env"], "run": r["run"], "target": r["basis"], "pt": a.get("point", "—"),

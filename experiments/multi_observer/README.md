@@ -19,11 +19,12 @@ frame-20 PNG + a waterfall contact sheet per scene, dw-8ray geometry:
     .pim/bin/python experiments/multi_observer/scripts/animate.py --n-observers 5 --seeds 0 1 2
 
 Outputs in `outputs/`. Measured on 40 scenes × 40 frames (dw-8ray geometry, region circle):
-a disc is visible to a given observer 93 % of the time (the rest: outside that observer's kept
-8-ray fan, or occluded), an observer sees both discs 86 %, never neither; no disc is ever
+a disc is visible to a given observer 93 % of the time (the rest is OCCLUSION by the other disc —
+every arena position lights ≥ 1 kept ray in every view, scanned 2026-09-13), an observer sees both discs 86 %, never neither; no disc is ever
 invisible to every one of 5 observers. Acceptance cost of the stay-inside rule ≈ the frustum's
 (19 vs 22 collision-free candidates per accepted 40-frame scene). Note that with N = 1 and the
-circle the canonical observer loses a disc 8 % of the time — the circle is NOT dw-8ray's
-always-in-frustum guarantee; that is the point of adding observers.
+circle the canonical observer loses a disc 8 % of the time to occlusion (the same-depth discs of a
+round arena line up more often than in the frustum) — the circle is NOT dw-8ray's always-in-frustum
+guarantee; that is the point of adding observers.
 
 No instance, corpus or run exists yet.

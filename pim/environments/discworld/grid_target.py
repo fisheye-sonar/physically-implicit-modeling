@@ -86,6 +86,9 @@ class CategoricalTarget:
         raise NotImplementedError
 
     def labels_from_cells(self, cells: np.ndarray, y_world: np.ndarray, sim: dict) -> np.ndarray:
+        if _n_views(sim) > 1:
+            raise ValueError("a cell-indexed categorical target is not scored on a multi-observer "
+                             "instance (millions of joint cells) — use the factorised form")
         """(..., N_OBJ) cells + (..., N_OBJ) depths → (..., G) uint8 labels, the nearer
         object winning a shared cell."""
         g = self.n_cells(sim)
@@ -278,6 +281,33 @@ def _nearest_run(runs: tuple, f: int, la: int) -> int:
     return best
 
 
+# ── several observers (2026-09-13, observers.py) ─────────────────────────────
+#
+# With ``sim["n_observers"] > 1`` the appearance partition is taken PER VIEW: a disc's cell is
+# the tuple of the runs it lights in every observer's kept fan, coded mixed-radix (the joint
+# partition is never enumerated — ``n_cells`` is its product upper bound). A disc outside a
+# view's fan lights no ray there and takes that view's extra "unseen" run (index n_runs), so
+# the factors get one extra class each: (centres + 1, lengths + 1) per view. Only the
+# factorised target (``appearance-fac``) is meant to be scored on such an instance; the
+# cell-indexed one would have millions of classes and refuses.
+
+def _n_views(sim: dict) -> int:
+    return int(sim.get("n_observers", 1))
+
+
+def _view_poses(sim: dict) -> np.ndarray:
+    from types import SimpleNamespace
+
+    from pim.environments.discworld.observers import observer_poses
+
+    return observer_poses(SimpleNamespace(y_near=float(sim["y_near"]), y_far=float(sim["y_far"]),
+                                          n_observers=_n_views(sim)))
+
+
+def _single_view(sim: dict) -> dict:
+    return {**sim, "n_observers": 1}
+
+
 @dataclass(frozen=True)
 class AppearanceTarget(CategoricalTarget):
     """The observation-exact partition: cell = the run of rays a disc lights, optionally
@@ -310,9 +340,38 @@ class AppearanceTarget(CategoricalTarget):
         return sorted({f + la for f, la in self.runs(sim)})
 
     def n_cells(self, sim: dict) -> int:
+        if _n_views(sim) > 1:
+            self._only_plain_runs(sim)
+            return (len(self.runs(sim)) + 1) ** _n_views(sim)      # product upper bound, incl. "unseen"
         if self.lateral_only:
             return len(self._centres(sim))
         return len(self.runs(sim)) * self.depth_bands
+
+    def _only_plain_runs(self, sim: dict) -> None:
+        if self.depth_bands != 1 or self.lateral_only:
+            raise ValueError(f"{self.name} is not defined for several observers (plain runs only)")
+
+    def _view_cells(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        """(..., 2) → (..., V) per-view run index, n_runs = "unseen" where the disc lights no ray."""
+        from pim.environments.discworld.observers import to_observer_frame
+
+        self._only_plain_runs(sim)
+        sim1 = _single_view(sim)
+        n_runs = len(self.runs(sim1))
+        p = np.asarray(pos, np.float64)
+        out = []
+        for pose in _view_poses(sim):
+            q = to_observer_frame(p, pose)
+            flat = q.reshape(-1, 2)
+            seen = covered_rays(flat, sim1).any(-1)
+            cells = np.full(flat.shape[0], n_runs, np.int64)
+            if seen.any():
+                cells[seen] = self._cell_of_flat(flat[seen], sim1)
+            out.append(cells.reshape(p.shape[:-1]))
+        return np.stack(out, -1)
+
+    def _view_radix(self, sim: dict) -> int:
+        return len(self.runs(_single_view(sim))) + 1
 
     # positions per chunk of the ray–disc test: (..., R) float64 intermediates at 128 rays
     # are ~1 KB per position, so 2^18 positions ≈ 0.3 GB each; labelling the 15.6 M
@@ -320,6 +379,10 @@ class AppearanceTarget(CategoricalTarget):
     CHUNK = 1 << 18
 
     def cell_of(self, pos: np.ndarray, sim: dict) -> np.ndarray:
+        if _n_views(sim) > 1:
+            vc = self._view_cells(pos, sim)                                   # (..., V)
+            radix = self._view_radix(sim)
+            return (vc * (radix ** np.arange(vc.shape[-1], dtype=np.int64))).sum(-1)
         p = np.asarray(pos, np.float64)
         flat = p.reshape(-1, 2)
         if flat.shape[0] <= self.CHUNK:
@@ -553,21 +616,32 @@ def _app_factor_tables(self, sim: dict) -> tuple[dict, dict]:
 
 
 def _app_factors(self, cells: np.ndarray, sim: dict) -> np.ndarray:
-    """(...) cells → (..., 2) (centre class, length class). Only the plain partition
+    """(...) cells → (..., F) classes. One view: F = 2, (centre class, length class). Several
+    views: F = 2·V, view-major (c_0, l_0, c_1, l_1, …), each view's class tables extended by
+    one "unseen" class (the disc lights no ray in that view). Only the plain partition
     factorises this way (a depth band or a merged centre is not a run)."""
     if self.depth_bands != 1 or self.lateral_only:
         raise ValueError(f"{self.name} does not factorise into (centre, length)")
-    runs = np.asarray(self.runs(sim))                      # (G, 2)
-    ct, lt = self._factor_tables(sim)
-    c_cls = np.array([ct[f + la] for f, la in runs])
-    l_cls = np.array([lt[la - f + 1] for f, la in runs])
+    sim1 = _single_view(sim)
+    runs = np.asarray(self.runs(sim1))                     # (G, 2)
+    ct, lt = self._factor_tables(sim1)
+    c_cls = np.array([ct[f + la] for f, la in runs] + [len(ct)])      # + "unseen"
+    l_cls = np.array([lt[la - f + 1] for f, la in runs] + [len(lt)])
     cells = np.asarray(cells, np.int64)
-    return np.stack([c_cls[cells], l_cls[cells]], -1)
+    V = _n_views(sim)
+    if V == 1:
+        return np.stack([c_cls[cells], l_cls[cells]], -1)
+    radix = len(runs) + 1
+    vc = np.stack([(cells // radix ** k) % radix for k in range(V)], -1)   # (..., V) per-view run
+    return np.stack([c_cls[vc], l_cls[vc]], -1).reshape(*cells.shape, 2 * V)
 
 
 def _app_factor_sizes(self, sim: dict) -> tuple[int, ...]:
-    ct, lt = self._factor_tables(sim)
-    return (len(ct), len(lt))
+    ct, lt = self._factor_tables(_single_view(sim))
+    V = _n_views(sim)
+    if V == 1:
+        return (len(ct), len(lt))
+    return (len(ct) + 1, len(lt) + 1) * V
 
 
 AppearanceTarget._factor_tables = _app_factor_tables
@@ -614,8 +688,12 @@ class FactorisedTarget(CategoricalTarget):
     def n_tiles(self) -> int:
         return N_OBJ * self.n_factors
 
+    def n_factors_on(self, sim: dict) -> int:
+        """Factors per object ON THIS INSTANCE (2 per view for the appearance partition)."""
+        return len(self.cat.factor_sizes(sim))
+
     def n_tiles_on(self, sim: dict) -> int:
-        return self.n_tiles
+        return N_OBJ * self.n_factors_on(sim)
 
     def class_offsets(self, sim: dict) -> np.ndarray:
         """Where each factor's classes start in the shared class axis."""
@@ -648,7 +726,7 @@ class FactorisedTarget(CategoricalTarget):
         change mask leaves it alone."""
         j = np.asarray(edit_object, dtype=int)
         idx = np.arange(len(j))
-        F = self.n_factors
+        F = self.n_factors_on(sim)
         before = self.factor_labels(pos[:, ef - 1], sim).reshape(len(j), N_OBJ, F)[idx, j]
         after = self.factor_labels(pos[:, ef], sim).reshape(len(j), N_OBJ, F)[idx, j]
         tile = (j[:, None] * F + np.arange(F)[None, :]).astype(np.int64)

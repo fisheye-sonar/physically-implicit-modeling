@@ -227,7 +227,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         ar = np.arange(n)[:, None]
         y = cur.copy()
         y[ar, moves["tile"]] = moves["new"]
-        cm = np.zeros((n, grid.n_tiles), bool)
+        cm = np.zeros((n, grid.n_tiles_on(sim)), bool)
         cm[ar, moves["tile"]] = moves["new"] != moves["old"]
         out_dims = []
     elif grid is not None:
