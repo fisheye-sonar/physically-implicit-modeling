@@ -5,6 +5,10 @@
 
 _Last updated: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
 
+## 🔄 dw-16ray chain on the WSL remote — 2026-09-14 (unit `dw_16ray`, `scripts/drivers/dw_16ray.sh`, logs `logs/ray_ablation/dw_16ray/` on wsl-sevan)
+
+Sevan: the ray axis upward — dw-8ray with 16 usable rays (18 cast, wall rays dropped, radius 1.0), otherwise identical (20M, Transformer-L 780k). Registered in `bigcorpus.INSTANCES` (seeds train 270e9 / eval 295e9 / probe 1080e9 / probe_large 1090e9; every other instance forbids them), REGISTRY instance + run rows, `dw_extra_targets` row (appearance-fac, appearance). Stages B generate (~3–5 h, 16 workers) → C train (~10.5 h on the 4090) → D master_eval + tables → E appearance-fac probes + floors + score. ETA all done ≈ 05:00–07:00 PT 09-15. Afterwards: pull run / probes / scores / logs and the instance's probe, eval and edits splits to the lab (NOT the 51 GB corpus), record.
+
 ## ✅ dw-8ray-obs5 chain — 2026-09-13 17:50 → 2026-09-14 07:29 PT, unit `dw_8ray_obs5` — DONE (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
 
 Sevan: "launch the whole thing now" (N = 5, otherwise dw-8ray's setup; discs may be invisible to some observers).
