@@ -6,8 +6,8 @@
 `L-dw-8ray-obs5-20m` (`experiments/inverse_probe/`; units `inverse_probe_oth`, `inverse_probe_dw`,
 `inverse_probe_mirror`, `inverse_probe_batch2`, `inverse_probe_batch3`; 4–6 minutes of compute per
 run). An INSTRUMENT experiment — it changes the write, not the environment — quoted beside the
-canonical editors, never in their place. The interpretation of the Othello failures (readings 5–6)
-is UNDER DISCUSSION with Sevan as of the evening of 2026-09-14; the numbers are final.
+canonical editors, never in their place. The adjacent failure was then put to two tests of
+Sevan's design the same evening (section "The two tests" below); the numbers are final.
 
 ## The question and the bets
 
@@ -116,25 +116,15 @@ where they edit; adjacent 0.93–0.97 at points 1–8 while the output does not 
    token model matches its frame twin (+0.66 vs +0.83 is the frame-set EI's smaller range),
    obs5 is lowest (+0.61, cartesian) — but the range is narrow and every instance edits, so
    discworld's toggles are toggles of degree while Othello's flipping toggle is one of kind.
-6. **Why adjacent does not edit is NOT settled; "lookup" is not the discriminator.** The
+6. **Why adjacent does not edit — two hypotheses, two tests (see the section below).** The
    adjacency finding's reading (`adjacency-ablation.md` reading 2) was that the decodable
-   colour there is an input lookup — the placing move's parity — and the legality circuit
-   consumes a different copy. The inverse map lands on adjacent at 0.93–0.97 with the output
-   unmoved, which fits. But Sevan's objection stands: discworld position is ALSO a lookup (the
-   observation floor equals the trained probe on every regression row; smooth's frame fixes
-   position exactly) and the inverse map edits every discworld instance. So "lookup vs
-   computed" cannot be what separates adjacent from the rest. The refinement proposed
-   (unrecorded until this note, UNTESTED): the operative question is whether the fact the
-   output needs is available from context positions OTHER than the one written. On discworld
-   the current frame enters at the last position only, so any layer wanting the current
-   position must read the stream we write into; on adjacent (and no-flip) a tile's colour is
-   recoverable by attending to the token that placed it, so a write at the last position
-   changes the copy the probe reads and leaves the copy attention can re-derive; with flipping
-   on, colour depends on the whole later history and must be maintained in the residual, which
-   puts the write on the path. The direct test — apply the inverse write at EVERY context
-   position, each with its own edited board, on adjacent — has not been run (Sevan asked to
-   hold it until the hypothesis is agreed). The account does not predict adjacent's partial
-   +0.41 / 0.97 at point 1, which it can accommodate but not explain.
+   colour there is an input lookup and the legality circuit consumes a different copy. Sevan's
+   objection: discworld position is ALSO a lookup and edits, so "lookup vs computed" cannot be
+   the discriminator. My refinement — that what matters is whether the fact is recoverable
+   from context positions OTHER than the one written — was tested with Sevan's last-tile case
+   set and is NOT supported. Sevan's alternative — that adjacent's output function does not
+   extend to unreachable boards while standard Othello's does — survives the reconstruction
+   control. Details and numbers below; the mechanism behind the generalisation gap is open.
 7. **`L-oth-noflip-20m` is a control with a known answer, not a test.** By the checkerboard
    theorem (`flip-ablation.md` §4, REGISTRY) colour on that instance equals square parity in
    every position and never enters legality, so (a) the edited board — one tile off parity —
@@ -155,6 +145,82 @@ where they edit; adjacent 0.93–0.97 at points 1–8 while the output does not 
    produce live in the probe's row space, which the alignment work measured to hold 1–3% of
    the true displacement on discworld — and, separately, what makes adjacent's residual copy
    of the board inert (reading 6).
+
+## The two tests of the adjacent failure (2026-09-14 evening — Sevan's design)
+
+**Test 1 — the last-placed disc.** The just-placed disc is the only tile whose square AND
+colour enter the network through the position the write touches (colour there is fixed by the
+position embedding at offset one). If the write fails on adjacent because the layers above the
+write re-read the untouched context, editing THIS tile should succeed; if adjacent's function
+simply does not extend to recoloured boards, it should fail like every other tile. Case set:
+the 1000 canonical histories with the last-placed disc recoloured, kept where the legal set
+changes (adjacent 864, standard 792; every case adds squares, none removes). All four write
+forms at every point, and the three canonical editors RE-SEARCHED on these cases over the
+run's own grids (ND 9 points × 14 α, PI 9 × 12, GS 5 layer sets × 6 α).
+
+**Test 2 — the reconstruction control.** Overwrite with g(s_pre), the conditional mean of the
+UNEDITED (reachable) board, no edit. If the output survives, it depends on nothing the board
+fails to determine, and any degradation under g(s_post) is off-manifold extrapolation, not a
+missing 3% of the residual (the claim I had made from the R² 0.97 / guard 1.5 pair, which
+Sevan flagged as over-read). Reported as drift (RMSE from the unsteered distribution) and
+pre-fidelity (distance to the pre-edit truth relative to the unsteered model's; 1.0 = preserved;
+both models are Bayes-optimal so the scale is the same on both).
+
+| last-tile cases | unedited | inverse overwrite | inverse delta | retrieval (either) | canonical ND | canonical PI | canonical GS |
+|---|---|---|---|---|---|---|---|
+| `L-oth-adjacent-20m` (864) | −1.00 | +0.37 / 0.44 (pt 1); +0.14 / 0.63 (pt 2); ≤ −0.08 / ≥ 1.26 from pt 3 | +0.41 / 0.51 (pt 1); +0.22 / 0.72 (pt 2); guards 2–7 from pt 3 | inert or destructive | +0.22 / 1.09; guarded **+0.19 / 0.69** (pt 1) | nothing positive (−0.19 / 3.66) | nothing positive (−0.92 / 5.21) |
+| `L-oth-20m` (792) | −0.93 | +0.78 / 0.43 (pt 4) | **+0.86 / 0.25** (pt 4) | inert | +0.72 / 0.55 (pt 5) | +0.87 / 0.42 (pt 4) | +0.83 / 0.35 (layers ≥ 0) |
+
+Landing on adjacent last-tile: 0.94–0.98 at points 1–8 for the overwrite. Per-point tables in
+`scores/othello_<run>_mirror128_lasttile.json` (`canonical_on_cases` holds every ND / PI / GS arm).
+
+| g(s_pre) overwrite, no edit — canonical cases (1000) | adjacent drift / pre-fid | standard drift / pre-fid |
+|---|---|---|
+| points 0–1 | 0.004–0.005 / 1.9–2.2 | 0.033–0.034 / 9.4–9.5 |
+| points 2–4 | 0.002–0.003 / 1.2–1.4 | 0.008–0.028 / 2.0–8.0 |
+| points 5–6 | 0.005–0.007 / 2.2–3.5 | 0.007–0.020 / 1.8–6.2 |
+| points 7–8 | 0.013–0.015 / 6.0–6.7 | 0.033–0.051 / 10–16 |
+
+(The retrieval mean of the unedited board damages adjacent from point 3 on — drift 0.018–0.044 —
+so ten nearest boards are not near enough on Othello even to reconstruct. Identical numbers on
+the last-tile histories, as they must be: the control does not depend on the edit.)
+
+**Reading.**
+
+- **The positional / bypass hypothesis is not supported.** With everything about the tile
+  inside the written stream, adjacent shows the same profile it shows on the canonical cases:
+  a modest effect at the first point or two (+0.37–0.41, now inside the guard at 0.44–0.51
+  where the canonical-case guard was 0.97), then destruction from point 3 while the read-out
+  lands at ≥ 0.94. Deep-point writes were the ones the hypothesis said should now work; they
+  do not. Standard Othello edits the just-placed disc as well as any tile (+0.86 / 0.25, and
+  all three canonical editors ≥ +0.72 inside the guard). The fact's location changes collateral
+  damage a little and editability not at all.
+- **Adjacent's output IS a function of the board on reachable boards — the "unexplained 3%"
+  claim is withdrawn.** Replacing adjacent's residual with g(s_pre) leaves the output within
+  0.002–0.005 RMSE of unsteered at every point through 5, a fraction of what any edit arm moves
+  it. Standard Othello is damaged by the same replacement at points 0–3 and 6–8 (drift 0.02–0.05)
+  and survives only at points 4–5 — exactly the points where its edits work. So on standard the
+  board suffices for the output only mid-depth, and that is where the write lands; on adjacent
+  the board suffices everywhere and the write lands nowhere. Sufficiency of the board for the
+  output is necessary for the state→latent write to edit, not sufficient.
+- **What stands is Sevan's framing: a generalisation gap.** Both models' outputs are functions
+  of the board on the boards games produce. Standard Othello's function extends to boards no
+  game produces — every edit in this programme writes such a board, and it moves the output at
+  +0.86–0.88. Adjacent's does not: g(s_post) is a residual the linear probe reads as the
+  recoloured board and the model reads as nothing in particular. Why one model's board function
+  extends and the other's does not is the open question. Candidates, not claims: the INLP
+  result (`adjacent-flip-ablation.md`: 80–280 colour copies per tile on adjacent vs 24–48 on
+  standard) — g's extrapolation may move the probe-visible copies and not the ones downstream
+  reads; or adjacent's legality is computed through features that coincide with the board only
+  on-manifold (placement parity), so a recoloured board has no valid encoding to extrapolate
+  to. A legality read-out fitted on-manifold and evaluated on g(s_post) would separate these.
+
+Scripts: `othello_inverse.py --cases last-tile` (+ `--recon-only`), `othello_lasttile_gs.py`,
+`lasttile_table.py`; driver `experiments/inverse_probe/drivers/lasttile.sh`; units
+`inverse_probe_lasttile`, `inverse_probe_lasttile_gs`; scores
+`scores/othello_{L-oth-adjacent-20m,L-oth-20m}_mirror128_{lasttile,recon}.json`; logs
+`logs/inverse_probe/mirror128_*_lasttile.log`, `*_recon.log`, and (both GS runs, the unit's
+quoting dropped the run name) `mirror128__lasttile_gs.log`.
 
 Caveats: one seed of g and one α grid (0.25 … 3; several discworld deltas peak at the top of it,
 so their best may be slightly under-read); k = 10 unswept; the inverse write sees the whole pre-
