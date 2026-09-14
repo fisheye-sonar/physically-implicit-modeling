@@ -36,6 +36,7 @@ ap.add_argument("--k", type=int, default=10)
 ap.add_argument("--alphas", type=float, nargs="+", default=(0.25, 0.5, 1.0, 1.5, 2.0, 3.0))
 ap.add_argument("--points", type=int, nargs="*", default=None)
 ap.add_argument("--smoke", action="store_true")
+ap.add_argument("--tag", default="", help="suffix for the scores file (e.g. mirror128)")
 a = ap.parse_args()
 t0 = time.time()
 run = REPO / "runs" / a.run
@@ -136,6 +137,6 @@ for ell in points:
     print(f"pt {ell}: g R² {st['r2']:+.3f} | overwrite {f(arms['overwrite'])} | mean-h {f(arms['mean_overwrite'])} | "
           f"nn-overwrite {f(arms['nn_overwrite'])} | {best_d} {f(arms[best_d])} | {best_n} {f(arms[best_n])}  [{(time.time() - t0) / 60:.1f} min]", flush=True)
     del H, H_tr_t, X_tr_t; torch.cuda.empty_cache()
-tag = a.run.split("/")[-1] + ("_smoke" if a.smoke else "")
+tag = a.run.split("/")[-1] + (f"_{a.tag}" if a.tag else "") + ("_smoke" if a.smoke else "")
 (REPO / "experiments/inverse_probe/scores" / f"discworld_{tag}.json").write_text(json.dumps(out, indent=1, default=float))
 print("wrote", f"experiments/inverse_probe/scores/discworld_{tag}.json", f"[{(time.time() - t0) / 60:.1f} min]")
