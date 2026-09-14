@@ -118,7 +118,55 @@ class Frames:
         return out
 
 
-def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> Frames:
+def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False,
+                    budget_tolerance: float = 0.10) -> dict:
+    """The replicate spread per (parent run, basis): ``{"n", "steps", "seeds", "dropped_steps",
+    <col>: SD (ddof 1), <col>_mean}`` over the pooled replicate set.
+
+    GUARD (default): replicates are pooled only at a MATCHED training budget — rows whose
+    ``steps`` lie within ``budget_tolerance`` (relative) of each other form one set; when a
+    parent has replicates at several budgets, the largest set is used (ties → the larger
+    budget) and the others are listed under ``dropped_steps`` so the table can say so. A
+    390k re-training and the parent's own 421,875-step checkpoint pool (8% apart); a 390k
+    and a 780k replicate do not. ``pool_budgets=True`` overrides the guard and pools every
+    replicate of the parent regardless of budget (Sevan, 2026-09-14) — the ± then mixes
+    training budgets and Table 5 shows every budget it contains.
+    """
+    if not rep_rows:
+        return {}
+    R = pd.DataFrame(rep_rows)
+    if "steps" not in R:
+        R["steps"] = np.nan
+    R["steps"] = R["steps"].fillna(-1).astype(int)
+    cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS] + [f"{e} fid" for e in EDITORS]
+    out = {}
+    for (parent, basis), g in R.groupby(["parent", "basis"]):
+        dropped: list[int] = []
+        if not pool_budgets:
+            groups: list[list] = []
+            for _, r in g.sort_values("steps").iterrows():
+                if groups and r["steps"] <= groups[-1][0]["steps"] * (1 + budget_tolerance):
+                    groups[-1].append(r)
+                else:
+                    groups.append([r])
+            chosen = max(groups, key=lambda grp: (len(grp), max(r["steps"] for r in grp)))
+            dropped = sorted({int(r["steps"]) for grp in groups if grp is not chosen for r in grp})
+            g = pd.DataFrame(chosen)
+        if len(g) < 2:
+            continue
+        out[(parent, basis)] = {
+            "n": int(len(g)), "steps": sorted({int(x) for x in g["steps"]}),
+            "seeds": sorted(int(x) for x in g["seed"]) if "seed" in g else [],
+            "dropped_steps": dropped, "pooled_budgets": bool(pool_budgets),
+            **{c: float(g[c].std(ddof=1)) for c in cols if c in g and g[c].notna().sum() >= 2},
+            **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g}}
+    return out
+
+
+def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
+            pool_budgets: bool = False, budget_tolerance: float = 0.10) -> Frames:
+    """Every listed run's rows + its seed replicates' spread (see ``pool_replicates`` for
+    the budget guard and its override)."""
     rows, perdim, frame_set, missing = [], [], set(), []
     rep_rows = []
     for env, names in (("othello", runs_oth), ("discworld", runs_dw)):
@@ -167,6 +215,8 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
             # seed replicates of this run (<name>__seed*) → ± columns
             for rp in sorted((REPO / "runs").glob(f"*/{name}__seed*/scores.json")):
                 rs = json.loads(rp.read_text())
+                rcfg = (json.loads((rp.parent / "config.json").read_text()).get("replicate", {})
+                        if (rp.parent / "config.json").exists() else {})
                 blocks = rs.get("bases", {}) if env == "discworld" else {"mine/theirs": {
                     "probe_skill_linear": rs["probe_skill"].get("mine|linear|sequence", [np.nan]),
                     "probe_skill_mlp": rs["probe_skill"].get("mine|mlp|sequence", [np.nan]),
@@ -177,16 +227,11 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
                     r = _block_row({**base, "run": rp.parts[-2]}, key, T,
                                    "edit_index" if env == "discworld" else OTH_EI, T.get("kind", "classification"))
                     r["parent"] = name
+                    r["steps"] = rcfg.get("steps", np.nan)
+                    r["seed"] = rcfg.get("seed", -1)
                     rep_rows.append(r)
     df = pd.DataFrame(rows)
-    rep_sd = {}
-    if rep_rows:
-        R = pd.DataFrame(rep_rows)
-        cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS] + [f"{e} fid" for e in EDITORS]
-        for (parent, basis), g in R.groupby(["parent", "basis"]):
-            if len(g) >= 2:
-                rep_sd[(parent, basis)] = {"n": int(len(g)), **{c: float(g[c].std(ddof=1)) for c in cols if c in g},
-                                           **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g}}
+    rep_sd = pool_replicates(rep_rows, pool_budgets=pool_budgets, budget_tolerance=budget_tolerance)
     base_json = {}
     for bp in (REPO / "runs" / "_baselines").glob("*/baselines.json"):
         b = json.loads(bp.read_text())
@@ -557,12 +602,18 @@ def table_seed_variance(F: Frames, tag: str = "5"):
     if not F.rep_sd:
         return None
     rows = []
+    mixed = any(v.get("pooled_budgets") and len(v["steps"]) > 1 for v in F.rep_sd.values())
     for (run, basis), v in sorted(F.rep_sd.items()):
-        row = {"run": run, "basis": basis, "n": v["n"]}
-        for c in ("skill_LIN", "skill_MLP", "PI EI", "ND EI", "GS EI"):
+        row = {"run": run, "basis": basis, "n": v["n"],
+               "steps": " / ".join(f"{x // 1000}k" for x in v["steps"]) + (" (mixed budgets)" if len(v["steps"]) > 1 and v.get("pooled_budgets") else ""),
+               "seeds": ",".join(str(x) for x in v.get("seeds", [])),
+               "not pooled": " / ".join(f"{x // 1000}k" for x in v.get("dropped_steps", [])) or "—"}
+        for c in ("skill_LIN", "skill_MLP", "PI EI", "ND EI", "GS EI", "GS fid"):
             row[f"{c}"] = f"{v.get(f'{c}_mean', np.nan):+.3f} ± {v.get(c, np.nan):.3f}" if c in v else "—"
         rows.append(row)
-    return image_table(pd.DataFrame(rows).set_index(["run", "basis"]), f"Table {tag} — seed replicates: mean ± SD", col_width=1.4)
+    title = (f"Table {tag} — seed replicates: mean ± SD over the replicate set"
+             + (" · budgets POOLED (override)" if mixed else " · matched training budget (±10%)"))
+    return image_table(pd.DataFrame(rows).set_index(["run", "basis"]), title, col_width=1.25)
 
 
 # ── Figures ──────────────────────────────────────────────────────────────────

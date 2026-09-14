@@ -62,7 +62,11 @@ for target, n_seeds in zip(a.targets, a.seeds):
         if seed == 0:
             best0 = best
         rec = {"skill_by_point": skill, "best_point": best, "editors": {}}
-        for pt_label, pt in (("own_best", best), ("seed0_best", best0)):
+        canon = json.loads((run / "scores.json").read_text())["bases"].get(target, {}).get("best", {})
+        pts = [("own_best", best), ("seed0_best", best0)]
+        if canon.get("PI"):                      # the run's canonical best-EDIT point (PI's)
+            pts.append(("canonical_edit_best", int(canon["PI"]["point"])))
+        for pt_label, pt in pts:
             arms = []
             for dims in dimsets:
                 arms += dwa.pinv_arm(model, b, {pt: fits[pt]}, a_pi, space="zspace", dims=dims)
@@ -95,8 +99,8 @@ for target, n_seeds in zip(a.targets, a.seeds):
             "skill_sd_across_seeds_per_point": [float(x) for x in sk_pts.std(axis=0, ddof=1)] if n_seeds > 1 else None,
             "editors": {}}
     for name in ("PI", "ND"):
-        for pt_label in ("own_best", "seed0_best"):
-            vals = [s["editors"][pt_label].get(name) for s in seeds.values()]
+        for pt_label in ("own_best", "seed0_best", "canonical_edit_best"):
+            vals = [s["editors"].get(pt_label, {}).get(name) for s in seeds.values()]
             vals = [v for v in vals if v]
             if not vals:
                 continue
