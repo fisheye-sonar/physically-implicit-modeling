@@ -175,7 +175,14 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         select, selection = grid_selection(data_dir, n, sel_target, instance=instance)
     if select is None and use_selection:                 # the instance's filtered case list
         if _sp.exists():
-            select = np.asarray(json.loads(_sp.read_text())["select"], dtype=int)[:n]
+            _sel = json.loads(_sp.read_text())
+            select = np.asarray(_sel["select"], dtype=int)[:n]
+            # RECORD that the filtered list was used (2026-09-14): the regression blocks of
+            # every discworld run had `bench_selection: None` while the selection WAS applied,
+            # so the record could not say which cases a number came from.
+            selection = {"file": str(_sp.relative_to(_REPO)) if _sp.is_relative_to(_REPO) else str(_sp),
+                         "rule": _sel.get("rule"), "n": int(len(select)),
+                         **{k: _sel[k] for k in ("min_rays", "pool", "stats") if k in _sel}}
     # the edits split alone — its own config_json carries the sim config, so the 188 MB
     # test split is never decompressed just to read a dict (2026-09-07)
     b = load_edits(edits_h5, n_obj_keep=N_OBJ)
