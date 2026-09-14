@@ -20,3 +20,5 @@ linear probe reads the written residual as s_post ("landed").
 
 Contained: reads the run's cached probes and probe corpus; writes `scores/othello_<run>.json`;
 nothing in `pim/` changes. Unit `inverse_probe_oth`, log `logs/inverse_probe/`.
+
+**Result (Othello, 2026-09-14).** Delta write at point 5: +0.92 / 0.20 — above PI, ND and GS on this run; overwrite +0.90 / 0.22; retrieval ≤ +0.15. `research/findings/inverse-probe.md`.

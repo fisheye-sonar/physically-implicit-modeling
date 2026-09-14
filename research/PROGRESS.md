@@ -220,6 +220,16 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 — INVERSE PROBE on Othello (Sevan's idea; contained, `experiments/inverse_probe/`): a learned
+state → latent MLP EDITS BETTER than every canonical editor.** g: one-hot board → residual (1024 hidden, 40
+epochs, 943k rows); delta write h + α(g(s_post) − g(s_pre)) at point 5, α 1.5: **+0.917 / 0.20** vs PI +0.82 /
+0.30, ND +0.72 / 0.31, GS +0.83 / 0.28; plain overwrite +0.90 / 0.22; nearest-neighbour retrieval ≤ +0.15;
+mean-residual control inert. Sevan's bet ("does not edit or poorly") loses on Othello. Works where the probes
+work (pts 4–6, g R² ≥ 0.85); early points land the read-out without moving the output; the last point
+destroys. Unit ran 4 min (after one failed launch: a 4 GB broadcast in the NN search hit the NVML-mismatch
+OOM assert — fixed as a one-hot matmul). `findings/inverse-probe.md`. Discworld (8-ray, factorised state)
+held for Sevan's go.
+
 **2026-09-14 — scoring audit (Sevan: are the remote dropout runs comparable; is everything on disk current?).**
 Every non-quarantined run is at the current version (discworld 2026-09-12.2, Othello 2026-09-12.1) on the
 standardised bench (Othello: 1000 flips at a 20-move prefix from the instance's own edits games; discworld:
