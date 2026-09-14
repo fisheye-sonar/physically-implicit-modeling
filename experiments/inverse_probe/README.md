@@ -38,7 +38,7 @@ just-placed disc recoloured, the only tile whose square and colour both enter th
 position (adjacent 864 / standard 792 cases): adjacent +0.41 / 0.51 at point 1 then destruction,
 canonical ND +0.19 / 0.69, PI and GS nothing; standard +0.86 / 0.25 (ND +0.72, PI +0.87, GS +0.83).
 The positional/bypass hypothesis is not supported. (2) Reconstruction control — overwrite with
-g(s_pre), no edit: adjacent's output preserved at every point through 5 (drift 0.002–0.005),
-standard's damaged except at points 4–5. Adjacent's output is a function of the board on reachable
+g(s_pre), no edit: adjacent's output preserved at every point through 5 (guard 1.2–2.2 against the pre-edit truth),
+standard's damaged except at points 4–5 (reconstruction guard 1.2–2.2 vs 5–16). Adjacent's output is a function of the board on reachable
 boards; the failure is off-manifold (Sevan's generalisation reading). `--cases last-tile`,
 `--recon-only`, `othello_lasttile_gs.py`, `lasttile_table.py`; finding section "The two tests".

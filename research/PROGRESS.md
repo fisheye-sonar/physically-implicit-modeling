@@ -226,9 +226,8 @@ only tile whose square and colour both enter through the written position; adjac
 adjacent +0.41 / 0.51 at point 1, +0.22 / 0.72 at point 2, destruction from 3 with landing ≥ 0.94 — the same
 profile as the canonical cases; canonical editors re-searched on these cases: ND guarded +0.19 / 0.69, PI and
 GS nothing. Standard edits the same tile at +0.86 / 0.25 (ND +0.72, PI +0.87, GS +0.83 inside the guard).
-(2) Reconstruction control, overwrite with g(s_pre), no edit: adjacent's output preserved at points 0–5 (drift
-0.002–0.005 RMSE, pre-fidelity 1.2–2.2), standard's damaged at 0–3 and 6–8 (drift 0.02–0.05) and preserved only
-at 4–5, where its edits work. My "the output consumes the 3% the board does not explain" claim is withdrawn
+(2) Reconstruction control, overwrite with g(s_pre), no edit: adjacent's output preserved at points 0–5 (guard against
+the pre-edit truth 1.2–2.2), standard's damaged at 0–3 and 6–8 (guard 5–16) and preserved only at 4–5 (1.8–2.0), where its edits work. My "the output consumes the 3% the board does not explain" claim is withdrawn
 (Sevan: R² on reachable boards says nothing about g off-manifold). Adjacent's output IS a function of the board
 on reachable boards; the failure is confined to unreachable ones. Open: why standard's board function extends
 off-manifold and adjacent's does not (INLP redundancy; placement-parity features). `findings/inverse-probe.md`

@@ -162,9 +162,10 @@ run's own grids (ND 9 points × 14 α, PI 9 × 12, GS 5 layer sets × 6 α).
 UNEDITED (reachable) board, no edit. If the output survives, it depends on nothing the board
 fails to determine, and any degradation under g(s_post) is off-manifold extrapolation, not a
 missing 3% of the residual (the claim I had made from the R² 0.97 / guard 1.5 pair, which
-Sevan flagged as over-read). Reported as drift (RMSE from the unsteered distribution) and
-pre-fidelity (distance to the pre-edit truth relative to the unsteered model's; 1.0 = preserved;
-both models are Bayes-optimal so the scale is the same on both).
+Sevan flagged as over-read). Reported as the fidelity guard computed against the PRE-edit legal
+set (the ordinary guard's construction with the pre-edit truth; 1.0 = output unchanged; both
+models are Bayes-optimal so the scale is the same on both). The raw RMSE from the unsteered
+distribution is in the JSON as `drift_rmse` and is not quoted.
 
 | last-tile cases | unedited | inverse overwrite | inverse delta | retrieval (either) | canonical ND | canonical PI | canonical GS |
 |---|---|---|---|---|---|---|---|
@@ -174,14 +175,12 @@ both models are Bayes-optimal so the scale is the same on both).
 Landing on adjacent last-tile: 0.94–0.98 at points 1–8 for the overwrite. Per-point tables in
 `scores/othello_<run>_mirror128_lasttile.json` (`canonical_on_cases` holds every ND / PI / GS arm).
 
-| g(s_pre) overwrite, no edit — canonical cases (1000) | adjacent drift / pre-fid | standard drift / pre-fid |
-|---|---|---|
-| points 0–1 | 0.004–0.005 / 1.9–2.2 | 0.033–0.034 / 9.4–9.5 |
-| points 2–4 | 0.002–0.003 / 1.2–1.4 | 0.008–0.028 / 2.0–8.0 |
-| points 5–6 | 0.005–0.007 / 2.2–3.5 | 0.007–0.020 / 1.8–6.2 |
-| points 7–8 | 0.013–0.015 / 6.0–6.7 | 0.033–0.051 / 10–16 |
+| g(s_pre) overwrite, no edit — canonical cases (1000); guard vs the PRE-edit legal set, 1.0 = output unchanged | points 0–1 | points 2–4 | points 5–6 | points 7–8 |
+|---|---|---|---|---|
+| `L-oth-adjacent-20m` | 1.9–2.2 | 1.2–1.4 | 2.2–3.5 | 6.0–6.7 |
+| `L-oth-20m` | 9.4–9.5 | 2.0–8.0 | 1.8–6.2 | 10–16 |
 
-(The retrieval mean of the unedited board damages adjacent from point 3 on — drift 0.018–0.044 —
+(The retrieval mean of the unedited board damages adjacent from point 3 on — guard 8.9–22 —
 so ten nearest boards are not near enough on Othello even to reconstruct. Identical numbers on
 the last-tile histories, as they must be: the control does not depend on the edit.)
 
@@ -197,9 +196,9 @@ the last-tile histories, as they must be: the control does not depend on the edi
   damage a little and editability not at all.
 - **Adjacent's output IS a function of the board on reachable boards — the "unexplained 3%"
   claim is withdrawn.** Replacing adjacent's residual with g(s_pre) leaves the output within
-  0.002–0.005 RMSE of unsteered at every point through 5, a fraction of what any edit arm moves
-  it. Standard Othello is damaged by the same replacement at points 0–3 and 6–8 (drift 0.02–0.05)
-  and survives only at points 4–5 — exactly the points where its edits work. So on standard the
+  1.2–2.2× the trained model's own distance from truth at every point through 5. Standard
+  Othello is damaged by the same replacement at points 0–3 and 6–8 (guard 5–16) and survives
+  only at points 4–5 (guard 1.8–2.0) — exactly the points where its edits work. So on standard the
   board suffices for the output only mid-depth, and that is where the write lands; on adjacent
   the board suffices everywhere and the write lands nowhere. Sufficiency of the board for the
   output is necessary for the state→latent write to edit, not sufficient.
