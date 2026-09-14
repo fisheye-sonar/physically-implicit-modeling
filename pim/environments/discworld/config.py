@@ -138,6 +138,15 @@ class SimConfig:
     soft_psf_sigma: float = 0.0
     soft_occlusion_temp: float = 0.0
 
+    # ---- multiple observers (OPTIONAL, 2026-09-13) -----------------------
+    # n_observers  observers on a ring about the frustum's depth midpoint, observer 0 the
+    #              canonical one; observation = the N views concatenated (observers.py).
+    # region       "frustum" (the canonical containment + sampling) or "circle": the disc
+    #              of radius (y_far - y_near)/2 about the pivot — every observer's near and
+    #              far planes are tangent to it. Open boundary only.
+    n_observers: int = 1
+    region: Literal["frustum", "circle"] = "frustum"
+
     # ---- omniscient 2D rendering (OPTIONAL) ------------------------------
     # Off by default; with `omni2d = False` the renderer is bit-for-bit the
     # original 1D ray-caster.  See `render2d.py` (this package) for the full
@@ -169,8 +178,9 @@ def obs_dim(cfg: SimConfig) -> int:
     this rather than reading ``obs_res`` directly, so that adding an observation
     channel never means hunting down shape literals.
     """
+    n_views = int(getattr(cfg, "n_observers", 1))
     if getattr(cfg, "omni2d", False):
-        return int(cfg.omni2d_h) * int(cfg.omni2d_w)
+        return n_views * int(cfg.omni2d_h) * int(cfg.omni2d_w)
     if getattr(cfg, "drop_edge_rays", False):
-        return int(cfg.obs_res) - 2
-    return int(cfg.obs_res)
+        return n_views * (int(cfg.obs_res) - 2)
+    return n_views * int(cfg.obs_res)

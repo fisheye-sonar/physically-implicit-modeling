@@ -95,6 +95,10 @@ def fully_in_frustum(positions: np.ndarray, radius: float, cfg: SimConfig) -> bo
     the entire circle to be contained: centre is at least ``radius`` away from
     every frustum wall.
     """
+    if getattr(cfg, "region", "frustum") == "circle":   # the multi-observer arena (2026-09-13)
+        from .observers import inside_region
+
+        return inside_region(positions, radius, cfg)
     x = positions[:, :, 0]  # (F, n)
     y = positions[:, :, 1]  # (F, n)
 
@@ -114,6 +118,10 @@ def sample_position(rng: np.random.Generator, cfg: SimConfig, radius: float) -> 
     THE draw order every generator uses (``simulate``, the interactive world). Factoring it
     here changes no dataset: two ``rng.uniform`` calls in the same order as before.
     """
+    if getattr(cfg, "region", "frustum") == "circle":   # the multi-observer arena (2026-09-13)
+        from .observers import sample_position_region
+
+        return sample_position_region(rng, cfg, radius)
     y = rng.uniform(cfg.y_near + radius, cfg.y_far - radius)
     x_lim = frustum_half_width(y, cfg) - radius
     x = rng.uniform(-x_lim, x_lim)
@@ -163,6 +171,9 @@ def simulate(cfg: SimConfig) -> Scene:
     Retries up to ``cfg.max_gen_attempts`` times.
     """
     rng = np.random.default_rng(cfg.seed)
+    if getattr(cfg, "region", "frustum") == "circle" and cfg.boundary != "open":
+        raise ValueError('region="circle" has no walls: use boundary="open" (+ always_in_frustum '
+                         "for the stay-inside acceptance)")
 
     n = cfg.n_objects
     if n is None:

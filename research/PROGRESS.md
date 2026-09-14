@@ -5,6 +5,15 @@
 
 _Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
 
+## Multi-observer discworld — implemented 2026-09-13 afternoon, NOT yet an instance
+
+Sevan's last control before writing: N observers on a ring about the frustum's depth midpoint,
+discs confined to the circle tangent to every near/far plane. Landed as `pim/environments/discworld/observers.py`
++ `SimConfig.n_observers` / `region` (default-off, bit-identical; 5 tests) + three one-line dispatches
+(renderer, position sampler, containment test) + generator / `sim_config_from` passthrough. Animations and
+visibility statistics in `experiments/multi_observer/` (README). Awaiting Sevan's look at the renders before any
+instance (`dw-8ray-obs5`?) is registered or generated.
+
 ## ✅ OVERNIGHT CHAIN 2026-09-12 20:00 → 2026-09-13 11:10 PT — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU) — DONE
 
 **Sevan's order (2026-09-12 evening):** profile H (power dome, (1 − u²)²) for the anti-aliased

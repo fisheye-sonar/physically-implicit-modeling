@@ -68,6 +68,13 @@ def render_frame(
         ids[hit] = keep[ids[hit]]
         return d, ids, inten
 
+    # Several observers (2026-09-13, observers.py): each view is rendered by THIS function
+    # with a one-observer copy of the config, so every channel below applies per view.
+    if int(getattr(cfg, "n_observers", 1)) > 1:
+        from pim.environments.discworld.observers import render_frame_multi
+
+        return render_frame_multi(positions, radii, reflectivities, cfg, rng=rng)
+
     # Optional alternative observation channels. Both default to off, in which
     # case neither branch is taken and the hard ray-caster below runs unchanged.
     # They are mutually exclusive (enforced by `render2d.validate`).
