@@ -28,6 +28,12 @@ REPO = Path(__file__).resolve().parents[2]
 EDITORS = ("PI", "ND", "GS")
 COMPONENTS = ("o1·x", "o1·y", "o2·x", "o2·y", "o1·vx", "o1·vy", "o2·vx", "o2·vy")
 CANONICAL = {"discworld": "frustum", "othello": "mine/theirs"}
+
+
+def reg_key(bases: dict) -> str:
+    """A discworld run's REGRESSION block: frustum, or cartesian when that is the only one
+    (dw-8ray-obs5, several observers, 2026-09-13 — the frustum basis is observer-0-relative)."""
+    return "frustum" if "frustum" in bases else "cartesian"
 OTH_EI = "edit_index_symdiff"            # the Othello headline construction (2026-09-12)
 RULE, RULE_ENV = "#172239", "#000000"
 ARCH_LABEL = {"transformer_l": "L", "transformer_s": "S", "recurrent_l": "R",
@@ -62,8 +68,9 @@ def _arm_str(a: dict | None) -> str:
     return (f"{a['dims']}·" if "dims" in a else "") + f"pt{a['point']}·α{a['alpha']:g}"
 
 
-def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str) -> dict:
+def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical: bool | None = None) -> dict:
     row = {**base, "basis": key, "kind": kind,
+           "canonical": (key == CANONICAL[base["env"]]) if canonical is None else canonical,
            "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),
            "tripwire": T.get("probe_sanity", {}).get("n_violations", 0),
            "unedited": T["unedited"].get(ei_key, T["unedited"].get("edit_index", np.nan))}
@@ -96,13 +103,11 @@ class Frames:
 
     @property
     def canonical(self) -> pd.DataFrame:
-        m = [b == CANONICAL[e] for b, e in zip(self.df["basis"], self.df["env"])]
-        return self.df[m].reset_index(drop=True)
+        return self.df[self.df["canonical"]].reset_index(drop=True)
 
     @property
     def extra(self) -> pd.DataFrame:
-        m = [b != CANONICAL[e] for b, e in zip(self.df["basis"], self.df["env"])]
-        return self.df[m].reset_index(drop=True)
+        return self.df[~self.df["canonical"]].reset_index(drop=True)
 
     @property
     def archs(self) -> dict:
@@ -113,7 +118,55 @@ class Frames:
         return out
 
 
-def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> Frames:
+def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False,
+                    budget_tolerance: float = 0.10) -> dict:
+    """The replicate spread per (parent run, basis): ``{"n", "steps", "seeds", "dropped_steps",
+    <col>: SD (ddof 1), <col>_mean}`` over the pooled replicate set.
+
+    GUARD (default): replicates are pooled only at a MATCHED training budget — rows whose
+    ``steps`` lie within ``budget_tolerance`` (relative) of each other form one set; when a
+    parent has replicates at several budgets, the largest set is used (ties → the larger
+    budget) and the others are listed under ``dropped_steps`` so the table can say so. A
+    390k re-training and the parent's own 421,875-step checkpoint pool (8% apart); a 390k
+    and a 780k replicate do not. ``pool_budgets=True`` overrides the guard and pools every
+    replicate of the parent regardless of budget (Sevan, 2026-09-14) — the ± then mixes
+    training budgets and Table 5 shows every budget it contains.
+    """
+    if not rep_rows:
+        return {}
+    R = pd.DataFrame(rep_rows)
+    if "steps" not in R:
+        R["steps"] = np.nan
+    R["steps"] = R["steps"].fillna(-1).astype(int)
+    cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS] + [f"{e} fid" for e in EDITORS]
+    out = {}
+    for (parent, basis), g in R.groupby(["parent", "basis"]):
+        dropped: list[int] = []
+        if not pool_budgets:
+            groups: list[list] = []
+            for _, r in g.sort_values("steps").iterrows():
+                if groups and r["steps"] <= groups[-1][0]["steps"] * (1 + budget_tolerance):
+                    groups[-1].append(r)
+                else:
+                    groups.append([r])
+            chosen = max(groups, key=lambda grp: (len(grp), max(r["steps"] for r in grp)))
+            dropped = sorted({int(r["steps"]) for grp in groups if grp is not chosen for r in grp})
+            g = pd.DataFrame(chosen)
+        if len(g) < 2:
+            continue
+        out[(parent, basis)] = {
+            "n": int(len(g)), "steps": sorted({int(x) for x in g["steps"]}),
+            "seeds": sorted(int(x) for x in g["seed"]) if "seed" in g else [],
+            "dropped_steps": dropped, "pooled_budgets": bool(pool_budgets),
+            **{c: float(g[c].std(ddof=1)) for c in cols if c in g and g[c].notna().sum() >= 2},
+            **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g}}
+    return out
+
+
+def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
+            pool_budgets: bool = False, budget_tolerance: float = 0.10) -> Frames:
+    """Every listed run's rows + its seed replicates' spread (see ``pool_replicates`` for
+    the budget guard and its override)."""
     rows, perdim, frame_set, missing = [], [], set(), []
     rep_rows = []
     for env, names in (("othello", runs_oth), ("discworld", runs_dw)):
@@ -144,12 +197,16 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
                 for key, T in s.get("bases", {}).items():
                     rows.append(_block_row(base, key, T, OTH_EI, T.get("kind", "regression")))
             else:
+                # a cartesian block is a legacy record beside a frustum block (hidden since
+                # 2026-09-11) — but THE regression block on an instance scored in cartesian
+                # (dw-8ray-obs5, several observers, 2026-09-13), so it shows when frustum is absent
+                rk = reg_key(s["bases"])
                 for key, T in s["bases"].items():
-                    if key == "cartesian":
+                    if key == "cartesian" and rk != "cartesian":
                         continue
                     kind = T.get("kind", "regression")
-                    rows.append(_block_row(base, key, T, "edit_index", kind))
-                    if kind == "regression" and key == "frustum":
+                    rows.append(_block_row(base, key, T, "edit_index", kind, canonical=(key == rk)))
+                    if kind == "regression" and key == rk:
                         for fam, k in (("linear", "LIN"), ("mlp", "MLP")):
                             pp = np.array([p[:len(COMPONENTS)] for p in T[f"probe_perdim_{fam}"]], float)
                             perdim.append({"run": name, "env": env, "arch": s["arch"], "instance": s["instance"],
@@ -158,26 +215,23 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables") -> F
             # seed replicates of this run (<name>__seed*) → ± columns
             for rp in sorted((REPO / "runs").glob(f"*/{name}__seed*/scores.json")):
                 rs = json.loads(rp.read_text())
+                rcfg = (json.loads((rp.parent / "config.json").read_text()).get("replicate", {})
+                        if (rp.parent / "config.json").exists() else {})
                 blocks = rs.get("bases", {}) if env == "discworld" else {"mine/theirs": {
                     "probe_skill_linear": rs["probe_skill"].get("mine|linear|sequence", [np.nan]),
                     "probe_skill_mlp": rs["probe_skill"].get("mine|mlp|sequence", [np.nan]),
                     "unedited": rs["unedited"], "best": rs["best"], "arms": rs["arms"]}}
                 for key, T in blocks.items():
-                    if key == "cartesian":
+                    if key == "cartesian" and "frustum" in blocks:
                         continue
                     r = _block_row({**base, "run": rp.parts[-2]}, key, T,
                                    "edit_index" if env == "discworld" else OTH_EI, T.get("kind", "classification"))
                     r["parent"] = name
+                    r["steps"] = rcfg.get("steps", np.nan)
+                    r["seed"] = rcfg.get("seed", -1)
                     rep_rows.append(r)
     df = pd.DataFrame(rows)
-    rep_sd = {}
-    if rep_rows:
-        R = pd.DataFrame(rep_rows)
-        cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS] + [f"{e} fid" for e in EDITORS]
-        for (parent, basis), g in R.groupby(["parent", "basis"]):
-            if len(g) >= 2:
-                rep_sd[(parent, basis)] = {"n": int(len(g)), **{c: float(g[c].std(ddof=1)) for c in cols if c in g},
-                                           **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g}}
+    rep_sd = pool_replicates(rep_rows, pool_budgets=pool_budgets, budget_tolerance=budget_tolerance)
     base_json = {}
     for bp in (REPO / "runs" / "_baselines").glob("*/baselines.json"):
         b = json.loads(bp.read_text())
@@ -321,7 +375,8 @@ def table_decodability(F: Frames, tag: str = "1"):
     for env in ("othello", "discworld"):
         for inst in dict.fromkeys(C[C["env"] == env]["instance"]):
             b = F.base.get(inst)
-            bkey = CANONICAL[env]
+            bkey = CANONICAL[env] if env == "othello" else reg_key(
+                (b or {}).get("archs", {}).get(next(iter((b or {}).get("archs", {})), ""), {}).get("bases", {}))
             archs = [a for a in dict.fromkeys(C[C["instance"] == inst]["arch"])]
             block = []
             if b and archs and bkey in b["archs"].get(archs[0], {}).get("bases", {}):
@@ -492,7 +547,7 @@ def table_alignment(F: Frames, tag: str = "3",
     H = {(r["run"].split("/")[-1], r["target"]): r for r in json.loads(haufe_path.read_text())} if haufe_path.exists() else {}
     rows = []
     for r in F.df.to_dict("records"):
-        if r["basis"] not in (CANONICAL[r["env"]], "appearance-fac"):
+        if not r["canonical"] and r["basis"] != "appearance-fac":
             continue
         a, h = A.get((r["run"], r["basis"]), {}), H.get((r["run"], r["basis"]), {})
         rows.append({"env": r["env"], "run": r["run"], "target": r["basis"], "pt": a.get("point", "—"),
@@ -547,12 +602,18 @@ def table_seed_variance(F: Frames, tag: str = "5"):
     if not F.rep_sd:
         return None
     rows = []
+    mixed = any(v.get("pooled_budgets") and len(v["steps"]) > 1 for v in F.rep_sd.values())
     for (run, basis), v in sorted(F.rep_sd.items()):
-        row = {"run": run, "basis": basis, "n": v["n"]}
-        for c in ("skill_LIN", "skill_MLP", "PI EI", "ND EI", "GS EI"):
+        row = {"run": run, "basis": basis, "n": v["n"],
+               "steps": " / ".join(f"{x // 1000}k" for x in v["steps"]) + (" (mixed budgets)" if len(v["steps"]) > 1 and v.get("pooled_budgets") else ""),
+               "seeds": ",".join(str(x) for x in v.get("seeds", [])),
+               "not pooled": " / ".join(f"{x // 1000}k" for x in v.get("dropped_steps", [])) or "—"}
+        for c in ("skill_LIN", "skill_MLP", "PI EI", "ND EI", "GS EI", "GS fid"):
             row[f"{c}"] = f"{v.get(f'{c}_mean', np.nan):+.3f} ± {v.get(c, np.nan):.3f}" if c in v else "—"
         rows.append(row)
-    return image_table(pd.DataFrame(rows).set_index(["run", "basis"]), f"Table {tag} — seed replicates: mean ± SD", col_width=1.4)
+    title = (f"Table {tag} — seed replicates: mean ± SD over the replicate set"
+             + (" · budgets POOLED (override)" if mixed else " · matched training budget (±10%)"))
+    return image_table(pd.DataFrame(rows).set_index(["run", "basis"]), title, col_width=1.25)
 
 
 # ── Figures ──────────────────────────────────────────────────────────────────

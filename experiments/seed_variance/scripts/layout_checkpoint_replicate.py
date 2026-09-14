@@ -4,6 +4,7 @@ training budget with the half-step seeds. Same construction as the training-curv
 (experiments/training_curve/scripts/make_training_curve.py): the checkpoint is copied, given
 the nearest validated val_loss, and stamped with a `replicate` block.
     python experiments/seed_variance/scripts/layout_checkpoint_replicate.py noise_ablation/L-dw-noiseless-20m 421875
+    python experiments/seed_variance/scripts/layout_checkpoint_replicate.py ray_ablation/L-dw-8ray-20m nearest:390000
 """
 import json
 import shutil
@@ -12,8 +13,18 @@ from pathlib import Path
 import torch
 
 REPO = Path(__file__).resolve().parents[3]
-parent, step = sys.argv[1], int(sys.argv[2])
+parent, arg = sys.argv[1], sys.argv[2]
 src = REPO / "runs" / parent
+saved = sorted(int(p.stem.split("_")[1]) for p in (src / "ckpt").glob("step_*.pt"))
+if arg.startswith("nearest:"):                  # the saved checkpoint nearest a step budget
+    want = int(arg.split(":")[1])
+    step = min(saved, key=lambda st: abs(st - want))
+    print(f"nearest saved checkpoint to {want:,}: {step:,} (saved: {saved})")
+else:
+    step = int(arg)
+existing = sorted(src.parent.glob(f"{src.name}__seed0_s*"))
+if existing and arg.startswith("nearest:"):
+    print("exists", existing[0].relative_to(REPO)); sys.exit(0)
 dst = src.parent / f"{src.name}__seed0_s{step}"
 if (dst / "best_model.pt").exists():
     print("exists", dst.relative_to(REPO)); sys.exit(0)

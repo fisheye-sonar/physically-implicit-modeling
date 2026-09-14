@@ -28,3 +28,11 @@ the canonical probes (the seed is in the cache key).
 train seed 1 → train seed 2 → lay out seed-0 ckpt → score + `appearance-fac` on the three
 replicates → probe seeds on three runs → tables. Result: `research/findings/seed-variance.md`
 (to be written when it lands).
+
+**2026-09-14 — made generic (Sevan).** `scripts/drivers/replicate.sh <topic/parent> <seed> <steps> [targets]`
+runs one replicate end to end (train → parent's nearest checkpoint as the seed-0 member → the parent's
+categorical targets → score); replicates inherit their parent's extra targets in `master_eval`; the
+tables pool at a MATCHED budget by default (`pool_replicates`, ±10%, dropped budgets listed) with
+`pool_budgets=True` as the override; `probe_seeds_othello.py` is the Othello sibling of the probe-seed
+script (linear grid, PI + ND at the best point). Result of the pilot: `research/findings/seed-variance.md`.
+

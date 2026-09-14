@@ -26,23 +26,27 @@ joint cell vs factorised), what is the seed-to-seed spread? Two sources, measure
 
 ## Run seeds: the replicate set at ~390k steps
 
+*Numbers below are at eval version 2026-09-12.2 (every run was rescored 2026-09-12/13 after the first write-up; the spread is unchanged in size — the first version's SDs were 0.005–0.017 too — and Table 5 in the table notebooks reads the same files).*
+
 | `L-dw-noiseless-20m` | val MSE | frustum skill LIN / MLP | frustum PI | frustum GS | fac skill LIN / MLP | fac PI | fac ND | fac GS |
 |---|---|---|---|---|---|---|---|---|
-| seed 0, 780k (the canonical row) | 0.00106 | 0.959 / 0.996 | +0.233 / 1.95 | −0.099 / 0.99 | 0.433 / 0.786 | +0.014 / 1.95 | +0.628 / 0.78 | +0.352 / 0.68 |
-| seed 0, 421,875 (checkpoint) | 0.00110 | 0.957 / 0.996 | +0.217 / 2.23 | −0.104 / 1.00 | 0.425 / 0.775 | +0.007 / 1.81 | +0.614 / 0.79 | +0.330 / 0.85 |
-| seed 1, 390k | 0.00110 | 0.956 / 0.995 | +0.227 / 1.80 | −0.109 / 0.99 | 0.424 / 0.782 | +0.016 / 1.96 | +0.644 / 0.72 | +0.306 / 1.09 |
-| seed 2, 390k | 0.00110 | 0.954 / 0.996 | +0.230 / 2.01 | −0.121 / 1.00 | 0.428 / 0.785 | +0.007 / 1.77 | +0.616 / 0.80 | +0.331 / 0.83 |
-| **pooled n = 3: mean ± SD** | | 0.956 ± 0.001 / 0.996 ± 0.000 | +0.225 ± 0.007, guard 2.01 ± 0.21 | −0.111 ± 0.009, guard 1.00 ± 0.01 | 0.426 ± 0.002 / 0.781 ± 0.005 | +0.010 ± 0.005 | **+0.624 ± 0.017**, guard 0.77 ± 0.04 | **+0.322 ± 0.014**, guard 0.92 ± 0.15 |
+| seed 0, 780k (the canonical row) | 0.00106 | 0.959 / 0.996 | +0.231 / 1.54 | -0.082 / 1.07 | 0.433 / 0.786 | +0.007 / 1.93 | +0.612 / 0.80 | +0.326 / 0.71 |
+| seed 0, 421,875 (checkpoint) | 0.00110 | 0.957 / 0.996 | +0.211 / 1.77 | -0.086 / 1.04 | 0.425 / 0.775 | -0.001 / 1.78 | +0.597 / 0.82 | +0.298 / 0.74 |
+| seed 1, 390k | 0.00110 | 0.956 / 0.995 | +0.215 / 1.96 | -0.090 / 1.05 | 0.424 / 0.782 | +0.003 / 1.74 | +0.626 / 0.83 | +0.291 / 0.80 |
+| seed 2, 390k | 0.00110 | 0.954 / 0.996 | +0.223 / 2.13 | -0.092 / 1.03 | 0.428 / 0.785 | -0.003 / 1.78 | +0.600 / 0.82 | +0.305 / 0.75 |
+| **pooled n = 3: mean ± SD** | | 0.956 ± 0.001 / 0.996 ± 0.000 | +0.217 ± 0.006, guard 1.95 ± 0.177 | -0.089 ± 0.003, guard 1.04 ± 0.006 | 0.426 ± 0.002 / 0.781 ± 0.005 | -0.000 ± 0.003 | **+0.608 ± 0.016**, guard 0.82 ± 0.009 | **+0.298 ± 0.007**, guard 0.76 ± 0.032 |
 
 **Reading.**
 1. **Training seed barely moves anything.** Decodability SDs are ≤ 0.005; the Edit Index SDs
    are 0.005–0.017 across every editor and both targets. The half-budget 780k-vs-390k
    difference (seed 0 at 780k vs its own 422k checkpoint) is of the same size as the seed
    spread: +0.628 vs +0.614 on ND, 0.786 vs 0.775 on MLP skill.
-2. **The guard is where the variance lives.** GS's fidelity ratio ranges 0.68–1.09 across the
-   set (SD 0.15) while its Edit Index sits at 0.31–0.35; PI's guard on the regression target
-   ranges 1.80–2.23. A one-seed row can therefore land on either side of the guard at its best
-   arm without the index moving — read guard verdicts near 1.0 as ±0.15.
+2. **The guard moves more than the index, on the arms that fail it.** The regression PI
+   guard ranges 1.54–2.13 across the set (SD 0.18) while its index sits at 0.21–0.23; the
+   editors that pass the guard hold it tightly (factorised ND 0.80–0.83, GS 0.71–0.80). So a
+   one-seed guard verdict on a FAILING arm is soft by ±0.2, a passing one is firm to ±0.03.
+   (Before the 2026-09-12 rescoring, GS's guard on this target had spanned 0.68–1.09 across
+   the same seeds — a reminder that a guard near 1.0 is the least stable number in a row.)
 3. **What this licenses.** Contrasts of ≥ 0.05 on the Edit Index between runs of this family
    are outside the seed spread (≈ 3 SD); the joint-cell vs factorised GS difference on 8-ray
    (+0.61 vs +0.46) and the 5-ray vs 8-ray bump (+0.58 vs +0.46 on GS, +0.49 vs +0.41 on PI)

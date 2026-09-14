@@ -44,3 +44,24 @@ val 2.4351, skill 0.973 / 0.978, PI −0.206 / 1.22, ND +0.053 / 2.95, GS inert.
 `outputs/inlp_compare_copies_dropout0_390k_vs_780k.png`, `outputs/inlp_compare_r2_dropout0_390k_vs_780k.png` from `scripts/inlp_compare.py`
 ("label=score.json" per run — the same script will take the dropout-0.3 arm as a fourth line). INLP ran 96 min on the lab 5090 while it shared
 the card with a discworld training job (26 min alone for the dropout run).
+
+**Third arm DONE (2026-09-13 17:46; rescored at eval 2026-09-12.1 on the lab box).** Dropout 0.3, same optimum (val 2.4354).
+Canonical (guarded, fid ≤ 1.1): **PI +0.172 / 1.04, ND +0.159 / 0.73** — the first oth-adjacent run on which canonical editors land
+(dropout 0.1: ND +0.107 / 1.02; dropout 0: nothing). INLP copies 185 / 137 / 115 / 101 / 97 / 90 / 87 / 86, plateau-then-cliff cascades,
+best guarded K-copy edit +0.445 / 0.52 (pt 3, K=64). `scripts/canonical_table.py` (four arms from scores.json), `scripts/inlp_compare.py`
+(`outputs/inlp_compare_*_dropout_0_01_03.png`), `scripts/covariance_dim.py` (`scores/covariance_dim.json`: participation ratio of the
+standardised residual covariance RISES with dropout, 44 → 81 → 84 at point 1 — dropout decorrelates the stream; it does not compress it).
+⚠ Eval versions: the remote scores at `2026-09-01.4` (old bench); the lab box rescored every Othello run at `2026-09-12.1` on 2026-09-12
+(new 1000-case bench, symmetric-difference headline). Every run trained on the remote is rescored here (`scripts/drivers/score_pending.sh`,
+~4 min with pulled probes) before it enters a table; the remote drivers keep the remote's old notebook name `build_full_table.ipynb`.
+
+**Fourth arm IN FLIGHT (2026-09-13 19:41 →).** `L-oth-adjacent-drop07-390k`, `--dropout 0.7`, `drivers/oth_adjacent_drop07.sh`, unit
+`oth_adjacent_drop07`; ETA scored on the remote ≈ 09:30 PDT 2026-09-14, then rescore + INLP + covariance here.
+
+**Fourth arm DONE (2026-09-14 09:37; rescored at 2026-09-12.1).** Dropout 0.7: val 2.4403 (0.008 above the floor — the first arm
+short of optimal; eval-mode val sat at 2.66–2.75 for 110k steps before converging), skill 0.981 / 0.986, guarded PI −0.168 / 0.95,
+ND +0.033 / 0.98 — editability falls back from the 0.3 peak. INLP copies 169 / 126 / 112 / 106 / 98 / 93 / 94 / 93, block-like
+plateaus at every depth (half-R² 63 … 32), point-1 R² 0.72 (colour computed later), best guarded K-copy edit +0.391 / 0.69 (pt 4, K=64).
+Five-way figures `outputs/inlp_compare_*_dropout_0_01_03_07.png`; `scores/covariance_dim.json` has all five arms (PR at pt 1: 44 / 40 /
+81 / 84 / 76). Reading: editability vs dropout is an inverted U peaking at 0.3 — enough read-channel noise prunes the weak additive
+tail; too much delays the colour computation and widens the redundant block until single-direction edits lose their handle again.

@@ -109,6 +109,12 @@ def parse_args() -> argparse.Namespace:
                    help="OPTIONAL soft rendering: 'lambert' curves the object's image "
                         "instead of a constant-reflectivity plateau; 'power' is the smooth "
                         "dome (1-(perp/r)^2)^p with p = --soft-profile-power (dw-smooth)")
+    g.add_argument("--n-observers", type=int, default=1, metavar="N",
+                   help="OPTIONAL: N observers on a ring about the frustum's depth midpoint; the "
+                        "observation is their N views concatenated (pim/.../observers.py)")
+    g.add_argument("--region", choices=["frustum", "circle"], default="frustum",
+                   help="OPTIONAL: where discs live — the canonical frustum, or the circle every "
+                        "observer's near/far planes are tangent to (open boundary only)")
     g.add_argument("--soft-profile-power", type=float, default=2.0, metavar="P",
                    help="exponent of the 'power' profile (0.5 = lambert; 2 = dw-smooth)")
     g.add_argument("--soft-psf-sigma", type=float, default=0.0, metavar="RAYS",
@@ -193,6 +199,8 @@ def _sim_from_args(args) -> SimConfig:
         soft_edge=args.soft_edge,
         soft_shading=args.soft_shading,
         soft_profile_power=args.soft_profile_power,
+        n_observers=args.n_observers,
+        region=args.region,
         soft_psf_sigma=args.soft_psf_sigma,
         soft_occlusion_temp=args.soft_occlusion_temp,
         omni2d=args.omni2d,

@@ -173,8 +173,11 @@ of the fitted artefact's cache key, so every seed's fits persist beside the cano
 set, and the spread is written into the run's own variance file). Half-budget replicates are
 legitimate where the loss and the downstream metrics have plateaued by then — check the
 training-curve record first — and the parent's own checkpoint at that budget must join the set
-so seed 0 is compared at equal training. A replicate that changes anything but the seed is not
-a replicate; it is a new run with its own row.
+so seed 0 is compared at equal training. The tables therefore pool only at a MATCHED budget by
+default (a tolerance of a few percent lets the nearest saved checkpoint join) and list any
+budget they left out; pooling across budgets is a deliberate, visible override, and the table
+says so when it is on. A replicate that changes anything but the seed is not a replicate; it
+is a new run with its own row.
 
 ## Local instantiations (this project — not portable)
 

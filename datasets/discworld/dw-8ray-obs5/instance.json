@@ -1,0 +1,18 @@
+{
+  "instance": "dw-8ray-obs5",
+  "class": "discworld",
+  "created": "2026-09-13 evening (the multi-observer control: dw-8ray seen by five observers)",
+  "description": "Identical to dw-8ray (2 discs, radius 1.0, 10 rays cast / 8 kept per view, no position noise, no observation noise, 40 frames, fixed reflectivities, open boundary, 20M training sequences, matched Transformer-L recipe) in TWO coupled fields. (1) FIVE observers instead of one: observer k is the canonical observer rotated about the pivot (0, 7.5) — the frustum's depth midpoint — by 2*pi*k/5, so each sits 7.5 from the pivot looking at it; the observation is the five 8-ray views concatenated observer-major (40 values). (2) The discs live in the CIRCLE of radius 4.5 about the pivot, which every observer's near and far planes are tangent to (region='circle'); sequences are accepted only if both discs stay fully inside it (the stay-inside analogue of always_in_frustum). Every arena position lights at least one kept ray in every view (scanned); a disc is nonetheless invisible to a given observer ~7% of the time through OCCLUSION by the other disc (accepted by Sevan), never to all five at once. Purpose (Sevan, 2026-09-13): position is more determined (as with anti-aliasing) but through a different pressure — integrating partial views — and the 8-ray output is five times wider again: does the categorical read-out still edit at +0.5..0.6 when the output is 40-dimensional? Read-outs: Cartesian regression basis (the frustum basis is observer-0-relative and no longer privileged); per-observer factorised appearance (5 centre+length pairs per disc).",
+  "sim": {
+    "n_objects": 2, "frames": 40, "obs_res": 10, "drop_edge_rays": true, "kept_rays_per_view": 8,
+    "n_observers": 5, "region": "circle", "arena_radius": 4.5, "pivot": [0.0, 7.5],
+    "radius": 1.0, "boundary": "open", "position_noise": 0.0, "obs_noise_std": 0.0,
+    "fixed_reflectivities": true, "always_in_frustum": "stay inside the circle", "max_edit_attempts": 2000
+  },
+  "seeds": {"train": "230e9 (bigcorpus base, 20M sequences)", "eval": "255.2e9", "edits": "255.3e9",
+            "probe_120k": "1060e9 + 200", "probe_250k": "1070e9 + 200"},
+  "layout": "v2 from birth (generate_dataset.py --role; bigcorpus writes layout.json)",
+  "driver": "scripts/drivers/dw_8ray_obs5.sh (unit dw_8ray_obs5)",
+  "run": "runs/observer_ablation/L-dw-8ray-obs5-20m",
+  "note": "HAND-WRITTEN summary for humans — never read by code. The machine-written contracts are train/corpus.json and each split's manifest / config_json."
+}

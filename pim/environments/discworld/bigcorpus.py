@@ -95,6 +95,15 @@ _SMOOTH_RANGES = [(200_000_000_000, 220_000_000_000, "dw-smooth train"),
                   (225_000_000_000, 225_400_000_000, "dw-smooth eval suite"),
                   (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
                   (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")]
+# dw-8ray-obs5 (2026-09-13 evening): dw-8ray seen by FIVE observers on a ring about the frustum's
+# depth midpoint, discs confined to the circle tangent to every observer's near/far planes
+# (observers.py; Sevan's "increasing observers" control). Observation = 5 × 8 kept rays = 40.
+_OBS5 = ["--n-observers", "5", "--region", "circle"]
+_OBS5_RANGES = [(230_000_000_000, 250_000_000_000, "dw-8ray-obs5 train"),
+                (255_000_000_000, 255_400_000_000, "dw-8ray-obs5 eval suite"),
+                (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
+                (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large")]
+_SMOOTH_RANGES = _SMOOTH_RANGES + _OBS5_RANGES     # every list that forbids dw-smooth forbids obs5 too
 _NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
                (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
                (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
@@ -219,7 +228,39 @@ INSTANCES = {
                       (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
                       (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large"),
                       (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
-                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")],
+                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")] + _OBS5_RANGES,
+    },
+    "dw-8ray-obs5": {  # dw-8ray + five observers on the ring, circular arena (observers.py)
+        "base_seed": 230_000_000_000,
+        "obs_dim": 40,
+        "sim_flags": _COMMON_FLAGS + _RAYS_8 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"] + _OBS5,
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (60_000_000_000, 80_000_000_000, "dw-8ray train"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (110_000_000_000, 130_000_000_000, "dw-blink train"),
+                      (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                      (160_000_000_000, 180_000_000_000, "dw-5ray train"),
+                      (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
+                      (200_000_000_000, 220_000_000_000, "dw-smooth train"),
+                      (225_000_000_000, 225_400_000_000, "dw-smooth eval suite"),
+                      (255_000_000_000, 255_400_000_000, "dw-8ray-obs5 eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
+                      (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large"),
+                      (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
+                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large"),
+                      (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
+                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large"),
+                      (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
+                      (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large")],
     },
 }
 

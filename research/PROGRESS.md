@@ -3,7 +3,55 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-13 11:30 PT — OVERNIGHT CHAIN DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+_Last updated: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+## ✅ dw-8ray-obs5 chain — 2026-09-13 17:50 → 2026-09-14 07:29 PT, unit `dw_8ray_obs5` — DONE (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
+
+Sevan: "launch the whole thing now" (N = 5, otherwise dw-8ray's setup; discs may be invisible to some observers).
+Stages: B generate (eval/edits/probes + 20M corpus, 128 GB memmap, ~3 h) → B' smoke-train → C train 780k (~8 h)
+→ W wait for `experiments/multi_observer/SCORER_READY` (≤ 12 h, hourly warning pings) → D appearance-fac probes
+(`--basis cartesian`) + floors → master_eval → test loss → full tables → ALL DONE (~05:30 2026-09-14).
+**Relaunch 17:50** after stage B1b failed on 1 seed in ~1,500: the edits generator drew teleport targets from
+observer 0's frustum (its own sampler, not `sim.sample_position`); fixed in `edits_dataset._sample_in_frustum`
+(commit 53af51c, GOTCHAS 2026-09-13), partial `edits.h5` moved to `_unused/` (ledgered), eval split kept.
+**Scorer pieces DONE 18:40 (commit 733b32c), marker NOT yet touched:** per-view factorised appearance target
+(`grid_target`: `_view_cells`, mixed-radix joint code, factors (centre+1, length+1) per view; one view is
+bit-identical; `tests/test_multiview_target.py`); master_eval `dw_bases_by_instance` (obs5 → cartesian),
+instance-aware `discworld_blocks`, baselines loop, `dw_extra_targets` entry; `tables.reg_key` so a lone
+cartesian block is the canonical row; both table notebooks execute. Geometry fact: every arena position lights
+≥ 1 kept ray in every view (the 7 % invisibility is occlusion). **Generation DONE 21:54** (corpus VERIFIED 20M / 0 dup / 128 GB; selection 1000/1000 from 1040 scanned, 47/4000
+identical frames, mean 11 entries changed, teleport mean 1.9 — the round arena is tighter than the frustum); smoke-train
+OK; **training started 21:55** (ETA ~06:00). **Scorer smoke PASSED 22:10 and the marker is touched** — it needed one
+more fix: `arms.fit_probes` refused categorical targets in any basis but frustum (the guard now covers only the
+snapped target, whose cell centres ARE frustum coordinates). Stage D will run fac probes (`--basis cartesian`) →
+master_eval (cartesian regression block + fac) → tables; ALL DONE ~07:30.
+**DONE 07:29 (chain complete with marker; monitors stopped).** Training 21:55 → 05:51 (476 min; val 0.00302 vs
+dw-8ray 0.00574); stage D fac probes + floors 05:51 → 07:05; master_eval + tables → 07:29. **Result: five observers
+make the categorical read-out MORE decodable (MLP 0.99) and LESS editable — appearance-fac PI +0.16 / ND +0.42 /
+GS +0.37 vs dw-8ray's +0.38 / +0.49 / +0.46; cartesian regression block inert (PI +0.19 / 1.60). Lands on
+dw-smooth's numbers.** `findings/observer-ablation.md` (observed), REGISTRY run row, run added to
+`build_full_tables`. Post-chain fix: the baselines cell hardwired basis "frustum" for categorical floors → the
+obs5 fac floors were fitted but not recorded; now `basis0 = dw_bases_for(inst)[0]`, master_eval rerun (skips all
+runs; adds the floor block), tables re-executed. **Open:** waterfall; N = 1 on the circle (arena vs observers
+control); second seed; whether obs5 enters the paper shortlist.
+**Owed while it runs (original list, kept for the record):** (1) master_eval per-instance
+regression basis — dw-8ray-obs5 scores the **Cartesian** block, not frustum (also the baselines cell);
+(2) the **per-observer factorised appearance target** in `grid_target.py` — for `n_observers > 1` the
+factorisation is (centre, length) per observer per disc (5 × 20 classes per disc; the joint cell is NOT
+enumerated); with one observer it must reproduce dw-8ray's `appearance-fac` labels exactly (test);
+`master_eval dw_extra_targets` gains `"observer_ablation/L-dw-8ray-obs5-20m": ("appearance-fac",)`.
+Smoke before launch: 64-seq suite with the flags re-renders bit-exactly through both config paths, discs inside
+the circle every frame, ray zones build on the 40-entry frames (~10 differing entries per case, all observers
+involved). Storage: ~150 GB (378 GB free before). Monitors armed in the orchestrator session.
+
+## Multi-observer discworld — implemented 2026-09-13 afternoon (superseded by the launch above)
+
+Sevan's last control before writing: N observers on a ring about the frustum's depth midpoint,
+discs confined to the circle tangent to every near/far plane. Landed as `pim/environments/discworld/observers.py`
++ `SimConfig.n_observers` / `region` (default-off, bit-identical; 5 tests) + three one-line dispatches
+(renderer, position sampler, containment test) + generator / `sim_config_from` passthrough. Animations and
+visibility statistics in `experiments/multi_observer/` (README). Awaiting Sevan's look at the renders before any
+instance (`dw-8ray-obs5`?) is registered or generated.
 
 ## ✅ OVERNIGHT CHAIN 2026-09-12 20:00 → 2026-09-13 11:10 PT — units `dw_smooth_gen` (CPU) + `rescore_protocol` (GPU) — DONE
 
@@ -85,7 +133,8 @@ legal-mass filter), caught by Sevan, retracted the same day; GOTCHAS entry rewri
 **Dropout ablation (2026-09-11 evening):** `scripts/train.py` gained `--resume` (exact continuation from `ckpt/latest.pt`, incl. optimizer/RNG/history; extendable; token sources fast-forward the batch stream so a resumed run reproduces an uninterrupted one — `tests/test_training_resume.py`) and `--dropout`. `L-oth-adjacent-nodrop-390k` launching on wsl-sevan (unit `oth_adjacent_nodrop`; oth-adjacent data built there from scratch in layout v2): dropout 0, 390k steps (~13 h on the 4090), then INLP + K-copy edits vs the dropout run. `experiments/dropout_ablation/`.
 **Dropout ablation DONE (2026-09-12 ~12:00):** `L-oth-adjacent-nodrop-390k` trained (12.5 h, same optimum); INLP copies per tile 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — MORE redundant without it; K ≤ 16 edits inert; best K-copy edit +0.45 / 0.37. The fused code is the rule's. Canonical master_eval scores on the remote pending at write time; run dir pulled to the lab box.
 **Extension DONE (2026-09-13 03:21):** `dropout_ablation/L-oth-adjacent-nodrop-20m` = the no-dropout run continued 390k → 780k via `--resume` (interrupted once at 400k when a Microsoft Store WSL update shut the VM down; resumed exactly; the keepalive task is now a self-restarting loop). INLP copies per tile 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 vs 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 at 390k and 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout — the tail prunes 10–20 % with doubled training but stays 1.2–1.6× the dropout run's; K-copy edit curves unchanged (K ≤ 16 inert; +0.42 at pt 1, K=128); canonical PI −0.21 / ND +0.05 / GS inert, skill 0.973 / 0.978. The redundancy is the regime's steady state. Run dir + scores pulled to the lab box; `experiments/dropout_ablation/scripts/inlp_compare.py` builds the N-run comparison figures/tables from the score files. Written up in `findings/adjacent-flip-ablation.md` §Dropout ablation → Extension.
-**Dropout 0.3 in flight (2026-09-13 03:22 →):** `dropout_ablation/L-oth-adjacent-drop03-390k` (Sevan's ask: the other direction), unit `oth_adjacent_drop03` on wsl-sevan, driver `experiments/dropout_ablation/drivers/oth_adjacent_drop03.sh` (queued behind the extension via a wait stage; smoke `runs/_smoke/L-oth-smoke-drop03` on the remote); 390k resumable steps, ETA training ≈ 16:00 PDT, scored ≈ 17:30; then INLP vs dropout 0 / 0.1.
+**Dropout 0.3 DONE (2026-09-13 17:46) and rescored on one protocol:** `dropout_ablation/L-oth-adjacent-drop03-390k` — same optimum (val 2.4354); at eval 2026-09-12.1 **PI +0.172 / fid 1.04 and ND +0.159 / 0.73 land inside the guard** (dropout 0.1: ND +0.107 / 1.02 only; dropout 0 at 390k and 780k: nothing). INLP copies at point 1 283 (dropout 0) → 232 (0.1) → 185 (0.3), plateau-then-cliff cascades at 0.3, K-copy window moving deeper (pt 1 → 2 → 3). Compression check (`experiments/dropout_ablation/scripts/covariance_dim.py`) REFUTES the stated prediction: participation ratio of the residual covariance RISES with dropout (44 → 81 → 84) — dropout decorrelates the stream and confines colour to a block of sufficient copies rather than compressing anything. All four arms now scored at eval 2026-09-12.1 (`canonical_table.py`, `inlp_compare.py`). Written up in `findings/adjacent-flip-ablation.md` §Dropout ablation → Dropout 0.3; REGISTRY rows.
+**Dropout 0.7 DONE (2026-09-14 09:37, rescored 09:40):** `dropout_ablation/L-oth-adjacent-drop07-390k` — val 2.4403 (0.008 above the floor; eval-mode val stuck at 2.66–2.75 for 110k steps before dropping), skill 0.981 / 0.986, guarded PI −0.168 / ND +0.033 — editability FALLS BACK from the 0.3 peak (inverted U in dropout). INLP point-1 copies 169 (283 → 232 → 185 → 169 for 0 → 0.1 → 0.3 → 0.7) but wide redundant plateaus at every depth and colour computed later (pt-1 R² 0.72; K-copy window at pt 4). Five arms on one protocol: `experiments/dropout_ablation/scripts/canonical_table.py`, `inlp_compare.py` (`outputs/*_dropout_0_01_03_07.png`), `covariance_dim.py`. Written up in `findings/adjacent-flip-ablation.md` §Dropout ablation → Dropout 0.7; REGISTRY row. Both GPUs idle. Open: second seed at 0.3 (→ `replicated`), dropout sweep on standard Othello, 0.5 to locate the peak.
 **Still open:** the recoloured-tile split
 (only 2/42 clean cases have one — needs a different counterfactual construction), extended-α + landing sweep, a second seed.
 
@@ -170,6 +219,14 @@ grid-4x2, grid-64x32) imports the fix fresh at each stage; **chain 3** (`probe_t
 done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` with the full
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
+
+**2026-09-14 — replicate machinery made generic (Sevan: "make those changes; guard by default, override
+available").** (1) `master_eval`: a replicate inherits its parent's extra targets (`extra_targets_of`); the
+three hand entries removed. (2) `pim.figures.tables.pool_replicates`: pooled per (parent, basis) at a
+matched budget (±10%, nearest checkpoint joins; other budgets listed as "not pooled"); `collect(pool_budgets=
+True)` / `POOL_BUDGETS` in both table notebooks overrides (Table 5 says "mixed budgets"); 4 tests.
+(3) `scripts/drivers/replicate.sh <topic/parent> <seed> <steps> [targets]` — one replicate end to end;
+`layout_checkpoint_replicate.py … nearest:<steps>`. (4) `probe_seeds_othello.py`. WORKFLOW/REGISTRY updated.
 
 **12:15 PT 2026-09-12 — seed-variance pilot CLOSED (stopped after the canonical run's probe seeds, Sevan's call;
 my ETA had slipped 08:00 → 18:00 because the probe refits ran at all 9 points and each seed re-collects its
