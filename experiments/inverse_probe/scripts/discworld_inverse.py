@@ -37,10 +37,13 @@ ap.add_argument("--alphas", type=float, nargs="+", default=(0.25, 0.5, 1.0, 1.5,
 ap.add_argument("--points", type=int, nargs="*", default=None)
 ap.add_argument("--smoke", action="store_true")
 ap.add_argument("--tag", default="", help="suffix for the scores file (e.g. mirror128)")
+ap.add_argument("--basis", default="auto", help="frustum | cartesian | auto (= the run's canonical regression block)")
 a = ap.parse_args()
 t0 = time.time()
 run = REPO / "runs" / a.run
 S = json.loads((run / "scores.json").read_text())["settings"]
+_bases = json.loads((run / "scores.json").read_text())["bases"]
+BASIS = a.basis if a.basis != "auto" else ("frustum" if "frustum" in _bases else "cartesian")
 inst = json.loads((run / "config.json").read_text())["data"]["instance"]
 model, _ = load_checkpoint(run / "best_model.pt", device=DEV); model.eval(); NP = n_points(model)
 span = int(getattr(model, "state_span", 39))
@@ -53,28 +56,28 @@ with h5py.File(layout.probe_file("discworld", inst, "120k"), "r") as f:
     pos = f["positions"][:n_seq, :span, :N_OBJ, :].astype(np.float32)
     vel = f["velocities"][:n_seq, :span, :N_OBJ, :].astype(np.float32)
 sim = json.load(open(layout.probe_manifest("discworld", inst, "120k")))["sim"]
-Y, _ = dwa._targets("full", pos, vel, sim, "frustum")                    # (N, T, 8)
+Y, _ = dwa._targets("full", pos, vel, sim, BASIS)                    # (N, T, 8)
 T = Y.shape[1]
 perm = np.random.default_rng(0).permutation(n_seq)
 tr_seq, te_seq = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
 X_all = Y.reshape(-1, Y.shape[-1]).astype(np.float32)                    # (N·T, 8)
 row_seq = np.repeat(np.arange(n_seq), T)
 tr = np.isin(row_seq, tr_seq); te = ~tr
-print(f"{a.run} ({inst}): {n_seq} sequences × {T} frames = {len(X_all):,} rows; {NP} points; "
+print(f"{a.run} ({inst}, basis {BASIS}): {n_seq} sequences × {T} frames = {len(X_all):,} rows; {NP} points; "
       f"hidden {a.hidden}, epochs {a.epochs}, k {a.k}", flush=True)
 
 # ── the bench: s_pre (frustum full state at EF−1), s_post (the pre-dynamics target, dims all)
-b = dwb.load_bench(model, n=50 if a.smoke else S["dw_bench_n"], target="full", basis_name="frustum", instance=inst)
-bp, bv = dwb._to_basis(b.pos[:, EF - 1], b.vel[:, EF - 1], b.sim, "frustum")
+b = dwb.load_bench(model, n=50 if a.smoke else S["dw_bench_n"], target="full", basis_name=BASIS, instance=inst)
+bp, bv = dwb._to_basis(b.pos[:, EF - 1], b.vel[:, EF - 1], b.sim, BASIS)
 s_pre = np.concatenate([bp.reshape(b.n, -1), bv.reshape(b.n, -1)], 1).astype(np.float32)
 s_post = b.tgt.cpu().numpy().astype(np.float32)
 cm = b.change_mask.cpu().numpy()
 assert np.allclose(s_pre[~cm], s_post[~cm], atol=1e-4), "unedited dims of s_pre and the target differ"
 u = dwa.unsteered(model, b)
-canon = json.loads((run / "scores.json").read_text())["bases"]["frustum"]["best"]
+canon = _bases[BASIS]["best"]
 print(f"bench: {b.n} cases · unedited {u['edit_index']:+.3f} · canonical PI {canon['PI']['edit_index']:+.3f}/{canon['PI']['fidelity_ratio']:.2f}  "
       f"GS {canon['GS']['edit_index']:+.3f}/{canon['GS']['fidelity_ratio']:.2f}", flush=True)
-lin = None if a.smoke else {e: p for e, (p, _) in dwa.fit_probes(model, target="full", family="linear", basis_name="frustum",
+lin = None if a.smoke else {e: p for e, (p, _) in dwa.fit_probes(model, target="full", family="linear", basis_name=BASIS,
                                                                     cache_dir=run / "probes", log=None, require_cached=True, **recipe).items()}
 Xpre_t, Xpost_t = (torch.from_numpy(x).to(DEV) for x in (s_pre, s_post))
 
@@ -100,7 +103,7 @@ def run_arm(ell, h0, h_new):
         rec["readout_err_before"] = readout_error(h0, b.tgt, lin[ell]); rec["readout_err_after"] = readout_error(h_new, b.tgt, lin[ell])
     return rec
 
-out = {"run": a.run, "instance": inst, "n_seq": n_seq, "rows": int(len(X_all)), "hidden": a.hidden, "epochs": a.epochs, "k": a.k,
+out = {"run": a.run, "instance": inst, "basis": BASIS, "n_seq": n_seq, "rows": int(len(X_all)), "hidden": a.hidden, "epochs": a.epochs, "k": a.k,
        "unedited": {k: v for k, v in u.items() if isinstance(v, (int, float))},
        "canonical": {e: {"edit_index": canon[e]["edit_index"], "fidelity_ratio": canon[e]["fidelity_ratio"]} for e in ("PI", "GS")},
        "points": {}}
