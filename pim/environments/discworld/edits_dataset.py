@@ -75,6 +75,10 @@ def _sample_in_frustum(
     The margin is subtracted from every boundary, so a circle of radius
     ``margin`` centred at the returned point will be fully contained.
     """
+    if getattr(cfg, "region", "frustum") == "circle":   # the multi-observer arena (2026-09-13)
+        from .observers import sample_position_region
+
+        return np.array(sample_position_region(rng, cfg, margin), dtype=np.float32)
     y_lo = cfg.y_near + margin
     y_hi = cfg.y_far - margin
     if y_lo >= y_hi:

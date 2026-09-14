@@ -85,3 +85,17 @@ def test_circle_region_sampling_and_acceptance():
     assert ob.inside_region(scene.positions, cfg.radius, cfg)
     with pytest.raises(ValueError):
         simulate(dataclasses.replace(cfg, boundary="bounce"))
+
+
+def test_edit_teleports_are_drawn_from_the_arena():
+    """The edits generator's own sampler must follow the region too (2026-09-13: it drew
+    from observer 0's frustum and the circle test then starved the search)."""
+    from pim.environments.discworld.edits_dataset import _sample_in_frustum
+    cfg = _cfg(region="circle", n_observers=5, radius=1.0)
+    rng = np.random.default_rng(1)
+    pts = np.array([_sample_in_frustum(rng, cfg, margin=cfg.radius) for _ in range(3000)])
+    dist = np.linalg.norm(pts - ob.pivot(cfg), axis=1)
+    assert dist.max() <= ob.region_radius(cfg) - cfg.radius + 1e-6
+    # and it fills the arena, not just the frustum's overlap with it: some points lie outside
+    # the frustum's lateral wedge
+    assert (np.abs(pts[:, 0]) > 0.5 * pts[:, 1]).any()
