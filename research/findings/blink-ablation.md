@@ -1,5 +1,8 @@
 # Blink ablation — position as a carried state is still not editable (2026-09-08)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Question.** In every discworld instance the current frame shows every object, so a model
 never has to remember a position; the flip ablation had shown that a decodable variable
 the dynamics do not use is not editable. dw-blink removes an object from the observation

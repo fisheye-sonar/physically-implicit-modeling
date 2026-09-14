@@ -358,8 +358,77 @@ Status `observed` (single seed per model; 20k games; canonical α grid, top of g
 several arms). Cascades and bases persisted per point under `probes/<run>/inlp/cascade_pt*.pt`;
 scores `scores/inlp_othello_<run>.json`; logs `logs/adjacent_flip_ablation/inlp_othello_*.log`.
 
+## Dropout ablation: the fused code is the rule's, not the regulariser's (2026-09-12, `experiments/dropout_ablation/`)
+
+Sevan's control on the materialisation theory: minGPT's dropout 0.1 on the embedding, attention
+and residual paths rewards writing a variable in many directions, so the 85–232 orthogonal colour
+copies on oth-adjacent — and the K=64 rescue — might be a regulariser effect. Prediction if so:
+without dropout the copy count collapses and single-probe edits start to land. Run:
+`dropout_ablation/L-oth-adjacent-nodrop-390k`, identical to `L-oth-adjacent-20m` except
+`--dropout 0` and 390k steps (Othello editability is at ~95% of its 780k value by then), trained
+resumable on the WSL remote (12.5 h); best val CE 2.4357 vs the dropout run's 2.435 (Bayes 2.433)
+— the same optimum. Same INLP + K-copy edits (`inlp_othello.py`).
+
+| oth-adjacent | copies per tile, pts 1–8 | best guarded edit | K needed to move at pt 1 |
+|---|---|---|---|
+| dropout 0.1 (780k) | 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 | +0.472 / fid 0.47 (pt2, K=64) | 32–64 |
+| **dropout 0 (390k)** | **283 / 227 / 187 / 161 / 150 / 148 / 146 / 162** | **+0.450 / fid 0.37** (pt1, K=128) | 32–64 |
+
+Guarded Edit Index by K (shrink), point 1 — dropout 0.1: K1 -0.68 K4 -0.68 K16 -0.64 K32 -0.26 K64 +0.28 K128 +0.39; dropout 0: K1 -0.65 K4 -0.65 K16 -0.65 K32 -0.31 K64 +0.28 K128 +0.44.
+Point 2 — dropout 0.1: K16 +0.11 K32 +0.35 K64 +0.47 K128 +0.33; dropout 0: K16 -0.61 K32 -0.28 K64 +0.01 K128 +0.12.
+
+**Reading.** The prediction fails in the informative direction. Without dropout the colour code
+is MORE redundant at every depth (1.2× at point 1, ~1.8× from point 3 on; the whole-subspace
+rank at exhaustion is 488/512 either way), single-probe and few-probe edits still do nothing at
+any point (K ≤ 16 at the unedited floor), and the rescue needs the same 32–64 copies and lands
+harder when all are written (+0.45 vs +0.39 at pt 1, K=128). Dropout was, if anything,
+compressing the code, not creating its redundancy. So the fused colour code on the adjacency
+instance is the rule's doing — the operative contrast with standard Othello (~30 copies, edits
+from K=2) survives the regulariser control. One shift: the no-dropout model's editable window is
+point 1 only (point 2 tops out at +0.15 vs the dropout run's +0.47), consistent with its slower
+consolidation across depth. Status `observed` (one seed; 390k steps vs 780k — the copy-count
+gap would have to reverse with more training to change the reading, and the dropout run's own
+counts were flat from point 4). Figure `experiments/dropout_ablation/outputs/inlp_dropout_vs_nodropout.png`;
+scores `experiments/dropout_ablation/scores/`. Canonical scores (master_eval): CE 2.436 (Bayes 2.433), legal mass 0.999; skill LIN 0.979 / MLP 0.981 (dropout run 0.988 / 0.990; observation floor 0.988); unedited -0.655; PI -0.302 / fid 1.07, ND +0.042 / 2.96, GS +0.001 / 7.76 (dropout run: PI −0.05 / 2.31, ND +0.12 / 1.05, GS +0.00 / 5.73); mine_signed skill 0.821 / 0.902, ND -0.029 / 2.66. The canonical editors are exactly as inert without dropout as with it; probe skill is a hair LOWER (0.979 vs 0.988), so dropout was not what made colour linearly readable either.
+
+**Extension to 780k (2026-09-13).** The no-dropout run was continued 390k → 780k with `--resume`
+(`dropout_ablation/L-oth-adjacent-nodrop-20m`; the 390k directory stays as the scored snapshot) to
+test the one escape left open above: that the long weak tail of copies was under-training rather
+than the no-dropout regime's steady state. Same INLP + K-copy edits
+(`experiments/dropout_ablation/scores/inlp_othello_L-oth-adjacent-nodrop-20m.json`; figures
+`outputs/inlp_compare_copies_dropout0_390k_vs_780k.png`, `outputs/inlp_compare_r2_dropout0_390k_vs_780k.png`,
+built by `scripts/inlp_compare.py` from the score files).
+
+| oth-adjacent | copies per tile, pts 1–8 | half-R² iteration, pts 1–8 | best guarded edit |
+|---|---|---|---|
+| dropout 0.1 (780k) | 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 | 96 / 42 / 27 / 19 / 16 / 15 / 16 / 16 | +0.472 / fid 0.47 (pt2, K=64) |
+| dropout 0 (390k) | 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 | 106 / 67 / 43 / 36 / 31 / 31 / 30 / 29 | +0.450 / fid 0.37 (pt1, K=128) |
+| **dropout 0 (780k)** | **272 / 210 / 158 / 132 / 122 / 119 / 118 / 137** | 101 / 62 / 39 / 32 / 28 / 28 / 28 / 30 | **+0.422 / fid 0.42** (pt1, K=128) |
+
+Guarded Edit Index by K (shrink), point 1, dropout 0 at 780k: K1–8 −0.66, K16 −0.64, K32 −0.29, K64 +0.26,
+K128 +0.41 — the 390k curve to within 0.03 at every K. Point 2: K64 −0.09, K128 +0.07 (390k: +0.01 / +0.12;
+dropout 0.1: +0.47 / +0.33). Whole-subspace rank at exhaustion 488/512 for all three models. Initial
+probe R² is lower without dropout at every point (0.85 vs 0.91 at pt 1) and does not recover with
+training (0.849 at 780k vs 0.858 at 390k).
+
+**Reading.** Doubling the training prunes the tail by 10–20 % (pts 3–7: 187→158, 161→132, 150→122)
+but the model still holds 1.4–1.6× the dropout run's copies from point 3 on, and 1.2× at point 1;
+the gap does not close, let alone reverse. Edits are unchanged: nothing lands below K=32, the
+K=64–128 rescue lands at the same magnitude (+0.42 vs +0.45), and the editable window stays point 1
+only. So the extra redundancy is the no-dropout regime's steady state, not an artefact of stopping
+at 390k — the 2026-09-12 reading stands with that caveat removed. Canonical scores of the 780k
+model (master_eval on the remote): val 2.4351, CE 2.4350 (Bayes 2.4326), legal mass 1.000; skill
+LIN 0.973 / MLP 0.978 (390k: 0.979 / 0.981; dropout run 0.988 / 0.990); unedited −0.683; PI −0.206 /
+fid 1.22, ND +0.053 / 2.95, GS +0.002 / 9.06 — canonically inert at 780k too. Status stays
+`observed` (one seed). Next arm in flight: the same recipe at dropout 0.3
+(`L-oth-adjacent-drop03-390k`), asking whether MORE dropout compresses the code further and whether
+editability moves with it.
+
 ## Log
 
+- **2026-09-13 (early)** — no-dropout run extended to 780k: copies per tile 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 (10–20 % pruning of the tail vs 390k; still 1.2–1.6× the dropout run), K-copy edit curves unchanged (K ≤ 16 inert, +0.42 at pt 1 K=128), canonical editors inert (PI −0.21, ND +0.05). The redundancy is the regime's steady state. Dropout-0.3 arm launched.
+
+- **2026-09-12 (noon)** — dropout ablation (`observed`): oth-adjacent WITHOUT dropout has MORE colour copies (283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83), single-probe edits still inert, K=64–128 rescue intact (+0.45). The fused code is the rule's, not the regulariser's.
 - **2026-09-12 (early)** — INLP (`observed`): copies of a tile's colour 30 (standard) / 50 (flip) / 85–232 (adjacent), the editability ordering; writing 32–64 copies at once makes oth-adjacent editable (+0.47 / 0.47) where 1–8 copies do nothing; standard edits from K=2 and peaks at K=16 (+0.65); the flip model saturates at K=8 (+0.24). Materialisation-follows-fan-out supported; "single register" too strong.
 - **2026-09-11 (late night)** — masked probes: a flipped-row probe halves the decoding error on recoloured tiles and edits them WORSE (ND −0.27 vs +0.08); the parity-only probe edits best of all (+0.28 on parity tiles); the flip bit is 78% decodable and inert. The computed colour has no linear causal handle; every landing edit runs through the placement-parity lookup direction. Hypothesis "the probe was the limitation" refuted.
 - **2026-09-11 (night)** — flipped tiles: decoded worse (9–28% vs 4–7% error), edited worse (ND +0.09 vs +0.22 guarded), computed later (pt 3–4); legality degrades mildly with flips. Follow-up: a flipped-row probe.

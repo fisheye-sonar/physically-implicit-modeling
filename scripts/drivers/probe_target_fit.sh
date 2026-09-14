@@ -4,7 +4,7 @@
 #   The scorer never fits an extra target's probes (require_cached); this is the one place
 #   they get fitted: the run's LIN + MLP (scripts/fit_probes.py, the target's recipe), the
 #   random-init floor and the right-aligned observation floor on the run's instance, then
-#   scripts/drivers/score_pending.sh (master_eval → build_full_table → headline).
+#   scripts/drivers/score_pending.sh (master_eval → build_full_tables + build_paper_tables → headline).
 # Under a unit:
 #   systemd-run --user --unit=<name> -p MemoryMax=45G --collect --working-directory=$PWD \
 #     /usr/bin/bash -c 'bash scripts/drivers/probe_target_fit.sh <run> <target> <name> > logs/<name>/unit.log 2>&1'

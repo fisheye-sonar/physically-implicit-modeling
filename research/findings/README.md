@@ -51,6 +51,7 @@ Full model: `../../harness/WORKFLOW.md`.
 _(A standalone identifiability / probe-recovery file — sub-question 2 — is still folded into
 `editability.md` and `architecture-independence.md`; split it out when it earns its own
 concept.)_
+- [smooth-ablation.md](smooth-ablation.md) — dw-smooth: an anti-aliased (continuous, power-dome) observation predicts 18× better and edits WORSE (frustum PI +0.11 / 2.62 vs +0.23; appearance-fac ND +0.38 vs +0.61) — aliasing was not what hid the register
 - [blink-ablation.md](blink-ablation.md) — dw-blink: position is CARRIED through blackouts (MLP 0.97–0.99 on hidden frames) and still not editable — the carried-state condition is excluded
 - [adjacency-ablation.md](adjacency-ablation.md) — oth-adjacent: colour is causally USED (Bayes-optimal legality) and the read-out lands 100%, yet edits are inert — causal use is not sufficient
 - [adjacent-flip-ablation.md](adjacent-flip-ablation.md) — oth-adjacent-flip: colour USED and REWRITTEN (recolouring back on under adjacency placement) — editability returns partially (ND +0.24 / fid 0.62, PI +0.17 / 0.85 vs Othello's +0.6), trained skill rises above the observation floor for the first time off standard Othello; `observed`

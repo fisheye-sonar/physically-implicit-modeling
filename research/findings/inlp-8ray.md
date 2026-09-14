@@ -1,5 +1,8 @@
 # INLP on the 8-ray transformer: a deeper, more redundant linear code; writing more of it moves the ceiling from +0.30 to +0.36
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Date** 2026-09-04 · **Run** `ray_ablation/L-dw-8ray-20m` (dw-8ray: radius 1.0, 8 usable rays)
 · **Code** `experiments/inlp/8ray/` (driver) + `experiments/inlp/scripts/inlp_dw.py` (the
 canonical INLP experiment script, extended with a per-component R² profile) · **Data**

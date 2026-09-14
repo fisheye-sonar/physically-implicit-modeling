@@ -36,7 +36,7 @@ stage "B score (GPU)"
 
 stage "C tables"
 ( cd "$ROOT/notebooks" && "$PY" "$ROOT/.pim/bin/jupyter-nbconvert" --to notebook \
-    --execute --inplace build_full_table.ipynb ) \
+    --execute --inplace build_full_tables.ipynb ) \
   > "$LOGS/c_table.log" 2>&1 || fail "C table" "$(tail -20 "$LOGS/c_table.log")"
 
 ping "PIM training-curve: ALL DONE" "$("$PY" - <<'EOF'

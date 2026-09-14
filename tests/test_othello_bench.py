@@ -10,7 +10,7 @@ import pickle
 import numpy as np
 
 from pim.environments.othello.bench import (
-    BENCHMARK_PKL, MINE, THEIRS, benchmark_from_cases, case_targets, load_benchmark)
+    BENCHMARK_PKL, MINE, THEIRS, benchmark_from_cases, case_targets, load_li_benchmark)
 from pim.environments.othello.vendor.othello import OthelloBoardState
 
 
@@ -27,7 +27,7 @@ def _legacy_case_targets(cases):
 def test_load_benchmark_is_benchmark_from_cases_on_the_pkl():
     with open(BENCHMARK_PKL, "rb") as f:
         cases = pickle.load(f)
-    a, b = load_benchmark(), benchmark_from_cases(cases)
+    a, b = load_li_benchmark(), benchmark_from_cases(cases)
     assert a.n_cases == b.n_cases == 1001
     assert np.array_equal(a.pos_int, b.pos_int) and np.array_equal(a.new_class, b.new_class)
     assert a.legal_pre == b.legal_pre and a.legal_post == b.legal_post
@@ -39,7 +39,7 @@ def test_load_benchmark_is_benchmark_from_cases_on_the_pkl():
 def test_case_targets_match_legacy_pkl_implementation():
     with open(BENCHMARK_PKL, "rb") as f:
         cases = pickle.load(f)
-    bench = load_benchmark()
+    bench = load_li_benchmark()
     cur, tgt = case_targets(bench)
     cur0, tgt0 = _legacy_case_targets(cases)
     assert np.array_equal(cur, cur0) and np.array_equal(tgt, tgt0)

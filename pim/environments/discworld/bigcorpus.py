@@ -86,10 +86,19 @@ _RAYS5_RANGES = [(160_000_000_000, 180_000_000_000, "dw-5ray train"),
                  (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
                  (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
                  (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large")]
+# dw-smooth (2026-09-12 night): dw-noiseless geometry (128 rays, radius 0.5, no noise) with the
+# smooth "power" dome profile (1-(perp/r)^2)^2 baked into the disc — the anti-aliasing instance
+# (profile H of experiments/antialias_pilot, Sevan's pick). soft_edge stays 0: the dome itself
+# reaches zero at the silhouette, so the image is continuous in position without an edge sigmoid.
+_SMOOTH = ["--soft-shading", "power", "--soft-profile-power", "2.0"]
+_SMOOTH_RANGES = [(200_000_000_000, 220_000_000_000, "dw-smooth train"),
+                  (225_000_000_000, 225_400_000_000, "dw-smooth eval suite"),
+                  (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
+                  (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")]
 _NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
                (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
                (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
-               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES + _RAYS5_RANGES
+               (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES + _RAYS5_RANGES + _SMOOTH_RANGES
 
 # ── the instance registry ─────────────────────────────────────────────────────
 # One entry per environment instance that owns a 20M streaming corpus. `forbidden`
@@ -137,7 +146,7 @@ INSTANCES = {
                       (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
                       (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
                       (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
-                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES,
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large")] + _BLINK_RANGES + _RAYS5_RANGES + _SMOOTH_RANGES,
     },
     "dw-blink": {  # dw-noiseless + blackouts (prob 0.05/obj/frame, draw mean 7 -> realised ~5.3 after cap 12 + sequence end, warm-up 3)
         "base_seed": 110_000_000_000,
@@ -158,7 +167,7 @@ INSTANCES = {
                       (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
                       (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
                       (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
-                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")] + _RAYS5_RANGES,
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large")] + _RAYS5_RANGES + _SMOOTH_RANGES,
     },
     "dw-5ray": {  # dw-8ray with 5 usable rays (7 cast, wall rays dropped); radius 1.0 — the quantisation push
         "base_seed": 160_000_000_000,
@@ -182,7 +191,35 @@ INSTANCES = {
                       (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
                       (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large"),
                       (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
-                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large")],
+                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large")] + _SMOOTH_RANGES,
+    },
+    "dw-smooth": {  # dw-noiseless + the smooth power-dome disc profile (anti-aliasing instance)
+        "base_seed": 200_000_000_000,
+        "obs_dim": 128,
+        "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"] + _SMOOTH,
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (60_000_000_000, 80_000_000_000, "dw-8ray train"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (110_000_000_000, 130_000_000_000, "dw-blink train"),
+                      (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                      (160_000_000_000, 180_000_000_000, "dw-5ray train"),
+                      (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
+                      (225_000_000_000, 225_400_000_000, "dw-smooth eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
+                      (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large"),
+                      (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
+                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large"),
+                      (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
+                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")],
     },
 }
 

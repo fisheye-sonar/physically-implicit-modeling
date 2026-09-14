@@ -36,11 +36,16 @@ DEV = "cuda"; EXP = REPO / "experiments/adjacent_flip_ablation"; D64 = torch.flo
 R2_STOP = 0.02
 
 
-def moments(Zt, y, rows):
-    """Augmented (d+1) moments over `rows`: G = Z̃ᵀZ̃, c = Z̃ᵀy, yy = yᵀy, n, ybar."""
-    Z = Zt[rows]; yy_ = y[rows]
-    Za = torch.cat([Z, torch.ones(len(Z), 1, dtype=D64, device=DEV)], 1)
-    return Za.T @ Za, Za.T @ yy_, float(yy_ @ yy_), len(Z), float(yy_.mean())
+def moments(Zt, y, rows, chunk: int = 131072):
+    """Augmented (d+1) moments over `rows`: G = Z̃ᵀZ̃, c = Z̃ᵀy, yy = yᵀy, n, ybar — accumulated
+    over row chunks so no gigabyte-scale temporary is ever materialised (the desktop holds ~11 GB
+    of the lab GPU; the un-chunked version OOM'd there, 2026-09-12)."""
+    idx = torch.nonzero(rows, as_tuple=False).squeeze(1); n = len(idx); d = Zt.shape[1]
+    G = torch.zeros(d + 1, d + 1, dtype=D64, device=DEV); c = torch.zeros(d + 1, dtype=D64, device=DEV); yy = 0.0; ysum = 0.0
+    for i in range(0, n, chunk):
+        ii = idx[i:i + chunk]; Za = torch.cat([Zt[ii], torch.ones(len(ii), 1, dtype=D64, device=DEV)], 1); yb = y[ii]
+        G += Za.T @ Za; c += Za.T @ yb; yy += float(yb @ yb); ysum += float(yb.sum()); del Za
+    return G, c, yy, n, (ysum / n if n else 0.0)
 
 
 def solve_minnorm(G, c, B):

@@ -90,3 +90,11 @@ pt 4); oth-adjacent's first 8 copies are inert everywhere and 64 copies at pt 2 
 writing the whole linear code changed nothing that mattered, on Othello's adjacency instance it is the whole
 code that carries the edit — the fused-code prediction of the materialisation theory. Full tables and reading:
 `adjacent-flip-ablation.md` §INLP.
+
+
+## 2026-09-12 — Dropout is not the source of the redundancy: oth-adjacent without dropout has MORE copies
+
+`dropout_ablation/L-oth-adjacent-nodrop-390k` (dropout 0, 390k steps, same optimum). Copies per tile pts 1–8:
+283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 vs 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 with dropout 0.1; K-copy edits unchanged in shape (K ≤ 16 inert; K=64 +0.28, K=128 +0.44 at
+pt 1 vs +0.28 / +0.39). The residual-stream regulariser was compressing the colour code, not inflating it.
+`adjacent-flip-ablation.md` §Dropout ablation.

@@ -1,0 +1,342 @@
+{
+ "adjacency_ablation/L-oth-adjacent-20m": {
+  "env": "othello",
+  "instance": "oth-adjacent",
+  "test_loss": 2.4349057050434806,
+  "bayes_floor": 2.432635694729183,
+  "excess": 0.0022700103142976324,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "adjacent_flip_ablation/L-oth-adjacent-flip-20m": {
+  "env": "othello",
+  "instance": "oth-adjacent-flip",
+  "test_loss": 2.3006938337025034,
+  "bayes_floor": 2.2954605721627837,
+  "excess": 0.005233261539719702,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "blink_ablation/L-dw-blink-20m": {
+  "env": "discworld",
+  "instance": "dw-blink",
+  "test_loss": 0.0012645990556105972,
+  "bayes_floor": 0.0,
+  "excess": 0.0012645990556105972,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless with blackouts: 0 for a state oracle that knows the blackout schedule; the schedule's timing is not inferable from the observations, so the history-conditioned floor is above 0 and not estimated here"
+ },
+ "dropout_ablation/L-oth-adjacent-nodrop-390k": {
+  "env": "othello",
+  "instance": "oth-adjacent",
+  "test_loss": 2.4356491188985667,
+  "bayes_floor": 2.432635694729183,
+  "excess": 0.0030134241693837716,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "flip_ablation/L-oth-noflip-20m": {
+  "env": "othello",
+  "instance": "oth-noflip",
+  "test_loss": 1.6802785445804531,
+  "bayes_floor": 1.6787931604841275,
+  "excess": 0.0014853840963255927,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "initial_othello_comparison/L-dw-20m": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.022895225438475608,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.006245818604980958,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "initial_othello_comparison/L-oth-20m": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.028563248555704,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.017874538876597068,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "interface_ablation/L-dw-8ray-tok-20m": {
+  "env": "discworld",
+  "instance": "dw-8ray",
+  "test_loss": 0.46375613241811897,
+  "bayes_floor": null,
+  "excess": null,
+  "n_sequences": null,
+  "unit": "CE (nats/frame), val split",
+  "note": "token model: CE objective; floor on the frame vocabulary not estimated"
+ },
+ "noise_ablation/L-dw-noiseless-20m": {
+  "env": "discworld",
+  "instance": "dw-noiseless",
+  "test_loss": 0.001063360589183867,
+  "bayes_floor": 0.0,
+  "excess": 0.001063360589183867,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "noise_ablation/L-dw-noiseless-20m__seed0_s421875": {
+  "env": "discworld",
+  "instance": "dw-noiseless",
+  "test_loss": 0.0011004089301452041,
+  "bayes_floor": 0.0,
+  "excess": 0.0011004089301452041,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "noise_ablation/L-dw-noiseless-20m__seed1": {
+  "env": "discworld",
+  "instance": "dw-noiseless",
+  "test_loss": 0.0011039465168491006,
+  "bayes_floor": 0.0,
+  "excess": 0.0011039465168491006,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "noise_ablation/L-dw-noiseless-20m__seed2": {
+  "env": "discworld",
+  "instance": "dw-noiseless",
+  "test_loss": 0.0010978116346523166,
+  "bayes_floor": 0.0,
+  "excess": 0.0010978116346523166,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "objective_ablation/L-oth-20m-mse": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.0481813514100033,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.03749264173089628,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "ray_ablation/L-dw-5ray-20m": {
+  "env": "discworld",
+  "instance": "dw-5ray",
+  "test_loss": 0.0070005126379430295,
+  "bayes_floor": 0.0,
+  "excess": 0.0070005126379430295,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "ray_ablation/L-dw-8ray-20m": {
+  "env": "discworld",
+  "instance": "dw-8ray",
+  "test_loss": 0.005760833892226219,
+  "bayes_floor": 0.0,
+  "excess": 0.005760833892226219,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "training_curve/L-dw-20m_s001000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.026195520105957985,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.0029455239374985807,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s004000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.023774543392658234,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.005366500650798332,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s016000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.02319075765311718,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.005950286390339385,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s064000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.02298205057680607,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.0061589934666504975,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s128000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.022941628673672675,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.006199415369783891,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s256000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.02292018339037895,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.0062208606530776145,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s512000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.022901489812135696,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.00623955423132087,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-20m_s780000": {
+  "env": "discworld",
+  "instance": "dw-pn04",
+  "test_loss": 0.022891286918520926,
+  "bayes_floor": 0.029141044043456566,
+  "excess": -0.00624975712493564,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "state oracle (true state + one step, clean render) vs the observed next frame, 1000 test sequences"
+ },
+ "training_curve/L-dw-8ray-20m_s032000": {
+  "env": "discworld",
+  "instance": "dw-8ray",
+  "test_loss": 0.005960711073130369,
+  "bayes_floor": 0.0,
+  "excess": 0.005960711073130369,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "training_curve/L-oth-20m_s001000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.5704608477314386,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.5597721380523315,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s004000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.281652570879304,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.270963861200197,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s016000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.13889178307776,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.128203073398653,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s064000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.064274531588265,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.05358582190915806,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s128000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.0471476909527992,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.03645898127369218,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s256000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.03718524389026,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.026496534211152944,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s512000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.0315655101792545,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.020876800500147397,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "training_curve/L-oth-20m_s780000": {
+  "env": "othello",
+  "instance": "oth-uniform",
+  "test_loss": 2.0286367060604906,
+  "bayes_floor": 2.010688709679107,
+  "excess": 0.017947996381383557,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "dropout_ablation/L-oth-adjacent-nodrop-20m": {
+  "env": "othello",
+  "instance": "oth-adjacent",
+  "test_loss": 2.4350062625147397,
+  "bayes_floor": 2.432635694729183,
+  "excess": 0.0023705677855567764,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "smooth_ablation/L-dw-smooth-20m": {
+  "env": "discworld",
+  "instance": "dw-smooth",
+  "test_loss": 5.9166380303213375e-05,
+  "bayes_floor": 0.0,
+  "excess": 5.9166380303213375e-05,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
+ }
+}

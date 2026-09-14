@@ -1,5 +1,8 @@
 # Ray-count ablation: 8 rays, radius 1.0 (dw-8ray, L-dw-8ray-20m)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Date** 2026-09-04 · **Instance** `dw-8ray` (= dw-noiseless with disc radius 1.0 and 8
 usable rays: 10 cast, the two frustum-wall rays dropped) · **Run**
 `runs/ray_ablation/L-dw-8ray-20m` (Transformer-L, 780k steps, matched recipe, `Linear(8,

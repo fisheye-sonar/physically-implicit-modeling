@@ -38,7 +38,7 @@ stage "D score (GPU)"
 
 stage "E tables"
 ( cd "$ROOT/notebooks" && "$PY" "$ROOT/.pim/bin/jupyter-nbconvert" --to notebook \
-    --execute --inplace build_full_table.ipynb ) \
+    --execute --inplace build_full_tables.ipynb ) \
   > "$LOGS/e_table.log" 2>&1 || fail "E table" "$(tail -20 "$LOGS/e_table.log")"
 
 ping "PIM $NAME: ALL DONE" "$("$PY" - "$ROOT/runs/$TOPIC/$NAME/scores.json" "$INST" <<'EOF'

@@ -105,9 +105,12 @@ def parse_args() -> argparse.Namespace:
     g.add_argument("--soft-edge", type=float, default=0.0, metavar="W",
                    help="OPTIONAL soft rendering: silhouette softness in world units "
                         "(0 = the original hard ray-caster); see pim/simulator/soft_render.py")
-    g.add_argument("--soft-shading", choices=["flat", "lambert"], default="flat",
+    g.add_argument("--soft-shading", choices=["flat", "lambert", "power"], default="flat",
                    help="OPTIONAL soft rendering: 'lambert' curves the object's image "
-                        "instead of a constant-reflectivity plateau")
+                        "instead of a constant-reflectivity plateau; 'power' is the smooth "
+                        "dome (1-(perp/r)^2)^p with p = --soft-profile-power (dw-smooth)")
+    g.add_argument("--soft-profile-power", type=float, default=2.0, metavar="P",
+                   help="exponent of the 'power' profile (0.5 = lambert; 2 = dw-smooth)")
     g.add_argument("--soft-psf-sigma", type=float, default=0.0, metavar="RAYS",
                    help="OPTIONAL soft rendering: Gaussian sensor blur along the ray axis")
     g.add_argument("--soft-occlusion-temp", type=float, default=0.0, metavar="T",
@@ -189,6 +192,7 @@ def _sim_from_args(args) -> SimConfig:
         blink_warmup=args.blink_warmup,
         soft_edge=args.soft_edge,
         soft_shading=args.soft_shading,
+        soft_profile_power=args.soft_profile_power,
         soft_psf_sigma=args.soft_psf_sigma,
         soft_occlusion_temp=args.soft_occlusion_temp,
         omni2d=args.omni2d,

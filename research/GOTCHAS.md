@@ -10,6 +10,18 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-12 — `nvidia-smi` can be broken while the GPU is fine (driver/library mismatch)
+
+After a driver package update the user-space `nvidia-smi` (595.91) no longer matches the loaded
+kernel module (595.84) until a reboot — "Failed to initialize NVML: Driver/library version
+mismatch" — while torch still sees the RTX 5090 and trains normally (`torch.cuda.is_available()`,
+`torch.cuda.mem_get_info()`). Consequences: a heartbeat must not depend on `nvidia-smi` (read GPU
+memory from torch, or skip it, and the unit's memory from `systemctl --user show <unit> -p
+MemoryCurrent`); "nvidia-smi fails" is NOT evidence that the GPU is down; and do not reboot under a
+running unit to "fix" it. Seen 2026-09-12 evening before the overnight chain; torch verified first.
+
+---
+
 ### 2026-09-01 — ND (Nanda direction addition) is ill-posed for a continuous target
 
 Nanda's method is **one fixed direction, one swept scalar**. That is coherent on Othello,
@@ -940,3 +952,83 @@ held-out 95th percentile for the same prefix length — not on legal mass
 ceiling against the ideal distribution's score (+1.000) and the held-out deviation before
 interpreting it. With the right filter the ceilings agree across instances (+0.66 to +0.70) and
 the editors sit below them.
+
+## 2026-09-11 — a discworld training unit sitting AT its memory cap is page cache, not a leak
+
+The trainer memory-maps the 20M-sequence `obs.f32` (16–410 GB), so the unit's `MemoryCurrent`
+climbs to `MemoryMax` and stays there while `memory.stat` shows ~0.2 GiB `anon` and the rest
+`file` / `file_mapped`; `memory.events` counts `max` hits (reclaim) with `oom_kill 0`. That is
+the cgroup reclaiming file pages, which costs read bandwidth, not correctness. Read
+`anon` before worrying — a unit that is really leaking shows anon growing toward the cap.
+Measured on `seed_variance` (45 GiB cap: anon 0.2, file 43.6, oom_kill 0, training advancing).
+
+
+## 2026-09-12 — The discworld write target was one dynamics step AHEAD of the probe's read-out (fixed)
+
+**Symptom.** Every discworld editor was aimed at a state no write could reach. The probe at the
+edit point reads the state that rendered the LAST CONSUMED frame (EF−1; labels are
+`positions[:, t]` against `obs[:, t]`, no shift), and the model's next output is its own
+dynamics step ahead of that state. The bench's write target was `positions[:, EF]` — the
+POST-dynamics state where the teleported object appears — and the reference was the render of
+that same state. So a perfectly landed write put the object at the target NOW, the model
+advanced it one step, and the output was compared to a frame in which the step had not
+happened. Rendering what a perfect editor would produce under that target: Edit Index
+**+0.70** (mean; median +0.68; 68 % of cases below +0.9) on dw-noiseless at 128 rays, where one
+step is 0.15 radii, and +0.92 on dw-8ray (radius 1, 0.07 radii per step). The full-state
+targets also asked the OTHER object to advance a step instead of holding (collateral 0.137 vs
+0.12 unedited). The ORACLE editors never had the problem — the counterfactual history places
+the object at target − v·dt at EF−1 — which is why the ceiling read +0.95 while the editors
+were off by a step. Othello never had it either: its probe reads the board after the last
+move and uniform-over-legal IS the next step. (Sevan's diagnosis, 2026-09-12.)
+
+**Fix (`bench.bench_arrays`, `grid_selection`).** The write target is the PRE-dynamics state:
+`pos[EF] − v·dt` for the edited object, the CURRENT state (frame EF−1) for everything else, for
+the regression, snapped, categorical and factorised targets and the cell-changing case
+selection. References (`gt_edited`, `gt_unedited`, `gt_roll`), zones, probes and Othello are
+untouched. Pinned by `tests/test_bench_target_alignment.py`: the target advanced one exact step
+re-renders the stored edited frame on dw-noiseless. Every discworld run is rescored under
+`EVAL_VERSION_BY_ENV["discworld"] = "2026-09-12.1"` (master_eval cell [2]); the pre-fix scores
+sit beside the new ones as `scores.pre-alignment-2026-09-12.json` (`runs/MOVES.md`).
+
+**Rule.** In BOTH environments editability is: form the state after the most recent
+observation, edit THAT state, and compare the model's next output with the simulator's
+post-dynamics rendering from the edited state (a distribution over legal moves in Othello; the
+next clean frame in discworld). Any new bench, target or environment must respect the
+pre-dynamics / post-dynamics split, and the check is the test above: does the target,
+advanced one simulator step, render the reference?
+
+**Why the references stay the simulator's (decided 2026-09-12, after the v2 pilot).** Both
+references are the simulator's prediction from the exact pre-edit and post-edit states — the
+Bayes-optimal prediction given the state, exact in Othello (the board is exactly inferable
+from the moves) and in noiseless discworld (the next frame is deterministic given the state).
+The state-from-history gap is a property of the environment, reported as the unedited floor and
+the counterfactual ceiling (−0.92 / +0.95 on dw-noiseless), and shared uncertainty cancels in
+the ratio. Replacing both references with the model's own predictions changed the index by
+≤ 0.03 on every noiseless and Othello condition (`scratch/2026-09-11-edit-index-v2-pilot.md`),
+so the symmetric simulator references stay. The noisy instance (dw-pn04, floor −0.70) is the
+one place the clean render is not the Bayes mean — the mean-reference spec's subject.
+
+## 2026-09-12 (evening) — ONE edit protocol; the tables are a module; Othello reads symmetric difference
+
+- **Benches.** Every instance has its own 1000-case bench at a FIXED edit position (discworld frame
+  20; Othello a 20-move prefix). Othello cases are cut from a dedicated `edits` index range
+  ([93M, 93M+10k); `corpus.EDITS_LO`) so they are disjoint from train, the gates' test split and
+  both probe corpora — check `verify_splits` before trusting any new range. Discworld benches are a
+  SELECTION (`edits/v1/selection.json`, ≥ 2 differing rays); `bench_arrays(use_selection=False)` is
+  the unfiltered pool. The old benches (192 cases; Li's 1001; the 5–30 length mix) live in
+  `_unused/` and their numbers are NOT comparable — editability varies with the edit position
+  (+0.8 at moves 4–8 → +0.35 at 40–55) and with the case filter.
+- **Full-state writes only.** `dw_edit_dims = ("all",)`: the "pos" dim set (position rows written,
+  velocity read-outs left free) was a partial write with no Othello analogue. Pre-2026-09-12
+  discworld PI numbers quoted the better of the two dim sets; many were "pos".
+- **Shared α grids and GS start layers** (`ALPHA_CAT`, `ALPHA_REG`, `GS_LAYERS` in master_eval
+  cell [2]). GS is the cost driver: arms × 100 descent steps × 1000 cases.
+- **Othello headline = symmetric difference** (REGISTRY, Edit Index legal-set row). Both indices
+  are in every arm record; tables read `edit_index_symdiff`, the scorer's `best` still picks by
+  union — `pim.figures.tables._best_by` re-picks per editor by symdiff from `arms`.
+- **The tables are `pim/figures/tables.py`**; the notebooks only set run lists. Editing a table
+  means editing the module (and its test, `tests/test_tables_module.py`), then re-executing BOTH
+  notebooks. Run names in the lists are exact directory names (`L-oth-20m-mse`, `L-oth-adjacent-20m`).
+- **Tonight's queued run** is `scripts/drivers/rescore_2026-09-12.sh` (launch instructions in its
+  header). Until it runs, every table shows the OLD benches' numbers under the NEW headline
+  construction; scores.json files stamped `2026-09-12.*` are the new protocol.

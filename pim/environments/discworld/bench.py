@@ -117,13 +117,21 @@ def grid_selection(data_dir: Path | None, n: int, grid: CategoricalTarget,
     Returns the case indices and a record for ``scores.json`` (rule, counts)."""
     with h5py.File(_edit_set(data_dir, instance)[0], "r") as f:
         pos = f["positions"][:, EF - 1: EF + 1, :N_OBJ, :].astype(np.float32)   # (M, 2, N_OBJ, 2)
+        vel = f["velocities"][:, EF - 1, :N_OBJ, :].astype(np.float32)          # (M, N_OBJ, 2)
         eobj = f["edit_object"][:].astype(int)
         sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
-    mv = grid.edit_cells(pos, eobj, ef=1, sim=sim)          # frame 1 of the 2-frame slice = EF
+    # frame 1 of the slice becomes the PRE-dynamics target state (see bench_arrays): the
+    # edited object at pos[EF] − v·dt, the other object at its current position
+    ar = np.arange(len(pos))
+    pre_dyn = pos[:, 0].copy()
+    pre_dyn[ar, eobj] = pos[ar, 1, eobj] - vel[ar, eobj] * float(sim["dt"])
+    pos[:, 1] = pre_dyn
+    mv = grid.edit_cells(pos, eobj, ef=1, sim=sim)          # frame 1 of the 2-frame slice = the target
     valid = np.where(mv["A"] != mv["B"])[0]
     sel = valid[:n]
     scanned = int(sel[-1]) + 1 if len(sel) else 0
-    return sel, {"rule": f"first {n} cases whose teleport changes a {grid.name} cell",
+    return sel, {"rule": f"first {n} cases whose teleport changes a {grid.name} cell "
+                         f"(pre-dynamics target state, 2026-09-12)",
                  "n": int(len(sel)), "scanned": scanned,
                  "dropped_same_cell": int(scanned - len(sel))}
 
@@ -191,12 +199,31 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
     # ⛔ The ZONES stay in world space — they are ray masks over the observation and do
     # not depend on how the state is coordinatised. Only the PROBE TARGET changes basis,
     # so the Edit Index remains directly comparable across bases.
+    #
+    # ⛔ THE WRITE TARGET IS THE PRE-DYNAMICS STATE (2026-09-12, Sevan). The probe at the
+    # edit point reads the state that rendered the LAST CONSUMED frame (EF−1); the model's
+    # next output is ITS OWN dynamics step ahead of that state. The edit asks the object to
+    # APPEAR at pos[EF] in the next frame, so the state to write is the one that produces
+    # it: pos[EF] − v·dt for the edited object, and the CURRENT state (frame EF−1) for
+    # everything else — a hold, not a one-step advance. The references (gt_edited,
+    # gt_unedited, gt_roll) are unchanged: they are the post-dynamics renders the model's
+    # next output is compared with. Until this date the target was the post-dynamics state
+    # itself, one velocity step ahead of anything a write could produce: a PERFECT write
+    # scored +0.70 on dw-noiseless (128 rays; 0.15 radii per step) and +0.92 on dw-8ray
+    # against a +1 ceiling (GOTCHAS 2026-09-12). Othello never had the problem — its
+    # probe reads the board after the last move and uniform-over-legal IS the next step.
+    dt = float(sim["dt"])
+    ar1 = np.arange(n)
+    pre_dyn = pos[:, EF - 1].copy()                                     # (n, N_OBJ, 2)
+    pre_dyn[ar1, eobj] = pos[ar1, EF, eobj] - vel[ar1, EF - 1, eobj] * dt
+    pos_t = pos.copy()
+    pos_t[:, EF] = pre_dyn            # frame EF read as the PRE-dynamics target state below
     cells = moves = None
     if isinstance(grid, FactorisedTarget):
-        # Factorised MOVE: the edited object's factor tiles take their post-teleport classes;
-        # only the tiles whose class changes are asked to move (the rest hold).
+        # Factorised MOVE: the edited object's factor tiles take the classes of the
+        # pre-dynamics target state; only the tiles whose class changes are asked to move.
         cur, _ = grid.label_frames(pos[:, EF - 1], sim)                  # (n, tiles) int64
-        moves = grid.edit_moves(pos, eobj, EF, sim)
+        moves = grid.edit_moves(pos_t, eobj, EF, sim)
         ar = np.arange(n)[:, None]
         y = cur.copy()
         y[ar, moves["tile"]] = moves["new"]
@@ -208,7 +235,7 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         # current frame's labels with the object gone from its old cell A and present in
         # its new cell B; only those two cells are asked to change (the rest hold).
         cur, _ = grid.label_frames(pos[:, EF - 1], sim)                  # (n, G) uint8
-        cells = grid.edit_cells(pos, eobj, EF, sim)
+        cells = grid.edit_cells(pos_t, eobj, EF, sim)                    # B = the pre-dynamics cell
         ar = np.arange(n)
         y = cur.astype(np.int64)
         y[ar, cells["A"]] = 0
@@ -218,14 +245,14 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
         cm[ar, cells["B"]] = True
         out_dims = []            # per-case rows, not a shared set — see arms.nanda_rollout
     else:
-        bp, bv = _to_basis(pos[:, EF], vel[:, EF], sim, basis_name)
+        bp, bv = _to_basis(pre_dyn, vel[:, EF - 1], sim, basis_name)
         base = target
         if snap is not None:
             # Snapped regression (2026-09-10): the edit asks for the CENTRE of the new cell,
             # in frustum coordinates; velocities (``full@…``) stay the basis velocities.
             if basis_name != "frustum":
                 raise ValueError(f"{target} is defined in the frustum basis, got {basis_name!r}")
-            bp, base = snap.snap(pos[:, EF], sim).astype(np.float32), snap.base
+            bp, base = snap.snap(pre_dyn, sim).astype(np.float32), snap.base
         y = bp.reshape(n, -1)
         if base == "full":
             y = np.concatenate([y, bv.reshape(n, -1)], axis=1)

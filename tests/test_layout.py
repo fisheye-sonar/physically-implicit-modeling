@@ -43,7 +43,7 @@ def test_v2_paths_and_marker(fake_datasets):
     assert layout.othello_split_file("oth-x", "train", 20_000_000) == o / "train" / "train_20000000.npz"
     assert layout.othello_split_file("oth-x", "test", 10_000) == o / "eval" / "test_10000.npz"
     assert layout.othello_split_file("oth-x", "probe_large", 170_000) == o / "probe" / "probe_large_170000.npz"
-    assert layout.othello_cases_file("oth-x") == o / "edits" / "v1" / "cases_1001.pkl"
+    assert layout.othello_cases_file("oth-x") == o / "edits" / "v1" / "cases_1000.pkl"   # the 2026-09-12 bench
     # eval/test.h5 and train/ do not move
     assert layout.eval_file("discworld", "dw-x") == r / "eval" / "test.h5"
     assert layout.train_dir("discworld", "dw-x") == r / "train"

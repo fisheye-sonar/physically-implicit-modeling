@@ -1,0 +1,188 @@
+# 2026-09-11 — Pilot: the model-referenced Edit Index on paired counterfactual histories
+
+**Ask (Sevan).** Both Edit Index references become the MODEL'S OWN predictions — `p_A` on the
+real history, `p_B` on a paired counterfactual history B that differs from A by one simulator
+edit — so unedited scores −1 by construction and reproducing `p_B` scores +1. A few dozen
+cases per condition, ONE arm per editor at the run's canonical best (point, α, dims), no
+sweep. Filter out edits the model's prediction does not register. Report the Othello
+tile-change statistics per instance.
+
+**Code** `experiments/edit_index_v2_pilot/scripts/pilot.py` · **scores**
+`experiments/edit_index_v2_pilot/scores/` · **figure**
+`experiments/edit_index_v2_pilot/outputs/pilot_ei.png` · **log** `logs/edit_index_v2_pilot/`.
+Formula = `pim.metrics.edit_index.edit_index_per_case` (the one formula) with new
+ingredients; editors = the canonical `pim.editors` primitives, the Othello arms re-wired for
+multi-tile targets. Status: `observed`, n = 48 per condition, one arm each, not canonical.
+
+## Counterfactual construction
+
+- **Discworld:** the edited object's whole trajectory shifted by the teleport vector over
+  frames 0..EF−1 (`arms.counterfactual_history`), other object untouched, noise matched;
+  kept if in-frustum and collision-free at every frame. Valid: 110/192 (noiseless), 66/192
+  (8-ray, radius 1.0), 81/192 on the appearance-fac case list (50 with ≥ 2 differing rays).
+- **Othello:** one of the last k = 4 moves substituted by another legal move, the original
+  remaining moves replayed; kept if the replay is legal, the mover is unchanged, the board and
+  the legal set differ. From 900 attempts on each instance's bench histories: 553 / 621 / 692 /
+  664 pairs (uniform / adjacent-flip / adjacent / noflip). Rejections: illegal replay 87–227,
+  mover changed 116 on uniform (passes) and ≤ 11 elsewhere, legal set unchanged 4 / 181 /
+  101 / 31.
+- **Filters.** `RMSE(p_A, p_B)` on the support ≥ max(floor, 0.25 × the simulator's own
+  separation): dropped 0 (dw frames, noflip), 4–6 of 66–81 (token runs), ~3–4 % on the
+  adjacency instances. Othello model-normal (legal mass ≥ 0.98 on BOTH histories): dropped
+  40/553 on uniform (min legal mass on B = 0.00 — some substituted histories are broken
+  for the model), 5/621 adjacent-flip, 3/692 adjacent, 0/664 noflip. The separation ratio
+  model/simulator sits at 1.00 (IQR 0.98–1.03) on frames and Othello, 0.86–0.89 on the token
+  model — these models see the counterfactual as sharply as the simulator does.
+
+## Othello tile changes per counterfactual (all valid pairs)
+
+| instance | pairs | tiles changed: mean · median · IQR · range | occupancy | colour (recolourings) | histogram |
+|---|---|---|---|---|---|
+| oth-uniform | 553 | **5.15** · 5 · [4, 6] · [2, 14] | exactly 2 | 3.15 (0–12) | 2:32 3:48 4:139 5:127 6:95 7:60 8:27 9:17 10+:8 |
+| oth-adjacent-flip | 621 | 2.38 · 2 · [2, 2] · [2, 7] | exactly 2 | 0.38 (0–5) | 2:476 3:95 4:27 5:10 6:11 7:2 |
+| oth-adjacent | 692 | 2.00 · 2 · [2, 2] · [2, 3] | exactly 2 | 0.00 (0–1) | 2:689 3:3 |
+| oth-noflip | 664 | 2.00 · 2 · [2, 2] · [2, 2] | exactly 2 | 0 | 2:664 |
+
+Every substitution vacates one square and occupies another (2 occupancy changes); the rest
+is recolouring, which only the flip rules produce — 3.15 discs on average in standard
+Othello, 0.38 under adjacency+flip (a locally placed disc encloses little). The count does
+not depend on how far back the substitution sits (j = 1..4 all within ±0.2). So a paired
+edit in standard Othello is a ~5-tile board change; on the three no-flip / adjacency
+instances it is a 2-tile occupancy change.
+
+## Results (n = 48 per row; one canonical arm per editor)
+
+| condition | ceiling v1 | unedited v1 | PI v2 / v1 (g2) | ND v2 / v1 (g2) | GS v2 / v1 (g2) |
+|---|---|---|---|---|---|
+| L-oth-20m | +0.80 | −0.79 | +0.12 / +0.12 (1.56) | −0.25 / −0.23 (0.84) | **+0.68 / +0.63 (0.23)** |
+| L-oth-adjacent-flip-20m | +0.71 | −0.70 | +0.05 / +0.05 (3.9) | +0.08 / +0.05 (0.79) | +0.02 / +0.02 (2.6) |
+| L-oth-adjacent-20m | +0.73 | −0.73 | +0.02 / +0.02 (7.5) | +0.06 / +0.06 (1.24) | −0.00 / −0.00 (5.0) |
+| L-oth-noflip-20m | +0.82 | −0.82 | +0.02 / +0.02 (2.6) | **+0.58 / +0.50 (0.27)** | +0.05 / +0.05 (2.3) |
+| L-dw-noiseless-20m | +0.95 | −0.92 | +0.25 / +0.25 (1.96) | −0.04 / −0.05 (4.1) | −0.02 / −0.02 (1.08) |
+| L-dw-8ray-20m | +0.85 | −0.89 | +0.29 / +0.31 (0.92) | −0.17 / −0.19 (1.22) | −0.07 / −0.05 (0.87) |
+| L-dw-8ray-tok-20m | +0.76 | −0.80 | +0.05 / +0.01 (0.70) | — | −0.12 / −0.13 (0.73) |
+| L-dw-8ray-20m @ appearance-fac | +0.85 | −0.89 | +0.44 / +0.47 (0.75) | +0.48 / +0.51 (0.80) | +0.42 / +0.42 (0.50) |
+| L-dw-8ray-tok-20m @ appearance-fac | +0.73 | −0.80 | +0.36 / +0.28 (0.43) | +0.46 / +0.36 (0.41) | **+0.59 / +0.52 (0.31)** |
+
+v2 = both references the model's predictions (unedited −1, `p_B` +1 by construction); v1 =
+the canonical simulator references on the SAME cases; g2 = the v2 guard, RMSE(edited, p_B) /
+RMSE(p_A, p_B), > 1 degraded; the v1 guard agrees with g2 to ±0.05 everywhere. Ceiling v1 =
+`p_B` under the canonical index.
+
+## Reading
+
+1. **The metric change is small; the edit-type change is large.** On the same paired cases
+   v2 and v1 agree to within ±0.03 on every frame and Othello row — these models predict
+   both worlds about as well as the simulator renders them (separation ratio ≈ 1.00), so
+   swapping simulator references for model references moves almost nothing. The token model
+   is the exception (+0.04 to +0.10 higher under v2, ceilings 0.73–0.76): its honest mass
+   split away from the point-mass frame reference is exactly what v2 removes. The
+   fully-model-referenced index therefore does NOT change the discworld story, and it
+   changes the Othello story only through what edits it makes askable.
+2. **Realisable edits reorder the Othello editors.** On the ~5-tile paired edits of standard
+   Othello GS reaches +0.68 (as on single flips), while PI drops from +0.61 to +0.12 and ND
+   from +0.62 to −0.25 with a degraded guard. The arms are the canonical single-flip arms
+   (point, α) applied to multi-tile targets without re-tuning, so this is a caution, not a
+   verdict — but the editor that survives is the one that descends rather than writes a fixed
+   step.
+3. **⭐ oth-noflip is EDITABLE on realisable edits.** ND at its canonical arm reaches +0.58
+   (v2) / +0.50 (v1) against a ceiling of +0.82, guard 0.27, on two-tile occupancy changes.
+   The canonical bench scored this instance inert (ND +0.09) — but that bench asks for a
+   one-tile recolouring, which is an IMPOSSIBLE state in a no-flip world (colour is locked to
+   parity). This is the legal-vs-illegal covariate Sevan asked for, and its first reading is
+   that "inert" on the checkerboard world was an artefact of asking for a state the world
+   cannot be in. The adjacency instances stay inert on the same realisable two-tile edits
+   (ND +0.06 / +0.08, PI and GS destructive), so the 2×2 story sharpens: the checkerboard
+   world (colour irrelevant) edits by occupancy; the adjacency worlds (colour used) do not,
+   even when asked for a state they can reach.
+4. **Discworld unchanged.** Regression editors at the floor or destructive on both frame
+   runs; appearance-fac stays editable on both interfaces (GS +0.42 frame, +0.59 token).
+5. **The filters barely bite here** (0–7 %), because the substitution counterfactuals are
+   in-distribution histories — unlike the swap-built ones of 2026-09-09 (legal mass 0.845).
+   Substitution + replay is the right generator.
+
+## Caveats
+
+n = 48, one arm per editor, arms not re-tuned for multi-tile edits (Othello) or for the
+subset (discworld); k ≤ 4 substitutions only; standard-Othello edits are 2–14 tiles, so the
+magnitude axis is not yet controlled — the by-magnitude figure is the next thing to build.
+The v2 support is still the simulator's (differing rays / union of legal sets), not the
+model's. Not in `pim.metrics`; no REGISTRY row; nothing canonical changed.
+
+## Open
+
+- Sevan's design decision (v2 fully model-referenced vs p_A + S(B)): on this evidence the
+  two agree wherever both are defined; the decision is about illegal edits, which v2 cannot
+  score. The noflip result says the legal/illegal split is itself a finding.
+- Re-tune PI/ND α for multi-tile Othello edits before reading point 2 as a fact.
+- Magnitude-stratified rerun (tiles changed 2 / 3–4 / 5+) on oth-uniform.
+
+## Addendum (same night) — standard Othello by edit magnitude, all 513 valid pairs
+
+`scripts/by_magnitude.py`, `scores/all_cases/L-oth-20m*.json`, `outputs/oth_uniform_by_magnitude.png`.
+Same canonical single-flip arms, every valid pair, binned by tiles changed (2 = the pure
+occupancy change; more = recolourings added by the flip rule):
+
+| tiles | n | ceiling v1 | PI v2 / v1 (g2) | ND v2 / v1 (g2) | GS v2 / v1 (g2) |
+|---|---|---|---|---|---|
+| 2 | 31 | +0.78 | +0.13 / +0.13 (1.67) | **+0.65 / +0.55 (0.08)** | +0.63 / +0.56 (0.14) |
+| 3 | 48 | +0.80 | +0.08 / +0.08 (1.67) | −0.03 / −0.03 (0.75) | +0.67 / +0.60 (0.11) |
+| 4 | 133 | +0.80 | +0.11 / +0.11 (1.48) | −0.19 / −0.18 (0.85) | +0.66 / +0.61 (0.15) |
+| 5 | 122 | +0.80 | +0.12 / +0.12 (1.41) | −0.22 / −0.21 (0.88) | +0.59 / +0.55 (0.19) |
+| 6 | 86 | +0.79 | +0.13 / +0.12 (1.36) | −0.33 / −0.32 (0.93) | +0.63 / +0.57 (0.18) |
+| 7+ | 93 | +0.80 | +0.15 / +0.15 (1.28) | −0.36 / −0.34 (0.93) | +0.59 / +0.56 (0.21) |
+
+- **At the smallest realisable edit (2 tiles) standard Othello reads as on the single flips:**
+  ND +0.65 / GS +0.63, guards 0.08–0.14. The "PI/ND collapse" in the 48-case table was a
+  magnitude effect: ND is a fixed-size step in one summed direction, and it decays
+  monotonically as recolourings are added (+0.65 → −0.36); GS descends and is flat in magnitude
+  (+0.59…+0.67); PI is flat and LOW at every magnitude (+0.08…+0.15, guard > 1) — its
+  single-flip α does not transfer to an occupancy edit even at 2 tiles, so PI needs its own
+  re-tune before it is read.
+- The ceiling is flat (+0.78…+0.80): magnitude does not change how well the model predicts
+  the counterfactual world, only how well a fixed write reaches it.
+- This is the magnitude figure the redesign called for, and it says the headline should be
+  read per magnitude bin (or at matched small magnitude across instances) rather than
+  pooled: standard Othello's 2-tile bin (+0.65) and noflip's 2-tile edits (+0.58) are the
+  like-for-like comparison, and both edit; the adjacency instances at 2 tiles do not.
+
+## Addendum 2 — is PI's flat +0.1 a wiring bug? (`scripts/pi_check.py`)
+
+**Wiring: exact.** On Li's shipped single-flip cases the pilot's multi-tile PI and ND hooks
+reproduce the canonical `linear_arm` to the last bit (EI +0.6079 / +0.6218, max |Δprob| = 0).
+
+**Two-tile paired edits on standard Othello (32 cases; every one is a vacate + an occupy,
+BLANK↔MINE/THEIRS — no colour flip among them).** PI sweep with the read-out landing rate:
+
+| PI point | α 0.5 | α 1 | α 2 | α 3 (canonical) | α 5 |
+|---|---|---|---|---|---|
+| 3 | −0.47 (0%) | +0.16 (100%) | +0.17 | +0.08 · guard 1.75 | +0.05 |
+| **4** | −0.22 (0%) | **+0.37 · guard 0.57 (100%)** | +0.20 · 1.12 | +0.13 · 1.75 | +0.06 · 2.7 |
+| 5 | −0.02 (0%) | +0.28 (100%) | +0.11 | +0.06 | +0.04 |
+| ND pt 4 α 0.35 | | **+0.64 · guard 0.27 (landed 88%)** | | | |
+
+- PI's pooled +0.12 was an **α mis-tune**: the canonical α = 3 (tuned on one-tile flips)
+  overshoots a two-tile occupancy edit (guard 1.75 = destructive). At α = 1 PI reaches
+  +0.37 with guard 0.57 — real, non-destructive, and still well short of ND's +0.64 and of
+  PI's own +0.61 on single flips.
+- The read-out LANDS in 100 % of cases from α = 1 on, at every point, while the output moves
+  only partway: the occupancy edit is another `readable ≠ grabbable` case. ND lands the
+  read-out less often (88 %) and edits more. A plausible reason, untested: occupancy is
+  recoverable from the move tokens themselves (a square is occupied iff its move was
+  played), so a write that vacates a square fights the input evidence in a way a recolouring
+  does not.
+- Consequence for the redesign: arms must be re-tuned per edit type / magnitude; the
+  pooled table's PI row is not comparable to the single-flip number. The by-magnitude
+  figure's PI line (+0.08…+0.15) is the mis-tuned α and should be redrawn with a per-bin
+  sweep.
+
+## Decision (2026-09-12, Sevan) — the model-referenced index is NOT adopted
+
+The pilot showed the reference change buys ≤ 0.03 on every noiseless and Othello condition
+while entangling edit magnitude across environments through the pair generator. The canonical
+metric stays: both references the simulator's predictions from the exact state (Bayes-optimal
+given the state; exact in Othello and noiseless discworld), the index relative so shared
+state-from-history uncertainty cancels, the floor and ceiling rows reporting the residual gap.
+What the pilot DID surface and what is kept: the pre-dynamics / post-dynamics alignment fix
+(GOTCHAS 2026-09-12; every discworld run rescored), the no-flip result on realisable edits as a
+legal-vs-illegal finding to be written up separately, the ceiling row, and the α lesson.

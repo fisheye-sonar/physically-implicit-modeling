@@ -1,5 +1,8 @@
 # GS lands in probe space and the generation ignores it (discworld)
 
+> **Rescored 2026-09-12** under the PRE-dynamics write target (GOTCHAS 2026-09-12; `scratch/2026-09-12-alignment-rescore.md`): every discworld editor number quoted below moved by ≤ 0.06 (median 0.005), floors unchanged, no conclusion changed. `scores.json` holds the current values.
+
+
 **Date** 2026-09-02 · **Run** L-dw-20m (dw-pn04), cached MLP-128 probes, both bases ·
 **Code** `experiments/gs_readout_pilot/` · **Data**
 `experiments/gs_readout_pilot/scores/gs_readout_pilot_L-dw-20m.json` (+ `summary_L-dw-20m.md`)
