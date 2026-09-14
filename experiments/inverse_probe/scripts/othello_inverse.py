@@ -91,13 +91,19 @@ print(f"bench: {n_cases} cases ({len(keep)} scored) · unedited symdiff {u['edit
 grid = oa.fit_probe_grid(model, data if not a.smoke else data, cache_dir=run / "probes", log=None) if not a.smoke else None
 
 def nn_mean(S_train_t: torch.Tensor, H_train_t: torch.Tensor, s_query: np.ndarray, k: int) -> torch.Tensor:
-    """(n, d): mean residual of the k training rows nearest each query board (Hamming)."""
-    q = torch.from_numpy(s_query.astype(np.int8)).to(DEV)
+    """(n, d): mean residual of the k training rows nearest each query board (Hamming).
+    Hamming distance over 64 three-way tiles = 64 − (one-hot agreement), computed as a
+    matmul against a (rows, 192) half-precision one-hot matrix — never a (b, rows, 64)
+    broadcast (a 4 GB intermediate; its OOM path trips PyTorch's NVML assert under the
+    2026-09-11 driver mismatch)."""
+    S1 = torch.nn.functional.one_hot(S_train_t.long(), N_CLASSES).reshape(len(S_train_t), -1).half()   # (rows, 192)
+    q = torch.from_numpy(onehot(s_query)).to(DEV).half()                                              # (n, 192)
     out = torch.zeros(len(q), H_train_t.shape[1], device=DEV)
-    for i in range(0, len(q), 64):
-        d = (S_train_t[None, :, :] != q[i:i + 64, None, :]).sum(-1)              # (b, rows)
-        idx = d.topk(k, dim=1, largest=False).indices                             # (b, k)
-        out[i:i + 64] = H_train_t[idx].mean(1)
+    for i in range(0, len(q), 256):
+        agree = q[i:i + 256] @ S1.T                                                # (b, rows) matches out of 64
+        idx = agree.topk(k, dim=1, largest=True).indices                            # nearest = most agreement
+        out[i:i + 256] = H_train_t[idx].mean(1)
+    del S1
     return out
 
 def run_arm(ell: int, make_new):
