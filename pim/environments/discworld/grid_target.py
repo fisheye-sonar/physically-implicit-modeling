@@ -342,7 +342,9 @@ class AppearanceTarget(CategoricalTarget):
     def n_cells(self, sim: dict) -> int:
         if _n_views(sim) > 1:
             self._only_plain_runs(sim)
-            return (len(self.runs(sim)) + 1) ** _n_views(sim)      # product upper bound, incl. "unseen"
+            # the resolution axis is PER VIEW (runs + the "unseen" class): the joint partition
+            # is a product that is never enumerated, and its size would mislead a coarse→fine table
+            return len(self.runs(sim)) + 1
         if self.lateral_only:
             return len(self._centres(sim))
         return len(self.runs(sim)) * self.depth_bands

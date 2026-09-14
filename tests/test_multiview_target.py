@@ -41,7 +41,7 @@ def test_single_view_path_is_unchanged():
 def test_shapes_and_sizes_with_five_views():
     assert T.cat.factor_sizes(SIM5) == (16, 6) * 5
     assert T.n_factors_on(SIM5) == 10 and T.n_tiles_on(SIM5) == 20 and T.n_classes_on(SIM5) == 110
-    assert A.n_cells(SIM5) == 31 ** 5
+    assert A.n_cells(SIM5) == 31          # per view (30 runs + unseen); the joint product is never enumerated
     pos = _positions(2)
     lab = T.factor_labels(pos, SIM5)
     assert lab.shape == (pos.shape[0], 2 * 10) and lab.min() >= 0 and lab.max() < 110
