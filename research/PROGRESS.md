@@ -11,7 +11,18 @@ Sevan: "launch the whole thing now" (N = 5, otherwise dw-8ray's setup; discs may
 Stages: B generate (eval/edits/probes + 20M corpus, 128 GB memmap, ~3 h) → B' smoke-train → C train 780k (~8 h)
 → W wait for `experiments/multi_observer/SCORER_READY` (≤ 12 h, hourly warning pings) → D appearance-fac probes
 (`--basis cartesian`) + floors → master_eval → test loss → full tables → ALL DONE (~05:30 2026-09-14).
-**Owed while it runs (the marker is touched only when both are done and smoked):** (1) master_eval per-instance
+**Relaunch 17:50** after stage B1b failed on 1 seed in ~1,500: the edits generator drew teleport targets from
+observer 0's frustum (its own sampler, not `sim.sample_position`); fixed in `edits_dataset._sample_in_frustum`
+(commit 53af51c, GOTCHAS 2026-09-13), partial `edits.h5` moved to `_unused/` (ledgered), eval split kept.
+**Scorer pieces DONE 18:40 (commit 733b32c), marker NOT yet touched:** per-view factorised appearance target
+(`grid_target`: `_view_cells`, mixed-radix joint code, factors (centre+1, length+1) per view; one view is
+bit-identical; `tests/test_multiview_target.py`); master_eval `dw_bases_by_instance` (obs5 → cartesian),
+instance-aware `discworld_blocks`, baselines loop, `dw_extra_targets` entry; `tables.reg_key` so a lone
+cartesian block is the canonical row; both table notebooks execute. Geometry fact: every arena position lights
+≥ 1 kept ray in every view (the 7 % invisibility is occlusion). **Remaining before the marker:** the scorer
+smoke on `runs/_pipeline_smoke/dw-8ray-obs5-smoke` once stage B' has produced it (~21:00): tiny fit_probes in
+cartesian (regression + appearance-fac), `load_bench` on the 40-entry frames, one arm per editor.
+**Owed while it runs (original list, kept for the record):** (1) master_eval per-instance
 regression basis — dw-8ray-obs5 scores the **Cartesian** block, not frustum (also the baselines cell);
 (2) the **per-observer factorised appearance target** in `grid_target.py` — for `n_observers > 1` the
 factorisation is (centre, length) per observer per disc (5 × 20 classes per disc; the joint cell is NOT
