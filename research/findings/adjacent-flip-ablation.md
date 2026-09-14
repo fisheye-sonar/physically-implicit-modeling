@@ -492,8 +492,48 @@ dropout 0.7 (`L-oth-adjacent-drop07-390k`, Sevan's ask), to see whether the tren
 the optimum is lost, and whether editability keeps improving.
 
 
+**Dropout 0.7 (2026-09-14, `L-oth-adjacent-drop07-390k`).** Sevan's fourth arm. Same recipe at
+`--dropout 0.7`, 390k steps (13.0 h). Training was qualitatively different: eval-mode val sat in a
+2.66–2.75 band for the first 110k steps (train loss with dropout active BELOW eval-mode val — the
+train/eval statistics mismatch at an extreme rate), then dropped to 2.45 by 140k and ended at best
+val **2.4403** — 0.008 above the Bayes floor where the other arms sit 0.002–0.003 above it. Close,
+but the first arm measurably short of optimal. Rescored on the lab box at eval `2026-09-12.1`.
+
+| oth-adjacent | val CE | skill LIN / MLP | PI guarded | ND guarded | GS | INLP copies pts 1–8 | best guarded K-copy edit |
+|---|---|---|---|---|---|---|---|
+| dropout 0 (390k) | 2.4357 | 0.979 / 0.981 | −0.307 / 1.08 | −0.237 / 0.94 | inert | 283 / 227 / 187 / 161 / 150 / 148 / 146 / 162 | +0.45 / 0.37 (pt 1, K128) |
+| dropout 0.1 (780k) | 2.4350 | 0.988 / 0.990 | −0.166 / 0.81 | +0.107 / 1.02 | inert | 232 / 138 / 99 / 88 / 90 / 85 / 83 / 83 | +0.47 / 0.47 (pt 2, K64) |
+| dropout 0.3 (390k) | 2.4354 | 0.988 / 0.991 | **+0.172 / 1.04** | **+0.159 / 0.73** | inert | 185 / 137 / 115 / 101 / 97 / 90 / 87 / 86 | +0.45 / 0.52 (pt 3, K64) |
+| dropout 0.7 (390k) | 2.4403 | 0.981 / 0.986 | −0.168 / 0.95 | +0.033 / 0.98 | inert | 169 / 126 / 112 / 106 / 98 / 93 / 94 / 93 | +0.39 / 0.69 (pt 4, K64) |
+
+(0.7 unguarded bests: PI +0.060 / 1.93, ND +0.033 / 0.98; unedited floor −0.555 vs −0.63 to −0.66
+for the others — the model is less sharp.) Half-R² iteration pts 1–8 at 0.7: 63 / 50 / 47 / 44 / 40 /
+36 / 35 / 32 (0.3: 64 / 45 / 37 / 29 / 21 / 18 / 18 / 18; 0.1: 96 / 42 / 27 / 19 / 16 / 15 / 16 / 16).
+Initial probe R² at point 1 falls to **0.72** (0.86–0.91 for the other arms) and peaks at points 3–4
+(0.89): colour is computed LATER at 0.7. Guarded K-copy edits at point 1 never land (K=128: −0.18);
+the window is point 4 (K=64 +0.39 exact). Covariance participation ratio at pt 1: 76 (0.3: 84), 88–96
+at points 4 and 8 (`scores/covariance_dim.json`). Figures `outputs/inlp_compare_*_dropout_0_01_03_07.png`.
+
+**Reading.** The copy count at point 1 keeps falling with dropout (283 → 232 → 185 → 169) but the
+editability trend is an inverted U with its peak at 0.3. Two things happen at 0.7 that the
+materialisation story predicts: the block-of-sufficient-copies shape now holds at EVERY depth (the
+half-R² iteration at points 4–8 is 32–44 vs 15–19 at 0.1 — a wider plateau of mutually redundant
+copies), and the colour computation is pushed later (point-1 R² 0.72, the K-copy window at point 4).
+What the editors need is a sufficient copy at a point where the downstream layers still read it; at
+0.7 the copies exist but sit deep, wide, and redundant enough that writing 1 (canonical) or even 128
+(K-copy, point 1) of them at the early points changes nothing, and the deep window is narrow. So
+more noise on the read channel keeps forcing materialisation, but past some rate it also delays the
+computation and spreads the redundancy so widely that single-direction edits lose their handle
+again, while the model gives back some of its optimality (val +0.008) and probe skill (0.981 vs
+0.988). Editability under dropout therefore peaks where the noise is strong enough to prune the weak
+additive tail but not so strong that the code becomes a wide redundant block late in the network.
+Status `observed` (one seed per arm; four rates). Open: a second seed at 0.3 to move the landing to
+`replicated`; the same sweep on standard Othello (does dropout ADD anything where the rule already
+materialises?); dropout at 0.5 to locate the peak.
+
 ## Log
 
+- **2026-09-14 (morning)** — dropout 0.7 arm (`observed`): reaches val 2.4403 (0.008 above the floor; slow start, eval-mode val stuck 2.66–2.75 for 110k steps), point-1 copies 169 (trend continues) but editability falls back (ND guarded +0.033, PI −0.17): the copies become a wide redundant block at every depth (half-R² iteration 32–44 at pts 4–8) and colour is computed later (pt-1 R² 0.72). Editability vs dropout is an inverted U peaking at 0.3.
 - **2026-09-13 (evening)** — dropout 0.3 arm (`observed`): same optimum; at eval 2026-09-12.1 both PI (+0.172 / fid 1.04) and ND (+0.159 / 0.73) land inside the guard on oth-adjacent for the first time (0.1: ND +0.107 / 1.02 only; 0: nothing). INLP copies at point 1 283 → 232 → 185 with dropout 0 → 0.1 → 0.3; cascade shape plateau-then-cliff. Compression check REFUTED in its stated form: the residual stream's participation ratio RISES with dropout (44 → 81 → 84) — dropout decorrelates the stream and confines colour to a block of sufficient copies; it does not compress the stream. All four arms rescored on one protocol. Dropout 0.7 launched.
 - **2026-09-13 (early)** — no-dropout run extended to 780k: copies per tile 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 (10–20 % pruning of the tail vs 390k; still 1.2–1.6× the dropout run), K-copy edit curves unchanged (K ≤ 16 inert, +0.42 at pt 1 K=128), canonical editors inert (PI −0.21, ND +0.05). The redundancy is the regime's steady state. Dropout-0.3 arm launched.
 

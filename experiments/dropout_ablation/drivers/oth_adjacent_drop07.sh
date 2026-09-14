@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# ── L-oth-adjacent-drop03-390k: Transformer-L on oth-adjacent with DROPOUT 0.3 (2026-09-13) ──
+# ── L-oth-adjacent-drop07-390k: Transformer-L on oth-adjacent with DROPOUT 0.7 (2026-09-13, evening) ──
 #
-# Third arm of the dropout ablation. Dropout 0 (L-oth-adjacent-nodrop-390k) made the colour
-# code MORE redundant (283/227/187… orthogonal copies vs 232/138/99… at the class default 0.1)
-# and left oth-adjacent canonically inert. This run asks the other direction: does dropout 0.3
-# prune the copies or spread them further, and does single-probe editability move at all?
-# Identical to adjacency_ablation/L-oth-adjacent-20m except --dropout 0.3 and 390k steps
-# (matching the nodrop snapshot; resumable, so extend later with --resume --steps 780000).
+# Fourth arm of the dropout ablation, Sevan's ask after the 0.3 result. Dropout 0 -> 0.1 -> 0.3 was monotone:
+# fewer orthogonal colour copies (283 / 232 / 185 at point 1), better probe skill, and the canonical ND edit
+# going from inert to guarded-positive (+0.165 / fid 0.77). 0.7 pushes the read-channel noise far past the
+# usual range to see whether the compression continues, whether editability keeps improving, and where the
+# model stops reaching the Bayes floor. Identical to adjacency_ablation/L-oth-adjacent-20m except --dropout 0.7
+# and 390k steps (resumable, so extend later with --resume --steps 780000).
 #
 # Stages (each gated on the previous one; a failed stage pings and stops):
-#   W  wait for the GPU: unit oth_adjacent_nodrop_ext (the 780k extension) must have exited
+#   W  wait for the GPU: unit oth_adjacent_drop03 must have exited (already inactive at launch)
 #   C  GPU  train 390k steps, dropout 0.3, resumable                          (~13 h on the 4090)
 #   D  GPU  master_eval (scores) + build_full_table
 # Launch (on wsl-sevan):
-#   systemd-run --user --unit=oth_adjacent_drop03 -p MemoryMax=40G --collect --working-directory=$PWD \
-#       /usr/bin/bash -c 'bash experiments/dropout_ablation/drivers/oth_adjacent_drop03.sh >> logs/dropout_ablation/L-oth-adjacent-drop03-390k/unit.log 2>&1'
+#   systemd-run --user --unit=oth_adjacent_drop07 -p MemoryMax=40G --collect --working-directory=$PWD \
+#       /usr/bin/bash -c 'bash experiments/dropout_ablation/drivers/oth_adjacent_drop07.sh >> logs/dropout_ablation/L-oth-adjacent-drop07-390k/unit.log 2>&1'
 # Relaunch after an interruption: the same command — training continues from ckpt/latest.pt.
 set -u
 cd "$(dirname "$0")/../../.." || exit 1
@@ -23,11 +23,11 @@ PY=$ROOT/.pim/bin/python
 export PYTHONPATH=$ROOT
 NT=https://ntfy.sh/swirling-tornado-ai691k
 TOPIC=dropout_ablation
-NAME=L-oth-adjacent-drop03-390k
+NAME=L-oth-adjacent-drop07-390k
 INST=oth-adjacent
 STEPS=390000
-DROPOUT=0.3
-WAIT_UNIT=oth_adjacent_nodrop_ext
+DROPOUT=0.7
+WAIT_UNIT=oth_adjacent_drop03
 LOGS=$ROOT/logs/$TOPIC/$NAME
 mkdir -p "$LOGS"
 echo $$ > "$LOGS/driver.pid"

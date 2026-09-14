@@ -111,3 +111,10 @@ redundant sufficient copies, not additive correlates. What dropout removes is th
 correlates; what it leaves is a block of individually sufficient copies — the code the editors can move. Extension of the
 no-dropout run to 780k (`L-oth-adjacent-nodrop-20m`): 272 / 210 / 158 / 132 / 122 / 119 / 118 / 137 — the tail prunes 10–20 %
 with doubled training and stays 1.2–1.6× the dropout run's. `adjacent-flip-ablation.md` §Dropout ablation → Dropout 0.3.
+
+**2026-09-14 — dropout 0.7.** `L-oth-adjacent-drop07-390k`: copies per tile pts 1–8 169 / 126 / 112 / 106 / 98 / 93 / 94 / 93. Point 1
+continues the monotone fall (283 / 232 / 185 / 169 for 0 / 0.1 / 0.3 / 0.7) but its initial R² collapses to 0.72 (0.86–0.91 elsewhere), and
+points 4–8 turn back up with longer plateaus (half-R² iteration 32–44 vs 15–19 at 0.1): the block of sufficient copies has moved deeper.
+Canonical editors fall back to inert/marginal (PI −0.168 guarded, ND +0.033) and the K-copy window sits at points 4–5 — copy count at a fixed
+point is not the whole story; WHERE the sufficient block lives relative to the editors' points matters too. `adjacent-flip-ablation.md`
+§Dropout ablation → Dropout 0.7.

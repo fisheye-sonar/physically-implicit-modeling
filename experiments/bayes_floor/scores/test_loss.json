@@ -338,5 +338,25 @@
   "n_sequences": 10000,
   "unit": "MSE (intensity\u00b2/ray)",
   "note": "noiseless: the next frame is a deterministic function of the state"
+ },
+ "dropout_ablation/L-oth-adjacent-drop03-390k": {
+  "env": "othello",
+  "instance": "oth-adjacent",
+  "test_loss": 2.435323575157744,
+  "bayes_floor": 2.432635694729183,
+  "excess": 0.0026878804285610514,
+  "n_sequences": 10000,
+  "unit": "CE (nats/move)",
+  "note": "gates on the test split; Bayes CE = E[log |legal|], exact"
+ },
+ "observer_ablation/L-dw-8ray-obs5-20m": {
+  "env": "discworld",
+  "instance": "dw-8ray-obs5",
+  "test_loss": 0.0030238308358937504,
+  "bayes_floor": 0.0,
+  "excess": 0.0030238308358937504,
+  "n_sequences": 10000,
+  "unit": "MSE (intensity\u00b2/ray)",
+  "note": "noiseless: the next frame is a deterministic function of the state"
  }
 }
