@@ -1,84 +1,103 @@
-# Inverse probe — a learned state → latent map edits Othello better than any probe-derived write (2026-09-14)
+# Inverse probe — a learned state → latent map edits BOTH environments, better than any probe-derived write (2026-09-14)
 
-**Status:** Othello measured 2026-09-14 (`experiments/inverse_probe/`, unit `inverse_probe_oth`,
-4 minutes of compute on `L-oth-20m`). Discworld held for Sevan's call. An INSTRUMENT
-experiment (it changes the write, not the environment): quoted beside the canonical editors,
-never in their place (`RESEARCH.md`: the independent variable is the environment).
+**Status:** measured 2026-09-14 on `L-oth-20m`, `L-dw-noiseless-20m`, `L-dw-8ray-20m`
+(`experiments/inverse_probe/`; units `inverse_probe_oth`, `inverse_probe_dw`, `inverse_probe_mirror`;
+minutes of compute per run). An INSTRUMENT experiment — it changes the write, not the
+environment — quoted beside the canonical editors, never in their place.
 
 ## The question and the bets
 
 Every canonical editor writes through a probe fitted latent → state, then inverted (PI),
 contrasted (ND) or descended (GS). Fit the OTHER direction — g: state → residual at point ℓ,
-on the same 20k-game probe corpus — and write g(target state). Sevan's bet: it does not edit,
-or edits poorly. Mine: the delta form lands near ND's level, the overwrite costs fidelity.
+on the same probe corpus — and write g(target state) into the residual. Sevan's bet: it does not
+edit, or edits poorly, in both environments. Mine: the delta form lands near ND on Othello and
+beats PI but stays well short of Othello on discworld.
 
 ## Method
 
-g is an MLP (192 → 1024 → 512; one-hot mine/theirs board in; the residual at point ℓ out),
-fitted on 943k training positions with the probes' own recipe (40 epochs, seeded 80/20 split
-by game), one g per residual point. Three write forms at the edit position, on the canonical
-1000-case bench with the canonical scorecards (symmetric-difference Edit Index, move fidelity):
+g is the MIRROR of the canonical MLP probe (Sevan): one hidden layer of 128, the probes' own
+200-epoch recipe, the same seeded 80/20 split by sequence, one g per residual point. Inputs:
+Othello — the one-hot mine/theirs board (64 × 3 = 192); discworld — the FULL frustum state,
+position and velocity of both discs (8), the canonical regression target. Outputs: the
+512-d residual at point ℓ. Four write forms at the edit position, scored on each run's
+canonical bench with the canonical scorecards (Othello: symmetric-difference Edit Index and
+move fidelity; discworld: ray-zone Edit Index and the fidelity guard, the pre-dynamics target
+state written for all dims):
 
-- **overwrite** h′ = g(s_post) — the conditional mean of the residual given the board;
-- **delta** h′ = h + α · (g(s_post) − g(s_pre)) — keeps what h carries beyond the board;
-- **nearest neighbour** — both forms with g replaced by the mean residual of the 10 training
-  boards nearest s (Hamming over 64 tiles): retrieval, no training.
+- **overwrite**          h′ = g(s_post) — the residual replaced by its conditional mean given the target state;
+- **delta**              h′ = h + α (g(s_post) − g(s_pre)), α ∈ {0.25 … 3} — keeps what h carries beyond the state;
+- **retrieval overwrite** h′ = m(s_post), m(s) = the mean residual of the k = 10 training frames whose state is nearest s (Hamming on Othello, Euclidean in standardised frustum units on discworld) — a lookup, no training;
+- **retrieval delta**    h′ = h + α (m(s_post) − m(s_pre)).
 
-Controls: overwrite with the state-free mean residual; the canonical PI / ND / GS rows. Also
-g's held-out R² (how much of the residual the board explains) and "landed" (the canonical
-linear probe reads the written residual as the target board at the flipped tile).
+Controls: overwrite with the state-free mean residual (inert or destructive everywhere:
+−0.04 … −0.59); the canonical PI / ND / GS rows from each run's `scores.json`. Also g's held-out
+R² per point (how much of the residual the state explains). A wider map (1024 hidden, 40
+epochs) was run first on Othello and noiseless and gave the same picture a few hundredths
+higher; its files are kept (`*_h1024e40.json`) and not quoted.
 
-## Result
+## The table — best arm over residual points, Edit Index / fidelity guard
 
-Unedited −0.933. Canonical on this run: PI +0.82 / 0.30, ND +0.72 / 0.31, GS +0.83 / 0.28.
+| run (bench) | unedited | **overwrite** | **delta** (best α) | **retrieval overwrite** | **retrieval delta** (best α) | canonical PI | canonical ND | canonical GS | state explains h (R², pts 1–8) |
+|---|---|---|---|---|---|---|---|---|---|
+| `L-oth-20m` (1000 flips) | −0.93 | +0.81 / 0.38 (pt 5) | **+0.88 / 0.23** (pt 4, α 3) | +0.04 / 2.54 | +0.15 / 1.34 | +0.82 / 0.30 | +0.72 / 0.31 | +0.83 / 0.28 | 0.68–0.88 |
+| `L-dw-noiseless-20m` (1000 teleports, frustum) | −0.93 | +0.60 / 0.34 (pt 6) | **+0.66 / 0.46** (pt 5, α 3) | +0.40 / 0.65 (pt 6) | +0.38 / 0.76 (pt 5) | +0.23 / 1.54 | n/a | −0.08 / 1.07 | 0.29–0.35 |
+| `L-dw-8ray-20m` (1000 teleports, frustum) | −0.90 | +0.73 / 0.27 (pt 5) | **+0.84 / 0.28** (pt 1–2, α 3) | +0.63 / 0.43 (pt 7) | +0.68 / 0.50 (pt 2) | +0.26 / 0.99 | n/a | −0.03 / 0.90 | 0.37–0.57 |
 
-| point | g R² (held out) | overwrite | mean-h control | nn overwrite | **delta, best α** | nn delta, best α |
-|---|---|---|---|---|---|---|
-| 0 | 0.43 | −0.28 / 1.96 | +0.13 / 2.92 | −0.24 / 2.18 | −0.58 / 1.24 (α 3) | −0.69 / 1.31 |
-| 1 | 0.74 | −0.31 / 1.77 | −0.20 / 1.83 | −0.29 / 1.94 | −0.67 / 1.10 | −0.66 / 1.30 |
-| 2 | 0.81 | −0.12 / 1.69 | −0.13 / 2.11 | −0.23 / 1.97 | −0.29 / 0.96 | −0.53 / 1.30 |
-| 3 | 0.83 | +0.07 / 1.22 | −0.01 / 2.50 | −0.19 / 1.88 | +0.47 / 0.61 (α 3) | −0.33 / 1.22 |
-| 4 | 0.85 | +0.57 / 0.56 | −0.04 / 3.40 | −0.09 / 1.81 | +0.86 / 0.38 (α 3) | −0.02 / 1.20 |
-| **5** | 0.87 | **+0.90 / 0.22** | −0.05 / 3.74 | +0.02 / 2.11 | **+0.92 / 0.20 (α 1.5)** | +0.15 / 1.34 |
-| 6 | 0.86 | +0.87 / 0.30 | −0.05 / 2.59 | +0.04 / 2.54 | +0.88 / 0.32 (α 2) | +0.03 / 1.42 |
-| 7 | 0.84 | +0.52 / 1.29 | −0.05 / 2.17 | −0.01 / 4.30 | +0.60 / 1.21 | −0.07 / 2.76 |
-| 8 | 0.92 | +0.25 / 3.30 | −0.05 / 2.17 | −0.00 / 4.15 | +0.32 / 5.61 | −0.07 / 5.43 |
-
-The delta write at point 5, α 1.5: **+0.917 at fidelity 0.20**, above every canonical editor
-on this run (best canonical +0.83 / 0.28); its α curve is a clean rise (α 1: +0.73, 1.5: +0.92,
-2: +0.92, 3: +0.86) with the write 26% of the activation norm at the peak. The plain overwrite
-at points 5–6 reaches +0.90 / 0.22 and +0.87 / 0.30 — replacing the whole residual with the
-board's conditional mean edits nearly as well as the delta, at points where the board explains
-86–87% of the residual's variance. Retrieval (10 nearest boards) never exceeds +0.15 and is
-destructive everywhere; the mean-residual control is at the unedited floor or worse.
+Every inverse-map arm above passes the guard (fidelity < 1) except Othello's retrieval forms,
+which do not edit at all. Per point (`scores/*_mirror128.json`): on Othello the effect is
+confined to points 3–6 and peaks at 4–5, exactly where PI and ND edit; on noiseless it is
+positive at every point from 1 on and flat from point 3; on 8-ray it is positive at EVERY
+point including the input embedding (overwrite +0.70 / 0.29 at point 0), peaks for the delta
+at points 1–3 and for the overwrite at 5.
 
 ## Reading
 
-1. **Sevan's bet loses on Othello, by a wide margin.** A map from the target board ALONE,
-   learned from the probe corpus, is the best editor we have on this model: +0.92 / 0.20 against
-   PI +0.82 / 0.30 and GS +0.83 / 0.28. The counterfactual history is not needed to find the
-   write; the conditional mean of the residual given the board is enough.
-2. **Where it works is where the probes work.** Points 4–6 — the same points at which PI and
-   ND edit — are where g explains ≥ 85% of the residual and where the write lands in the
-   output; at points 0–2 the read-out lands (82–99%) and the output does not follow, the same
-   dissociation the probe-derived writes show early in the stack. Point 8 explains the most
-   variance (0.92) and edits worst: the last residual is nearly the logits, and overwriting it
-   with a mean destroys the move distribution (fidelity 3.3).
-3. **Learning beats retrieval decisively.** Boards after 20 moves are essentially unique; the
-   10 nearest training boards differ in many tiles and their mean residual is not the target's
-   — the MLP interpolates where retrieval cannot. The state-free mean is inert, so the effect is
-   the board's, not the mean's.
-4. **What it says about the negative on discworld.** If the same construction edits discworld's
-   8-ray model under the factorised target, then the discworld failure is a property of the
-   probe-derived WRITE (a pseudo-inverse or a row contrast of a linear read-out), not of the
-   representation; if it does not, the residual there carries too much that the target state
-   does not determine (velocity, history), and the conditional mean cannot supply it — which is
-   the alignment result (`edit-direction-alignment.md` Result 2) from the other side. That is the
-   next run, on Sevan's go.
+1. **Sevan's bet loses in both environments, and the discworld half is the finding.** The
+   regression rows of `L-dw-noiseless-20m` and `L-dw-8ray-20m` have never edited through a
+   probe — PI only over the guard at the top of its α grid, GS negative, on every instance and
+   seed we have. A map from the full state alone, fitted on the same 30k probe sequences with
+   the probe's own architecture mirrored, edits them at +0.66 / 0.46 and +0.84 / 0.28, the
+   latter at Othello's level. The residual was writable all along; the probe-derived write was
+   the wrong write. This is the alignment result (`edit-direction-alignment.md` Result 2: the
+   true Δ edits at +0.9, the position rows carry none of it) closed from the other side — the
+   conditional mean E[h | state] carries the part of Δ the probe rows miss.
+2. **It edits where the state explains little of the residual.** On noiseless g's held-out R²
+   is 0.29–0.35 and on 8-ray 0.37–0.57, against 0.68–0.88 on Othello — most of discworld's
+   residual is NOT a function of position and velocity (history, the other object's past,
+   whatever the model keeps) — yet writing the conditional mean, or its difference, moves the
+   output. The overwrite discards the unexplained 60–70% and still edits at +0.60 / +0.73 with
+   the guard well under 1; the delta keeps it and edits a little better with a slightly worse
+   guard. Editability does not require explaining the residual; it requires writing along the
+   direction the state moves it.
+3. **Retrieval works where states repeat and fails where they do not.** On 8-ray the ten
+   nearest training frames are genuinely near (a coarse 5-ray-to-8-ray world visits similar
+   states often) and their mean residual edits at +0.63 / 0.43 — a training-free editor better
+   than every canonical one on this run; on noiseless it edits at +0.40; on Othello, where a
+   20-move board is essentially unique, the ten nearest boards differ in many tiles and
+   retrieval is inert. The learned map interpolates where the lookup cannot, and is never worse.
+4. **The Othello result reproduces at probe width.** Delta +0.88 / 0.23 at point 4 — above
+   PI (+0.82), ND (+0.72) and GS (+0.83) — with the same 128-unit hidden layer the canonical
+   MLP probe uses. Width mattered only at the deeper points (6–8), where the 128-map explains
+   less of the residual and its edits fall with it.
+5. **What this does to the project's negative.** "Discworld position is decodable but not
+   editable" was true of the probe-derived writes. The state-conditional mean is an editor
+   built from the same data, the same architecture and the same held-out discipline as the
+   probe, and it edits discworld's regression state at +0.66 to +0.84. The open question
+   moves: not whether the state is writable, but why a linear read-out's pseudo-inverse and a
+   nonlinear read-out's gradient both miss the direction that E[h | state] finds — the write
+   directions those editors produce live in the probe's row space, and the alignment work
+   measured that space to hold 1–3% of the true displacement on discworld. The
+   environment-side toggles (ray count, flipping) still order the canonical editors; whether
+   they order the inverse map too is the next measurement (5-ray, blink, the token model,
+   adjacent Othello).
 
-Provenance: `experiments/inverse_probe/scores/othello_L-oth-20m.json` (every arm),
-`logs/inverse_probe/othello_L-oth-20m.log`; script `experiments/inverse_probe/scripts/othello_inverse.py`.
-Caveats: one seed of g; the bench is the canonical one (fixed 20-move prefix); the α grid is
-(0.25 … 3); hidden 1024 / 40 epochs unswept. The write is per case a function of (h, s_pre,
-s_post) — an editor with more information than PI/ND (which see only the tile flip), which is
-part of the point and part of the caveat.
+Caveats: one seed of g and one α grid (0.25 … 3; the discworld delta peaks at the top of it on
+several points, so its best may be slightly under-read); k = 10 unswept; the inverse write sees
+the whole pre- and post-edit STATE per case, more than PI/ND see (the tile flip / the teleport
+dims), which is part of the construction and part of the caveat; no waterfall yet for the
+discworld writes (`pim.figures.waterfall_grid` on the delta arm is the natural next figure).
+
+Provenance: `experiments/inverse_probe/scores/{othello_L-oth-20m,discworld_L-dw-noiseless-20m,discworld_L-dw-8ray-20m}_mirror128.json`
+(every arm, every point), `logs/inverse_probe/`; scripts `experiments/inverse_probe/scripts/{othello,discworld}_inverse.py`.
+The first Othello launch failed on a 4 GB broadcast in the retrieval search (its OOM path trips
+the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.

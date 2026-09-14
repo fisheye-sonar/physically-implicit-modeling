@@ -220,6 +220,17 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 (afternoon) — INVERSE PROBE, all three runs, mirrored map (128 hidden, 200 epochs — Sevan): the
+state → latent write EDITS DISCWORLD's regression state.** Best arms (EI / guard): Othello delta +0.88 / 0.23
+(canonical best +0.83); noiseless delta +0.66 / 0.46, overwrite +0.60 / 0.34 (canonical PI +0.23 / 1.54, GS
+−0.08); 8-ray delta +0.84 / 0.28, overwrite +0.73 / 0.27, and RETRIEVAL (10 nearest training states, no
+training) +0.63 / 0.43 (canonical PI +0.26 / 0.99). State explains only 0.29–0.57 of the residual on discworld
+yet the conditional mean edits — the alignment result closed from the other side; the probe-derived write
+was the wrong write, not the representation. Sevan's bet loses in both environments. Wide map (1024/40)
+dropped from the write-up (files kept). `findings/inverse-probe.md` rewritten with the 4-form table +
+canonical editors per run. Next candidates: 5-ray / blink / token model / adjacent Othello under the same
+write; a waterfall for the discworld delta arm.
+
 **2026-09-14 — INVERSE PROBE on Othello (Sevan's idea; contained, `experiments/inverse_probe/`): a learned
 state → latent MLP EDITS BETTER than every canonical editor.** g: one-hot board → residual (1024 hidden, 40
 epochs, 943k rows); delta write h + α(g(s_post) − g(s_pre)) at point 5, α 1.5: **+0.917 / 0.20** vs PI +0.82 /

@@ -21,4 +21,4 @@ linear probe reads the written residual as s_post ("landed").
 Contained: reads the run's cached probes and probe corpus; writes `scores/othello_<run>.json`;
 nothing in `pim/` changes. Unit `inverse_probe_oth`, log `logs/inverse_probe/`.
 
-**Result (Othello, 2026-09-14).** Delta write at point 5: +0.92 / 0.20 — above PI, ND and GS on this run; overwrite +0.90 / 0.22; retrieval ≤ +0.15. `research/findings/inverse-probe.md`.
+**Result (2026-09-14, mirrored map 128/200 — the quoted variant; the 1024/40 map's files are kept as `*_h1024e40.json`).** Othello delta +0.88 / 0.23 (canonical best +0.83); noiseless delta +0.66 / 0.46 and overwrite +0.60 / 0.34 (canonical PI +0.23 / 1.54); 8-ray delta +0.84 / 0.28, overwrite +0.73 / 0.27, retrieval overwrite +0.63 / 0.43 (canonical PI +0.26 / 0.99). Discworld's regression state is editable through the state-conditional mean. `research/findings/inverse-probe.md`; `scripts/discworld_inverse.py` is the discworld variant (full frustum state in).
