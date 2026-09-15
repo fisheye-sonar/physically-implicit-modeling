@@ -1,7 +1,8 @@
 """pim.figures.tables — the master tables, as figures (2026-09-12).
 
-The two table notebooks (``notebooks/build_paper_tables.ipynb``, the shortlist;
-``notebooks/build_full_tables.ipynb``, the long list) are thin callers of this module: they
+The two table notebooks (``notebooks/build_paper_tables_and_figs.ipynb``, the paper's tables and
+figures — the canonical replication notebook shipped with the public code; ``notebooks/build_full_tables.ipynb``,
+the long list) are thin callers of this module: they
 set the run lists and call one function per table. Everything here reads the run
 directories' ``scores.json`` (written by ``master_eval.ipynb``), the baselines under
 ``runs/_baselines/``, and two experiment score files (Table 3, Table 4); nothing is
@@ -32,6 +33,19 @@ EDITORS_ALL = ("PI", "ND", "GS", "IM", "IM-NN")     # every editor a row carries
 COMPONENTS = ("o1·x", "o1·y", "o2·x", "o2·y", "o1·vx", "o1·vy", "o2·vx", "o2·vy")
 CANONICAL = {"discworld": "frustum", "othello": "mine/theirs"}
 REG_BASES = ("frustum", "cartesian")
+# Titles on the drawn tables and figures (2026-09-15, Sevan): a notebook sets ``T.SHOW_TITLES = False`` at its
+# top to draw every panel without its "(a) …" title and "Table n — …" suptitle (the paper's captions carry them).
+SHOW_TITLES = True
+
+
+def _title(ax, text, **kw):
+    if SHOW_TITLES and text:
+        ax.set_title(text, **kw)
+
+
+def _suptitle(fig, text, **kw):
+    if SHOW_TITLES and text:
+        fig.suptitle(text, **kw)
 
 
 def set_basis(basis: str) -> None:
@@ -276,7 +290,7 @@ def heat(ax, data, xt, yt, *, fmt, cmap, norm=None, vmin=None, vmax=None, cbar_l
                 annot_kws=dict(fontsize=9 if annot_text is None else 7.5))
     for j in range(1, np.shape(data)[1]):
         ax.axvline(j, color="white", lw=1.2)
-    ax.set_title(title, fontsize=10.5, loc="left", pad=8)
+    _title(ax, title, fontsize=10.5, loc="left", pad=8)
     ax.tick_params(labelsize=9, length=0)
     plt.setp(ax.get_yticklabels(), rotation=0)
     plt.setp(ax.get_xticklabels(), rotation=0)
@@ -356,7 +370,7 @@ def image_table(df: pd.DataFrame, title: str, col_width: float = 1.1, fontsize: 
         if i == 0:
             c.set_text_props(weight="bold", color=RULE)
             c.set_facecolor("#f1f0eb")
-    ax.set_title(title, fontsize=10.5, loc="left", pad=6)
+    _title(ax, title, fontsize=10.5, loc="left", pad=6)
     return fig
 
 
@@ -434,7 +448,7 @@ def table_decodability(F: Frames, tag: str = "1"):
     heat(axes[1], B[["gap_LIN", "gap_MLP"]].values, ["LIN", "MLP"], [""] * len(B), fmt="+.3f",
          cmap="Oranges", vmin=0.0, vmax=0.5, cbar_label="in-sample − held-out", title="(b) overfit check")
     side_rules(axes[1], groups, eb)
-    fig.suptitle(f"Table {tag} — decodability against its floors", fontsize=12, y=1.0)
+    _suptitle(fig, f"Table {tag} — decodability against its floors", fontsize=12, y=1.0)
     return fig
 
 
@@ -511,7 +525,7 @@ def table_editability(F: Frames, tag: str = "2"):
          norm=TwoSlopeNorm(vmin=0.0, vcenter=1.0, vmax=3.0), cbar_label="fidelity ratio", annot_text=Af,
          title="(b) fidelity ratio  (1 = unedited; >1 degraded)")
     side_rules(axes[1], groups, eb)
-    fig.suptitle(f"Table {tag} — editability" + ("   ± = SD over seed replicates" if F.rep_sd else ""), fontsize=12, y=1.0)
+    _suptitle(fig, f"Table {tag} — editability" + ("   ± = SD over seed replicates" if F.rep_sd else ""), fontsize=12, y=1.0)
     return fig
 
 
@@ -557,7 +571,7 @@ def table_gridified(F: Frames, tag: str = "2c"):
          norm=TwoSlopeNorm(vmin=0.0, vcenter=1.0, vmax=3.0), cbar_label="fidelity ratio", title="(c) fidelity ratio")
     for ax in axes[1:]:
         side_rules(ax, groups)
-    fig.suptitle(f"Table {tag} — gridified discworld targets (label · cells), coarse → fine", fontsize=12, y=1.0)
+    _suptitle(fig, f"Table {tag} — gridified discworld targets (label · cells), coarse → fine", fontsize=12, y=1.0)
     return fig
 
 
@@ -705,7 +719,7 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
         ax.set_axisbelow(True)
         for sp_ in ax.spines.values():
             sp_.set_edgecolor("#c3c2b7")
-        ax.set_title(title, fontsize=10, loc="left", pad=6)
+        _title(ax, title, fontsize=10, loc="left", pad=6)
         ax.set_xlabel("training step", fontsize=9, color=INK)
         ax.set_ylabel(ylabel, fontsize=9, color=INK)
         ax.tick_params(labelsize=8, colors=INK)
@@ -767,7 +781,7 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
         dress(b_, steps, f"(b) {src} — Edit Index, tracked arm", "Edit Index", extra=[HOLLOW] if any_h else [])
         c.set_ylim(0, 3.0)
         dress(c, steps, f"(c) {src} — fidelity ratio, tracked arm", "fidelity ratio", extra=[HOLLOW] if any_h else [], loc="upper left")
-    fig.suptitle(f"Fig {tag} — training curve: decodability, editability, guard (the final checkpoint's arm, read at every step)",
+    _suptitle(fig, f"Fig {tag} — training curve: decodability, editability, guard (the final checkpoint's arm, read at every step)",
                  fontsize=11.5, y=1.02)
     return fig
 
@@ -780,5 +794,5 @@ def fig_capacity(tag: str = "2"):
     if not any(p.exists() for p in files):
         return None
     fig = capacity_figure(files)
-    fig.suptitle(f"Fig {tag} — probe-capacity sweep", fontsize=11.5, y=1.02)
+    _suptitle(fig, f"Fig {tag} — probe-capacity sweep", fontsize=11.5, y=1.02)
     return fig

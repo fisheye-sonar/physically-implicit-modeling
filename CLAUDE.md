@@ -59,7 +59,7 @@ python scripts/train.py --env discworld --arch transformer_l \
 
 # score every unscored run + the master table
 jupyter nbconvert --to notebook --execute --inplace notebooks/master_eval.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/build_paper_tables.ipynb   # the shortlist
+jupyter nbconvert --to notebook --execute --inplace notebooks/build_paper_tables_and_figs.ipynb   # the paper's tables + figures (the public replication notebook)
 jupyter nbconvert --to notebook --execute --inplace notebooks/build_full_tables.ipynb    # the long list
 # (both are thin callers of pim/figures/tables.py; the run lists at the top of each are the only knobs)
 
@@ -114,7 +114,7 @@ bash harness/check.sh
   beside the run directories is how `runs/` became a junkyard once already
   (cleared 2026-09-01).
 - Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run tables →
-  `notebooks/build_paper_tables.ipynb` (shortlist) and `build_full_tables.ipynb` (long list),
+  `notebooks/build_paper_tables_and_figs.ipynb` (the paper's tables and figures — the canonical replication notebook, shipped public; its figures may drift from the long list) and `build_full_tables.ipynb` (long list),
   both rendering through `pim/figures/tables.py`
 - Experiments — the quarantined workspace: scripts, drivers, data, outputs, scores,
   probes, one folder per experiment → `experiments/<name>/`; generic run-queue

@@ -26,7 +26,7 @@ stage "master_eval"
 nb master_eval || fail "master_eval" "$(tail -25 "$LOGS/master_eval.log")"
 stage "build_full_tables"
 nb build_full_tables || fail "build_full_tables" "$(tail -25 "$LOGS/build_full_tables.log")"
-nb build_paper_tables || fail "build_paper_tables" "$(tail -25 "$LOGS/build_paper_tables.log")"
+nb build_paper_tables_and_figs || fail "build_paper_tables_and_figs" "$(tail -25 "$LOGS/build_paper_tables_and_figs.log")"
 "$PY" scripts/drivers/probe_targets_headline.py > "$LOGS/headline.txt" 2>&1 || true
 ping "PIM $NAME: DONE" "$(grep -E "pos@|snapped" "$LOGS/headline.txt" | head -8; grep -E "wrote|adding blocks|SKIPPED" "$LOGS/master_eval.log" | head -6)" white_check_mark
 stage "chain complete"
