@@ -23,4 +23,4 @@ for name, suf in ORDER:
     k1 = P[hp]["k1_exact_best"]; c = d["canonical"]; tok = " †" if d.get("model_kind") == "tokens" else ""
     print(f"| {label}{tok} | {d['unedited']['edit_index']:+.2f} | {lst(d, 'iters_to_0.4')} | {lst(d, 'iters_to_0.05')} | {lst(d, 'k_exhaust_mean', lambda x: f'{x:.0f}')} | "
           f"{'—' if bg is None else cell(bg[1]) + f' (pt {bg[0]}, K {bg[1][chr(75)]}, α {bg[1][chr(97)+chr(108)+chr(112)+chr(104)+chr(97)]:g})'} | {cell(k1)} | "
-          f"{cell(bu)} (pt {bu_p}, K {bu['K']}{' = all' if bu.get('K_is_all') else ''}) | {cell(c.get('PI'))} | {cell(c.get('ND'))} | {cell(c.get('GS'))} |")
+          f"{cell(bu)} (pt {bu_p}, K {bu['K']}{' = all' if bu.get('K_is_all') else ''}) | {cell(c.get('PI'))} | {cell(c.get('ND')) if suf else 'n/a (regression)'} | {cell(c.get('GS'))} |")

@@ -39,7 +39,9 @@ written for all dims; the token model †: the frame-set Edit Index the canonica
 
 Controls: overwrite with the state-free mean residual (inert or destructive everywhere:
 −0.04 … −0.59); the canonical PI / ND / GS rows from each run's `scores.json` (Othello symdiff
-block; discworld's regression block — ND has no regression form, hence n/a). Also g's held-out
+block; discworld's regression block — ND is n/a there by the registry's rule: one fixed direction with a
+swept scalar is coherent only for a categorical target, so discworld's regression ND arms are computed into
+`scores.json` but never tabulated). Also g's held-out
 R² per point (how much of the residual the state explains; a RANGE over points 1–8 because one g
 is fitted per point) and, on Othello, whether the canonical linear probe reads the written
 residual as s_post at the edited tile ("landed"). A wider map (1024 hidden, 40 epochs) was run
