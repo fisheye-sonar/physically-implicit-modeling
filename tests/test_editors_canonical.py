@@ -307,3 +307,45 @@ def test_pinv_step_on_a_classification_probe_matches_the_inline_othello_form(cls
     assert torch.allclose(delta_new, delta_old, atol=1e-6)
     # and it LANDS: the probe reads the swapped logits at the alpha=1 write
     assert torch.allclose(p(cur + pinv_step(cur, target, p)).reshape(B, -1), target, atol=1e-3)
+
+
+# ── IM: the inverse-map editor (2026-09-15) ────────────────────────────────────────────────────
+from pim.editors.inverse import inverse_delta, inverse_overwrite, retrieval_overwrite
+from pim.probes.inverse import RetrievalBank, fit_inverse_map
+
+
+def test_inverse_overwrite_is_the_fitted_conditional_mean():
+    """g fitted on h = A s + noise; the overwrite returns g(s) in RAW residual units, and the
+    delta at α = 1 from h = g(s_pre) equals the overwrite exactly."""
+    rng = np.random.default_rng(0)
+    A = rng.standard_normal((4, 16)).astype(np.float32)
+    S = rng.standard_normal((4000, 4)).astype(np.float32)
+    H = S @ A + 0.01 * rng.standard_normal((4000, 16)).astype(np.float32) + 3.0
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    g, st = fit_inverse_map(S[:3200], H[:3200], S[3200:], H[3200:], device=dev)   # the canonical 200 epochs
+    assert st["r2"] > 0.95
+    s_pre = torch.from_numpy(S[:8]).to(dev); s_post = torch.from_numpy(S[8:16]).to(dev)
+    ow = inverse_overwrite(g, s_post)
+    assert ow.shape == (8, 16)
+    assert torch.allclose(ow, g(s_post))
+    assert torch.allclose(inverse_delta(g, g(s_pre), s_pre, s_post, 1.0), ow, atol=1e-5)
+    # the write lands near the true conditional mean (raw units, including the +3 offset)
+    assert float((ow - torch.from_numpy(S[8:16] @ A + 3.0).to(dev)).abs().mean()) < 0.25
+
+
+def test_retrieval_bank_k1_returns_the_nearest_rows_residual_and_hamming_on_onehot():
+    dev = "cuda" if torch.cuda.is_available() else "cpu"
+    S = torch.tensor([[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [5.0, 5.0]], device=dev)
+    H = torch.arange(4, device=dev, dtype=torch.float32)[:, None].repeat(1, 3)
+    bank = RetrievalBank(S, H, metric="euclidean", k=1)
+    out = retrieval_overwrite(bank, torch.tensor([[4.5, 4.5], [0.1, -0.1]], device=dev))
+    assert torch.allclose(out, torch.tensor([[3.0, 3.0, 3.0], [0.0, 0.0, 0.0]], device=dev))
+    bank2 = RetrievalBank(S, H, metric="euclidean", k=2)                      # mean of the two nearest
+    assert torch.allclose(bank2.mean(torch.tensor([[0.6, 0.0]], device=dev)), torch.tensor([[0.5, 0.5, 0.5]], device=dev))
+    # one-hot agreement = Hamming: the row sharing the most tiles wins
+    B = torch.nn.functional.one_hot(torch.tensor([[0, 1, 2], [0, 1, 1], [2, 2, 2]]), 3).reshape(3, -1).float().to(dev)
+    hb = RetrievalBank(B, torch.tensor([[10.0], [20.0], [30.0]], device=dev), metric="onehot", k=1)
+    q = torch.nn.functional.one_hot(torch.tensor([[0, 1, 0]]), 3).reshape(1, -1).float().to(dev)
+    assert float(hb.mean(q)[0, 0]) in (10.0, 20.0)                            # ties with rows 0 and 1 (2 agreements)
+    q2 = torch.nn.functional.one_hot(torch.tensor([[2, 2, 0]]), 3).reshape(1, -1).float().to(dev)
+    assert float(hb.mean(q2)[0, 0]) == 30.0

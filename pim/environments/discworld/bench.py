@@ -336,3 +336,26 @@ def restrict_mask(cm: torch.Tensor, dims: str) -> torch.Tensor:
     keep = torch.zeros(cm.shape[1], dtype=torch.bool, device=cm.device)
     keep[list(idx)] = True
     return cm & keep
+
+
+def full_state_pair(pos: np.ndarray, vel: np.ndarray, edit_object: np.ndarray, sim: dict,
+                    basis_name: str) -> tuple[np.ndarray, np.ndarray]:
+    """The FULL state (position + velocity of every object, in ``basis_name``) BEFORE and
+    AFTER the edit, per case — the inverse-map editor's input pair (2026-09-15).
+
+    ``s_pre`` is the state that rendered the last consumed frame (EF−1). ``s_post`` is the
+    PRE-DYNAMICS target state (the 2026-09-12 write target, see ``bench_arrays``): the
+    edited object at pos[EF] − v·dt, everything else held — so on the regression ``full``
+    bench ``s_post`` equals ``Bench.tgt`` exactly, and on a categorical bench it is the
+    same state the categorical move was derived from. Returns two (N, 4·N_OBJ) arrays.
+    """
+    n = len(pos)
+    ar = np.arange(n)
+    eobj = np.asarray(edit_object, int)
+    pre_dyn = pos[:, EF - 1].copy()
+    pre_dyn[ar, eobj] = pos[ar, EF, eobj] - vel[ar, EF - 1, eobj] * float(sim["dt"])
+    bp0, bv0 = _to_basis(pos[:, EF - 1], vel[:, EF - 1], sim, basis_name)
+    bp1, bv1 = _to_basis(pre_dyn, vel[:, EF - 1], sim, basis_name)
+    s_pre = np.concatenate([bp0.reshape(n, -1), bv0.reshape(n, -1)], 1).astype(np.float32)
+    s_post = np.concatenate([bp1.reshape(n, -1), bv1.reshape(n, -1)], 1).astype(np.float32)
+    return s_pre, s_post

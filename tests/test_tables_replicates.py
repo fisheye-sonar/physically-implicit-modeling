@@ -43,3 +43,38 @@ def test_tolerance_is_relative_and_bases_are_separate():
     assert ("P", "frustum") not in out                                   # two singletons after the split
     assert out[("P", "appearance-fac")]["n"] == 2
     assert pool_replicates(rows, budget_tolerance=0.15)[("P", "frustum")]["n"] == 2
+
+
+# ── the basis switch and the editor list (2026-09-15) ────────────────────────────────────────
+from pim.figures import tables as T
+
+
+def test_set_basis_switches_reg_key_and_stars_fallback():
+    try:
+        T.set_basis("frustum")
+        both = {"frustum": {}, "cartesian": {}}
+        assert T.reg_key(both) == "frustum" and T.basis_star(both) == ""
+        cart_only = {"cartesian": {}}
+        assert T.reg_key(cart_only) == "cartesian" and T.basis_star(cart_only) == "*"
+        T.set_basis("cartesian")
+        assert T.reg_key(both) == "cartesian" and T.basis_star(both) == ""
+        assert T.reg_key({"frustum": {}}) == "frustum" and T.basis_star({"frustum": {}}) == ""   # no star under cartesian
+    finally:
+        T.set_basis("frustum")
+
+
+def test_block_row_carries_every_editor_and_shows_pi_gs_im():
+    assert T.EDITORS == ("PI", "GS", "IM")
+    arms = [{"editor": "PI[zspace]", "point": 2, "alpha": 1.0, "edit_index": 0.2, "fidelity_ratio": 0.9},
+            {"editor": "ND", "point": 2, "alpha": 1.0, "edit_index": 0.1, "fidelity_ratio": 1.1},
+            {"editor": "GS@L0", "point": 0, "alpha": 0.1, "edit_index": -0.1, "fidelity_ratio": 0.9},
+            {"editor": "IM", "point": 4, "alpha": 1.0, "edit_index": 0.7, "fidelity_ratio": 0.3},
+            {"editor": "IM-NN", "point": 4, "alpha": 1.0, "edit_index": 0.4, "fidelity_ratio": 0.6}]
+    blk = {"probe_skill_linear": [0.5, 0.9], "probe_skill_mlp": [0.6, 0.95], "unedited": {"edit_index": -0.9},
+           "best": {}, "arms": arms}
+    row = T._block_row({"env": "discworld", "run": "r", "instance": "i", "arch": "transformer_l", "val": 0.0},
+                       "frustum", blk, "edit_index", "regression")
+    assert row["IM EI"] == 0.7 and row["IM fid"] == 0.3 and row["IM arm"] == "pt4·α1"
+    assert row["IM-NN EI"] == 0.4                      # on hand, not shown
+    assert np.isnan(row["ND EI"])                       # inapplicable on a regression target
+    assert row["PI EI"] == 0.2 and row["GS EI"] == -0.1

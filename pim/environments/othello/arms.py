@@ -423,3 +423,100 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
                                  getattr(model, "output_kind", "logits"))
         del rs, x0, specs
     return probs, move_scorecard(probs, bench.legal_pre, bench.legal_post)
+
+
+# ── IM: the inverse-map editor on Othello (2026-09-15) ──────────────────────────────────────
+
+
+@torch.no_grad()
+def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_games: int,
+                 seed: int = 0, k: int | None = None, points=None,
+                 uns_probs: np.ndarray | None = None, log=print) -> tuple[list[dict], dict]:
+    """IM (h′ = g(board_post) at the last position) and IM-NN (the mean residual of the k
+    training boards nearest the target board, Hamming) at every residual point, on the
+    canonical cases. g: one-hot mine/theirs board (64 × 3) → residual, the mirror of the
+    MLP-128 probe, fitted on ``data``'s rows (the probe games; the same seeded 80/20 split
+    BY GAME as ``fit_probe_grid``) and cached in ``cache_dir`` (kind ``inverse_map``); ``rules`` =
+    ``corpus.rules_of(instance)``, to replay the bench histories into boards.
+    Returns the arm records (canonical scorecard + guard when ``uns_probs`` is given) and
+    ``{"g_r2": [...], "g_rmse": [...]}``."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.othello.bench import case_targets
+    from pim.environments.othello.data import (N_CLASSES, N_TILES, board_probs, canonical_vocab,
+                                               flatten_rows, harvest_point, tokens_and_labels)
+    from pim.metrics.set_editability import move_fidelity_ratio, move_scorecard
+    from pim.probes.cache import ProbeCache
+    from pim.probes.inverse import (INVERSE_EPOCHS, INVERSE_HIDDEN, RETRIEVAL_K, RetrievalBank,
+                                    fit_inverse_map)
+
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    seq_of_row, states = flatten_rows(data, "mine")                          # (rows,), (rows, 64) ∈ {0,1,2}
+    n_seq = int(data.mask.shape[0])
+    tr_idx, te_idx = _split(n_seq, seq_of_row, "sequence", 0.2, int(seed))
+    onehot = lambda st: np.eye(N_CLASSES, dtype=np.float32)[st].reshape(len(st), -1)   # noqa: E731
+    X_all = onehot(states)
+    # the bench's pre- and post-edit boards in the mover's frame (the case's tile flipped)
+    itos = {v: kk for kk, v in canonical_vocab().items()}
+    n_cases = bench.n_cases
+    hist = [None] * n_cases
+    for toks, ids in zip(bench.tokens, bench.case_ids):
+        for row, i in zip(toks, ids):
+            hist[i] = [itos[int(t)] for t in row]
+    bd = tokens_and_labels([hist[i] for i in range(n_cases)], **rules)   # the instance's rules (corpus.rules_of)
+    cur_lab, tgt_lab = case_targets(bench)
+    s_pre = np.stack([bd.mine[i, len(hist[i]) - 1] for i in range(n_cases)])
+    s_post = s_pre.copy()
+    s_post[np.arange(n_cases), bench.pos_int] = tgt_lab
+    assert (s_pre[np.arange(n_cases), bench.pos_int] == cur_lab).all(), "pre-edit board disagrees with the bench"
+    Xpost_t = torch.from_numpy(onehot(s_post)).to(DEV)
+    X_tr_t = torch.from_numpy(X_all[tr_idx]).to(DEV)
+    okind = getattr(model, "output_kind", "logits")
+    recs, stats = [], {"g_r2": [], "g_rmse": []}
+    for ell in (points if points is not None else range(model.n_layers + 1)):
+        fname, prov = store.key(model, kind="inverse_map", target="mine-onehot", n_seq=n_seq,
+                                split="sequence", seed=int(seed), hidden=INVERSE_HIDDEN,
+                                epochs=INVERSE_EPOCHS, point=int(ell), n_games=int(n_games))
+        acts = harvest_point(model, data.tokens, ell)
+        H = acts[data.mask]
+        del acts
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            g, st = hit["g"].to(DEV), hit["stats"]
+        else:
+            g, st = fit_inverse_map(X_all[tr_idx], H[tr_idx], X_all[te_idx], H[te_idx], seed=int(seed), device=DEV)
+            store.store(fname, prov, {"g": g, "stats": st})
+            if log:
+                log(f"    inverse map point {ell}: held-out R² {st['r2']:+.3f}  WROTE {fname}")
+        bank = RetrievalBank(X_tr_t, torch.from_numpy(H[tr_idx]).to(DEV), metric="onehot",
+                             k=RETRIEVAL_K if k is None else int(k))
+        del H
+        stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        for editor, h_new_all in (("IM", inverse_overwrite(g, Xpost_t)),
+                                  ("IM-NN", retrieval_overwrite(bank, Xpost_t))):
+            probs = np.zeros((n_cases, N_TILES), np.float32)
+            ratios = []
+            for toks, ids in zip(bench.tokens, bench.case_ids):
+                idx = torch.from_numpy(toks).to(DEV)
+                h_new = h_new_all[torch.as_tensor(ids, device=DEV)]
+
+                def hook(layer, x, _h=h_new):
+                    if layer != ell:
+                        return x
+                    cur = x[:, -1]
+                    ratios.append(float(((_h - cur).norm(dim=1) / cur.norm(dim=1)).mean()))
+                    out = x.clone()
+                    out[:, -1] = _h
+                    return out
+                probs[ids] = board_probs(model.decode(idx, edit=hook), okind)           # THE write
+            card = move_scorecard(probs, bench.legal_pre, bench.legal_post)
+            rec = {"editor": editor, "point": int(ell), "alpha": 1.0, "g_r2": float(st["r2"]),
+                   "write_ratio": float(np.mean(ratios)) if ratios else None,
+                   **{kk: v for kk, v in card.items() if isinstance(v, (int, float))}}
+            if uns_probs is not None:
+                rec["fidelity_ratio"] = move_fidelity_ratio(probs, uns_probs, bench.legal_post)
+            if editor == "IM-NN":
+                rec["k"] = int(bank.k)
+            recs.append(rec)
+        del bank
+        torch.cuda.empty_cache()
+    return recs, stats

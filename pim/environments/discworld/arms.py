@@ -663,3 +663,115 @@ def grad_steer_arm(model, b: Bench, probes: dict, start_layers, alphas,
                              or [np.nan])),
                          **score(model, b, roll)})
     return recs
+
+
+# ── IM: the inverse-map editor (2026-09-15) ────────────────────────────────────────────────
+#
+#   g: full state → residual at a point (pim.probes.inverse, cached like every probe), written
+#   as h′ = g(s_post) at the edit frame (pim.editors.inverse_overwrite) and scored like PI / GS.
+#   IM-NN beside it: the k-nearest-training-state mean residual (retrieval, no fit).
+#   One g per point serves EVERY bench of the same basis (regression and categorical alike —
+#   the write is a state write, the bench only selects cases), so the fit runs once per run.
+
+
+def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str = "test",
+                      probe: dict | tuple | None = None, data_dir: Path | None = None,
+                      cache_dir: Path | None = None, seed: int = SEED, k: int | None = None,
+                      points=None, encoder=None, encoder_tag: str | None = None,
+                      epochs: int | None = None, log=print):
+    """Yield ``(point, g, bank, stats)`` for every residual point: g from the cache or fitted
+    (kind ``inverse_map``; key = model fingerprint, target, n_seq, split, basis, seed, data,
+    hidden, epochs, point), the retrieval bank built from the same training rows (never
+    cached — it IS the residuals), ``stats`` = g's held-out fit (``r2``, ``rmse``)."""
+    from pim.probes.inverse import (INVERSE_EPOCHS, INVERSE_HIDDEN, RETRIEVAL_K, RetrievalBank,
+                                    fit_inverse_map)
+
+    epochs = INVERSE_EPOCHS if epochs is None else int(epochs)     # the recipe's `epochs` (None = canonical)
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    h5_path, manifest, keyf = _probe_corpus(data_dir, probe, split)
+    with h5py.File(h5_path, "r") as f:
+        obs = f["obs_intensity"][:n_seq].astype(np.float32)
+        pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+    sim = json.load(open(manifest))["sim"]
+    y, _ = _targets("full", pos, vel, sim, basis_name)                       # (N, T, 8)
+    span = getattr(model, "state_span", obs.shape[1])
+    obs = obs[:, : min(obs.shape[1], span)]
+    y = y[:, : obs.shape[1]]
+    if encoder is not None:
+        obs = encoder(obs)
+    T = y.shape[1]
+    X_all = y.reshape(-1, y.shape[-1]).astype(np.float32)
+    perm = np.random.default_rng(int(seed)).permutation(n_seq)
+    tr = np.isin(np.repeat(np.arange(n_seq), T), perm[: int(0.8 * n_seq)])
+    te = ~tr
+    X_tr_t = torch.from_numpy(X_all[tr]).to(DEV)
+    extra = {} if encoder is None else {"encoder": encoder_tag or "custom"}
+    _sdir = Path(__file__).resolve().parents[3] / ".scratch"
+    _sdir.mkdir(exist_ok=True)
+    for ell in (points if points is not None else range(model.n_layers + 1)):
+        fname, prov = store.key(model, kind="inverse_map", target="full", n_seq=int(n_seq),
+                                split=keyf["split"], basis=basis_name, seed=int(seed),
+                                data=keyf["data"], hidden=INVERSE_HIDDEN, epochs=epochs,
+                                point=int(ell), **extra)
+        _tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=_sdir)
+        _tmp.close()
+        try:
+            R = collect_residuals(model, obs, batch=64, memmap=_tmp.name, points=[ell])[0]
+            H = np.ascontiguousarray(R.reshape(-1, R.shape[-1]))
+            del R
+        finally:
+            os.unlink(_tmp.name)
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            g, st = hit["g"].to(DEV), hit["stats"]
+            if log:
+                log(f"    inverse map cache HIT  {fname}  (point {ell}, R² {st['r2']:+.3f})")
+        else:
+            g, st = fit_inverse_map(X_all[tr], H[tr], X_all[te], H[te], epochs=epochs, seed=int(seed), device=DEV)
+            store.store(fname, prov, {"g": g, "stats": st})
+            if log:
+                log(f"    inverse map point {ell}: held-out R² {st['r2']:+.3f}  rmse {st['rmse']:.4f}  WROTE {fname}")
+        bank = RetrievalBank(X_tr_t, torch.from_numpy(H[tr]).to(DEV), metric="euclidean",
+                             k=RETRIEVAL_K if k is None else int(k))
+        del H
+        yield int(ell), g, bank, st
+        del bank
+        torch.cuda.empty_cache()
+
+
+@torch.no_grad()
+def inverse_arms(model, benches: dict, *, basis_name: str, unsteered_cards: dict | None = None,
+                 **fit_kw) -> tuple[dict, dict]:
+    """IM and IM-NN arms for every bench in ``benches`` ({block key: Bench}), all in one pass
+    over the residual points. Returns ``({key: [arm records]}, {"g_r2": [...], "g_rmse": [...]})``.
+    ``unsteered_cards`` ({key: unsteered card}) attaches the fidelity guard as ``score`` does."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.discworld.bench import full_state_pair
+
+    S = {}
+    for key, b in benches.items():
+        s_pre, s_post = full_state_pair(b.pos, b.vel, b.edit_object, b.sim, basis_name)
+        if b.kind == "regression" and b.tgt.shape[1] == s_post.shape[1]:
+            # the regression `full` bench: the pre-dynamics target IS the bench's own target
+            assert np.allclose(s_post, b.tgt.cpu().numpy(), atol=1e-4), f"{key}: s_post ≠ Bench.tgt"
+        S[key] = (torch.from_numpy(s_pre).to(DEV), torch.from_numpy(s_post).to(DEV))
+    arms = {key: [] for key in benches}
+    stats = {"g_r2": [], "g_rmse": []}
+    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, **fit_kw):
+        stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        for key, b in benches.items():
+            _, s_post = S[key]
+            as_activations(model, ell)
+            h0 = model.flat_state(b.state)
+            u = None if unsteered_cards is None else unsteered_cards.get(key)
+            for editor, h_new in (("IM", inverse_overwrite(g, s_post)),
+                                  ("IM-NN", retrieval_overwrite(bank, s_post))):
+                roll = model.rollout_with_edit(b.state, ell, h_new, K_ROLL).cpu().numpy()  # THE write
+                rec = {"editor": editor, "point": ell, "alpha": 1.0, "dims": "all",
+                       "write_ratio": float((h_new - h0).norm(dim=1).div(h0.norm(dim=1)).mean()),
+                       "g_r2": float(st["r2"]), **score(model, b, roll, u)}
+                if editor == "IM-NN":
+                    rec["k"] = int(bank.k)
+                arms[key].append(rec)
+    return arms, stats

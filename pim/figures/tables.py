@@ -25,15 +25,39 @@ import seaborn as sns
 from matplotlib.colors import TwoSlopeNorm
 
 REPO = Path(__file__).resolve().parents[2]
-EDITORS = ("PI", "ND", "GS")
+# The editors SHOWN in every editability table (Sevan, 2026-09-15): PI, GS, IM — the inverse-map
+# overwrite is canonical, ND is computed into scores.json but no longer tabulated by default.
+EDITORS = ("PI", "GS", "IM")
+EDITORS_ALL = ("PI", "ND", "GS", "IM", "IM-NN")     # every editor a row carries (ND / IM-NN on hand)
 COMPONENTS = ("o1·x", "o1·y", "o2·x", "o2·y", "o1·vx", "o1·vy", "o2·vx", "o2·vy")
 CANONICAL = {"discworld": "frustum", "othello": "mine/theirs"}
+REG_BASES = ("frustum", "cartesian")
+
+
+def set_basis(basis: str) -> None:
+    """Switch EVERY discworld table to one regression basis (2026-09-15, Sevan): decodability,
+    floors, PI / GS / IM all read the ``basis`` block; the other basis is never read. Call it
+    at the top of a table notebook (``T.set_basis(BASIS)``). Grid-defined targets stay as they
+    are in either basis; a run without the requested block (dw-8ray-obs5 has no frustum) falls
+    back to the block it has and is marked with an asterisk when frustum is requested."""
+    if basis not in REG_BASES:
+        raise ValueError(f"basis must be one of {REG_BASES}, got {basis!r}")
+    CANONICAL["discworld"] = basis
 
 
 def reg_key(bases: dict) -> str:
-    """A discworld run's REGRESSION block: frustum, or cartesian when that is the only one
-    (dw-8ray-obs5, several observers, 2026-09-13 — the frustum basis is observer-0-relative)."""
-    return "frustum" if "frustum" in bases else "cartesian"
+    """A discworld run's REGRESSION block under the current basis: the requested basis when the
+    run has it, else the other one (dw-8ray-obs5, several observers, 2026-09-13 — the frustum
+    basis is observer-0-relative, so that instance is scored in cartesian only)."""
+    want = CANONICAL["discworld"]
+    if want in bases:
+        return want
+    return next((b for b in REG_BASES if b in bases), want)
+
+
+def basis_star(bases: dict) -> str:
+    """'*' when the run is shown in a fallback basis under a frustum request (Sevan, 2026-09-15)."""
+    return "*" if CANONICAL["discworld"] == "frustum" and reg_key(bases) != "frustum" else ""
 OTH_EI = "edit_index_symdiff"            # the Othello headline construction (2026-09-12)
 RULE, RULE_ENV = "#172239", "#000000"
 ARCH_LABEL = {"transformer_l": "L", "transformer_s": "S", "recurrent_l": "R",
@@ -79,7 +103,7 @@ def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical:
         bp = int(np.argmax(T[f"probe_skill_{fam}"]))
         row[f"gap_{k}"] = ps.get(bp, {}).get(f"insample_gap_{fam}", np.nan)
     arms = T.get("arms", [])
-    for ed in EDITORS:
+    for ed in EDITORS_ALL:
         b = _best_by(arms, ed, ei_key) if arms else T["best"].get(ed)
         if ed == "ND" and base["env"] == "discworld" and kind == "regression":
             b = None                     # one fixed direction cannot serve 1000 teleports (registry)
@@ -197,12 +221,12 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                 for key, T in s.get("bases", {}).items():
                     rows.append(_block_row(base, key, T, OTH_EI, T.get("kind", "regression")))
             else:
-                # a cartesian block is a legacy record beside a frustum block (hidden since
-                # 2026-09-11) — but THE regression block on an instance scored in cartesian
-                # (dw-8ray-obs5, several observers, 2026-09-13), so it shows when frustum is absent
+                # ONE regression basis per table (set_basis): the requested block, the other basis
+                # never read; a run lacking the requested block falls back and is starred
                 rk = reg_key(s["bases"])
+                base = {**base, "star": basis_star(s["bases"])}
                 for key, T in s["bases"].items():
-                    if key == "cartesian" and rk != "cartesian":
+                    if key in REG_BASES and key != rk:
                         continue
                     kind = T.get("kind", "regression")
                     rows.append(_block_row(base, key, T, "edit_index", kind, canonical=(key == rk)))
@@ -221,8 +245,9 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                     "probe_skill_linear": rs["probe_skill"].get("mine|linear|sequence", [np.nan]),
                     "probe_skill_mlp": rs["probe_skill"].get("mine|mlp|sequence", [np.nan]),
                     "unedited": rs["unedited"], "best": rs["best"], "arms": rs["arms"]}}
+                rk_rep = reg_key(blocks) if env == "discworld" else None
                 for key, T in blocks.items():
-                    if key == "cartesian" and "frustum" in blocks:
+                    if key in REG_BASES and key != rk_rep:
                         continue
                     r = _block_row({**base, "run": rp.parts[-2]}, key, T,
                                    "edit_index" if env == "discworld" else OTH_EI, T.get("kind", "classification"))
@@ -306,7 +331,8 @@ def side_rules(ax, groups, env_break=None):
 
 
 def run_groups(df, frame_set=()):
-    return groups_of([f"{r.env} · {r.run}{' †' if r.run in frame_set else ''}" for r in df.itertuples()])
+    return groups_of([f"{r.env} · {r.run}{' †' if r.run in frame_set else ''}{getattr(r, 'star', '') or ''}"
+                      for r in df.itertuples()])
 
 
 def image_table(df: pd.DataFrame, title: str, col_width: float = 1.1, fontsize: float = 8.5, index=True):
@@ -388,7 +414,7 @@ def table_decodability(F: Frames, tag: str = "1"):
                                   {"skill_LIN": R["linear"]["skill"], "skill_MLP": R["mlp"]["skill"],
                                    "gap_LIN": R["linear"]["insample_gap"], "gap_MLP": R["mlp"]["insample_gap"]}))
                 for r in C[(C["instance"] == inst) & (C["arch"] == a)].itertuples():
-                    block.append((f"trained · {r.run}{' †' if r.run in F.frame_set else ''}",
+                    block.append((f"trained · {r.run}{' †' if r.run in F.frame_set else ''}{getattr(r, 'star', '') or ''}",
                                   {"skill_LIN": r.skill_LIN, "skill_MLP": r.skill_MLP,
                                    "gap_LIN": r.gap_LIN, "gap_MLP": r.gap_MLP}))
             if not b:
@@ -644,7 +670,7 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
                  "unedited": s["unedited"], "arms": s["arms"], "best": s["best"]}
             k = OTH_EI
         else:
-            T = s["bases"]["frustum"]
+            T = s["bases"][reg_key(s["bases"])]
             k = "edit_index"
         row = {"source": src, "env": s["env"], "instance": s["instance"], "arch": s["arch"], "step": step, "run": name,
                "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),

@@ -275,3 +275,40 @@ def token_encoder(vocab: FrameVocab):
         return encode(obs, vocab)
     tag = f"tokens:V{vocab.size}:{int(vocab.counts.sum())}"
     return enc, tag
+
+
+@torch.no_grad()
+def inverse_arms(model, tbenches: dict, arrays: dict, vocab: FrameVocab, *, basis_name: str,
+                 uns: dict | None = None, **fit_kw) -> tuple[dict, dict]:
+    """IM and IM-NN on the frames-as-tokens model (2026-09-15): ``arms.inverse_arms`` with the
+    token write (``_write_hook`` at the last position) and the frame-set scorecard.
+    ``arrays`` ({key: bench_arrays(...) of the SAME target}) supplies the world positions a
+    TokenBench does not carry; ``uns`` ({key: unsteered probs}) attaches the guard."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.discworld.arms import iter_inverse_maps
+
+    enc, tag = token_encoder(vocab)
+    S = {}
+    for key, tb in tbenches.items():
+        a = arrays[key]
+        _, s_post = dwb.full_state_pair(a["pos"], a["vel"], a["edit_object"], a["sim"], basis_name)
+        assert len(s_post) == tb.n, f"{key}: bench_arrays and TokenBench disagree on n"
+        S[key] = torch.from_numpy(s_post).to(DEV)
+    H0 = {key: residuals_last(model, tb) for key, tb in tbenches.items()}
+    arms = {key: [] for key in tbenches}
+    stats = {"g_r2": [], "g_rmse": []}
+    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, encoder=enc,
+                                              encoder_tag=tag, **fit_kw):
+        stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        for key, tb in tbenches.items():
+            h0 = H0[key][ell]
+            for editor, h_new in (("IM", inverse_overwrite(g, S[key])),
+                                  ("IM-NN", retrieval_overwrite(bank, S[key]))):
+                probs = probs_at_edit(model, tb, hook=_write_hook(ell, h_new))          # THE write
+                rec = {"editor": editor, "point": ell, "alpha": 1.0, "dims": "all",
+                       "write_ratio": float((h_new - h0).norm(dim=1).div(h0.norm(dim=1)).mean()),
+                       "g_r2": float(st["r2"]), **scorecard(probs, tb, None if uns is None else uns.get(key))}
+                if editor == "IM-NN":
+                    rec["k"] = int(bank.k)
+                arms[key].append(rec)
+    return arms, stats
