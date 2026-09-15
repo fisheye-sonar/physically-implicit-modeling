@@ -44,3 +44,11 @@ pseudo-inverse (rtol 1e-2) is the alternative — on 8-ray pts 2 / 4 they give b
 runs that had completed under the independent-sum write (noiseless, 8-ray, smooth) are rescored writes-only
 from their saved cascades (`drivers/rescore_writes.sh`); their first score files are kept under
 `scores/_superseded/*_independent-sum-write.json`. Redundancy numbers are unaffected.
+
+**Result (2026-09-14 18:25, all eight cells).** Redundancy (dims per variable to mean R² < 0.4, pts 2–8):
+5-ray fac 39–48 > 8-ray fac 29–34 ≈ 5-ray 26–32 > smooth 24–29 ≈ 8-ray 22–24 > 8-ray token 14–23 >
+noiseless-fac 7–8 ≈ noiseless 5–7. Sevan's bets (8-ray slightly less redundant; fac meaningfully less) lose;
+Claude's hold in direction (fac came out MORE redundant than position, not equal). Writes: K = 1 ≡ PI
+verified; all copies +0.34 / 0.93 on 8-ray and +0.31–0.34 / 0.82–0.92 on 5-ray (PI +0.26 / +0.24), +0.49 / 0.98
+on 5-ray fac (PI +0.51 / 0.70), nothing under the guard on noiseless, smooth, the token model or noiseless-fac.
+Redundancy predicts editability in neither direction across models. `research/findings/inlp-sweep.md`.

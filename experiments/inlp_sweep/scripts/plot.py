@@ -25,11 +25,15 @@ for n, s in have:
     fig.suptitle("INLP on the state: orthogonal linear copies of one state variable, per residual point", fontsize=10.5)
     fig.tight_layout(); fig.savefig(OUT / f"inlp_r2_by_iteration_{n}{s}.png", dpi=150); plt.close(fig)
 if have:
-    fig, axes = plt.subplots(1, len(have), figsize=(5.6 * len(have), 5.8), sharey=True); axes = np.atleast_1d(axes)
+    ncol = 4 if len(have) > 4 else len(have); nrow = int(np.ceil(len(have) / ncol))
+    fig, axes = plt.subplots(nrow, ncol, figsize=(5.6 * ncol, 5.4 * nrow), sharey=True); axes = np.atleast_1d(axes).ravel()
     for ax, (n, s) in zip(axes, have):
         panel(ax, json.load(open(SC / f"inlp_{n}{s}.json")), LABEL[n] + (" — appearance-fac" if s else ""))
-    axes[0].set_ylabel("held-out R² of one target variable, mean over variables", fontsize=9)
-    h, l = axes[0].get_legend_handles_labels(); fig.legend(h, l, loc="upper center", ncol=5, fontsize=8.5, bbox_to_anchor=(0.5, 0.93), frameon=False)
-    fig.suptitle("INLP on the state: how many orthogonal linear copies of one state variable the residual holds, per residual point (light = early layer, dark = late)", fontsize=11, y=0.99)
-    fig.tight_layout(rect=(0, 0, 1, 0.88)); fig.savefig(OUT / "inlp_r2_by_iteration.png", dpi=150); plt.close(fig)
+    for ax in axes[len(have):]:
+        ax.axis("off")
+    for r in range(nrow):
+        axes[r * ncol].set_ylabel("held-out R² of one target variable, mean over variables", fontsize=9)
+    h, l = axes[0].get_legend_handles_labels(); fig.legend(h, l, loc="upper center", ncol=5, fontsize=9, bbox_to_anchor=(0.5, 0.955), frameon=False)
+    fig.suptitle("INLP on the state: how many orthogonal linear copies of one state variable the residual holds, per residual point (light = early layer, dark = late)", fontsize=12, y=0.995)
+    fig.tight_layout(rect=(0, 0, 1, 0.92)); fig.savefig(OUT / "inlp_r2_by_iteration.png", dpi=150); plt.close(fig)
 print("plots:", [p.name for p in sorted(OUT.glob("inlp_r2_by_iteration*.png"))])

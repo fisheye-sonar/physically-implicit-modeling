@@ -220,6 +220,19 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 (evening) — INLP SWEEP on discworld, per-variable cascades (Sevan; new experiment
+`experiments/inlp_sweep/`, 8 run × target cells).** Redundancy (dimensions removed per variable to mean R² < 0.4,
+points 2–8): 5-ray appearance-fac 39–48 > 8-ray fac 29–34 ≈ 5-ray 26–32 > smooth 24–29 ≈ 8-ray 22–24 > 8-ray token
+14–23 > noiseless-fac 7–8 ≈ noiseless 5–7 — fewer rays and coarser targets mean MORE copies. Bets: Sevan (8-ray
+slightly less redundant; fac meaningfully less) loses all three; Claude right in direction, wrong in size. The
+K-copy write (joint weighted-ridge step over every variable's first K copies, shrunk targets; K = 1 ≡ PI in z-space,
+verified) beats canonical PI by +0.08–0.10 inside the guard on 8-ray (+0.34 / 0.93) and 5-ray (+0.31–0.34), matches
+PI on the factorised targets, and moves nothing on noiseless, smooth, the token model or noiseless-fac. Redundancy
+predicts editability in NEITHER direction across models (smooth: as redundant as 8-ray, least editable; Othello
+ran the other way) — it is a symptom of code geometry. Sevan caught a wrong first write (independent per-variable
+steps summed; cross-talk between the eight variables) — superseded, rescored from the saved cascades.
+`findings/inlp-sweep.md`; figures `experiments/inlp_sweep/outputs/inlp_r2_by_iteration*.png`.
+
 **2026-09-14 (late) — inverse probe on dw-blink by subset (Sevan): reappearance frames edit exactly like visible
 frames.** Reappearance (edited object hidden through EF−1, visible at EF; 642 cases, staleness 1–12) delta
 +0.69 / 0.39, overwrite +0.53 / 0.39; visible (no blink on either object through the 15-step rollout; 630 cases)
