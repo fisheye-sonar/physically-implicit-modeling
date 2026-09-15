@@ -8,10 +8,11 @@ ping() { curl -sS --max-time 20 -H "Title: $1" -H "Tags: ${3:-information_source
 hb() {
   n=$("$PY" - <<'PY'
 import json, glob, os, time
+skip=set(filter(None, os.environ.get("PIM_SKIP_TOPICS", "").split(",")))
 done=[]; total=0
 for p in glob.glob("runs/*/*/scores.json"):
     top=p.split("/")[1]
-    if top.startswith("_") or top=="archive": continue
+    if top.startswith("_") or top=="archive" or top in skip: continue
     try: d=json.load(open(p))
     except Exception: continue
     blocks=list(d.get("bases",{}).values()) + ([d] if "arms" in d else [])

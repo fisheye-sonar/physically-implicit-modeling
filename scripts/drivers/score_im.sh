@@ -8,7 +8,7 @@
 #     /usr/bin/bash -c 'bash scripts/drivers/score_im.sh > logs/score_im/unit.log 2>&1'
 set -u
 cd "$(dirname "$0")/../.." || exit 1
-ROOT=$PWD; export PYTHONPATH=$ROOT; export PIM_DW_BASES=frustum,cartesian
+ROOT=$PWD; export PYTHONPATH=$ROOT; export PIM_DW_BASES=frustum,cartesian; export PIM_SKIP_TOPICS=${PIM_SKIP_TOPICS:-}
 PY=$ROOT/.pim/bin/python; LOGS=$ROOT/logs/score_im; NT=https://ntfy.sh/swirling-tornado-ai691k
 mkdir -p "$LOGS"
 ping()  { curl -sS --max-time 20 -H "Title: $1" -H "Tags: ${3:-information_source}" -d "$2" "$NT" > /dev/null 2>&1 || true; }
