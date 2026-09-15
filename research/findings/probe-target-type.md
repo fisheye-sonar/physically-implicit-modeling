@@ -597,8 +597,22 @@ factorised target falls with ray count too (LIN 0.93 / 0.94 / 0.88 / 0.43), and 
 linear probe beats its random-init floor by 0.07 (0.88 vs 0.81) where at 5 and 8 the floor equalled
 the probe — a finer partition is harder to read off a random network, and harder to write into a
 trained one. 16 rays sits where the axis predicts, between 8 and 128 on every column; nothing
-reverses. Status `observed` (one seed per instance). The joint-cell `appearance` row is being fitted
-(unit `dw_16ray_app`, remote) and will be appended below.
+reverses. Status `observed` (one seed per instance).
+
+**The joint-cell target on dw-16ray** (unit `dw_16ray_app`, 1 h 50 on the remote; siblings re-quoted
+from their current scores.json):
+
+| `appearance` (joint cell) | skill LIN / MLP | floors rand-init / obs-right (LIN · MLP) | PI | ND | GS |
+|---|---|---|---|---|---|
+| L-dw-5ray-20m | 0.88 / 0.89 | 0.86 · 0.87 / 0.53 · 0.87 | **+0.56 / 0.78** | +0.44 / 0.90 | **+0.64 / 0.42** |
+| L-dw-8ray-20m | 0.89 / 0.90 | 0.88 · 0.89 / 0.54 · 0.89 | +0.44 / 0.89 | +0.42 / 0.97 | +0.59 / 0.44 |
+| **L-dw-16ray-20m** | 0.85 / 0.87 | 0.81 · 0.84 / 0.55 · 0.85 | +0.23 / 1.32 (pt 3, α 60, landed 91 %) | +0.27 / 1.07 (pt 3, α 12) | +0.44 / 0.57 (pt 0, α 0.7) |
+
+Same ordering on the other read-out: every editor is lower at 16 rays than at 8 (PI −0.21, ND −0.15,
+GS −0.15), PI and ND now over the guard, GS still landing but weaker (+0.44 / 0.57 vs +0.59 / 0.44).
+Taking each editor's better read-out on dw-16ray: PI +0.23 (joint, over guard), ND +0.42 (fac, guarded),
+GS +0.44 (joint, guarded) — against 5-ray's +0.54 / +0.56 / +0.64, all guarded. The quantisation
+toggle is monotone in both directions on both categorical read-outs and inert on regression.
 
 ## The factorised target on the RECURRENT 8-ray model (2026-09-11, `R-dw-8ray-20m`, un-quarantined for this)
 
