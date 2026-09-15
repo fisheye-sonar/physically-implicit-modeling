@@ -220,6 +220,16 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-14 19:47 → 21:18 — CARTESIAN blocks added to all 21 discworld runs (Sevan: validated cartesian scores
+"in our back pocket" for the paper; tables and figures NOT switched).** Unit `score_cartesian` + watcher, overnight
+protocol (smoke of the cartesian path, capped unit, staged driver, heartbeat, pings); 91 min because the pre-09-11
+runs still had cached cartesian probes. `master_eval` `dw_bases` now reads `PIM_DW_BASES` (default frustum —
+unchanged behaviour; applied with nbformat, the notebook exceeds the Read cap). Frustum vs cartesian canonical PI:
+noiseless +0.23 / 1.54 vs +0.20 / 1.71; L-dw-20m +0.18 vs +0.16; blink +0.21 vs +0.17; smooth +0.11 vs +0.10; 8-ray
++0.26 / 0.99 vs +0.21 / 1.00; 5-ray +0.24 / 0.94 vs +0.14 / 0.85; token model +0.00 both; GS negative in both bases
+everywhere. No conclusion moves; the coarse-ray runs lose the most, as the 2026-09-04 8-ray comparison predicted.
+Cartesian floors added for dw-smooth (the one instance without them). Verify table `logs/score_cartesian/verify.txt`.
+
 **2026-09-14 (evening) — INLP SWEEP on discworld, per-variable cascades (Sevan; new experiment
 `experiments/inlp_sweep/`, 8 run × target cells).** Redundancy (dimensions removed per variable to mean R² < 0.4,
 points 2–8): 5-ray appearance-fac 39–48 > 8-ray fac 29–34 ≈ 5-ray 26–32 > smooth 24–29 ≈ 8-ray 22–24 > 8-ray token
