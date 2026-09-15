@@ -344,9 +344,14 @@ def side_rules(ax, groups, env_break=None):
         ax.axhline(y, color=RULE_ENV if y == env_break else RULE, lw=4.0 if y == env_break else 1.6)
 
 
+def _star(r) -> str:
+    """The row's basis-fallback mark — '' unless the collector set a string (Othello rows carry NaN)."""
+    v = getattr(r, "star", "")
+    return v if isinstance(v, str) else ""
+
+
 def run_groups(df, frame_set=()):
-    return groups_of([f"{r.env} · {r.run}{' †' if r.run in frame_set else ''}{getattr(r, 'star', '') or ''}"
-                      for r in df.itertuples()])
+    return groups_of([f"{r.env} · {r.run}{' †' if r.run in frame_set else ''}{_star(r)}" for r in df.itertuples()])
 
 
 def image_table(df: pd.DataFrame, title: str, col_width: float = 1.1, fontsize: float = 8.5, index=True):
@@ -428,7 +433,7 @@ def table_decodability(F: Frames, tag: str = "1"):
                                   {"skill_LIN": R["linear"]["skill"], "skill_MLP": R["mlp"]["skill"],
                                    "gap_LIN": R["linear"]["insample_gap"], "gap_MLP": R["mlp"]["insample_gap"]}))
                 for r in C[(C["instance"] == inst) & (C["arch"] == a)].itertuples():
-                    block.append((f"trained · {r.run}{' †' if r.run in F.frame_set else ''}{getattr(r, 'star', '') or ''}",
+                    block.append((f"trained · {r.run}{' †' if r.run in F.frame_set else ''}{_star(r)}",
                                   {"skill_LIN": r.skill_LIN, "skill_MLP": r.skill_MLP,
                                    "gap_LIN": r.gap_LIN, "gap_MLP": r.gap_MLP}))
             if not b:

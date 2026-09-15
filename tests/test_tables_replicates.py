@@ -78,3 +78,11 @@ def test_block_row_carries_every_editor_and_shows_pi_gs_im():
     assert row["IM-NN EI"] == 0.4                      # on hand, not shown
     assert np.isnan(row["ND EI"])                       # inapplicable on a regression target
     assert row["PI EI"] == 0.2 and row["GS EI"] == -0.1
+
+
+def test_star_label_is_empty_for_rows_without_a_string_mark():
+    import pandas as pd
+    df = pd.DataFrame([{"env": "othello", "run": "a", "star": np.nan}, {"env": "discworld", "run": "b", "star": "*"},
+                       {"env": "discworld", "run": "c", "star": ""}])
+    labels = [g[0] for g in T.run_groups(df)]
+    assert labels == ["othello · a", "discworld · b*", "discworld · c"]
