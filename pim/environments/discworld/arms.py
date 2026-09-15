@@ -722,6 +722,13 @@ def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str
             del R
         finally:
             os.unlink(_tmp.name)
+        if float(H[te].var(0).sum()) <= 1e-12:
+            # a residual that is the same at every frame (a recurrent model's initial state at point 0)
+            # has no conditional mean to learn and no held-out R² — no inverse map at this point
+            if log:
+                log(f"    inverse map point {ell}: residual constant across frames — skipped")
+            del H
+            continue
         hit = store.load(fname, prov, device=DEV)
         if hit is not None:
             g, st = hit["g"].to(DEV), hit["stats"]
