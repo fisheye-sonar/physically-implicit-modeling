@@ -124,3 +124,13 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 
 ## 2026-09-12
 - copy `runs/dropout_ablation/L-oth-adjacent-nodrop-390k/` (checkpoints, config, metrics; NOT scores.json / probes) → `runs/dropout_ablation/L-oth-adjacent-nodrop-20m/` — the no-dropout run continued to 780k under a new name; the 390k dir stays as the scored snapshot
+
+## 2026-09-15 (wsl-sevan) — remote-scored Othello runs parked out of the scorer's path
+# master_eval on the remote scans every run dir and tried to rescore these (stamped eval 2026-09-01.4, stale at 2026-09-12.1);
+# their datasets there are layout v1, so the rescore crashed the dw-16ray chain's stage D (01:46). Each run had been synced to
+# the lab box (verified 2026-09-14) and rescored here; the lab copies are authoritative. Moved on the REMOTE, not deleted:
+- `runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m/` → `runs/_synced_to_lab/adjacent_flip_ablation/L-oth-adjacent-flip-20m/`
+- `runs/dropout_ablation/L-oth-adjacent-nodrop-390k/` → `runs/_synced_to_lab/dropout_ablation/L-oth-adjacent-nodrop-390k/`
+- `runs/dropout_ablation/L-oth-adjacent-nodrop-20m/` → `runs/_synced_to_lab/dropout_ablation/L-oth-adjacent-nodrop-20m/`
+- `runs/dropout_ablation/L-oth-adjacent-drop03-390k/` → `runs/_synced_to_lab/dropout_ablation/L-oth-adjacent-drop03-390k/`
+- `runs/dropout_ablation/L-oth-adjacent-drop07-390k/` → `runs/_synced_to_lab/dropout_ablation/L-oth-adjacent-drop07-390k/`

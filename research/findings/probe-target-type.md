@@ -559,6 +559,47 @@ factorised form wins ND — so on dw-5ray, taking each editor's better read-out:
 +0.56, GS +0.64, all guard-passing. The quantisation toggle moves every editor under both
 categorical read-outs and none under regression.
 
+## The ray axis upward: dw-16ray (2026-09-14 → 15, `L-dw-16ray-20m`, trained on the WSL remote)
+
+Sevan's next toggle on the same axis, the other way: dw-8ray's geometry with **16 usable rays**
+(18 cast, wall rays dropped; radius 1.0 kept, so 5 → 8 → 16 is one axis at one radius; dw-noiseless
+is 128 rays at radius 0.5). 20M sequences, the matched Transformer-L recipe, 780k steps on the 4090
+(best val MSE **0.003968** at 765k — between 8-ray's 0.00574 and 128-ray's 0.00106, as the ray count
+predicts). Factorised appearance target: 34 factor classes per object (136 logits) against 20 on 8-ray
+and 13 on 5-ray; cell-changing bench 1000 of the first 1062 teleports (62 same-cell, vs 34 of 226 at
+8 rays); identical-frame teleports 8.4 % of the pool (20 % at 8 rays). Chain: generate 2 h 47
+(16 workers, 51 GB corpus), train 11 h 08, canonical score 14 min, fac probes + floors + rescore
+1 h 51 (`scripts/drivers/dw_16ray.sh`, unit `dw_16ray`, logs `logs/ray_ablation/dw_16ray/` +
+`logs/dw_16ray_fac/` on wsl-sevan, pulled to the lab). Everything below is eval `2026-09-12.2`, so the
+sibling rows are re-quoted from their CURRENT scores.json (they differ slightly from the tables above,
+which predate the one-protocol rescore).
+
+**Regression row** (canonical, frustum): skill LIN 0.954 / MLP 0.991; unedited −0.910; PI +0.245 / fid
+1.45 (pt 3, α 100), ND −0.203 / 0.90, GS −0.133 / 0.84 — inert like every discworld regression row,
+and PI's guard is now over 1 (5-ray 0.94, 8-ray 0.99, 128-ray 1.54): the exact write degrades the
+frame more the finer the observation.
+
+**The factorised categorical target, the whole ray axis at one eval version:**
+
+| `appearance-fac` | rays | val MSE | skill LIN / MLP | floors rand-init / obs-right (LIN · MLP) | PI | ND | GS |
+|---|---|---|---|---|---|---|---|
+| L-dw-5ray-20m | 5 | 0.00694 | 0.93 / 0.93 | 0.92 · 0.92 / — | **+0.51 / 0.70** | +0.55 / 0.58 | **+0.60 / 0.46** |
+| L-dw-8ray-20m | 8 | 0.00574 | 0.94 / 0.94 | 0.92 · 0.93 / 0.48 · 0.93 | +0.38 / 0.95 | +0.49 / 0.98 | +0.46 / 0.54 |
+| **L-dw-16ray-20m** | 16 | 0.00397 | 0.88 / 0.92 | 0.81 · 0.89 / 0.36 · 0.89 | +0.10 / 1.39 (pt 1, α 100, landed 91 %) | +0.42 / 0.90 (pt 2, α 8) | +0.28 / 0.85 (pt 0, α 1.5) |
+| L-dw-noiseless-20m | 128 | 0.00106 | 0.43 / 0.79 | 0.30 · 0.59 / 0.12 · 0.52 | +0.01 / 1.93 | **+0.61 / 0.80** | +0.33 / 0.71 |
+
+**Reading.** The axis is monotone in the direction of Sevan's bet for the two editors that write a
+direction: PI +0.51 → +0.38 → +0.10 → +0.01 and GS +0.60 → +0.46 → +0.28 → +0.33 as the observation is
+refined 5 → 8 → 16 → 128, with PI's guard crossing 1 at 16 rays (it needs α 100 and a write ratio of 53
+to land 91 % of cases, and degrades the frame doing it). ND is the exception again: +0.55 → +0.49 →
++0.42 → +0.61, flat-to-down until the 128-ray model, where it is the best editor. Decodability of the
+factorised target falls with ray count too (LIN 0.93 / 0.94 / 0.88 / 0.43), and at 16 rays the trained
+linear probe beats its random-init floor by 0.07 (0.88 vs 0.81) where at 5 and 8 the floor equalled
+the probe — a finer partition is harder to read off a random network, and harder to write into a
+trained one. 16 rays sits where the axis predicts, between 8 and 128 on every column; nothing
+reverses. Status `observed` (one seed per instance). The joint-cell `appearance` row is being fitted
+(unit `dw_16ray_app`, remote) and will be appended below.
+
 ## The factorised target on the RECURRENT 8-ray model (2026-09-11, `R-dw-8ray-20m`, un-quarantined for this)
 
 Is the read-out result architecture-independent? `R-dw-8ray-20m` is the stacked GRU

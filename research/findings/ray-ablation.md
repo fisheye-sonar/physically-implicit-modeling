@@ -102,3 +102,13 @@ which for the recurrent model is point 0 (aggregate 0.967, position-dominated) �
 which no velocity is linearly present (0.00–0.03) although points 1–4 read velocity at
 0.4–0.7 (LIN) / 0.45–0.80 (MLP). The rule "per-component at the aggregate-best point"
 hides that; the per-point profile is in the run's scores.json.
+
+
+## Addendum 2026-09-15 — the axis upward: dw-16ray (`ray_ablation/L-dw-16ray-20m`)
+
+dw-8ray with 16 usable rays (18 cast, wall rays dropped, radius 1.0), generated and trained on the WSL
+remote (`scripts/drivers/dw_16ray.sh`). Best val MSE 0.003968 (8-ray 0.00574, 5-ray 0.00694, 128-ray
+0.00106). Regression row inert (PI +0.245 / fid 1.45, ND −0.20, GS −0.13); under `appearance-fac` PI
++0.10 / 1.39, ND +0.42 / 0.90, GS +0.28 / 0.85 — between 8-ray (+0.38 / +0.49 / +0.46) and 128-ray
+(+0.01 / +0.61 / +0.33) on every editor. Coarser observation → more writable state holds through
+16 rays; full write-up in `probe-target-type.md` §The ray axis upward.
