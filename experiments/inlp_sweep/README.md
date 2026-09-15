@@ -30,3 +30,17 @@ curve to R² < 0.4 and < 0.05 at points 1–8, plus copies per variable to exhau
 - Addendum 16:40 (Sevan adds `L-dw-5ray-20m` appearance-fac; the 5-ray full state is added as its own baseline): Sevan —
   5-ray appearance-fac is MEANINGFULLY less redundant (less certain now about 8-ray appearance-fac). Claude — unchanged:
   5-ray full state at least as redundant as noiseless; 5-ray appearance-fac about equal to 5-ray's own position variables.
+
+**Write correction (2026-09-14 ~17:00, Sevan's catch).** The first write summed each variable's K-copy steps
+independently (the Othello script's form, which writes ONE tile per case, so it had no cross-talk); with eight
+variables written at once the non-orthogonal per-variable directions disturb each other's read-outs, and K = 1
+sat far below canonical PI (8-ray: −0.01 vs +0.26). The write is now a JOINT step over the stacked copies of all
+variables (multi-output least squares is separable, so at K = 1 the rows are the joint lstsq probe's and the
+step is PI in z-space — verified: 8-ray pt 4 K = 1 +0.23 / 0.98 = canonical PI's guarded arm there). The
+unregularised joint pseudo-inverse blows up from K ≈ 8 (guards 3–4 at every α: near-dependent, small-norm rows);
+the default solver is a weighted ridge (rows weighted by R², λ = 1e-2 × mean diagonal), the truncated
+pseudo-inverse (rtol 1e-2) is the alternative — on 8-ray pts 2 / 4 they give best +0.33 / 0.96 (K 32) and
++0.35 / 0.93 (K 85) respectively, K = 1 +0.25 on both. α grid extended to the canonical top (175). The three
+runs that had completed under the independent-sum write (noiseless, 8-ray, smooth) are rescored writes-only
+from their saved cascades (`drivers/rescore_writes.sh`); their first score files are kept under
+`scores/_superseded/*_independent-sum-write.json`. Redundancy numbers are unaffected.

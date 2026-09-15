@@ -22,7 +22,7 @@ YL = {"": "held-out R² of a state variable (frustum position / velocity), mean 
 for n, s in have:
     d = json.load(open(SC / f"inlp_{n}{s}.json")); fig, ax = plt.subplots(figsize=(7.5, 5.4)); panel(ax, d, LABEL[n] + (" — appearance-fac" if s else ""))
     ax.set_ylabel(YL[s], fontsize=9); ax.legend(fontsize=7.5, ncol=2, loc="upper right")
-    fig.suptitle("INLP on the state: how many orthogonal linear copies of one state variable the residual holds, per residual point", fontsize=10.5)
+    fig.suptitle("INLP on the state: orthogonal linear copies of one state variable, per residual point", fontsize=10.5)
     fig.tight_layout(); fig.savefig(OUT / f"inlp_r2_by_iteration_{n}{s}.png", dpi=150); plt.close(fig)
 if have:
     fig, axes = plt.subplots(1, len(have), figsize=(5.6 * len(have), 5.8), sharey=True); axes = np.atleast_1d(axes)

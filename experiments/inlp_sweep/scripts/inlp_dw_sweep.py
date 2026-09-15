@@ -2,7 +2,13 @@
 the construction of experiments/adjacent_flip_ablation/scripts/inlp_othello.py (one rank-1 cascade per
 target variable, deflating that variable's own fitted direction, to exhaustion) on the discworld state,
 plus the write through the first K orthogonal copies of every variable with each copy's target shrunk
-toward the population mean by its own held-out R² (the `pim.editors.nullspace` shrink rule).
+toward the population mean by its own held-out R² (the `pim.editors.nullspace` shrink rule). The write is
+solved JOINTLY across variables (2026-09-14 16:55, Sevan): all variables' first K directions are stacked
+into one matrix A and Δz = A⁺ (t − r) — within a variable the rows are orthogonal, across variables they are
+not, and a sum of independent per-variable steps lets each step disturb the others' read-outs. Because
+multi-output least squares is separable per output, at K = 1 the stacked rows ARE the joint lstsq probe's
+rows and the write is closed-form PI in z-space (the earlier INLP's wiring check: within 6–10 % of the
+canonical PI step through the gradient-fitted probe).
 
 Targets (--target):
   full             the canonical regression state — 8 variables: frustum position (x, y) and velocity
@@ -46,10 +52,15 @@ ap.add_argument("--basis", default="frustum")
 ap.add_argument("--n-seq", type=int, default=20000)
 ap.add_argument("--points", type=int, nargs="*", default=None)
 ap.add_argument("--ks", type=int, nargs="+", default=[1, 2, 4, 8, 16, 32, 64, 128])
-ap.add_argument("--alphas", type=float, nargs="*", default=[0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 35.0, 60.0])
+ap.add_argument("--alphas", type=float, nargs="*", default=[0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 35.0, 60.0, 100.0, 175.0])
 ap.add_argument("--max-iter", type=int, default=480)
 ap.add_argument("--r2-stop", type=float, default=0.02)
 ap.add_argument("--smoke", action="store_true")
+ap.add_argument("--solve", choices=("pinv", "trunc", "wridge"), default="wridge",
+                help="joint step solver: pinv (unregularised), trunc (pseudo-inverse with singular values below --rtol × max dropped), wridge (rows weighted by R², ridge --ridge × mean diagonal)")
+ap.add_argument("--rtol", type=float, default=1e-2)
+ap.add_argument("--ridge", type=float, default=1e-2)
+ap.add_argument("--writes-only", action="store_true", help="skip residual collection and cascade fitting; load probes/<run>/cascade_pt*.pt and re-run the write sweep")
 a = ap.parse_args(); t0 = time.time()
 run = REPO / "runs" / a.run; name = a.run.split("/")[-1]; FAC = a.target == "appearance-fac"
 scores = json.loads((run / "scores.json").read_text()); S = scores["settings"]
@@ -166,35 +177,44 @@ def score_write(ell, h_new):
 
 tagf = name + ("_fac" if FAC else "") + ("_smoke" if a.smoke else "")
 out = {"run": a.run, "instance": inst, "model_kind": "tokens" if TOKENS else "frames", "target": a.target, "basis": a.basis, "variables": VAR, "n_seq": n_seq, "n_cases": int(n_cases),
-       "settings": {"max_iter": max_iter, "r2_stop": a.r2_stop, "Ks": a.ks + ["all"], "alphas": alphas, "construction": "per-variable rank-1 deflation (inlp_othello); shrink target_k = μ_v + R²_k (t_v − μ_v)"},
+       "settings": {"max_iter": max_iter, "r2_stop": a.r2_stop, "Ks": a.ks + ["all"], "alphas": alphas, "construction": "per-variable rank-1 deflation (inlp_othello); shrink target_k = μ_v + R²_k (t_v − μ_v); joint step over the stacked copies", "solve": a.solve, "rtol": a.rtol, "ridge": a.ridge},
        "unedited": {k: v for k, v in u.items() if isinstance(v, (int, float))},
        "canonical": {e: {"edit_index": canon[e]["edit_index"], "fidelity_ratio": canon[e]["fidelity_ratio"]} for e in ("PI", "ND", "GS") if canon.get(e)}, "points": {}}
 sdir = REPO / ".scratch"; sdir.mkdir(exist_ok=True)
+prev = json.load(open(EXP / "scores" / f"inlp_{tagf}.json")) if a.writes_only and (EXP / "scores" / f"inlp_{tagf}.json").exists() else None
+if a.writes_only:
+    out["settings"]["rescored_writes"] = f"joint step over the stacked copies, solver {a.solve} (rtol {a.rtol}, ridge {a.ridge})"
 for ell in points:
     tp = time.time()
-    tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=sdir); tmp.close()
-    try:
-        R = collect_residuals(model, inp, batch=64, memmap=tmp.name, points=[ell])[0]; H = np.ascontiguousarray(R.reshape(-1, R.shape[-1])); del R
-    finally:
-        os.unlink(tmp.name)
-    mu = H[tr_idx].mean(0).astype(np.float64); sd = (H[tr_idx].std(0) + 1e-6).astype(np.float64)
-    mu_t, sd_t = torch.from_numpy(mu).to(DEV), torch.from_numpy(sd).to(DEV)
-    G_tr, C_tr, _, _ = moments(H, mu_t, sd_t, tr_idx); G_te, C_te, yy_te, n_te = moments(H, mu_t, sd_t, te_idx); del H
-    d = G_tr.shape[0] - 1; gen = torch.Generator(device=DEV).manual_seed(0)
-    per_var = {}
-    for v in range(m):
-        W, r2s, B = cascade(v, G_tr, C_tr, G_te, C_te, yy_te, n_te)
-        _, r2r, _ = cascade(v, G_tr, C_tr, G_te, C_te, yy_te, n_te, random_dirs=True, n_iter=len(r2s), gen=gen)
-        per_var[v] = {"W": W.float().cpu(), "r2": r2s, "r2_random": r2r, "k_exhaust": len(r2s), "mu": float(ybar[v])}
+    if a.writes_only:
+        ck = torch.load(store / f"cascade_pt{ell}.pt", weights_only=False); per_var = ck["per_var"]; mu, sd = ck["x_mean"], ck["x_std"]
+        d = per_var[0]["W"].shape[1] - 1
+    else:
+        tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=sdir); tmp.close()
+        try:
+            R = collect_residuals(model, inp, batch=64, memmap=tmp.name, points=[ell])[0]; H = np.ascontiguousarray(R.reshape(-1, R.shape[-1])); del R
+        finally:
+            os.unlink(tmp.name)
+        mu = H[tr_idx].mean(0).astype(np.float64); sd = (H[tr_idx].std(0) + 1e-6).astype(np.float64)
+        mu_t, sd_t = torch.from_numpy(mu).to(DEV), torch.from_numpy(sd).to(DEV)
+        G_tr, C_tr, _, _ = moments(H, mu_t, sd_t, tr_idx); G_te, C_te, yy_te, n_te = moments(H, mu_t, sd_t, te_idx); del H
+        d = G_tr.shape[0] - 1; gen = torch.Generator(device=DEV).manual_seed(0)
+        per_var = {}
+        for v in range(m):
+            W, r2s, B = cascade(v, G_tr, C_tr, G_te, C_te, yy_te, n_te)
+            _, r2r, _ = cascade(v, G_tr, C_tr, G_te, C_te, yy_te, n_te, random_dirs=True, n_iter=len(r2s), gen=gen)
+            per_var[v] = {"W": W.float().cpu(), "r2": r2s, "r2_random": r2r, "k_exhaust": len(r2s), "mu": float(ybar[v])}
     kmax = max(pv["k_exhaust"] for pv in per_var.values())
     curve = lambda key: [float(np.mean([pv[key][k] if k < len(pv[key]) else 0.0 for pv in per_var.values()])) for k in range(kmax)]  # noqa: E731
     mean_r2, mean_rand = curve("r2"), curve("r2_random")
-    torch.save({"per_var": per_var, "variables": VAR, "x_mean": mu, "x_std": sd, "point": ell, "run": a.run, "target": a.target}, store / f"cascade_pt{ell}.pt")
+    if not a.writes_only:
+        torch.save({"per_var": per_var, "variables": VAR, "x_mean": mu, "x_std": sd, "point": ell, "run": a.run, "target": a.target}, store / f"cascade_pt{ell}.pt")
     summ = {"variables": VAR, "r2_first_by_var": [pv["r2"][0] for pv in per_var.values()], "k_exhaust_by_var": [pv["k_exhaust"] for pv in per_var.values()],
             "k_exhaust_mean": float(np.mean([pv["k_exhaust"] for pv in per_var.values()])), "k_exhaust_max": int(kmax),
             "mean_r2_curve": mean_r2, "mean_r2_random_curve": mean_rand, "r2_curve_by_var": [pv["r2"] for pv in per_var.values()],
             "iters_to_0.4": iters_to(mean_r2, 0.4), "iters_to_0.05": iters_to(mean_r2, 0.05), "iters_to_exhaust": iters_to(mean_r2, a.r2_stop)}
-    del G_tr, C_tr, G_te, C_te
+    if not a.writes_only:
+        del G_tr, C_tr, G_te, C_te
     # ── the K-copy write: every variable through its first K orthogonal copies ────────────
     Wpad = torch.zeros(m, kmax, d + 1, device=DEV); R2 = torch.zeros(m, kmax, device=DEV); valid = torch.zeros(m, kmax, dtype=torch.bool, device=DEV)
     for v in range(m):
@@ -211,11 +231,21 @@ for ell in points:
     wn2 = (w_all * w_all).sum(-1).clamp_min(1e-12)[None]                                                     # (1, m, K)
 
     def delta(K, shrink):
+        """Joint least-squares step: stack every variable's first K copies (rows of A), solve Δz = A⁺ (t − r)."""
         t_ex = TGT[:, :, None].expand_as(r)
         t_k = MU[None, :, None] + R2[None] * (TGT[:, :, None] - MU[None, :, None]) if shrink else t_ex
-        msk = valid[None] & (torch.arange(kmax, device=DEV)[None, None, :] < K)
-        coef = torch.where(msk, (t_k - r) / wn2, torch.zeros_like(r))
-        return torch.einsum("nmk,mkd->nd", coef, w_all) * sd32                                               # back to raw residual units
+        msk = valid & (torch.arange(kmax, device=DEV)[None, :] < K)                                        # (m, K)
+        A = w_all[msk].double()                                                                             # (R, d) the stacked copies
+        rhs = (t_k - r)[:, msk].double()                                                                    # (n, R)
+        if a.solve == "pinv":
+            dz = rhs @ torch.linalg.pinv(A).T
+        elif a.solve == "trunc":
+            dz = rhs @ torch.linalg.pinv(A, rtol=a.rtol).T
+        else:                                                                                               # weighted ridge: (AᵀΩA + λI)⁻¹ AᵀΩ δ, Ω = diag(R²)
+            om = R2[msk].double().clamp_min(1e-6)
+            M_ = A.T @ (om[:, None] * A); lam = a.ridge * float(M_.diagonal().mean())
+            dz = rhs @ (om[:, None] * A) @ torch.linalg.inv(M_ + lam * torch.eye(A.shape[1], dtype=D64, device=DEV)).T
+        return dz.float() * sd32                                                                            # back to raw residual units
     arms = []
     Ks = [K for K in a.ks if K <= kmax] + ([kmax] if kmax not in a.ks else [])
     for K in Ks:
