@@ -13,7 +13,10 @@
 #   D  GPU  master_eval (canonical probes, baselines, all editors) + tables                    (~30 min)
 #   E  GPU  appearance-fac probes + floors on the new run, then score + tables                 (~1 h)
 #
-# Resumable: every stage is idempotent (generation skips finished splits / shards). Under a unit:
+# Resumable: every stage is idempotent (generation skips finished splits / shards; training uses --resume, a
+# no-op once 780k is reached; scoring skips runs already at the eval version). ⚠ master_eval scans EVERY run dir
+# on the machine — park runs that were scored elsewhere under runs/_synced_to_lab/ (ledgered) or the rescore of a
+# stale run whose instance is not built here fails the stage (2026-09-15 01:46). Under a unit:
 #   systemd-run --user --unit=dw_16ray -p MemoryMax=40G --collect --working-directory=$PWD \
 #       /usr/bin/bash -c 'bash scripts/drivers/dw_16ray.sh > logs/ray_ablation/dw_16ray/unit.log 2>&1'
 set -u
@@ -109,7 +112,7 @@ Starting the 780k-step training (~10.5 h on the 4090)." rocket
 # ── Stage C — GPU: train Transformer-L on the 16-ray instance ─────────────────
 stage "C train (GPU)"
 "$PY" scripts/train.py --env discworld --arch transformer_l --instance "$INST" \
-    --topic "$RUN_TOPIC" --run-name "$RUN_NAME" --steps 780000 \
+    --topic "$RUN_TOPIC" --run-name "$RUN_NAME" --steps 780000 --resume \
     > "$LOGS/c_train.log" 2>&1 || fail "C training" "$(tail -20 "$LOGS/c_train.log")"
 
 ping "PIM dw-16ray: training DONE" \
