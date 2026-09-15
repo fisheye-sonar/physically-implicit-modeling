@@ -220,6 +220,19 @@ done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` wi
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
 
+**2026-09-15 — IM (inverse-map overwrite) becomes a CANONICAL EDITOR; ND dropped from the tables by default
+(Sevan).** `pim/probes/inverse.py` (g: state → residual, the mirror of MLP-128, cached per point per basis;
+`RetrievalBank` for IM-NN), `pim/editors/inverse.py` (overwrite h′ = g(s_post); delta and retrieval kept
+non-default), IM / IM-NN arm functions for frame (`dwa.inverse_arms`), token (`tkb.inverse_arms`) and Othello
+(`oa.inverse_arms`) models — one g per basis serves every block of a run. `master_eval` scores IM + IM-NN on every
+block; an EDITOR-LEVEL fold-in appends them to already-scored runs (dated backup under `runs/<run>/scores_backup/`,
+atomic write; a 3-run smoke left every existing arm byte-identical and reproduced the 2026-09-14 experiment: token
+model IM +0.650 / 0.29 at pt 8 vs +0.65 / 0.29; no-flip −0.554 vs −0.553). Tables: `EDITORS = (PI, GS, IM)`,
+`EDITORS_ALL` keeps ND / IM-NN in the frame; `T.set_basis(BASIS)` switches EVERY discworld number to one regression
+basis (knob at the top of both table notebooks, default frustum; grid-defined targets unchanged; dw-8ray-obs5 falls
+back to cartesian and is starred under frustum). Registry rows for INVERSE MAP and IM. Chain `score_im` launched
+~11:30 to fold IM into all runs in both bases (ETA ~4 h); tables to be re-rendered when it completes.
+
 **2026-09-14 19:47 → 21:18 — CARTESIAN blocks added to all 21 discworld runs (Sevan: validated cartesian scores
 "in our back pocket" for the paper; tables and figures NOT switched).** Unit `score_cartesian` + watcher, overnight
 protocol (smoke of the cartesian path, capped unit, staged driver, heartbeat, pings); 91 min because the pre-09-11
