@@ -52,31 +52,54 @@ def set_basis(basis: str) -> None:
     """Switch EVERY discworld table to one regression basis (2026-09-15, Sevan): decodability,
     floors, PI / GS / IM all read the ``basis`` block; the other basis is never read. Call it
     at the top of a table notebook (``T.set_basis(BASIS)``). Grid-defined targets stay as they
-    are in either basis; a run without the requested block (dw-8ray-obs5 has no frustum) falls
-    back to the block it has and is marked with an asterisk when frustum is requested."""
+    are in either basis. A row with no block in the requested basis is left BLANK, except the
+    instances whose basis is fixed by construction (``BASIS_BY_INSTANCE``: dw-8ray-obs5 has no
+    frustum block), which show in the basis they have with an asterisk."""
     if basis not in REG_BASES:
         raise ValueError(f"basis must be one of {REG_BASES}, got {basis!r}")
     CANONICAL["discworld"] = basis
 
 
-def reg_key(bases: dict) -> str:
-    """A discworld run's REGRESSION block under the current basis: the requested basis when the
-    run has it, else the other one (dw-8ray-obs5, several observers, 2026-09-13 — the frustum
-    basis is observer-0-relative, so that instance is scored in cartesian only)."""
+# Instances that CANNOT carry every basis, and the one they do — mirrors master_eval SETTINGS
+# ["dw_bases_by_instance"]. dw-8ray-obs5 has five observers, so the frustum basis (observer 0's
+# lateral fraction + depth) is not defined for it; Sevan (2026-09-15) asked that it still show,
+# marked with an asterisk, when frustum is requested.
+BASIS_BY_INSTANCE = {"dw-8ray-obs5": ("cartesian",)}
+
+
+def reg_key(bases: dict, instance: str | None = None) -> "str | None":
+    """The REGRESSION block a discworld row is drawn from, or None to leave the row BLANK.
+
+    The requested basis (``set_basis``) when the row has it. Otherwise None — a row with no block in
+    the requested basis is blank, never the other basis's numbers (Sevan, 2026-09-15: "if they don't
+    have results in the basis I specify then just leave them blank"). The one exception is an
+    instance whose basis is fixed by construction (``BASIS_BY_INSTANCE``)."""
     want = CANONICAL["discworld"]
     if want in bases:
         return want
-    return next((b for b in REG_BASES if b in bases), want)
+    for b in BASIS_BY_INSTANCE.get(instance or "", ()):
+        if b in bases:
+            return b
+    return None
 
 
-def basis_star(bases: dict) -> str:
-    """'*' when the row is shown in a basis OTHER than the one requested (2026-09-15).
+def basis_star(bases: dict, instance: str | None = None) -> str:
+    """'*' when the row is drawn from a basis other than the requested one — only ever the
+    ``BASIS_BY_INSTANCE`` exception, since every other mismatch is blank."""
+    rk = reg_key(bases, instance)
+    return "*" if rk is not None and rk != CANONICAL["discworld"] else ""
 
-    Symmetric on purpose: under a frustum request dw-8ray-obs5 falls back to cartesian (it has no
-    frustum block), and under a cartesian request any run or instance whose cartesian block has not
-    been scored yet falls back to frustum. Either way the cell is not the requested basis and must
-    say so — an unmarked fallback is frustum data read as cartesian."""
-    return "*" if reg_key(bases) != CANONICAL["discworld"] else ""
+
+def _blank_regression_row(base: dict, key: str) -> dict:
+    """A discworld row with no block in the requested basis: labelled, every cell empty."""
+    row = {**base, "basis": key, "kind": "regression", "canonical": True,
+           "skill_LIN": np.nan, "skill_MLP": np.nan, "tripwire": 0, "unedited": np.nan,
+           "gap_LIN": np.nan, "gap_MLP": np.nan}
+    for ed in EDITORS_ALL:
+        row[f"{ed} EI"] = np.nan
+        row[f"{ed} fid"] = np.nan
+        row[f"{ed} arm"] = "—"
+    return row
 OTH_EI = "edit_index_symdiff"            # the Othello headline construction (2026-09-12)
 RULE, RULE_ENV = "#172239", "#000000"
 ARCH_LABEL = {"transformer_l": "L", "transformer_s": "S", "recurrent_l": "R",
@@ -241,9 +264,11 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                     rows.append(_block_row(base, key, T, OTH_EI, T.get("kind", "regression")))
             else:
                 # ONE regression basis per table (set_basis): the requested block, the other basis
-                # never read; a run lacking the requested block falls back and is starred
-                rk = reg_key(s["bases"])
-                base = {**base, "star": basis_star(s["bases"])}
+                # never read; a run with no block in that basis gets a BLANK regression row
+                rk = reg_key(s["bases"], s["instance"])
+                base = {**base, "star": basis_star(s["bases"], s["instance"])}
+                if rk is None:
+                    rows.append(_blank_regression_row(base, CANONICAL["discworld"]))
                 for key, T in s["bases"].items():
                     if key in REG_BASES and key != rk:
                         continue
@@ -264,7 +289,7 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                     "probe_skill_linear": rs["probe_skill"].get("mine|linear|sequence", [np.nan]),
                     "probe_skill_mlp": rs["probe_skill"].get("mine|mlp|sequence", [np.nan]),
                     "unedited": rs["unedited"], "best": rs["best"], "arms": rs["arms"]}}
-                rk_rep = reg_key(blocks) if env == "discworld" else None
+                rk_rep = reg_key(blocks, rs.get("instance")) if env == "discworld" else None
                 for key, T in blocks.items():
                     if key in REG_BASES and key != rk_rep:
                         continue
@@ -425,18 +450,28 @@ def table_decodability(F: Frames, tag: str = "1"):
     for env in ("othello", "discworld"):
         for inst in dict.fromkeys(C[C["env"] == env]["instance"]):
             b = F.base.get(inst)
-            bkey = CANONICAL[env] if env == "othello" else reg_key(
-                (b or {}).get("archs", {}).get(next(iter((b or {}).get("archs", {})), ""), {}).get("bases", {}))
+            _bb = (b or {}).get("archs", {}).get(next(iter((b or {}).get("archs", {})), ""), {}).get("bases", {})
+            bkey = CANONICAL[env] if env == "othello" else reg_key(_bb, inst)
+            # The FLOORS follow the same rule as the rows: an instance whose baselines were never
+            # fitted in the requested basis (dw-smooth, dw-16ray in cartesian, 2026-09-15) gets BLANK
+            # floor rows, not the other basis's numbers — a run can carry a cartesian block while its
+            # baselines are frustum-only, which is how frustum floors once read as cartesian.
+            fstar = "" if env == "othello" else basis_star(_bb, inst)
+            _NAN = {"skill_LIN": np.nan, "skill_MLP": np.nan, "gap_LIN": np.nan, "gap_MLP": np.nan}
             archs = [a for a in dict.fromkeys(C[C["instance"] == inst]["arch"])]
             block = []
             if b and archs and bkey in b["archs"].get(archs[0], {}).get("bases", {}):
-                block += _obs_rows(b["archs"][archs[0]]["bases"][bkey], env)
+                block += [(lab + fstar, cells) for lab, cells in _obs_rows(b["archs"][archs[0]]["bases"][bkey], env)]
+            elif b and archs:
+                block.append((f"observation · not fitted in {CANONICAL[env]}", dict(_NAN)))
             for a in archs:
                 if b and bkey in b["archs"].get(a, {}).get("bases", {}):
                     R = b["archs"][a]["bases"][bkey]["random_init"]
-                    block.append((f"random-init · {ARCH_LABEL.get(a, a)}",
+                    block.append((f"random-init · {ARCH_LABEL.get(a, a)}{fstar}",
                                   {"skill_LIN": R["linear"]["skill"], "skill_MLP": R["mlp"]["skill"],
                                    "gap_LIN": R["linear"]["insample_gap"], "gap_MLP": R["mlp"]["insample_gap"]}))
+                elif b:
+                    block.append((f"random-init · {ARCH_LABEL.get(a, a)}", dict(_NAN)))
                 for r in C[(C["instance"] == inst) & (C["arch"] == a)].itertuples():
                     block.append((f"trained · {r.run}{' †' if r.run in F.frame_set else ''}{_star(r)}",
                                   {"skill_LIN": r.skill_LIN, "skill_MLP": r.skill_MLP,
@@ -694,7 +729,10 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
                  "unedited": s["unedited"], "arms": s["arms"], "best": s["best"]}
             k = OTH_EI
         else:
-            T = s["bases"][reg_key(s["bases"])]
+            rk = reg_key(s["bases"], s.get("instance"))
+            if rk is None:                     # no block in the requested basis — nothing to plot
+                continue
+            T = s["bases"][rk]
             k = "edit_index"
         row = {"source": src, "env": s["env"], "instance": s["instance"], "arch": s["arch"], "step": step, "run": name,
                "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),
