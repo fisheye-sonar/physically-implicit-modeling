@@ -58,6 +58,27 @@ That bench is a small option in the edit generator, not a new run. Sevan chose t
 deliberately for this run; the pair bench is the obvious follow-up and the reading above should not be quoted as
 "the constraint reduces writability" until it exists.
 
+**Bets on record (2026-09-16 13:45, before the IM/IM-NN arms were scored).** The IM editor was absent from this
+run for a branch reason — `pim/editors/inverse.py` lived only on `sweeps_and_blates`, which the remote was not on
+— and IM is the only editor that lands in discworld's regression block (frustum: +0.52 dw-blink … +0.73 dw-8ray;
+dw-noiseless +0.598 / fid 0.34, IM-NN +0.397 / 0.65). Fitting it here is the sharpest available test of the
+confound above, because IM and IM-NN differ exactly on the manifold question: IM *synthesises* a residual for the
+target state through a learned g, while IM-NN *retrieves* the residuals of real states, and no real dw-pair state
+has a broken separation.
+
+- **Sevan:** IM will fail on dw-pair.
+- **Claude:** IM lands but is clearly weakened — **+0.40 to +0.55** against dw-noiseless's +0.598, with fidelity
+  worse than 0.34. Reasoning: the teleport breaks one coordinate (the separation) while the velocities stay
+  shared, so s_post is off-manifold in a single direction; g takes p₀ and p₁ as explicit inputs and the
+  observation code is close to additive over the two discs' ray runs, so a ReLU MLP's piecewise-linear
+  extrapolation should still put disc 1 roughly where it is asked.
+- **Claude, the sharper call:** IM-NN falls much further than IM — **below +0.30** against dw-noiseless's +0.397 —
+  because retrieval cannot represent an impossible configuration at all; the nearest real states are legal pairs.
+  So the **IM − IM-NN gap widens beyond 0.25** (dw-noiseless: 0.598 − 0.397 = 0.20). This is the prediction to
+  judge me on: it is the one that distinguishes "the state is unwritable" from "the target is off-manifold",
+  and it fails cleanly if the two editors move together.
+- **Sevan wins outright** if IM's guarded Edit Index is ≤ +0.10, or if it has no arm inside the fidelity guard.
+
 **Not yet done.** The pair-teleport bench (above); a waterfall panel for the ND appearance-fac arm; a second seed;
 the joint-cell `appearance` and fixed-grid targets on this run; a second separation (3.0) if the effect is worth
 a dose-response.
