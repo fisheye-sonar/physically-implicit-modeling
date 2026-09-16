@@ -614,6 +614,40 @@ Taking each editor's better read-out on dw-16ray: PI +0.23 (joint, over guard), 
 GS +0.44 (joint, guarded) — against 5-ray's +0.54 / +0.56 / +0.64, all guarded. The quantisation
 toggle is monotone in both directions on both categorical read-outs and inert on regression.
 
+**Fixed-resolution grids across the ray axis (2026-09-15, `grid-8x4` and `grid-16x8` fitted on the 5-ray and
+16-ray models on the WSL remote, unit `grid_targets_5_16`; 8-ray and 128-ray already had them).** The
+observation-exact target grows with the ray count (13 / 20 / 34 / 500+ factor classes), so the ray trend above
+mixes observation resolution with target granularity. Under a grid that does not scale with the observation:
+
+| `grid-8x4` (32 cells) | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|
+| 5-ray | 0.32 / 0.36 | 0.21 · 0.27 / 0.06 · 0.28 | +0.34 / 1.02 | +0.32 / 1.08 | **+0.45 / 0.60** |
+| 8-ray | 0.46 / 0.51 | — | +0.31 / 0.91 | +0.28 / 1.01 | +0.31 / 0.73 |
+| 16-ray | 0.65 / 0.73 | 0.52 · 0.61 / 0.27 · 0.61 | +0.32 / 0.87 | +0.29 / 1.17 | +0.31 / 0.71 |
+| 128-ray | 0.71 / 0.89 | — | +0.26 / 1.04 | +0.35 / 0.88 | +0.28 / 0.83 |
+
+| `grid-16x8` (128 cells) | skill LIN / MLP | floors rand-init / obs-right | PI | ND | GS |
+|---|---|---|---|---|---|
+| 5-ray | 0.05 / 0.09 | 0.01 · 0.04 / −0.01 · 0.04 | +0.16 / 1.58 | +0.30 / 1.11 | **+0.50 / 0.66** |
+| 8-ray | 0.16 / 0.21 | — | +0.12 / 1.65 | +0.30 / 1.07 | +0.39 / 0.66 |
+| 16-ray | 0.33 / 0.43 | 0.14 · 0.24 / 0.06 · 0.27 | +0.15 / 1.38 | +0.27 / 1.18 | +0.32 / 0.69 |
+| 128-ray | 0.43 / 0.71 | 0.32 · 0.58 / 0.05 · 0.54 | +0.13 / 1.63 | +0.37 / 0.95 | +0.32 / 0.77 |
+
+**Reading.** Most of the ray trend was the target. Under a fixed grid, 8-ray, 16-ray and 128-ray are
+indistinguishable on PI and GS (grid-8x4: PI +0.31 / +0.32 / +0.26, GS +0.31 / +0.31 / +0.28; grid-16x8
+likewise) and ND is flat everywhere (+0.27 to +0.37, 128-ray highest as always). Only 5-ray keeps a real edge,
+and only on GS (+0.45 vs +0.31 at 32 cells; +0.50 vs +0.39 / +0.32 at 128 cells), while it is the least
+readable model on either grid (LIN 0.32 and 0.05 — five rays cannot resolve a 16 × 8 grid, yet GS still lands
++0.50 on it). Decodability of the fixed grid rises monotonically with rays (0.32 / 0.46 / 0.65 / 0.71 at 32
+cells), the opposite of the observation-exact target's 0.93 / 0.94 / 0.88 / 0.43, which was tracking the
+partition's size. So on the ray axis: (i) what a coarse observation buys under the observation-exact target
+is mostly that the target is coarse; (ii) the residual, target-independent effect is confined to the
+coarsest observation and to the gradient editor; (iii) the 8 → 16 → 128 stretch is flat once the target is
+held fixed, which also removes the urgency of the radius confound at 128 rays (a 128-ray radius-1.0 run
+would be testing a difference that the fixed grids do not show). Status `observed`. Note: the 8-ray and
+128-ray rows also carry the newer IM / IM-NN blocks (score_im chain, 2026-09-15); the 5-ray and 16-ray runs
+were scored on the remote before that chain and lack them until the next lab rescore.
+
 ## The factorised target on the RECURRENT 8-ray model (2026-09-11, `R-dw-8ray-20m`, un-quarantined for this)
 
 Is the read-out result architecture-independent? `R-dw-8ray-20m` is the stacked GRU
