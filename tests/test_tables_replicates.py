@@ -58,7 +58,8 @@ def test_set_basis_switches_reg_key_and_stars_fallback():
         assert T.reg_key(cart_only) == "cartesian" and T.basis_star(cart_only) == "*"
         T.set_basis("cartesian")
         assert T.reg_key(both) == "cartesian" and T.basis_star(both) == ""
-        assert T.reg_key({"frustum": {}}) == "frustum" and T.basis_star({"frustum": {}}) == ""   # no star under cartesian
+        # a run scored in frustum only is a FALLBACK under a cartesian request and must be starred too
+        assert T.reg_key({"frustum": {}}) == "frustum" and T.basis_star({"frustum": {}}) == "*"
     finally:
         T.set_basis("frustum")
 

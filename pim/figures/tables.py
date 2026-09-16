@@ -70,8 +70,13 @@ def reg_key(bases: dict) -> str:
 
 
 def basis_star(bases: dict) -> str:
-    """'*' when the run is shown in a fallback basis under a frustum request (Sevan, 2026-09-15)."""
-    return "*" if CANONICAL["discworld"] == "frustum" and reg_key(bases) != "frustum" else ""
+    """'*' when the row is shown in a basis OTHER than the one requested (2026-09-15).
+
+    Symmetric on purpose: under a frustum request dw-8ray-obs5 falls back to cartesian (it has no
+    frustum block), and under a cartesian request any run or instance whose cartesian block has not
+    been scored yet falls back to frustum. Either way the cell is not the requested basis and must
+    say so — an unmarked fallback is frustum data read as cartesian."""
+    return "*" if reg_key(bases) != CANONICAL["discworld"] else ""
 OTH_EI = "edit_index_symdiff"            # the Othello headline construction (2026-09-12)
 RULE, RULE_ENV = "#172239", "#000000"
 ARCH_LABEL = {"transformer_l": "L", "transformer_s": "S", "recurrent_l": "R",
