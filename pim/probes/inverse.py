@@ -82,3 +82,13 @@ class RetrievalBank:
                 idx = (q.half() @ self.A.T).topk(self.k, dim=1, largest=True).indices
             out[i:i + chunk] = self.H[idx].float().mean(1)
         return out
+
+    @torch.no_grad()
+    def r2(self, s_te: torch.Tensor, h_te: torch.Tensor) -> float:
+        """Held-out R² of the retrieval mean as a predictor of the residual — the same statistic
+        as the inverse map's ``r2`` (``pim.metrics.decodability.r2`` against the TRAINING mean),
+        so the two instruments are compared on one axis (2026-09-16)."""
+        from pim.metrics.decodability import r2
+
+        pred = self.mean(s_te).cpu().numpy()
+        return float(r2(pred, h_te.float().cpu().numpy(), self.H.float().mean(0).cpu().numpy()))

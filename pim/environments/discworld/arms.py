@@ -741,6 +741,8 @@ def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str
                 log(f"    inverse map point {ell}: held-out R² {st['r2']:+.3f}  rmse {st['rmse']:.4f}  WROTE {fname}")
         bank = RetrievalBank(X_tr_t, torch.from_numpy(H[tr]).to(DEV), metric="euclidean",
                              k=RETRIEVAL_K if k is None else int(k))
+        # the retrieval form's held-out R² on the SAME rows as g's (2026-09-16): one axis for both
+        st = {**st, "nn_r2": bank.r2(torch.from_numpy(X_all[te]).to(DEV), torch.from_numpy(H[te]).to(DEV))}
         del H
         yield int(ell), g, bank, st
         del bank
@@ -764,9 +766,10 @@ def inverse_arms(model, benches: dict, *, basis_name: str, unsteered_cards: dict
             assert np.allclose(s_post, b.tgt.cpu().numpy(), atol=1e-4), f"{key}: s_post ≠ Bench.tgt"
         S[key] = (torch.from_numpy(s_pre).to(DEV), torch.from_numpy(s_post).to(DEV))
     arms = {key: [] for key in benches}
-    stats = {"g_r2": [], "g_rmse": []}
+    stats = {"g_r2": [], "g_rmse": [], "nn_r2": []}
     for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, **fit_kw):
         stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        stats["nn_r2"].append(float(st["nn_r2"]))
         for key, b in benches.items():
             _, s_post = S[key]
             as_activations(model, ell)

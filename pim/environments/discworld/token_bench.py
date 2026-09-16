@@ -296,10 +296,11 @@ def inverse_arms(model, tbenches: dict, arrays: dict, vocab: FrameVocab, *, basi
         S[key] = torch.from_numpy(s_post).to(DEV)
     H0 = {key: residuals_last(model, tb) for key, tb in tbenches.items()}
     arms = {key: [] for key in tbenches}
-    stats = {"g_r2": [], "g_rmse": []}
+    stats = {"g_r2": [], "g_rmse": [], "nn_r2": []}
     for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, encoder=enc,
                                               encoder_tag=tag, **fit_kw):
         stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        stats["nn_r2"].append(float(st["nn_r2"]))
         for key, tb in tbenches.items():
             h0 = H0[key][ell]
             for editor, h_new in (("IM", inverse_overwrite(g, S[key])),

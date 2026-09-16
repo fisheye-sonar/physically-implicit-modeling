@@ -145,6 +145,15 @@ def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical:
         bp = int(np.argmax(T[f"probe_skill_{fam}"]))
         row[f"gap_{k}"] = ps.get(bp, {}).get(f"insample_gap_{fam}", np.nan)
     arms = T.get("arms", [])
+    inv = T.get("inverse_map") or {}
+    im_best = _best_by(arms, "IM", ei_key) if arms else T["best"].get("IM")
+    pt = int(im_best["point"]) if im_best else None
+    for name, key in (("g_r2", "g_r2"), ("nn_r2", "nn_r2")):
+        vals = inv.get(key)
+        row[f"{name}@IM"] = (vals[pt] if vals and pt is not None and pt < len(vals) else np.nan)
+        row[f"{name} max"] = max(vals) if vals else np.nan
+        row[f"{name} argmax"] = int(np.argmax(vals)) if vals else -1
+    row["IM point"] = pt if pt is not None else -1
     for ed in EDITORS_ALL:
         b = _best_by(arms, ed, ei_key) if arms else T["best"].get(ed)
         if ed == "ND" and base["env"] == "discworld" and kind == "regression":
@@ -250,7 +259,8 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                 T = {"probe_skill_linear": s["probe_skill"].get("mine|linear|sequence", [np.nan]),
                      "probe_skill_mlp": s["probe_skill"].get("mine|mlp|sequence", [np.nan]),
                      "unedited": s["unedited"], "best": s["best"], "arms": s["arms"],
-                     "probe_sanity": {"n_violations": 0, "rows": []}}
+                     "probe_sanity": {"n_violations": 0, "rows": []},
+                     "inverse_map": s.get("inverse_map")}
                 row = _block_row(base, "mine/theirs", T, OTH_EI, "classification")
                 for fam, k in (("linear", "LIN"), ("mlp", "MLP")):
                     sub = [x for x in s["probe_stats"] if x["target"] == "mine" and x["split"] == "sequence"
@@ -494,6 +504,45 @@ def table_decodability(F: Frames, tag: str = "1"):
          cmap="Oranges", vmin=0.0, vmax=0.5, cbar_label="in-sample − held-out", title="(b) overfit check")
     side_rules(axes[1], groups, eb)
     _suptitle(fig, f"Table {tag} — decodability against its floors", fontsize=12, y=1.0)
+    return fig
+
+
+# ── Table 1b: the inverse map's fit beside the retrieval bank's ─────────────
+
+
+def table_inverse_r2(F: Frames, tag: str = "1b"):
+    """Table 1b — held-out R² of the two state→residual instruments on every listed run's
+    canonical block (2026-09-16): the inverse map g (MLP-128, `inverse_map.g_r2`) and the
+    k-nearest-state retrieval mean (`inverse_map.nn_r2`), each at the point the IM editor's
+    best arm writes and at its own best point. Both R² are against the training-mean baseline
+    on the same held-out rows (``RetrievalBank.r2``). A run scored before the retrieval R² was
+    recorded shows a blank retrieval cell until the scorer folds it in."""
+    C = F.canonical
+    if not len(C):
+        return None
+    rows = []
+    for r, t in zip(C.to_dict("records"), C.itertuples()):     # column names carry spaces / '@'
+        rows.append({"env": r["env"], "instance": r["instance"],
+                     "source": f"{r['run']}{' †' if r['run'] in F.frame_set else ''}{_star(t)}",
+                     "pt": r["IM point"],
+                     "g@IM": r["g_r2@IM"], "g max": r["g_r2 max"], "g arg": r["g_r2 argmax"],
+                     "nn@IM": r["nn_r2@IM"], "nn max": r["nn_r2 max"], "nn arg": r["nn_r2 argmax"]})
+    B = pd.DataFrame(rows)
+    groups = groups_of([f"{r.env} · {r.instance}" for r in B.itertuples()])
+    eb = env_break_of(B)
+    cols = ["g@IM", "g max", "nn@IM", "nn max"]
+    xt = ["inverse map\n@ IM point", "inverse map\nbest point", "retrieval\n@ IM point", "retrieval\nbest point"]
+    annot = np.empty((len(B), 4), dtype=object)
+    for i, r in enumerate(B.to_dict("records")):
+        annot[i] = [_fmt(r["g@IM"], "+.3f") + (f"\n(pt {r['pt']})" if r["pt"] >= 0 else ""),
+                    _fmt(r["g max"], "+.3f") + (f"\n(pt {r['g arg']})" if r["g arg"] >= 0 else ""),
+                    _fmt(r["nn@IM"], "+.3f"),
+                    _fmt(r["nn max"], "+.3f") + (f"\n(pt {r['nn arg']})" if r["nn arg"] >= 0 else "")]
+    fig, ax = plt.subplots(1, 1, figsize=(8.6, 0.5 * len(B) + 2.0))
+    heat(ax, B[cols].values, xt, list(B["source"]), fmt="+.3f", cmap="Greens", vmin=0.0, vmax=1.0,
+         cbar_label="held-out R² (vs training mean)", title="state → residual: held-out R²", annot_text=annot)
+    group_rows(ax, groups, x=-0.72, env_break=eb)
+    _suptitle(fig, f"Table {tag} — the inverse map beside nearest-state retrieval", fontsize=12, y=1.0)
     return fig
 
 

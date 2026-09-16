@@ -30,6 +30,7 @@ ROOT=$PWD
 PY=$ROOT/.pim/bin/python
 export PYTHONPATH=$ROOT
 export PIM_DW_BASES=frustum,cartesian     # the scorer fits/scores both bases (tables' BASIS knob switches)
+export PIM_SKIP_TOPICS=training_curve   # paused by Sevan 2026-09-15; the scorer must not pick those runs up here
 NT=https://ntfy.sh/swirling-tornado-ai691k
 INST=dw-128ray
 RUN_TOPIC=ray_ablation

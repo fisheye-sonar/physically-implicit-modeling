@@ -471,7 +471,7 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     Xpost_t = torch.from_numpy(onehot(s_post)).to(DEV)
     X_tr_t = torch.from_numpy(X_all[tr_idx]).to(DEV)
     okind = getattr(model, "output_kind", "logits")
-    recs, stats = [], {"g_r2": [], "g_rmse": []}
+    recs, stats = [], {"g_r2": [], "g_rmse": [], "nn_r2": []}
     for ell in (points if points is not None else range(model.n_layers + 1)):
         fname, prov = store.key(model, kind="inverse_map", target="mine-onehot", n_seq=n_seq,
                                 split="sequence", seed=int(seed), hidden=INVERSE_HIDDEN,
@@ -489,6 +489,8 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
                 log(f"    inverse map point {ell}: held-out R² {st['r2']:+.3f}  WROTE {fname}")
         bank = RetrievalBank(X_tr_t, torch.from_numpy(H[tr_idx]).to(DEV), metric="onehot",
                              k=RETRIEVAL_K if k is None else int(k))
+        # the retrieval form's held-out R² on g's held-out games (2026-09-16)
+        stats["nn_r2"].append(bank.r2(torch.from_numpy(X_all[te_idx]).to(DEV), torch.from_numpy(H[te_idx]).to(DEV)))
         del H
         stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
         for editor, h_new_all in (("IM", inverse_overwrite(g, Xpost_t)),
