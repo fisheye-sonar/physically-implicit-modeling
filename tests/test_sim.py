@@ -52,3 +52,24 @@ def test_deterministic_with_seed():
     s1 = simulate(cfg)
     s2 = simulate(cfg)
     np.testing.assert_array_equal(s1.positions, s2.positions)
+
+
+def test_pair_separation_rigid_pair():
+    """dw-pair (2026-09-15): two objects at a fixed centre distance, same velocity, inside the frustum."""
+    import numpy as np
+    from pim.environments.discworld.config import SimConfig
+    from pim.environments.discworld.sim import fully_in_frustum, simulate
+    cfg = SimConfig(seed=3, n_objects=2, n_frames=40, boundary="open", always_in_frustum=True,
+                    radius=0.5, pair_separation=2.0, position_noise_std=0.0, obs_noise_std=0.0)
+    sc = simulate(cfg)
+    d = np.linalg.norm(sc.positions[:, 0] - sc.positions[:, 1], axis=-1)
+    assert np.allclose(d, 2.0, atol=1e-9)
+    assert np.allclose(sc.velocities[:, 0], sc.velocities[:, 1])
+    assert fully_in_frustum(sc.positions, cfg.radius, cfg)
+    for bad in (dict(n_objects=3), dict(boundary="bounce"), dict(pair_separation=1.0)):
+        try:
+            simulate(SimConfig(**{**dict(seed=3, n_objects=2, boundary="open", radius=0.5, pair_separation=2.0), **bad}))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"expected ValueError for {bad}")

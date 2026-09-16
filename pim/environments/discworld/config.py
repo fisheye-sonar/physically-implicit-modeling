@@ -145,6 +145,11 @@ class SimConfig:
     #              of radius (y_far - y_near)/2 about the pivot — every observer's near and
     #              far planes are tangent to it. Open boundary only.
     n_observers: int = 1
+    # pair_separation (2026-09-15, dw-pair): with exactly two objects, object 1 is placed at a FIXED
+    # centre-to-centre distance from object 0 (random orientation) and shares its velocity, so the pair
+    # moves as a rigid body — the state has two free position dims + an orientation instead of four.
+    # Open boundary only (a wall bounce would break the pair); must be >= the collision spacing.
+    pair_separation: float | None = None
     region: Literal["frustum", "circle"] = "frustum"
 
     # ---- omniscient 2D rendering (OPTIONAL) ------------------------------

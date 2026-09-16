@@ -93,6 +93,14 @@ _RAYS16_RANGES = [(270_000_000_000, 290_000_000_000, "dw-16ray train"),
                   (295_000_000_000, 295_400_000_000, "dw-16ray eval suite"),
                   (1_080_000_000_000, 1_081_000_000_000, "dw-16ray probe suite"),
                   (1_090_000_000_000, 1_091_000_000_000, "dw-16ray probe_large")]
+# dw-pair (2026-09-15, Sevan): dw-noiseless with the two discs as a RIGID PAIR at centre distance 2.0 (same
+# velocity; sim.py pair_separation). The state has 2 free position dims + an orientation instead of 4;
+# the single-object teleport bench is deliberately kept (the edits are expected to fail).
+_PAIR = ["--pair-separation", "2.0"]
+_PAIR_RANGES = [(300_000_000_000, 320_000_000_000, "dw-pair train"),
+                (325_000_000_000, 325_400_000_000, "dw-pair eval suite"),
+                (1_100_000_000_000, 1_101_000_000_000, "dw-pair probe suite"),
+                (1_110_000_000_000, 1_111_000_000_000, "dw-pair probe_large")]
 # dw-smooth (2026-09-12 night): dw-noiseless geometry (128 rays, radius 0.5, no noise) with the
 # smooth "power" dome profile (1-(perp/r)^2)^2 baked into the disc — the anti-aliasing instance
 # (profile H of experiments/antialias_pilot, Sevan's pick). soft_edge stays 0: the dome itself
@@ -110,7 +118,7 @@ _OBS5_RANGES = [(230_000_000_000, 250_000_000_000, "dw-8ray-obs5 train"),
                 (255_000_000_000, 255_400_000_000, "dw-8ray-obs5 eval suite"),
                 (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
                 (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large")]
-_SMOOTH_RANGES = _SMOOTH_RANGES + _OBS5_RANGES + _RAYS16_RANGES     # every list that forbids dw-smooth forbids obs5 and 16ray too
+_SMOOTH_RANGES = _SMOOTH_RANGES + _OBS5_RANGES + _RAYS16_RANGES + _PAIR_RANGES     # every list that forbids dw-smooth forbids obs5, 16ray and pair too
 _NEW_RANGES = [(60_000_000_000, 80_000_000_000, "dw-8ray train"),
                (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
                (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
@@ -235,7 +243,7 @@ INSTANCES = {
                       (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
                       (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large"),
                       (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
-                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")] + _OBS5_RANGES + _RAYS16_RANGES,
+                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large")] + _OBS5_RANGES + _RAYS16_RANGES + _PAIR_RANGES,
     },
     "dw-8ray-obs5": {  # dw-8ray + five observers on the ring, circular arena (observers.py)
         "base_seed": 230_000_000_000,
@@ -267,7 +275,7 @@ INSTANCES = {
                       (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
                       (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large"),
                       (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
-                      (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large")] + _RAYS16_RANGES,
+                      (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large")] + _RAYS16_RANGES + _PAIR_RANGES,
     },
     "dw-16ray": {  # dw-8ray with 16 usable rays (18 cast, wall rays dropped); radius 1.0 — the ray axis upward
         "base_seed": 270_000_000_000,
@@ -303,7 +311,47 @@ INSTANCES = {
                       (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
                       (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large"),
                       (1_080_000_000_000, 1_081_000_000_000, "dw-16ray probe suite"),
-                      (1_090_000_000_000, 1_091_000_000_000, "dw-16ray probe_large")],
+                      (1_090_000_000_000, 1_091_000_000_000, "dw-16ray probe_large")] + _PAIR_RANGES,
+    },
+    "dw-pair": {  # dw-noiseless with the two discs as a rigid pair at centre distance 2.0 (same velocity)
+        "base_seed": 300_000_000_000,
+        "obs_dim": 128,
+        "sim_flags": _COMMON_FLAGS + _RAYS_128 + ["--position-noise", "0.0", "--obs-noise-std", "0.0"] + _PAIR,
+        "forbidden": [(0, 120_000, "dset4-era eval"), (3_000_000, 3_950_000, "dset17"),
+                      (10_000_000, 19_800_000_000, "dw-pn04 train"),
+                      (30_000_000_000, 50_000_000_000, "dw-noiseless train"),
+                      (52_000_000_000, 52_400_000_000, "dw-noiseless eval suite"),
+                      (60_000_000_000, 80_000_000_000, "dw-8ray train"),
+                      (85_000_000_000, 85_400_000_000, "dw-8ray eval suite"),
+                      (110_000_000_000, 130_000_000_000, "dw-blink train"),
+                      (135_000_000_000, 135_400_000_000, "dw-blink eval suite"),
+                      (160_000_000_000, 180_000_000_000, "dw-5ray train"),
+                      (185_000_000_000, 185_400_000_000, "dw-5ray eval suite"),
+                      (200_000_000_000, 220_000_000_000, "dw-smooth train"),
+                      (225_000_000_000, 225_400_000_000, "dw-smooth eval suite"),
+                      (230_000_000_000, 250_000_000_000, "dw-8ray-obs5 train"),
+                      (255_000_000_000, 255_400_000_000, "dw-8ray-obs5 eval suite"),
+                      (270_000_000_000, 290_000_000_000, "dw-16ray train"),
+                      (295_000_000_000, 295_400_000_000, "dw-16ray eval suite"),
+                      (325_000_000_000, 325_400_000_000, "dw-pair eval suite"),
+                      (900_000_000_000, 901_000_000_000, "dw-pn04 probe suite"),
+                      (950_000_000_000, 951_000_000_000, "dw-noiseless probe suite"),
+                      (960_000_000_000, 961_000_000_000, "dw-pn04 probe_large (capacity sweep)"),
+                      (970_000_000_000, 971_000_000_000, "dw-noiseless probe_large"),
+                      (980_000_000_000, 981_000_000_000, "dw-8ray probe suite"),
+                      (990_000_000_000, 991_000_000_000, "dw-8ray probe_large"),
+                      (1_000_000_000_000, 1_001_000_000_000, "dw-blink probe suite"),
+                      (1_010_000_000_000, 1_011_000_000_000, "dw-blink probe_large"),
+                      (1_020_000_000_000, 1_021_000_000_000, "dw-5ray probe suite"),
+                      (1_030_000_000_000, 1_031_000_000_000, "dw-5ray probe_large"),
+                      (1_040_000_000_000, 1_041_000_000_000, "dw-smooth probe suite"),
+                      (1_050_000_000_000, 1_051_000_000_000, "dw-smooth probe_large"),
+                      (1_060_000_000_000, 1_061_000_000_000, "dw-8ray-obs5 probe suite"),
+                      (1_070_000_000_000, 1_071_000_000_000, "dw-8ray-obs5 probe_large"),
+                      (1_080_000_000_000, 1_081_000_000_000, "dw-16ray probe suite"),
+                      (1_090_000_000_000, 1_091_000_000_000, "dw-16ray probe_large"),
+                      (1_100_000_000_000, 1_101_000_000_000, "dw-pair probe suite"),
+                      (1_110_000_000_000, 1_111_000_000_000, "dw-pair probe_large")],
     },
 }
 

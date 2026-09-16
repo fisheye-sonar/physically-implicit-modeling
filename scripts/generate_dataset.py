@@ -112,6 +112,9 @@ def parse_args() -> argparse.Namespace:
     g.add_argument("--n-observers", type=int, default=1, metavar="N",
                    help="OPTIONAL: N observers on a ring about the frustum's depth midpoint; the "
                         "observation is their N views concatenated (pim/.../observers.py)")
+    g.add_argument("--pair-separation", type=float, default=None, metavar="D",
+                   help="two objects as a RIGID PAIR: object 1 at centre distance D from object 0 "
+                        "(random orientation), same velocity (dw-pair, 2026-09-15); open boundary only")
     g.add_argument("--region", choices=["frustum", "circle"], default="frustum",
                    help="OPTIONAL: where discs live — the canonical frustum, or the circle every "
                         "observer's near/far planes are tangent to (open boundary only)")
@@ -201,6 +204,7 @@ def _sim_from_args(args) -> SimConfig:
         soft_profile_power=args.soft_profile_power,
         n_observers=args.n_observers,
         region=args.region,
+        pair_separation=args.pair_separation,
         soft_psf_sigma=args.soft_psf_sigma,
         soft_occlusion_temp=args.soft_occlusion_temp,
         omni2d=args.omni2d,
