@@ -177,3 +177,4 @@ that motivated the environment-instance manifests.
 - `datasets/discworld/dw-8ray/probe/val.h5` → `datasets/discworld/dw-8ray/_unused/v1_partial_2026-09-09/probe_val.h5`
 - `datasets/discworld/dw-8ray/probe/edits.h5` → `datasets/discworld/dw-8ray/_unused/v1_partial_2026-09-09/probe_edits.h5`
 - `datasets/discworld/dw-8ray/probe/test.h5` → `datasets/discworld/dw-8ray/_unused/v1_partial_2026-09-09/probe_test.h5`
+- `datasets/othello/oth-adjacent/edits/v1/cases_1001.{json,pkl}` → `datasets/othello/oth-adjacent/_unused/edits_v1_cases_1001/` (old bench; identical to the lab's parked copy)
