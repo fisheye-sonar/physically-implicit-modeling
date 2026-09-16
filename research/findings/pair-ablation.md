@@ -1,4 +1,4 @@
-# Pair ablation — a rigid two-disc world is MORE readable and LESS writable, but the edits do not fail (2026-09-16)
+# Pair ablation — a rigid two-disc world is MORE readable and LESS writable, but every editor still lands (2026-09-16)
 
 **Status:** `observed` (one run, one seed, canonical scoring under the unified protocol; no waterfall built yet —
 the qualitative panel is owed before any generation claim is quoted). ⚠ The main caveat is structural, not
@@ -79,7 +79,43 @@ has a broken separation.
   and it fails cleanly if the two editors move together.
 - **Sevan wins outright** if IM's guarded Edit Index is ≤ +0.10, or if it has no arm inside the fidelity guard.
 
-**Not yet done.** The pair-teleport bench (above); a waterfall panel for the ND appearance-fac arm; a second seed;
+**Bet outcome (2026-09-16 14:12, unit `score_im_pair` on the remote; the lab branch `sweeps_and_blates` pushed and
+checked out there for the IM code).**
+
+| block | IM | IM-NN | IM − IM-NN | g R² |
+|---|---|---|---|---|
+| dw-pair frustum | **+0.471 / 0.60** (pt 7) | +0.230 / 0.91 | +0.241 | 0.753 |
+| dw-pair cartesian | +0.410 / 0.70 (pt 6) | +0.162 / 0.97 | +0.249 | 0.765 |
+| dw-pair appearance-fac | +0.469 / 0.60 (pt 7) | +0.229 / 0.91 | +0.240 | 0.753 |
+| dw-noiseless frustum | +0.598 / 0.34 (pt 6) | +0.397 / 0.65 | +0.202 | 0.750 |
+| dw-noiseless cartesian | +0.590 / 0.34 | +0.327 / 0.76 | +0.263 | 0.741 |
+
+**Sevan loses:** IM lands at +0.471 well inside the fidelity guard — not a failure by any reading. **Claude's level
+calls hold:** IM landed in the predicted +0.40 to +0.55 with fidelity worse than 0.34 (0.60), and IM-NN came in
+below +0.30 (+0.230). **Claude's nominated call FAILS:** the IM − IM-NN gap was predicted to widen past 0.25; it
+widened only 0.202 → 0.241 in frustum, and in CARTESIAN it NARROWED, 0.263 → 0.249. The gap is not a robust
+discriminator and should not be used as one.
+
+**The pre-registered artefact check passes.** g's held-out R² is 0.753 on dw-pair against 0.750 on dw-noiseless:
+the inverse map is fit just as well on the constrained world, so the weaker IM is not a bad-map artefact. IM's
+value is also near-identical across the three blocks (0.471 / 0.410 / 0.469), as it must be — IM writes the state,
+not the probe target — which is a further sanity check that the arms were computed correctly.
+
+**Reading.** Both inverse-map editors weaken on the constrained world and IM-NN weakens PROPORTIONALLY more —
+IM ×0.79 (0.598 → 0.471), IM-NN ×0.58 (0.397 → 0.230); in absolute terms −0.127 against −0.167. That is the
+direction the off-manifold account predicts, since retrieval cannot represent a broken-separation state at all
+while a learned g can extrapolate to one. But the effect is a matter of degree, not the clean dissociation the
+gap statistic was supposed to show, and the cartesian row runs the other way. So the manifold account is
+SUPPORTED, not established, and the confound above stands: a pair-teleport bench is still the control that
+would settle it. The headline of this run is unchanged and now rests on five editors: on a world that forbids the
+counterfactual, every editor that lands elsewhere still lands here, each one weaker and each damaging the frame
+more (IM fid 0.34 → 0.60, ND 0.80 → 0.91, GS 0.71 → 0.86).
+
+**The identity control, owed.** IM with the target set to the CURRENT state (an on-manifold overwrite) localises
+the loss: if it is near-lossless while the teleport target scores +0.47, the weakening is about the target, not
+the editor. Cheap, and it should run before the magnitude is quoted anywhere durable.
+
+**Not yet done.** The pair-teleport bench (above); the IM identity control (above); a waterfall panel for the IM and ND arms; a second seed;
 the joint-cell `appearance` and fixed-grid targets on this run; a second separation (3.0) if the effect is worth
 a dose-response.
 
