@@ -171,6 +171,8 @@ from matplotlib.colors import LinearSegmentedColormap, to_rgb  # noqa: E402
 from pim.figures.waterfall import DARK_BG, DIFF_CMAP, GHOST_C, TARGET_C  # noqa: E402
 
 STRIP = 1.0          # height of one single-frame row, in waterfall-frame units
+CTX_ROW = 0.55       # height of one waterfall (context) frame, in the same units — squashed against the strips
+COL_W = 3.3          # inches per column
 PAIR_DIFF = 0.75     # the error strip under a prediction in the "paired" variant
 GAP, BIGGAP = 0.22, 0.8
 TEXT = "black"
@@ -237,11 +239,11 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
                 out.append((f"{blk}:{ed}:diff", PAIR_DIFF))
             out.append(("gap", GAP))
         return out[:-1]
-    rows = ([("waterfall", context)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
+    rows = ([("waterfall", context * CTX_ROW)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
             + edit_rows("cont") + [("gap", BIGGAP)] + edit_rows("cat"))
     heights = [h for _, h in rows]
     ncol = len(names)
-    fig = plt.figure(figsize=(2.55 * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
+    fig = plt.figure(figsize=(COL_W * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
     bar = mode in ("diff", "overlay", "paired")   # "abs" (red by |error|) carries no bar — the caption explains it
     gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.945 if bar else 0.995,
                   top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
