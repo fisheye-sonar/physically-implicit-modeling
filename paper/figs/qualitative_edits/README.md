@@ -23,10 +23,10 @@ which arms were used and whether each variant's tile changed).
 
 Drawing follows the canonical waterfall (`pim/figures/waterfall.py`): `gray` on the dark panel
 background, fixed 0–1 range, nearest interpolation; the page is white, the text black; no gridlines;
-every strip stretched so a one-pixel-tall observation is readable; the ground-truth row has a heavier
-black frame and a bold label. Two more files per seed: `…_diff` draws the six edit rows as prediction −
+every strip stretched so a one-pixel-tall observation is readable; the ground-truth row's label is bold. Two more files per seed: `…_diff` draws the six edit rows as prediction −
 ground truth on the canonical signed-error map (red = under-prediction, green = over, zero = background),
 and `…_overlay` keeps each prediction's own grey and tints every ray red / green in proportion to its
 error, so a perfect ray is simply drawn (`--diff-scale`, default ±1.0, the true worst case, sets both);
-the bar for either sits at the right, spanning the six edit rows. Predictions are cached in `.scratch/` per seed so `--redraw`
+the bar for either sits at the right, spanning the six edit rows. `…_abs` is the overlay with a
+single hue — red by absolute error, no bar (for a caption that explains it). Predictions are cached in `.scratch/` per seed so `--redraw`
 re-renders without reloading the five models. Nothing on the figure names the environment.

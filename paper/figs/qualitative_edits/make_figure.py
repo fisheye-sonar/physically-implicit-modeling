@@ -178,14 +178,16 @@ OVERLAY_ALPHA = 0.85     # a fully wrong ray keeps a trace of its own grey under
 OVERLAY_CMAP = LinearSegmentedColormap.from_list("pim_overlay", [GHOST_C, "#8c8c8c", TARGET_C])
 
 
-def overlay_rgb(pred: np.ndarray, gt: np.ndarray, scale: float) -> np.ndarray:
-    """The prediction drawn in grey, each ray tinted toward red (under-prediction) or green (over)
-    in proportion to |prediction − truth| / scale — a perfect ray is just its grey."""
+def overlay_rgb(pred: np.ndarray, gt: np.ndarray, scale: float, signed: bool = True) -> np.ndarray:
+    """The prediction drawn in grey, each ray tinted in proportion to |prediction − truth| / scale
+    — a perfect ray is just its grey. ``signed``: red for under-prediction, green for over;
+    otherwise red alone, by absolute error."""
     pred, gt = np.asarray(pred, float), np.asarray(gt, float)
     g = np.clip(pred, 0.0, 1.0)[..., None].repeat(3, -1)
     err = pred - gt
     a = OVERLAY_ALPHA * np.clip(np.abs(err) / scale, 0.0, 1.0)[..., None]
-    tint = np.where((err < 0)[..., None], np.array(to_rgb(GHOST_C)), np.array(to_rgb(TARGET_C)))
+    red = np.array(to_rgb(GHOST_C))
+    tint = np.where((err < 0)[..., None], red, np.array(to_rgb(TARGET_C))) if signed else red
     return (1.0 - a) * g + a * tint
 
 
@@ -214,7 +216,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
     heights = [h for _, h in rows]
     ncol = len(names)
     fig = plt.figure(figsize=(2.55 * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
-    bar = mode in ("diff", "overlay")
+    bar = mode in ("diff", "overlay")        # "abs" (red by |error|) carries no bar — the caption explains it
     gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.945 if bar else 0.995,
                   top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
     first = {}
@@ -230,15 +232,13 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             elif kind == "Unedited":
                 _panel(ax, col["cont"]["unedited"])
             elif kind == "Ground truth":
-                _panel(ax, col["gt"])
-                for sp in ax.spines.values():                     # the reference every row below is judged against
-                    sp.set_linewidth(2.0); sp.set_edgecolor("black")
+                _panel(ax, col["gt"])                             # the reference every row below is judged against
             else:
                 blk, ed = kind.split(":")
                 if mode == "diff":
                     _panel(ax, col[blk][ed] - col["gt"], diff=True, diff_scale=diff_scale)
-                elif mode == "overlay":
-                    _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale), rgb=True)
+                elif mode in ("overlay", "abs"):
+                    _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale, signed=(mode == "overlay")), rgb=True)
                 else:
                     _panel(ax, col[blk][ed])
             if c == 0:
@@ -311,8 +311,9 @@ if __name__ == "__main__":
     draw(data, a.context, out)
     draw(data, a.context, out.with_name(out.name + "_diff"), mode="diff", diff_scale=a.diff_scale)
     draw(data, a.context, out.with_name(out.name + "_overlay"), mode="overlay", diff_scale=a.diff_scale)
+    draw(data, a.context, out.with_name(out.name + "_abs"), mode="abs", diff_scale=a.diff_scale)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay) and .png / .json")
+    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay, _abs) and .png / .json")
