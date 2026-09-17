@@ -27,7 +27,8 @@ every strip stretched so a one-pixel-tall observation is readable; the ground-tr
 ground truth on the canonical signed-error map (red = under-prediction, green = over, zero = background),
 and `…_overlay` keeps each prediction's own grey and tints every ray red / green in proportion to its
 error, so a perfect ray is simply drawn (`--diff-scale`, default ±1.0, the true worst case, sets both);
-the bar for either sits at the right, spanning the six edit rows. `…_abs` is the overlay with a
+the bar for either sits at the right, spanning the six edit rows. `…_paired` stacks, for each edit row, the plain prediction with its `_diff` strip directly beneath
+(no gap). `…_abs` is the overlay with a
 single hue — red by absolute error, no bar (for a caption that explains it). In all three the error is
 taken on the prediction CLIPPED to [0, 1] — what the grey panel shows — so a raw output of −0.85 on an
 empty ray, drawn black like the truth, is not tinted; `--raw-error` uses the raw value instead, which is

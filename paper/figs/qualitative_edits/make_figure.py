@@ -171,6 +171,7 @@ from matplotlib.colors import LinearSegmentedColormap, to_rgb  # noqa: E402
 from pim.figures.waterfall import DARK_BG, DIFF_CMAP, GHOST_C, TARGET_C  # noqa: E402
 
 STRIP = 1.0          # height of one single-frame row, in waterfall-frame units
+PAIR_DIFF = 0.75     # the error strip under a prediction in the "paired" variant
 GAP, BIGGAP = 0.22, 0.8
 TEXT = "black"
 FRAME = "#6f6f6f"    # thin panel border
@@ -227,13 +228,21 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
          tint_gamma: float = 1.0, locators: bool = True, raw_error: bool = False,
          title_size: float = 16, label_size: float = 11):
     names = [v[0] for v in VARIANTS]
+    # "paired": every edit row is its plain prediction with the signed-error strip directly beneath (no gap)
+    def edit_rows(blk):
+        out = []
+        for ed in EDITORS:
+            out.append((f"{blk}:{ed}", STRIP))
+            if mode == "paired":
+                out.append((f"{blk}:{ed}:diff", PAIR_DIFF))
+            out.append(("gap", GAP))
+        return out[:-1]
     rows = ([("waterfall", context)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
-            + [x for ed in EDITORS for x in (("cont:" + ed, STRIP), ("gap", GAP))][:-1] + [("gap", BIGGAP)]
-            + [x for ed in EDITORS for x in (("cat:" + ed, STRIP), ("gap", GAP))][:-1])
+            + edit_rows("cont") + [("gap", BIGGAP)] + edit_rows("cat"))
     heights = [h for _, h in rows]
     ncol = len(names)
     fig = plt.figure(figsize=(2.55 * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
-    bar = mode in ("diff", "overlay")        # "abs" (red by |error|) carries no bar — the caption explains it
+    bar = mode in ("diff", "overlay", "paired")   # "abs" (red by |error|) carries no bar — the caption explains it
     gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.945 if bar else 0.995,
                   top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
     first = {}
@@ -251,8 +260,10 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             elif kind == "Ground truth":
                 _panel(ax, col["gt"])                             # the reference every row below is judged against
             else:
-                blk, ed = kind.split(":")
-                if mode == "diff":
+                blk, ed, *sub = kind.split(":")
+                if sub:                                           # the paired variant's error strip
+                    _panel(ax, error(col[blk][ed], col["gt"], raw_error), diff=True, diff_scale=diff_scale)
+                elif mode == "diff":
                     _panel(ax, error(col[blk][ed], col["gt"], raw_error), diff=True, diff_scale=diff_scale)
                 elif mode in ("overlay", "abs"):
                     _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale, signed=(mode == "overlay"),
@@ -269,28 +280,31 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
     # row labels just left of the first column; the group labels against them, not the page edge
     x_lab = first["waterfall"].get_position().x0 - 0.006
     for kind, ax in first.items():
+        if kind.endswith(":diff"):
+            continue
         if kind == "waterfall":
             lab = f"last {context} frames"
         elif ":" in kind:
             lab = kind.split(":")[1]
         else:
             lab = kind
-        y = (ax.get_position().y0 + ax.get_position().y1) / 2
+        lo = first.get(kind + ":diff", ax)                          # paired: centre on both strips
+        y = (lo.get_position().y0 + ax.get_position().y1) / 2
         fig.text(x_lab, y, lab, ha="right", va="center", fontsize=label_size, color=TEXT,
                  fontweight="bold" if kind == "Ground truth" else "normal")
     x_line = x_lab - 0.030
     for blk, text in (("cont", "Continuous\npositions"), ("cat", "Categorical\npositions")):
         axes = [first[f"{blk}:{ed}"] for ed in EDITORS]
-        y0 = axes[-1].get_position().y0; y1 = axes[0].get_position().y1
+        y0 = first.get(f"{blk}:{EDITORS[-1]}:diff", axes[-1]).get_position().y0; y1 = axes[0].get_position().y1
         fig.add_artist(plt.Line2D([x_line, x_line], [y0, y1], transform=fig.transFigure, color=TEXT, lw=0.9))
         fig.text(x_line - 0.024, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
                  fontsize=label_size + 1, color=TEXT)
     if bar:
         import matplotlib as mpl
-        y0 = first["cat:" + EDITORS[-1]].get_position().y0
+        y0 = first.get(f"cat:{EDITORS[-1]}:diff", first["cat:" + EDITORS[-1]]).get_position().y0
         y1 = first["cont:" + EDITORS[0]].get_position().y1
         cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
-        cb = mpl.colorbar.ColorbarBase(cax, cmap=DIFF_CMAP if mode == "diff" else OVERLAY_CMAP, orientation="vertical",
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=OVERLAY_CMAP if mode == "overlay" else DIFF_CMAP, orientation="vertical",
                                        norm=mpl.colors.Normalize(-diff_scale, diff_scale))
         cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=8, colors=TEXT, length=2)
         cb.outline.set_edgecolor(FRAME); cb.outline.set_linewidth(0.5)
@@ -338,10 +352,10 @@ if __name__ == "__main__":
     out = HERE / f"qualitative_edits_seed{seed}"
     kw = dict(diff_scale=a.diff_scale, tint_gamma=a.tint_gamma, locators=not a.no_locators, raw_error=a.raw_error)
     draw(data, a.context, out, **kw)
-    for mode in ("diff", "overlay", "abs"):
+    for mode in ("diff", "overlay", "abs", "paired"):
         draw(data, a.context, out.with_name(f"{out.name}_{mode}"), mode=mode, **kw)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay, _abs) and .png / .json")
+    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay, _abs, _paired) and .png / .json")
