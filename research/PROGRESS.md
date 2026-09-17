@@ -3,7 +3,77 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+_Last updated: 2026-09-16 17:40 PT — oth-adjacent-flip seed variance IN FLIGHT (first section)_
+
+## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)
+
+Sevan: the run's quoted contrasts (symdiff IM +0.66/0.51, ND +0.58, PI +0.40) carry no spread. Two
+sources, the `experiments/seed_variance` convention: RUN seeds (re-train at 390k with `--seed 1` /
+`--seed 2` via `scripts/drivers/replicate.sh`, plus the parent's step-421,875 checkpoint as the
+seed-0 member — val at 390k is within 0.1% of the 780k best, and the tables pool replicates into the
+parent row's ± at a matched budget) and PROBE seeds (10 seeds of the linear grid **and of the
+inverse map g**, which also reseeds IM-NN's retrieval bank → `runs/<run>/variance.json`).
+**Order (Sevan): seed 1 is trained, scored AND probed before seed 2 starts.** Stages: A parent probe
+seeds (~30 min) → B seed 1 train 390k (~10 h) + seed-0 ckpt member + score → C probe seeds on both
+(~1 h) → D seed 2 (~10 h) → E probe seeds. ETA ~14:00–17:00 on 2026-09-17 (rate read from the
+heartbeat once training starts; the parent ran 8.4 steps/s on the 4090, `L-oth-20m` 11.2 here).
+**Sevan may stop this in the morning to use the GPU and resume later:** `systemctl --user stop
+oth_adjflip_seeds oth_adjflip_seeds_watch`, then relaunch the same `systemd-run` command — finished
+stages skip, and an interrupted training resumes from `ckpt/latest.pt` (replicate.sh now passes
+`--resume`; it previously died on train.py's guard). The driver exports
+`PIM_SKIP_TOPICS=training_curve`.
+Prep (commit 7d08991): IM/IM-NN section in `probe_seeds_othello.py` (`--im-seeds`, `--im-points`,
+`--out`); its canonical edit point is now the best arm under **symdiff** — `scores.json["best"]` is
+keyed on the UNION index, which named pt 4 where the tables quote pt 5; `RetrievalBank.r2`
+subsamples to 20k held-out rows (Othello's full set is ~450k against a 1.8M-row bank). Smoke:
+1 linear seed + 1 IM seed on the parent (3.0 min / 6 s per seed; artefact in
+`experiments/seed_variance/scores/adjflip_probeseeds_smoke_2026-09-16.json`), and a 200→400-step
+Othello replicate train + resume in `runs/_pipeline_smoke/L-oth-adjflip-smoke__seed1`.
+_Previous: 2026-09-16 13:55 PT
+
+## ✅ dw-128ray chain — 2026-09-15 20:57 → 2026-09-16 13:45 PT, unit `dw_128ray` — DONE (`scripts/drivers/dw_128ray.sh`, logs `logs/ray_ablation/dw_128ray/`, `logs/dw_128ray_fac/`)
+
+**Outcome (13:45):** dw-128ray lands on dw-noiseless on every column (cartesian IM +0.57/0.32, PI +0.24/1.57; appearance-fac LIN 0.26 / MLP 0.71, PI −0.00, ND +0.54, GS +0.31, IM +0.57) — the coarse-ray gains are a RAY-COUNT effect, not disc size. Recorded: `findings/ray-ablation.md` addendum, REGISTRY run row, both table notebooks re-executed. Hardware: two hard freezes during stage D (07:22, ~10:20; journal ends abruptly, no oops/OOM/Xid) → Sevan replaced the PSU; the GPU whined at 530 W on the new PSU, so the last relaunch ran under `nvidia-smi -pl 400` (Sevan raised it back later). One slip: relaunch #5 ran master_eval without `PIM_SKIP_TOPICS=training_curve`, which scored `L-dw-20m_s001000` / `s004000` (complete, valid, unrequested) before I stopped it; the driver now exports the guard.
+**Same day, parked:** Table 1b (inverse-map R² beside retrieval R²) is in the paper notebook; the retrieval column is BLANK until `inverse_map.nn_r2` is folded into the scores — patch script ready (`scratchpad/patch_master_eval_nn_r2.py`, NOT applied; ~2 h GPU for all runs, ~50 min for the listed ones). Sevan: hold. Also this session: `experiments/waterfall_gallery/` (six edit waterfalls), `experiments/history_rewrite/` (IM at every history step on dw-noiseless: rewritten history alone carries the edit, +0.65/0.48; +IM at EF +0.63/0.36 vs canonical +0.61/0.36).
+
+Sevan: a 128-ray entry that matches the 5/8/16-ray family EXACTLY — dw-8ray geometry (radius 1.0, wall rays
+dropped, max-edit-attempts 2000) with 130 cast / 128 kept rays. dw-noiseless is radius 0.5 / 128 cast / no drop,
+so until now ray count and disc size were confounded between it and the coarse-ray family. Stages: B generate
+(eval / edits / probe 120k + 250k / 20M corpus 410 GB / edit selection, ~2 h) → C train
+`runs/ray_ablation/L-dw-128ray-20m` 780k (~8 h on the 5090) → D master_eval in BOTH bases + both table
+notebooks (~40 min) → E appearance-fac (`probe_target_fit.sh`, `logs/dw_128ray_fac/`, ~1 h). **ETA ~09:00 PT
+2026-09-16.** Every stage idempotent; relaunch the same unit command to resume (train `--resume`).
+Prep this session: `bigcorpus.INSTANCES["dw-128ray"]` (+ the `dw-16ray` block pulled from the unmerged
+`dw_16ray` branch, identical text, so its seed ranges are forbidden here too); instance.json; run listed in
+`build_paper_tables_and_figs` (before 16-ray) and `build_full_tables`; master_eval `dw_extra_targets` row
+(nbformat — Read cap); REGISTRY instance + run rows. Disk: 680 GB free after deleting three orphaned 15 GB
+`.scratch/tmp*.npy` (arms.py scratch memmaps from a 2026-09-10 crash). Generator smoke with the family flags:
+128-wide obs, 100/100 edits placed. Heartbeat gpu column shows an NVML driver/library mismatch — cosmetic (torch
+sees the 5090); a reboot clears it. **When done:** read `scores.json`, update `findings/ray-ablation.md`
+(128 vs 16 vs noiseless: ray count or disc size?), flip the REGISTRY run row from IN FLIGHT, re-render tables.
+_Previous: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+**2026-09-15 (evening) — near-teleport pilot (dw-noiseless):** teleports INSIDE the 1.6-unit exclusion zone
+edit as well as canonical ones (IM +0.63/0.32 vs +0.60/0.33; PI +0.26/1.52 vs +0.23/1.61; GS ≈ 0), so a hole in
+the joint support does not break IM on discworld; the adjacent-noflip failure is a code-factorisation matter,
+not off-support per se. `experiments/near_teleport_pilot/`, `findings/inverse-probe.md`, scratch note. The
+repulsion variant is OFF the table as the missing "nothing edits" discworld cell; an equality coupling remains.
+
+**2026-09-15 (later) — IM by reachability on Othello (paper-theory check):** on adjacent-noflip IM lands on the
+ordinary reachable single-flip cases (+0.53 symdiff, n 29) and fails on cases with no counterfactual board
+(−0.17, fid 1.41, n 30); on standard and adjacent-flip IM lands on both subsets (+0.70…+0.76). The inverse map
+generalises past reachability only where colour varies independently in training (flips). Recorded in
+`findings/inverse-probe.md` (dated entry) and the scratch addendum; JSONs `ceiling_symdiff_*.json`.
+Candidate discworld cell for the paper's matrix: couple the two discs' positions in the generator.
+
+**2026-09-15 (paper session) — Othello Edit-Index CEILING under the symdiff headline measured:** ≈ **+0.91** on
+all three instances with reachable counterfactual boards (standard 13 ordinary cases: +0.909 symdiff / +0.692
+union; adjacent 29: +0.916; adjacent-flip 32: +0.908), unedited −0.94 … −0.98. Standard ND recovers 91%, PI 83%.
+⚠ GS (best full-bench arm) is destructive on the 13-case subset (fid 2.89) — check its per-case fidelity.
+Script `experiments/adjacent_flip_ablation/scripts/ceiling_symdiff.py`, scores `…/scores/ceiling_symdiff_*.json`,
+scratch `2026-09-15-othello-ceiling-symdiff.md`, findings addendum in `edit-direction-alignment.md`, REGISTRY row.
+Owed: bootstrap the ceiling; re-measure the discworld overwrite-oracle ceiling (+0.91, 2026-09-07) on the
+1000-case protocol bench before the paper pairs the two.
 
 ## ✅ dw-8ray-obs5 chain — 2026-09-13 17:50 → 2026-09-14 07:29 PT, unit `dw_8ray_obs5` — DONE (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
 
