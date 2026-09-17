@@ -3,9 +3,21 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-16 17:40 PT — oth-adjacent-flip seed variance IN FLIGHT (first section)_
+_Last updated: 2026-09-17 09:30 PT — oth-adjacent-flip seed variance PAUSED at seed 2 step 160k (first section)_
 
 ## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)
+
+**⏸ PAUSED 2026-09-17 09:25 PT at Sevan's request (he wants the GPU).** Stages A–C are DONE: the
+parent, `__seed0_s421875` (the parent's own checkpoint at a matched budget) and `__seed1` are all
+scored AND carry 10 probe seeds each. Seed 2 stopped at step 160,000/390,000 with `ckpt/latest.pt`
+written. **To resume, relaunch both unit commands from the driver's header** — A–C skip, seed 2
+continues from its checkpoint (~5.8 h train + ~35 min probe seeds).
+**Results so far (symdiff, best arm):** parent +0.399/2.09 PI, +0.138/1.75 GS, +0.664/0.51 IM ·
+seed-0 ckpt +0.364/1.90, +0.077/2.54, +0.639/0.50 · seed 1 +0.379/1.86, +0.116/2.86, +0.616/0.40.
+Training-seed spread at the matched budget: PI 0.015, GS 0.039, IM 0.023; every editor keeps its
+best point. Probe-seed spread (10 seeds): skill ±0.0008, PI ±0.007–0.014, ND ±0.003–0.005,
+IM ±0.017–0.026 — so refitting g moves IM about as much as retraining does. GS is NOT probe-reseeded
+(that needs the MLP grid refitted, ~90 min/member).
 
 Sevan: the run's quoted contrasts (symdiff IM +0.66/0.51, ND +0.58, PI +0.40) carry no spread. Two
 sources, the `experiments/seed_variance` convention: RUN seeds (re-train at 390k with `--seed 1` /
