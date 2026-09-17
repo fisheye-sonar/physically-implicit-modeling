@@ -10,8 +10,8 @@ scenario since their rules differ. Boards are replayed under the instance's own 
 distribution), Ground truth (post-edit board, uniform over its legal moves — the reference the Edit
 Index is scored against), PI / GS / IM (post-edit board, the distribution after the write at the run's
 scored best arm under the symmetric-difference construction, called exactly as the scorer calls them:
-`linear_arm` pinv, `grad_steer_arm`, `inverse_arms`). Squares are tinted yellow by probability mass: fully at `--tint-scale` (0.2, a uniform over five
-legal moves) and (p / scale)^`--gamma` below; the edited tile is outlined pink (`--no-locator` drops it).
+`linear_arm` pinv, `grad_steer_arm`, `inverse_arms`). Squares are tinted yellow by probability mass: fully at `--tint-scale` (0.02 — any square carrying
+more than 2 % of the mass) and (p / scale)^`--gamma` below; the edited tile is outlined pink (`--no-locator` drops it).
 
 **Layouts.** `rows` (default): variants down, the five conditions across, repeated per game — 5·n boards
 wide by 4 tall, the paper-width shape. `cols`: the sketch's arrangement, variants across and conditions

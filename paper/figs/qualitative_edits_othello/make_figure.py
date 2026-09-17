@@ -115,9 +115,9 @@ def compute(run: str) -> dict:
 
 
 # ── drawing ──────────────────────────────────────────────────────────────────────────
-GREEN, LINE, TINT, EDIT_C = "#33a852", "#1e1e1e", "#ffcc00", "#ff4fa3"
+GREEN, LINE, TINT, EDIT_C = "#33a852", "#1e1e1e", "#ffe600", "#ff4fa3"
 DISC_R = 0.38
-TINT_SCALE = 0.2      # the probability at which a square is fully tinted (a uniform over 5 legal moves)
+TINT_SCALE = 0.02     # the probability at which a square is fully tinted (Sevan: 10x louder than 0.2)
 
 
 def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.6,
