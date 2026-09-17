@@ -113,7 +113,9 @@ def predictions(model, run_dir: Path, inst: str, sc: dict, obs, clean, vis, sim:
     b, a = bench_for(model, sc, obs, clean, vis, sim, target, basis)
     recipe = dwa.probe_recipe(target, inst, n_seq=30_000)
     cache = run_dir / "probes"
-    out = {"unedited": dwa.unsteered_rollout(model, b)[0, 0], "changes_tile": bool(a["change_mask"].any())}
+    cx = lambda m: float(np.where(np.asarray(m))[0].mean()) if np.asarray(m).any() else float("nan")  # noqa: E731
+    out = {"unedited": dwa.unsteered_rollout(model, b)[0, 0], "changes_tile": bool(a["change_mask"].any()),
+           "ghost_x": cx(a["zones"].ghost[0]), "target_x": cx(a["zones"].target[0])}   # ray centres at the edit frame
     arm = {ed: best_arm(scores, target if target != "full" else basis, ed) for ed in EDITORS}
     lin = dwa.fit_probes(model, target=target, family="linear", basis_name=basis, cache_dir=cache,
                          log=None, require_cached=True, **recipe)
@@ -178,14 +180,25 @@ OVERLAY_ALPHA = 0.85     # a fully wrong ray keeps a trace of its own grey under
 OVERLAY_CMAP = LinearSegmentedColormap.from_list("pim_overlay", [GHOST_C, "#8c8c8c", TARGET_C])
 
 
-def overlay_rgb(pred: np.ndarray, gt: np.ndarray, scale: float, signed: bool = True) -> np.ndarray:
-    """The prediction drawn in grey, each ray tinted in proportion to |prediction − truth| / scale
+def error(pred: np.ndarray, gt: np.ndarray, raw: bool = False) -> np.ndarray:
+    """prediction − truth. By default the prediction is CLIPPED to the observation range [0, 1] first,
+    so the tint reflects what the grey panel shows: a raw output of −0.85 on an empty ray is drawn
+    black, as the truth is, and is not an error to the eye. The scorer does not clip (``zone_rmse``
+    uses the raw rollout, so that −0.85 IS error in the Edit Index); ``raw=True`` reproduces that."""
+    pred, gt = np.asarray(pred, float), np.asarray(gt, float)
+    return (pred if raw else np.clip(pred, 0.0, 1.0)) - gt
+
+
+def overlay_rgb(pred: np.ndarray, gt: np.ndarray, scale: float, signed: bool = True,
+                gamma: float = 1.0, raw: bool = False) -> np.ndarray:
+    """The prediction drawn in grey, each ray tinted in proportion to (|prediction − truth| / scale)^gamma
     — a perfect ray is just its grey. ``signed``: red for under-prediction, green for over;
-    otherwise red alone, by absolute error."""
+    otherwise red alone, by absolute error. ``gamma`` > 1 mutes small errors (an intensity error of
+    0.15 is invisible in grey but tints at gamma 1), < 1 amplifies them. ``raw``: see ``error``."""
     pred, gt = np.asarray(pred, float), np.asarray(gt, float)
     g = np.clip(pred, 0.0, 1.0)[..., None].repeat(3, -1)
-    err = pred - gt
-    a = OVERLAY_ALPHA * np.clip(np.abs(err) / scale, 0.0, 1.0)[..., None]
+    err = error(pred, gt, raw)
+    a = OVERLAY_ALPHA * np.clip(np.abs(err) / scale, 0.0, 1.0)[..., None] ** gamma
     red = np.array(to_rgb(GHOST_C))
     tint = np.where((err < 0)[..., None], red, np.array(to_rgb(TARGET_C))) if signed else red
     return (1.0 - a) * g + a * tint
@@ -207,7 +220,11 @@ def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0, 
         sp.set_linewidth(0.5); sp.set_edgecolor(FRAME)
 
 
+ORIGIN_C, DEST_C = "#00bcd4", "#ff4fa3"     # cyan = where the edited disc came from, pink = where it was moved to
+
+
 def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_scale: float = 1.0,
+         tint_gamma: float = 1.0, locators: bool = True, raw_error: bool = False,
          title_size: float = 16, label_size: float = 11):
     names = [v[0] for v in VARIANTS]
     rows = ([("waterfall", context)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
@@ -236,11 +253,17 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             else:
                 blk, ed = kind.split(":")
                 if mode == "diff":
-                    _panel(ax, col[blk][ed] - col["gt"], diff=True, diff_scale=diff_scale)
+                    _panel(ax, error(col[blk][ed], col["gt"], raw_error), diff=True, diff_scale=diff_scale)
                 elif mode in ("overlay", "abs"):
-                    _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale, signed=(mode == "overlay")), rgb=True)
+                    _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale, signed=(mode == "overlay"),
+                                           gamma=tint_gamma, raw=raw_error), rgb=True)
                 else:
                     _panel(ax, col[blk][ed])
+            if locators and kind != "waterfall":
+                for key, colr in (("ghost_x", ORIGIN_C), ("target_x", DEST_C)):
+                    x = col["cont"].get(key, float("nan"))
+                    if np.isfinite(x):
+                        ax.axvline(x, color=colr, lw=1.3, alpha=0.95)
             if c == 0:
                 first[kind] = ax
     # row labels just left of the first column; the group labels against them, not the page edge
@@ -286,6 +309,11 @@ if __name__ == "__main__":
     ap.add_argument("--max-tries", type=int, default=50)
     ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions for this seed (.scratch/)")
     ap.add_argument("--diff-scale", type=float, default=1.0, help="± range of the error map in the _diff variant")
+    ap.add_argument("--tint-gamma", type=float, default=1.0, help="exponent on |error|/scale for the overlay tints")
+    ap.add_argument("--no-locators", action="store_true", help="drop the cyan (origin) / pink (destination) lines")
+    ap.add_argument("--raw-error", action="store_true",
+                    help="tint by the RAW prediction − truth (the scorer's quantity; predictions below 0 or above 1 "
+                         "count) instead of the clipped, visible one")
     a = ap.parse_args()
     import pickle
     seed = a.seed
@@ -308,10 +336,10 @@ if __name__ == "__main__":
         print("⚠ on some variant the teleport does not change a factorised tile — the categorical rows there "
               "ask for no change (use --find)")
     out = HERE / f"qualitative_edits_seed{seed}"
-    draw(data, a.context, out)
-    draw(data, a.context, out.with_name(out.name + "_diff"), mode="diff", diff_scale=a.diff_scale)
-    draw(data, a.context, out.with_name(out.name + "_overlay"), mode="overlay", diff_scale=a.diff_scale)
-    draw(data, a.context, out.with_name(out.name + "_abs"), mode="abs", diff_scale=a.diff_scale)
+    kw = dict(diff_scale=a.diff_scale, tint_gamma=a.tint_gamma, locators=not a.no_locators, raw_error=a.raw_error)
+    draw(data, a.context, out, **kw)
+    for mode in ("diff", "overlay", "abs"):
+        draw(data, a.context, out.with_name(f"{out.name}_{mode}"), mode=mode, **kw)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
