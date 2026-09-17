@@ -431,7 +431,8 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
 @torch.no_grad()
 def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_games: int,
                  seed: int = 0, k: int | None = None, points=None,
-                 uns_probs: np.ndarray | None = None, log=print) -> tuple[list[dict], dict]:
+                 uns_probs: np.ndarray | None = None, log=print,
+                 return_probs: bool = False):
     """IM (h′ = g(board_post) at the last position) and IM-NN (the mean residual of the k
     training boards nearest the target board, Hamming) at every residual point, on the
     canonical cases. g: one-hot mine/theirs board (64 × 3) → residual, the mirror of the
@@ -439,7 +440,8 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     BY GAME as ``fit_probe_grid``) and cached in ``cache_dir`` (kind ``inverse_map``); ``rules`` =
     ``corpus.rules_of(instance)``, to replay the bench histories into boards.
     Returns the arm records (canonical scorecard + guard when ``uns_probs`` is given) and
-    ``{"g_r2": [...], "g_rmse": [...]}``."""
+    ``{"g_r2": [...], "g_rmse": [...]}``; with ``return_probs`` also ``{(editor, point): (n_cases, 64)
+    move distributions}`` — the qualitative figure draws them (2026-09-17)."""
     from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
     from pim.environments.othello.bench import case_targets
     from pim.environments.othello.data import (N_CLASSES, N_TILES, board_probs, canonical_vocab,
@@ -471,7 +473,7 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     Xpost_t = torch.from_numpy(onehot(s_post)).to(DEV)
     X_tr_t = torch.from_numpy(X_all[tr_idx]).to(DEV)
     okind = getattr(model, "output_kind", "logits")
-    recs, stats = [], {"g_r2": [], "g_rmse": [], "nn_r2": []}
+    recs, stats, probs_by = [], {"g_r2": [], "g_rmse": [], "nn_r2": []}, {}
     for ell in (points if points is not None else range(model.n_layers + 1)):
         fname, prov = store.key(model, kind="inverse_map", target="mine-onehot", n_seq=n_seq,
                                 split="sequence", seed=int(seed), hidden=INVERSE_HIDDEN,
@@ -519,6 +521,8 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
             if editor == "IM-NN":
                 rec["k"] = int(bank.k)
             recs.append(rec)
+            if return_probs:
+                probs_by[(editor, int(ell))] = probs.copy()
         del bank
         torch.cuda.empty_cache()
-    return recs, stats
+    return (recs, stats, probs_by) if return_probs else (recs, stats)
