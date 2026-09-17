@@ -164,7 +164,9 @@ def build(seed: int, context: int) -> dict:
 # ``gray`` on the dark panel background, fixed 0–1 range, nearest interpolation. The page stays
 # white and the text black. The ``diff`` variant draws the six edit rows as prediction − ground
 # truth on the canonical signed-error map (red = under-prediction, green = over, zero = background).
-from pim.figures.waterfall import DARK_BG, DIFF_CMAP, TARGET_C  # noqa: E402
+from matplotlib.colors import LinearSegmentedColormap, to_rgb  # noqa: E402
+
+from pim.figures.waterfall import DARK_BG, DIFF_CMAP, GHOST_C, TARGET_C  # noqa: E402
 
 STRIP = 1.0          # height of one single-frame row, in waterfall-frame units
 GAP, BIGGAP = 0.22, 0.8
@@ -172,11 +174,28 @@ TEXT = "black"
 FRAME = "#6f6f6f"    # thin panel border
 
 
-def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0):
+OVERLAY_ALPHA = 0.85     # a fully wrong ray keeps a trace of its own grey under the tint
+OVERLAY_CMAP = LinearSegmentedColormap.from_list("pim_overlay", [GHOST_C, "#8c8c8c", TARGET_C])
+
+
+def overlay_rgb(pred: np.ndarray, gt: np.ndarray, scale: float) -> np.ndarray:
+    """The prediction drawn in grey, each ray tinted toward red (under-prediction) or green (over)
+    in proportion to |prediction − truth| / scale — a perfect ray is just its grey."""
+    pred, gt = np.asarray(pred, float), np.asarray(gt, float)
+    g = np.clip(pred, 0.0, 1.0)[..., None].repeat(3, -1)
+    err = pred - gt
+    a = OVERLAY_ALPHA * np.clip(np.abs(err) / scale, 0.0, 1.0)[..., None]
+    tint = np.where((err < 0)[..., None], np.array(to_rgb(GHOST_C)), np.array(to_rgb(TARGET_C)))
+    return (1.0 - a) * g + a * tint
+
+
+def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0, rgb: bool = False):
     img = np.asarray(img)
-    if img.ndim == 1:
-        img = img[None, :]
-    if diff:
+    if img.ndim == (2 if rgb else 1):
+        img = img[None]
+    if rgb:
+        ax.imshow(img, aspect="auto", interpolation="nearest")
+    elif diff:
         ax.imshow(img, cmap=DIFF_CMAP, vmin=-diff_scale, vmax=diff_scale, aspect="auto", interpolation="nearest")
     else:
         ax.imshow(img, cmap="gray", vmin=0.0, vmax=1.0, aspect="auto", interpolation="nearest")
@@ -195,8 +214,9 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
     heights = [h for _, h in rows]
     ncol = len(names)
     fig = plt.figure(figsize=(2.55 * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
-    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.995,
-                  top=0.94, bottom=0.085 if mode == "diff" else 0.01, wspace=0.10, hspace=0.0)
+    bar = mode in ("diff", "overlay")
+    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.945 if bar else 0.995,
+                  top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
     first = {}
     for c, name in enumerate(names):
         col = fig_data["cols"][name]
@@ -212,11 +232,13 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             elif kind == "Ground truth":
                 _panel(ax, col["gt"])
                 for sp in ax.spines.values():                     # the reference every row below is judged against
-                    sp.set_linewidth(2.2); sp.set_edgecolor(TARGET_C)
+                    sp.set_linewidth(2.0); sp.set_edgecolor("black")
             else:
                 blk, ed = kind.split(":")
                 if mode == "diff":
                     _panel(ax, col[blk][ed] - col["gt"], diff=True, diff_scale=diff_scale)
+                elif mode == "overlay":
+                    _panel(ax, overlay_rgb(col[blk][ed], col["gt"], diff_scale), rgb=True)
                 else:
                     _panel(ax, col[blk][ed])
             if c == 0:
@@ -238,17 +260,18 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         axes = [first[f"{blk}:{ed}"] for ed in EDITORS]
         y0 = axes[-1].get_position().y0; y1 = axes[0].get_position().y1
         fig.add_artist(plt.Line2D([x_line, x_line], [y0, y1], transform=fig.transFigure, color=TEXT, lw=0.9))
-        fig.text(x_line - 0.012, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
+        fig.text(x_line - 0.024, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
                  fontsize=label_size + 1, color=TEXT)
-    if mode == "diff":
+    if bar:
         import matplotlib as mpl
-        cax = fig.add_axes([0.42, 0.018, 0.20, 0.011])
-        cb = mpl.colorbar.ColorbarBase(cax, cmap=DIFF_CMAP, orientation="horizontal",
+        y0 = first["cat:" + EDITORS[-1]].get_position().y0
+        y1 = first["cont:" + EDITORS[0]].get_position().y1
+        cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=DIFF_CMAP if mode == "diff" else OVERLAY_CMAP, orientation="vertical",
                                        norm=mpl.colors.Normalize(-diff_scale, diff_scale))
-        cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=8, colors=TEXT)
+        cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=8, colors=TEXT, length=2)
         cb.outline.set_edgecolor(FRAME); cb.outline.set_linewidth(0.5)
-        fig.text(0.52, 0.040, "edit rows: prediction − ground truth  (red = under-prediction, green = over)",
-                 ha="center", va="bottom", fontsize=9, color=TEXT)
+        cb.set_label("red = under-prediction, green = over", fontsize=9, color=TEXT, rotation=90, labelpad=4)
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
     fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")
     plt.close(fig)
@@ -287,8 +310,9 @@ if __name__ == "__main__":
     out = HERE / f"qualitative_edits_seed{seed}"
     draw(data, a.context, out)
     draw(data, a.context, out.with_name(out.name + "_diff"), mode="diff", diff_scale=a.diff_scale)
+    draw(data, a.context, out.with_name(out.name + "_overlay"), mode="overlay", diff_scale=a.diff_scale)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff) and .png / .json")
+    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay) and .png / .json")
