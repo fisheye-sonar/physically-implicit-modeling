@@ -29,6 +29,10 @@ import numpy as np
 import torch
 
 matplotlib.use("Agg")
+matplotlib.rcParams.update({"font.family": "serif",
+                            "font.serif": ["Times New Roman", "Liberation Serif", "Nimbus Roman"],
+                            "mathtext.fontset": "stix",      # Times-like maths, should any appear
+                            "pdf.fonttype": 42, "ps.fonttype": 42})   # embed as TrueType, editable in the PDF
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import to_rgb  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
