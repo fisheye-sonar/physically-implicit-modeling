@@ -72,7 +72,7 @@ out_path = run / a.out
 var = json.loads(out_path.read_text()) if out_path.exists() else {}
 var.setdefault("probe_seeds", {})
 seeds, t0 = {}, time.time()
-for seed in range(a.seeds):
+for seed in range(a.seeds):   # --seeds 0 runs the IM section alone and leaves probe_seeds["mine"] as it is
     grid = oa.fit_probe_grid(model, data, families=("linear",), seed=seed, cache_dir=run / "probes", log=None)
     lin = {p: grid.probes[("mine", "linear", "sequence", p)] for p in range(NP)}
     skill = [probe_skill_from_stats(next(st for st in grid.stats if st["point"] == p and st["family"] == "linear"))
@@ -140,6 +140,12 @@ if a.im_seeds:
     print("inverse map: " + " ".join(
         f"{k}: EI {v['edit_index']['mean']:+.3f}±{v['edit_index']['sd'] or 0:.3f}"
         for k, v in im_summ["editors"].items()) + f"  [{(time.time() - t1) / 60:.1f} min]")
+
+if not a.seeds:
+    var["written"] = time.strftime("%Y-%m-%d %H:%M")
+    out_path.write_text(json.dumps(var, indent=1, default=float))
+    print("wrote", out_path.relative_to(REPO), "(inverse map only; linear record untouched)")
+    raise SystemExit
 
 sk_best = np.array([s["skill_by_point"][s["best_point"]] for s in seeds.values()])
 sk_pts = np.array([s["skill_by_point"] for s in seeds.values()])

@@ -1047,3 +1047,15 @@ one place the clean render is not the Bayes mean — the mean-reference spec's s
 - **Tonight's queued run** is `scripts/drivers/rescore_2026-09-12.sh` (launch instructions in its
   header). Until it runs, every table shows the OLD benches' numbers under the NEW headline
   construction; scores.json files stamped `2026-09-12.*` are the new protocol.
+
+## Othello residual streams overflow FP16 at the deep points (2026-09-16)
+
+`transformer_l_tokens` carries outlier residual features up to **~1.1e5** at points 5–8 (point 0:
+22). Half precision tops out at 65504, so anything that stores an Othello residual as `float16`
+silently gets ±inf in ~1 % of rows. Found in `RetrievalBank` (IM-NN's bank was `resid.half()` as a
+memory optimisation): every retrieval mean touching an inf row was inf, which made
+`RetrievalBank.r2` NaN. The bank is float32 since, and the constructor raises on non-finite input.
+Discworld peaks at ~3.5e3 and was never affected. The measured damage to the scored IM-NN arms was
+≤0.002 Edit Index — too few rows to move an aggregate over 1000 cases — so no recorded number
+changed; the pooled 20k-row R² was the only casualty. **Check the dynamic range before storing
+activations in half**, and prefer float32 for anything whose mean is taken.

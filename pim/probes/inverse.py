@@ -51,9 +51,14 @@ class RetrievalBank:
 
     ``metric="euclidean"``: distance in standardised state units (continuous states —
     discworld position + velocity). ``metric="onehot"``: agreement count between one-hot
-    rows, i.e. Hamming distance over categorical tiles (Othello boards). The residual bank
-    is held in half precision on the device (0.9 M × 512 rows fit in ~1 GB); the
-    distances are computed by one matmul per chunk — never a (chunk, rows, m) broadcast.
+    rows, i.e. Hamming distance over categorical tiles (Othello boards). The distances are
+    computed by one matmul per chunk — never a (chunk, rows, m) broadcast.
+
+    ⛔ The residual bank is FLOAT32 (2026-09-16). It was half — 0.9 M × 512 rows in ~1 GB —
+    until an Othello run showed why that is unsafe: this project's token models carry outlier
+    residual features up to ~1.1e5 at the deep points, above half's 65504, so ~1 % of rows
+    held ±inf and every retrieval mean touching them was inf. Discworld peaks at ~3.5e3 and was
+    never affected. The QUERY side stays half (one-hot boards / standardised states, both O(1)).
     """
 
     def __init__(self, states: torch.Tensor, resid: torch.Tensor, *,
@@ -61,7 +66,9 @@ class RetrievalBank:
         if metric not in ("euclidean", "onehot"):
             raise ValueError(f"metric must be 'euclidean' or 'onehot', got {metric!r}")
         self.k, self.metric = int(k), metric
-        self.H = resid.half()
+        if not torch.isfinite(resid).all():
+            raise ValueError("retrieval bank got non-finite residuals")
+        self.H = resid.float()
         if metric == "euclidean":
             self.mu = states.float().mean(0)
             self.sd = states.float().std(0).clamp_min(1e-6)
