@@ -21,5 +21,10 @@ drawn is what is scored. `--find` advances the seed until the teleport changes a
 on every variant (otherwise a categorical row asks for no change there; the sidecar JSON records
 which arms were used and whether each variant's tile changed).
 
-Drawing: white = empty ray, dark = disc (`gray_r`, fixed 0–1 range); no gridlines; every strip
-stretched so a one-pixel-tall observation is readable. Nothing on the figure names the environment.
+Drawing follows the canonical waterfall (`pim/figures/waterfall.py`): `gray` on the dark panel
+background, fixed 0–1 range, nearest interpolation; the page is white, the text black; no gridlines;
+every strip stretched so a one-pixel-tall observation is readable; the ground-truth row is framed in
+the locator green. A second file, `…_diff`, draws the six edit rows as prediction − ground truth on
+the canonical signed-error map (red = under-prediction, green = over, zero = background; `--diff-scale`,
+default ±1.0, the true worst case). Predictions are cached in `.scratch/` per seed so `--redraw`
+re-renders without reloading the five models. Nothing on the figure names the environment.

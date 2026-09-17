@@ -160,28 +160,43 @@ def build(seed: int, context: int) -> dict:
 
 
 # ── drawing ──────────────────────────────────────────────────────────────────────────
+# Observations are drawn exactly as the canonical waterfall draws them (pim/figures/waterfall.py):
+# ``gray`` on the dark panel background, fixed 0–1 range, nearest interpolation. The page stays
+# white and the text black. The ``diff`` variant draws the six edit rows as prediction − ground
+# truth on the canonical signed-error map (red = under-prediction, green = over, zero = background).
+from pim.figures.waterfall import DARK_BG, DIFF_CMAP, TARGET_C  # noqa: E402
+
 STRIP = 1.0          # height of one single-frame row, in waterfall-frame units
-GAP, BIGGAP = 0.35, 1.6
-CMAP = "gray_r"      # 0 = white (empty ray), dark = a disc
+GAP, BIGGAP = 0.22, 0.8
+TEXT = "black"
+FRAME = "#6f6f6f"    # thin panel border
 
 
-def _strip(ax, row: np.ndarray, vmin=0.0, vmax=1.0):
-    ax.imshow(np.asarray(row)[None, :], cmap=CMAP, vmin=vmin, vmax=vmax, aspect="auto", interpolation="nearest")
+def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0):
+    img = np.asarray(img)
+    if img.ndim == 1:
+        img = img[None, :]
+    if diff:
+        ax.imshow(img, cmap=DIFF_CMAP, vmin=-diff_scale, vmax=diff_scale, aspect="auto", interpolation="nearest")
+    else:
+        ax.imshow(img, cmap="gray", vmin=0.0, vmax=1.0, aspect="auto", interpolation="nearest")
+    ax.set_facecolor(DARK_BG)
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values():
-        sp.set_linewidth(0.5); sp.set_edgecolor("#9a9a9a")
+        sp.set_linewidth(0.5); sp.set_edgecolor(FRAME)
 
 
-def draw(fig_data: dict, context: int, out: Path, title_size: float = 16, label_size: float = 11):
+def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_scale: float = 1.0,
+         title_size: float = 16, label_size: float = 11):
     names = [v[0] for v in VARIANTS]
     rows = ([("waterfall", context)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
             + [x for ed in EDITORS for x in (("cont:" + ed, STRIP), ("gap", GAP))][:-1] + [("gap", BIGGAP)]
             + [x for ed in EDITORS for x in (("cat:" + ed, STRIP), ("gap", GAP))][:-1])
     heights = [h for _, h in rows]
     ncol = len(names)
-    fig = plt.figure(figsize=(2.55 * ncol + 1.9, 0.42 * sum(heights) + 1.0), facecolor="white")
-    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.17, right=0.995,
-                  top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
+    fig = plt.figure(figsize=(2.55 * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
+    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.995,
+                  top=0.94, bottom=0.085 if mode == "diff" else 0.01, wspace=0.10, hspace=0.0)
     first = {}
     for c, name in enumerate(names):
         col = fig_data["cols"][name]
@@ -190,21 +205,24 @@ def draw(fig_data: dict, context: int, out: Path, title_size: float = 16, label_
                 continue
             ax = fig.add_subplot(gs[r, c])
             if kind == "waterfall":
-                ax.imshow(col["context"], cmap=CMAP, vmin=0, vmax=1, aspect="auto", interpolation="nearest")
-                ax.set_xticks([]); ax.set_yticks([])
-                for sp in ax.spines.values():
-                    sp.set_linewidth(0.5); sp.set_edgecolor("#9a9a9a")
-                ax.set_title(name, fontsize=title_size, pad=8)
+                _panel(ax, col["context"])
+                ax.set_title(name, fontsize=title_size, pad=8, color=TEXT)
             elif kind == "Unedited":
-                _strip(ax, col["cont"]["unedited"])
+                _panel(ax, col["cont"]["unedited"])
             elif kind == "Ground truth":
-                _strip(ax, col["gt"])
+                _panel(ax, col["gt"])
+                for sp in ax.spines.values():                     # the reference every row below is judged against
+                    sp.set_linewidth(2.2); sp.set_edgecolor(TARGET_C)
             else:
                 blk, ed = kind.split(":")
-                _strip(ax, col[blk][ed])
+                if mode == "diff":
+                    _panel(ax, col[blk][ed] - col["gt"], diff=True, diff_scale=diff_scale)
+                else:
+                    _panel(ax, col[blk][ed])
             if c == 0:
                 first[kind] = ax
-    # row labels on the first column, group labels further left
+    # row labels just left of the first column; the group labels against them, not the page edge
+    x_lab = first["waterfall"].get_position().x0 - 0.006
     for kind, ax in first.items():
         if kind == "waterfall":
             lab = f"last {context} frames"
@@ -212,14 +230,27 @@ def draw(fig_data: dict, context: int, out: Path, title_size: float = 16, label_
             lab = kind.split(":")[1]
         else:
             lab = kind
-        ax.text(-0.04, 0.5, lab, transform=ax.transAxes, ha="right", va="center", fontsize=label_size)
+        y = (ax.get_position().y0 + ax.get_position().y1) / 2
+        fig.text(x_lab, y, lab, ha="right", va="center", fontsize=label_size, color=TEXT,
+                 fontweight="bold" if kind == "Ground truth" else "normal")
+    x_line = x_lab - 0.030
     for blk, text in (("cont", "Continuous\npositions"), ("cat", "Categorical\npositions")):
         axes = [first[f"{blk}:{ed}"] for ed in EDITORS]
         y0 = axes[-1].get_position().y0; y1 = axes[0].get_position().y1
-        fig.text(0.035, (y0 + y1) / 2, text, ha="center", va="center", rotation=90, fontsize=label_size + 1)
-        fig.add_artist(plt.Line2D([0.065, 0.065], [y0, y1], transform=fig.transFigure, color="#444", lw=0.9))
-    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight")
-    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight")
+        fig.add_artist(plt.Line2D([x_line, x_line], [y0, y1], transform=fig.transFigure, color=TEXT, lw=0.9))
+        fig.text(x_line - 0.012, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
+                 fontsize=label_size + 1, color=TEXT)
+    if mode == "diff":
+        import matplotlib as mpl
+        cax = fig.add_axes([0.42, 0.018, 0.20, 0.011])
+        cb = mpl.colorbar.ColorbarBase(cax, cmap=DIFF_CMAP, orientation="horizontal",
+                                       norm=mpl.colors.Normalize(-diff_scale, diff_scale))
+        cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=8, colors=TEXT)
+        cb.outline.set_edgecolor(FRAME); cb.outline.set_linewidth(0.5)
+        fig.text(0.52, 0.040, "edit rows: prediction − ground truth  (red = under-prediction, green = over)",
+                 ha="center", va="bottom", fontsize=9, color=TEXT)
+    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
+    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")
     plt.close(fig)
 
 
@@ -230,11 +261,20 @@ if __name__ == "__main__":
     ap.add_argument("--find", action="store_true",
                     help="advance the seed until the teleport changes a categorical tile on every variant")
     ap.add_argument("--max-tries", type=int, default=50)
+    ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions for this seed (.scratch/)")
+    ap.add_argument("--diff-scale", type=float, default=1.0, help="± range of the error map in the _diff variant")
     a = ap.parse_args()
+    import pickle
     seed = a.seed
+    cache = REPO / ".scratch" / f"qualitative_edits_seed{seed}_ctx{a.context}.pkl"
     for attempt in range(a.max_tries if a.find else 1):
         print(f"seed {seed}", flush=True)
-        data = build(seed, a.context)
+        if a.redraw and cache.exists():
+            data = pickle.load(open(cache, "rb"))
+        else:
+            data = build(seed, a.context)
+            cache.parent.mkdir(exist_ok=True)
+            pickle.dump(data, open(cache, "wb"))
         ok = all(c["cat"]["changes_tile"] for c in data["cols"].values())
         if ok or not a.find:
             break
@@ -246,8 +286,9 @@ if __name__ == "__main__":
               "ask for no change (use --find)")
     out = HERE / f"qualitative_edits_seed{seed}"
     draw(data, a.context, out)
+    draw(data, a.context, out.with_name(out.name + "_diff"), mode="diff", diff_scale=a.diff_scale)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "and .png / .json")
+    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff) and .png / .json")
