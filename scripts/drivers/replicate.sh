@@ -43,8 +43,11 @@ if [ -f "$ROOT/runs/$TOPIC/$RUN/best_model.pt" ] && [ -f "$ROOT/runs/$TOPIC/$RUN
    && tail -n 1 "$ROOT/runs/$TOPIC/$RUN/metrics.jsonl" | grep -q "\"step\": $STEPS"; then
   echo "  already trained — skipping" | tee -a "$LOGS/driver.log"
 else
+  # an interrupted replicate resumes from its own ckpt/latest.pt (train.py refuses the dir otherwise)
+  RESUME=()
+  [ -f "$ROOT/runs/$TOPIC/$RUN/ckpt/latest.pt" ] && { RESUME=(--resume); echo "  resuming from ckpt/latest.pt" | tee -a "$LOGS/driver.log"; }
   "$PY" scripts/train.py --env "$ENV" --arch "$ARCH_FLAG" "${REPR_FLAG[@]}" --instance "$INST" \
-      --topic "$TOPIC" --run-name "$RUN" --steps "$STEPS" --seed "$SEED" --replicate-of "$PARENT" \
+      --topic "$TOPIC" --run-name "$RUN" --steps "$STEPS" --seed "$SEED" --replicate-of "$PARENT" "${RESUME[@]}" \
       > "$LOGS/a_train.log" 2>&1 || fail "A train" "$(tail -20 "$LOGS/a_train.log")"
   ping "PIM $NAME: trained" "$(grep '^done' "$LOGS/a_train.log" | tail -1)"
 fi

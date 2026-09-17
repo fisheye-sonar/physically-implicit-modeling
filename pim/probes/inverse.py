@@ -18,6 +18,7 @@ Othello variants; retrieval edits where states repeat (discworld), never on Othe
 
 from __future__ import annotations
 
+import numpy as np
 import torch
 
 from pim.probes.base import FIT_BATCH, FIT_EPOCHS, FIT_LR, WorldStateProbe, fit_probe
@@ -27,6 +28,7 @@ INVERSE_HIDDEN = CANONICAL_HIDDEN     # the mirror: the canonical MLP probe's wi
 INVERSE_EPOCHS = FIT_EPOCHS
 INVERSE_SEED = 0
 RETRIEVAL_K = 10
+R2_ROWS = 20_000                       # held-out rows used for RetrievalBank.r2 (see its docstring)
 
 
 def fit_inverse_map(s_tr, h_tr, s_te, h_te, *, hidden: int = INVERSE_HIDDEN,
@@ -84,11 +86,21 @@ class RetrievalBank:
         return out
 
     @torch.no_grad()
-    def r2(self, s_te: torch.Tensor, h_te: torch.Tensor) -> float:
+    def r2(self, s_te: torch.Tensor, h_te: torch.Tensor, max_rows: int = R2_ROWS) -> float:
         """Held-out R² of the retrieval mean as a predictor of the residual — the same statistic
         as the inverse map's ``r2`` (``pim.metrics.decodability.r2`` against the TRAINING mean),
-        so the two instruments are compared on one axis (2026-09-16)."""
+        so the two instruments are compared on one axis (2026-09-16).
+
+        Every query scores the WHOLE bank, so the held-out set is subsampled to ``max_rows``
+        (deterministically, generator seed 0) — Othello's is ~450k rows against a 1.8M-row bank,
+        which is minutes per point for a number that is converged in the thousands.
+        """
         from pim.metrics.decodability import r2
 
+        if len(s_te) > max_rows:
+            idx = torch.from_numpy(
+                np.random.default_rng(0).choice(len(s_te), max_rows, replace=False)
+            ).to(s_te.device)
+            s_te, h_te = s_te[idx], h_te[idx]
         pred = self.mean(s_te).cpu().numpy()
         return float(r2(pred, h_te.float().cpu().numpy(), self.H.float().mean(0).cpu().numpy()))

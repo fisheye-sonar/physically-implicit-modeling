@@ -1,0 +1,252 @@
+{
+ "probe_seeds": {
+  "inverse_map": {
+   "summary": {
+    "n_seeds": 1,
+    "points": "canonical",
+    "n_games": 20000,
+    "edit_index": "edit_index_symdiff",
+    "canonical_point": 4,
+    "editors": {
+     "IM": {
+      "edit_index": {
+       "mean": 0.5578517994500166,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 0.3883858578435842,
+       "sd": null
+      },
+      "g_r2_at_arm": {
+       "mean": 0.9582622569214323,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     },
+     "IM-NN": {
+      "edit_index": {
+       "mean": -0.44069551997894824,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 2.07032011602958,
+       "sd": null
+      },
+      "g_r2_at_arm": {
+       "mean": 0.9582622569214323,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     }
+    },
+    "nn_r2_max": {
+     "mean": 0.905127387743121,
+     "sd": null
+    }
+   },
+   "seeds": {
+    "0": {
+     "g_r2": [
+      0.9582622569214323
+     ],
+     "nn_r2": [
+      0.905127387743121
+     ],
+     "editors": {
+      "IM": {
+       "edit_index": 0.5578517994500166,
+       "fidelity_ratio": 0.3883858578435842,
+       "point": 4,
+       "g_r2": 0.9582622569214323
+      },
+      "IM-NN": {
+       "edit_index": -0.44069551997894824,
+       "fidelity_ratio": 2.07032011602958,
+       "point": 4,
+       "g_r2": 0.9582622569214323
+      }
+     }
+    }
+   }
+  },
+  "mine": {
+   "summary": {
+    "n_seeds": 1,
+    "families": [
+     "linear"
+    ],
+    "n_games": 20000,
+    "best_skill": {
+     "mean": 0.9468852193419741,
+     "sd": null
+    },
+    "best_point": {
+     "values": [
+      4
+     ],
+     "n_distinct": 1
+    },
+    "skill_sd_across_points_per_seed": {
+     "mean": 0.1848096417357537,
+     "min": 0.1848096417357537,
+     "max": 0.1848096417357537
+    },
+    "skill_sd_across_seeds_per_point": null,
+    "unedited": {
+     "li_error_vs_post": 4.306,
+     "li_error_vs_pre": 0.006,
+     "edit_index_union": -0.6465925500776302,
+     "edit_index_symdiff": -0.9637233047339564,
+     "legal_mass": 0.9712355732917786,
+     "n_scored": 1000
+    },
+    "edit_index": "edit_index_symdiff",
+    "editors": {
+     "PI@own_best": {
+      "edit_index": {
+       "mean": 0.24650414944814583,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 4.261145222163758,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     },
+     "PI@seed0_best": {
+      "edit_index": {
+       "mean": 0.24650414944814583,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 4.261145222163758,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     },
+     "PI@canonical_edit_best": {
+      "edit_index": {
+       "mean": 0.40640048692423997,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 2.1002515058292452,
+       "sd": null
+      },
+      "points_used": [
+       2
+      ]
+     },
+     "ND@own_best": {
+      "edit_index": {
+       "mean": 0.3904536671628387,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 5.160211481421705,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     },
+     "ND@seed0_best": {
+      "edit_index": {
+       "mean": 0.3904536671628387,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 5.160211481421705,
+       "sd": null
+      },
+      "points_used": [
+       4
+      ]
+     },
+     "ND@canonical_edit_best": {
+      "edit_index": {
+       "mean": 0.34577432165566463,
+       "sd": null
+      },
+      "fidelity_ratio": {
+       "mean": 5.073297612264242,
+       "sd": null
+      },
+      "points_used": [
+       2
+      ]
+     }
+    }
+   },
+   "seeds": {
+    "0": {
+     "skill_by_point": [
+      0.38070849950149555,
+      0.875738035892323,
+      0.9217544865403788,
+      0.9393705134596211,
+      0.9468852193419741,
+      0.9453215353938186,
+      0.9403696410767697,
+      0.9399212362911267,
+      0.9398670239282153
+     ],
+     "best_point": 4,
+     "editors": {
+      "own_best": {
+       "PI": {
+        "alpha": 10.0,
+        "edit_index": 0.24650414944814583,
+        "fidelity_ratio": 4.261145222163758,
+        "point": 4
+       },
+       "ND": {
+        "alpha": 12.0,
+        "edit_index": 0.3904536671628387,
+        "fidelity_ratio": 5.160211481421705,
+        "point": 4
+       }
+      },
+      "seed0_best": {
+       "PI": {
+        "alpha": 10.0,
+        "edit_index": 0.24650414944814583,
+        "fidelity_ratio": 4.261145222163758,
+        "point": 4
+       },
+       "ND": {
+        "alpha": 12.0,
+        "edit_index": 0.3904536671628387,
+        "fidelity_ratio": 5.160211481421705,
+        "point": 4
+       }
+      },
+      "canonical_edit_best": {
+       "PI": {
+        "alpha": 10.0,
+        "edit_index": 0.40640048692423997,
+        "fidelity_ratio": 2.1002515058292452,
+        "point": 2
+       },
+       "ND": {
+        "alpha": 12.0,
+        "edit_index": 0.34577432165566463,
+        "fidelity_ratio": 5.073297612264242,
+        "point": 2
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "written": "2026-09-16 17:26"
+}
