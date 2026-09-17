@@ -1,6 +1,6 @@
 {
  "seed": 0,
- "layout": "rows",
+ "layout": "cols",
  "picks": {
   "Standard": [
    850

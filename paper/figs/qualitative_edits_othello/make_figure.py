@@ -115,24 +115,24 @@ def compute(run: str) -> dict:
 
 
 # ── drawing ──────────────────────────────────────────────────────────────────────────
-GREEN, LINE, TINT, EDIT_C = "#33a852", "#111111", "#ffe066", "#ff4fa3"
-DISC_R = 0.40
+GREEN, LINE, TINT, EDIT_C = "#33a852", "#1e1e1e", "#ffcc00", "#ff4fa3"
+DISC_R = 0.38
+TINT_SCALE = 0.2      # the probability at which a square is fully tinted (a uniform over 5 legal moves)
 
 
-def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.5,
-               tint_max: float = 0.85, locator: bool = True):
-    """One 8×8 board: green squares tinted by probability mass, black / white discs, the edited
-    tile outlined. ``board`` white 0 / blank 1 / black 2 (row-major, a1 top-left as in the data)."""
+def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.6,
+               tint_scale: float = TINT_SCALE, locator: bool = True):
+    """One 8×8 board: green squares tinted by probability mass — fully at ``tint_scale`` and above,
+    (p / tint_scale) ** gamma below — black / white discs, the edited tile outlined. ``board`` white 0 /
+    blank 1 / black 2 (row-major, a1 top-left as in the data)."""
     g, t = np.array(to_rgb(GREEN)), np.array(to_rgb(TINT))
     for sq in range(64):
         r, c = divmod(sq, 8)
-        a = tint_max * min(1.0, float(probs[sq])) ** gamma if probs[sq] > 0 else 0.0
-        ax.add_patch(Rectangle((c, 7 - r), 1, 1, facecolor=(1 - a) * g + a * t, edgecolor=LINE, linewidth=0.6))
+        a = min(1.0, float(probs[sq]) / tint_scale) ** gamma if probs[sq] > 0 else 0.0
+        ax.add_patch(Rectangle((c, 7 - r), 1, 1, facecolor=(1 - a) * g + a * t, edgecolor=LINE, linewidth=0.4))
         if board[sq] != 1:
             ax.add_patch(Circle((c + 0.5, 7 - r + 0.5), DISC_R, facecolor="black" if board[sq] == 2 else "white",
-                                edgecolor="#333333", linewidth=0.6, zorder=3))
-            ax.add_patch(Circle((c + 0.36, 7 - r + 0.64), DISC_R * 0.28, facecolor="white" if board[sq] == 2 else "#dddddd",
-                                edgecolor="none", alpha=0.35 if board[sq] == 2 else 0.9, zorder=4))
+                                edgecolor="#333333", linewidth=0.5, zorder=3))
     if locator and edited is not None:
         r, c = divmod(int(edited), 8)
         ax.add_patch(Rectangle((c, 7 - r), 1, 1, facecolor="none", edgecolor=EDIT_C, linewidth=2.2, zorder=5))
@@ -142,7 +142,8 @@ def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, 
         sp.set_visible(False)
 
 
-def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: float = 0.5, locator: bool = True,
+def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: float = 0.6, tint_scale: float = TINT_SCALE,
+         locator: bool = True,
          title_size: float = 13, label_size: float = 11):
     names = [v[0] for v in VARIANTS]
     n_games = len(next(iter(picks.values())))
@@ -168,7 +169,8 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
                 r_, c_ = cell(v, k, c)
                 ax = fig.add_subplot(gs[r_, c_])
                 board = col["board_pre"] if cond == "Unedited" else col["board_post"]
-                draw_board(ax, board[i], col["probs"][cond][i], col["pos"][i], gamma=gamma, locator=locator)
+                draw_board(ax, board[i], col["probs"][cond][i], col["pos"][i], gamma=gamma, tint_scale=tint_scale,
+                           locator=locator)
                 axes[(r_, c_)] = ax
     for c_, text in col_titles:
         axes[(0, c_)].set_title(text, fontsize=title_size, pad=6, color="black",
@@ -191,12 +193,13 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--games", type=int, default=2, help="board states per variant")
+    ap.add_argument("--games", type=int, default=1, help="board states per variant")
     ap.add_argument("--layout", choices=("rows", "cols"), default="rows",
                     help="rows: variants down, conditions across (wide); cols: the sketch's arrangement")
     ap.add_argument("--min-moves", type=int, default=12)
     ap.add_argument("--max-moves", type=int, default=45)
-    ap.add_argument("--gamma", type=float, default=0.5, help="tint = probability ** gamma")
+    ap.add_argument("--gamma", type=float, default=0.6, help="tint = (p / tint-scale) ** gamma, capped at 1")
+    ap.add_argument("--tint-scale", type=float, default=TINT_SCALE, help="probability at which a square is fully tinted")
     ap.add_argument("--no-locator", action="store_true", help="drop the outline on the edited tile")
     ap.add_argument("--recompute", action="store_true", help="ignore the cached writes")
     a = ap.parse_args()
@@ -218,7 +221,7 @@ if __name__ == "__main__":
         print(f"  {name:<16} cases {picks[name]}  moves in {[int(L[i]) for i in picks[name]]}  "
               f"arms {cols[name]['arms']}  EI {{{', '.join(f'{e} {x:+.2f}' for e, x in cols[name]['ei'].items())}}}")
     out = HERE / f"othello_edits_seed{a.seed}_{a.layout}"
-    draw(cols, picks, out, layout=a.layout, gamma=a.gamma, locator=not a.no_locator)
+    draw(cols, picks, out, layout=a.layout, gamma=a.gamma, tint_scale=a.tint_scale, locator=not a.no_locator)
     json.dump({"seed": a.seed, "layout": a.layout, "picks": picks,
                "arms": {n: cols[n]["arms"] for n in picks}, "moves": {n: [int(cols[n]["lengths"][i]) for i in picks[n]] for n in picks}},
               open(out.with_suffix(".json"), "w"), indent=1)
