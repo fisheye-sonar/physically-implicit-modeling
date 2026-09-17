@@ -172,8 +172,9 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
                 draw_board(ax, board[i], col["probs"][cond][i], col["pos"][i], gamma=gamma, tint_scale=tint_scale,
                            locator=locator)
                 axes[(r_, c_)] = ax
+    shown = lambda t: {"Unedited": "Unedited Pred"}.get(t, t)   # noqa: E731
     for c_, text in col_titles:
-        axes[(0, c_)].set_title(text, fontsize=title_size, pad=6, color="black",
+        axes[(0, c_)].set_title(shown(text), fontsize=title_size, pad=6, color="black",
                                 fontweight="bold" if text == "Ground truth" else "normal")
     if layout == "rows" and n_games > 1:     # a game label above each group of five
         for k in range(n_games):
@@ -183,7 +184,7 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
     for r_, text in row_labels:
         ax = axes[(r_, 0)]
         y = (ax.get_position().y0 + ax.get_position().y1) / 2
-        fig.text(ax.get_position().x0 - 0.008, y, text, ha="right", va="center", fontsize=label_size, color="black",
+        fig.text(ax.get_position().x0 - 0.008, y, shown(text), ha="right", va="center", fontsize=label_size, color="black",
                  fontweight="bold" if text == "Ground truth" else "normal")
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
     fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")

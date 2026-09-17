@@ -289,7 +289,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         elif ":" in kind:
             lab = kind.split(":")[1]
         else:
-            lab = kind
+            lab = {"Unedited": "Unedited Pred"}.get(kind, kind)
         lo = first.get(kind + ":diff", ax)                          # paired: centre on both strips
         y = (lo.get_position().y0 + ax.get_position().y1) / 2
         fig.text(x_lab, y, lab, ha="right", va="center", fontsize=label_size, color=TEXT,
