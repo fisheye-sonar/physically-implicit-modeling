@@ -228,7 +228,7 @@ ORIGIN_C, DEST_C = "#00bcd4", "#ff4fa3"     # cyan = where the edited disc came 
 
 def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_scale: float = 1.0,
          tint_gamma: float = 1.0, locators: bool = True, raw_error: bool = False,
-         title_size: float = 16, label_size: float = 11):
+         title_size: float = 24, label_size: float = 17):
     names = [v[0] for v in VARIANTS]
     # "paired": every edit row is its plain prediction with the signed-error strip directly beneath (no gap)
     def edit_rows(blk):
@@ -245,7 +245,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
     ncol = len(names)
     fig = plt.figure(figsize=(COL_W * ncol + 1.6, 0.40 * sum(heights) + 1.2), facecolor="white")
     bar = mode in ("diff", "overlay", "paired")   # "abs" (red by |error|) carries no bar — the caption explains it
-    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.13, right=0.945 if bar else 0.995,
+    gs = GridSpec(len(rows), ncol, figure=fig, height_ratios=heights, left=0.15, right=0.945 if bar else 0.995,
                   top=0.94, bottom=0.01, wspace=0.10, hspace=0.0)
     first = {}
     for c, name in enumerate(names):
@@ -294,12 +294,12 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         y = (lo.get_position().y0 + ax.get_position().y1) / 2
         fig.text(x_lab, y, lab, ha="right", va="center", fontsize=label_size, color=TEXT,
                  fontweight="bold" if kind == "Ground truth" else "normal")
-    x_line = x_lab - 0.030
+    x_line = x_lab - 0.040
     for blk, text in (("cont", "Continuous\npositions"), ("cat", "Categorical\npositions")):
         axes = [first[f"{blk}:{ed}"] for ed in EDITORS]
         y0 = first.get(f"{blk}:{EDITORS[-1]}:diff", axes[-1]).get_position().y0; y1 = axes[0].get_position().y1
         fig.add_artist(plt.Line2D([x_line, x_line], [y0, y1], transform=fig.transFigure, color=TEXT, lw=0.9))
-        fig.text(x_line - 0.024, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
+        fig.text(x_line - 0.030, (y0 + y1) / 2, text, ha="center", va="center", rotation=90,
                  fontsize=label_size + 1, color=TEXT)
     if bar:
         import matplotlib as mpl
@@ -308,9 +308,9 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         cax = fig.add_axes([0.958, y0, 0.010, y1 - y0])
         cb = mpl.colorbar.ColorbarBase(cax, cmap=OVERLAY_CMAP if mode == "overlay" else DIFF_CMAP, orientation="vertical",
                                        norm=mpl.colors.Normalize(-diff_scale, diff_scale))
-        cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=8, colors=TEXT, length=2)
+        cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=12, colors=TEXT, length=2)
         cb.outline.set_edgecolor(FRAME); cb.outline.set_linewidth(0.5)
-        cb.set_label("red = under-prediction, green = over", fontsize=9, color=TEXT, rotation=90, labelpad=4)
+        cb.set_label("red = under-prediction, green = over", fontsize=14, color=TEXT, rotation=90, labelpad=6)
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
     fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")
     plt.close(fig)
