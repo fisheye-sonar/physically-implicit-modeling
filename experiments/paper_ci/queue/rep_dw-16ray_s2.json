@@ -1,0 +1,43 @@
+{
+ "id": "rep_dw-16ray_s2",
+ "group": "dw-16ray",
+ "kind": "replicate",
+ "hosts": [
+  "remote"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/replicate.sh ray_ablation/L-dw-16ray-20m 2 390000 appearance-fac",
+ "env": {
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 22,
+ "est_hours": {
+  "lab": 7.2,
+  "remote": 9.27
+ },
+ "train_h_lab": 5.6,
+ "score_h": 0.8,
+ "n_scored": 2,
+ "inputs": [
+  "runs/ray_ablation/L-dw-16ray-20m",
+  "runs/ray_ablation/L-dw-16ray-20m__seed0_s*",
+  "runs/ray_ablation/L-dw-16ray-20m__seed2"
+ ],
+ "outputs": [
+  "runs/ray_ablation/L-dw-16ray-20m__seed2",
+  "runs/ray_ablation/L-dw-16ray-20m__seed0_s*",
+  "logs/rep_L-dw-16ray-20m_s2",
+  "runs/MOVES.md"
+ ],
+ "progress": {
+  "metrics": "runs/ray_ablation/L-dw-16ray-20m__seed2/metrics.jsonl",
+  "steps": 390000
+ },
+ "mem_max": null,
+ "max_attempts": 3,
+ "note": "train L-dw-16ray-20m__seed2 to 390k, lay out the seed-0 member if missing, score (both bases, appearance-fac)"
+}

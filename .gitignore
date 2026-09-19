@@ -228,3 +228,10 @@ logs/
 experiments/_archive/_smoke_runs/
 experiments/othello_causal_state/scores/per_square_*.npz
 experiments/othello_causal_state/scores/relevance_*.npz
+
+# experiments/paper_ci: the queue's runtime state and the dashboard's generated data are not records
+experiments/paper_ci/state/
+experiments/paper_ci/dashboard/state.json
+experiments/paper_ci/dashboard/ledger.json
+experiments/paper_ci/dashboard/ledger.csv
+experiments/paper_ci/dashboard/ledger.md

@@ -1,0 +1,43 @@
+{
+ "id": "rep_dw-blink_s2",
+ "group": "dw-blink",
+ "kind": "replicate",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/replicate.sh blink_ablation/L-dw-blink-20m 2 390000 appearance-fac",
+ "env": {
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 40,
+ "est_hours": {
+  "lab": 5.6,
+  "remote": 7.19
+ },
+ "train_h_lab": 4.0,
+ "score_h": 0.8,
+ "n_scored": 2,
+ "inputs": [
+  "runs/blink_ablation/L-dw-blink-20m",
+  "runs/blink_ablation/L-dw-blink-20m__seed0_s*",
+  "runs/blink_ablation/L-dw-blink-20m__seed2"
+ ],
+ "outputs": [
+  "runs/blink_ablation/L-dw-blink-20m__seed2",
+  "runs/blink_ablation/L-dw-blink-20m__seed0_s*",
+  "logs/rep_L-dw-blink-20m_s2",
+  "runs/MOVES.md"
+ ],
+ "progress": {
+  "metrics": "runs/blink_ablation/L-dw-blink-20m__seed2/metrics.jsonl",
+  "steps": 390000
+ },
+ "mem_max": null,
+ "max_attempts": 3,
+ "note": "train L-dw-blink-20m__seed2 to 390k, lay out the seed-0 member if missing, score (both bases, appearance-fac)"
+}

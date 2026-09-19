@@ -1,0 +1,23 @@
+{
+ "id": "xfer_dw-5ray_train",
+ "group": "dw-5ray",
+ "kind": "transfer",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "cpu",
+ "cmd": "rsync -a --partial --info=stats2 datasets/discworld/dw-5ray/train/ wsl-sevan:research/physically-implicit-modeling/datasets/discworld/dw-5ray/train/",
+ "env": {},
+ "deps": [],
+ "host_deps": {},
+ "priority": 6,
+ "est_hours": {
+  "lab": 0.2
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": "4G",
+ "max_attempts": 3,
+ "note": "push the dw-5ray training corpus to the remote (the 4090 can then train its replicates)"
+}

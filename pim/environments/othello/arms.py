@@ -446,7 +446,7 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     from pim.environments.othello.bench import case_targets
     from pim.environments.othello.data import (N_CLASSES, N_TILES, board_probs, canonical_vocab,
                                                flatten_rows, harvest_point, tokens_and_labels)
-    from pim.metrics.set_editability import move_fidelity_ratio, move_scorecard
+    from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio, move_scorecard
     from pim.probes.cache import ProbeCache
     from pim.probes.inverse import (INVERSE_EPOCHS, INVERSE_HIDDEN, RETRIEVAL_K, RetrievalBank,
                                     fit_inverse_map)
@@ -518,6 +518,7 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
                    **{kk: v for kk, v in card.items() if isinstance(v, (int, float))}}
             if uns_probs is not None:
                 rec["fidelity_ratio"] = move_fidelity_ratio(probs, uns_probs, bench.legal_post)
+                rec.update(move_fidelity_ci95(probs, uns_probs, bench.legal_post))
             if editor == "IM-NN":
                 rec["k"] = int(bank.k)
             recs.append(rec)

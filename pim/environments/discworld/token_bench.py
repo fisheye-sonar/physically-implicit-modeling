@@ -39,7 +39,7 @@ from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
 from pim.metrics.zone_editability import edit_index as zone_edit_index
-from pim.metrics.set_editability import move_fidelity_ratio, move_scorecard
+from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio, move_scorecard
 
 DEV, EF = dwb.DEV, dwb.EF
 
@@ -148,6 +148,7 @@ def scorecard(probs: np.ndarray, tb: TokenBench, uns: np.ndarray | None = None) 
                expected_frame(probs, tb.vocab)[tb.keep], _mask_zones(tb.zones, tb.keep)))}
     if uns is not None:
         out["fidelity_ratio"] = move_fidelity_ratio(probs, uns, tb.legal_post)
+        out.update(move_fidelity_ci95(probs, uns, tb.legal_post))
     return out
 
 

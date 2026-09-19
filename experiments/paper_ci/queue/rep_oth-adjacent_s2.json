@@ -1,0 +1,44 @@
+{
+ "id": "rep_oth-adjacent_s2",
+ "group": "oth-adjacent",
+ "kind": "replicate",
+ "hosts": [
+  "remote",
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/replicate.sh adjacency_ablation/L-oth-adjacent-20m 2 512000",
+ "env": {
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 50,
+ "est_hours": {
+  "lab": 13.9,
+  "remote": 17.99
+ },
+ "train_h_lab": 12.7,
+ "score_h": 0.6,
+ "n_scored": 2,
+ "inputs": [
+  "runs/adjacency_ablation/L-oth-adjacent-20m",
+  "runs/adjacency_ablation/L-oth-adjacent-20m__seed0_s*",
+  "runs/adjacency_ablation/L-oth-adjacent-20m__seed2"
+ ],
+ "outputs": [
+  "runs/adjacency_ablation/L-oth-adjacent-20m__seed2",
+  "runs/adjacency_ablation/L-oth-adjacent-20m__seed0_s*",
+  "logs/rep_L-oth-adjacent-20m_s2",
+  "runs/MOVES.md"
+ ],
+ "progress": {
+  "metrics": "runs/adjacency_ablation/L-oth-adjacent-20m__seed2/metrics.jsonl",
+  "steps": 512000
+ },
+ "mem_max": null,
+ "max_attempts": 3,
+ "note": "train L-oth-adjacent-20m__seed2 to 512k, lay out the seed-0 member if missing, score (both bases)"
+}

@@ -32,7 +32,7 @@ from pim.editors.pinv import pinv_step, readout_error, swap_class_logits
 from pim.environments.discworld.bench import (
     DEV, EF, K_ROLL, N_OBJ, SEED, Bench, _to_basis, dim_idx, restrict_mask)
 from pim.environments.discworld.grid_target import categorical_target, snapped_target
-from pim.metrics.zone_editability import edit_scorecard, fidelity_ratio, object_constants
+from pim.metrics.zone_editability import edit_scorecard, fidelity_ci95, fidelity_ratio, object_constants
 from pim.models.protocol import free_run
 from pim.probes.base import FIT_BATCH, FIT_EPOCHS, collect_residuals
 from pim.probes.cache import ProbeCache
@@ -359,6 +359,7 @@ def score(model, b: Bench, roll: np.ndarray, uns_card: dict | None = None) -> di
     c = edit_scorecard(roll, b.zones, b.gt_roll)
     if uns_card is not None:
         c["fidelity_ratio"] = fidelity_ratio(c, uns_card)
+        c.update(fidelity_ci95(c, uns_card))       # the guard's case-level interval (2026-09-18)
     return c
 
 

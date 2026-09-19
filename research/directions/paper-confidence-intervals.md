@@ -1,0 +1,74 @@
+# Seed spread on the paper's main numbers — `[in-frame]` — sub-questions 2, 3
+
+**Status:** `active` (Sevan, 2026-09-18) — queue built and smoked 2026-09-18 evening; launch pending
+Sevan's go. Reference implementation `experiments/paper_ci/` (protocol `harness/MULTIDAY.md`).
+
+## The question
+
+Every decodability, Edit Index and fidelity number in the paper's main tables (ten runs: four
+Othello, six discworld) is a single training seed. What is the spread under re-training, so the
+environment contrasts the paper leans on are read against it?
+
+## Decisions (Sevan, 2026-09-18)
+
+- **Readout: mean ± SD over training seeds, n stated** (Table 5 panel (a); the ± cells of Tables
+  1–2). **Secondary: the t-based 95% CI of the mean** (Table 5 panel (b)). Both come from the same
+  replicate sets (`pim.figures.tables.pool_replicates`; REGISTRY "replicate spread").
+- **n = 3**: the parent's own checkpoint at the matched budget (seed 0) + two re-trainings
+  (`scripts/train.py --replicate-of`, seeds 1 and 2). No third GPU is assumed.
+- **Budgets: Othello 512k steps, discworld 390k.** 780k everywhere would be ~250 GPU-hours at
+  5090 rates — six days on the two GPUs — and the window is 4–5 days. `L-oth-20m` has checkpoints
+  only at 256k / 512k / 780k, so its set is at 512k; the other Othello sets match it (their
+  492,188 checkpoints are 4% off). Discworld editability is flat from 64k (`findings/training-curve.md`)
+  and dw-noiseless already has its n = 3 at 390k. The paper says so in one sentence; the tables
+  print the budget beside every ±. The Othello point estimate drifts +0.58 → +0.61 → +0.62 over
+  256k / 512k / 780k, about one SD, so the 512k spread is a fair estimate of the 780k spread.
+- **Probe seeds are not re-measured per run**: the pilot found them an order of magnitude below
+  the training-seed spread (`findings/seed-variance.md`; skill ±0.0007, Edit Index ≤ 0.02). Each
+  replicate is re-scored in full (probes refitted, editors re-swept), so one draw of probe noise
+  sits inside every ±. Cheap extras at the tail of the queue: 10 probe seeds on `L-oth-20m` and
+  `L-dw-8ray-20m`, and on adjacent-flip's 512k members (its 390k probe seeds are parked).
+- **The guard gets a spread too** (every editor's `fid` column is pooled), and a guard verdict is
+  read as "k of n seeds".
+- **Case-level (bench-resampling) spread is recorded beside every arm from now on**
+  (`edit_index.case_stats`, `ratio_ci95`; REGISTRY "case-level spread") so the option exists later;
+  it is never added to the seed spread and is not quoted in the paper.
+- **Dataset variance is not measured** (20M-sequence corpora; the probe corpora's split variance is
+  the probe seed; one fixed bench per instance across seeds) — stated in the paper.
+- The supplemental runs (obs5, smooth, 8ray-tok, oth-mse) and the gridified probe layouts get
+  NO spread; the time goes to the main numbers.
+
+## The plan (`experiments/paper_ci/plan.py --show`)
+
+Twenty replicate / extension jobs + two corpus pushes + five probe-seed extras + one tables
+rebuild. Greedy two-host schedule from a cold start: **≈ 90 h wall on both hosts, ≈ 3.8 days**
+at 100% duty (lab RTX 5090 rate 1.0; WSL RTX 4090 rate 0.77). Data locality: dw-128ray and
+dw-blink on the lab only (406 GB corpora), dw-16ray on the remote only (its corpus lives there),
+dw-8ray / dw-5ray either side after a ~8 min corpus push, every Othello family either side.
+Priority: ray family → standard Othello and adjacent-flip → blink → adjacent / noflip → extras.
+Trim if needed: the two inert Othello rows at 390k instead of 512k save ~12 GPU-hours.
+
+## Bootstrap
+
+`experiments/paper_ci/README.md` (operate), `harness/MULTIDAY.md` (protocol). Launch =
+`rm experiments/paper_ci/state/PAUSED`. Dashboard `https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`.
+Ledger `experiments/paper_ci/dashboard/ledger.md`. Tables: `notebooks/build_paper_tables_and_figs.ipynb`
+(Table 5 panels via `T.table_seed_variance(F, which="sd")` / `which="ci"`).
+
+## Decision rules
+
+A contrast between two rows is "outside the seed spread" when it exceeds ~3 pooled SDs
+(n = 3 each). A guard verdict holds when every seed of the set is on the same side of 1.0.
+Replicates pool only at a matched budget (±10%); a set with n < 2 prints no ±.
+
+## Owed / open
+
+- One notebook line: `master_eval` cell [4] builds Othello's PI / ND / GS arm records itself, so
+  they lack `fidelity_ci95_lo/_hi` (IM / IM-NN and every discworld arm have it) — add
+  `**move_fidelity_ci95(pr, uns_probs, bench.legal_post)` beside `move_fidelity_ratio` (2 places).
+- Bootstrap CI on the Othello ceiling (+0.91 symdiff on n = 13 / 29 / 32 ordinary cases):
+  `ceiling_symdiff.py` has the per-case values; a 5-minute addition, no GPU.
+- Which gridified discworld rows (Table 2c) the paper keeps — only `appearance-fac` (and
+  `appearance` on 8-ray / 5-ray) get a spread under this plan.
+- Machine hardening needing sudo on the lab box (Sevan): hold the nvidia packages / pause
+  unattended-upgrades for the week; the 5090's power cap (two PSU freezes at 530 W on 2026-09-16).

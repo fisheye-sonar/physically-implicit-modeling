@@ -3,7 +3,32 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-18 18:30 PT — orientation session; nothing running (seed-variance chain still PAUSED at seed 2 step 160k); 2026-09-15/17 paper-session work (clip pilot, probe-space landing, ceiling symdiff, near-teleport) is on disk but UNCOMMITTED_
+_Last updated: 2026-09-18 20:20 PT — paper seed-replicate queue BUILT and SMOKED on both hosts, PAUSED, awaiting Sevan's go (first section)_
+
+## ⏸ Paper seed-replicate queue (`experiments/paper_ci/`) — READY 2026-09-18 20:20 PT, NOT launched
+
+**Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
+mean ± SD as the readout and a t-based 95% CI secondary, on the two GPUs only, in ≤ 5 days; the
+supplemental runs and the gridified layouts get none. Brief: `research/directions/paper-confidence-intervals.md`.
+Protocol written generically as `harness/MULTIDAY.md` (queue + timer dispatcher + per-host watchdog +
+dashboard + two ntfy channels); `experiments/paper_ci/README.md` is the operator's manual.
+**Plan:** Othello at 512k (L-oth-20m has no ~390k checkpoint; 780k everywhere ≈ 6 days, infeasible),
+discworld at 390k; 20 replicate/extension jobs + 2 corpus pushes (dw-8ray / dw-5ray → remote) + 5
+probe-seed extras + final tables; greedy schedule **≈ 90 h wall ≈ 3.8 days** (`plan.py --show`).
+**State:** lab timers installed and ticking (`pimci-dispatch` every 2 min, `pimci-watchdog` every 5 min,
+`pimci-dashboard` server); remote watchdog timer installed; `tailscale serve` publishes the dashboard at
+`https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`; smoke jobs ran through the real launch path on BOTH
+hosts (the remote one failed once — the job file was not on the remote — fixed: the dispatcher now
+pushes config/scripts/job file before every remote launch). Code changes this session: case-level
+spread beside every arm (`edit_index.case_stats` / `ratio_ci95`, wired in both scorecards; Othello's
+PI/ND/GS guard CI needs one notebook line — owed), `tables.pool_replicates` gains `_ci95` / `_values`
+and pools every editor's guard, Table 5 has SD and CI panels, `layout_checkpoint_replicate.py` lays
+out a new member when the existing one is > 10% off the budget, `replicate.sh` extends a finished
+replicate and parks its stale scores, `score_pending.sh` honours `PIM_SCORE_ONLY=1`. Tests: 281 + 4 pass.
+**Launch = `rm experiments/paper_ci/state/PAUSED`.** Remote synced (runs, non-train splits, Othello
+corpora, code at HEAD after the pull). Sudo items for Sevan: hold nvidia packages / pause
+unattended-upgrades; the 5090 power cap (his call).
+_Previous: 2026-09-18 18:30 PT — orientation session; 2026-09-15/17 paper-session work committed as 4c725b5_
 
 ## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)
 

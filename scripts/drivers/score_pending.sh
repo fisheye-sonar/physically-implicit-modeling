@@ -24,6 +24,14 @@ nb()    { "$PY" "$ROOT/.pim/bin/jupyter-nbconvert" --to notebook --execute --inp
 
 stage "master_eval"
 nb master_eval || fail "master_eval" "$(tail -25 "$LOGS/master_eval.log")"
+if [ "${PIM_SCORE_ONLY:-0}" = "1" ]; then
+  # scoring only (2026-09-18, the multi-machine replicate queue): the tables are rebuilt once
+  # on the lab box when the queue drains — on the remote they would read a partial run tree
+  stage "tables skipped (PIM_SCORE_ONLY=1)"
+  ping "PIM $NAME: scored" "$(grep -E "wrote|adding blocks|SKIPPED" "$LOGS/master_eval.log" | head -6)" white_check_mark
+  stage "chain complete"
+  exit 0
+fi
 stage "build_full_tables"
 nb build_full_tables || fail "build_full_tables" "$(tail -25 "$LOGS/build_full_tables.log")"
 nb build_paper_tables_and_figs || fail "build_paper_tables_and_figs" "$(tail -25 "$LOGS/build_paper_tables_and_figs.log")"

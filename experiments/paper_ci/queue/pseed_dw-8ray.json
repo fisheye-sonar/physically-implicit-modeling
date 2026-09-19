@@ -1,0 +1,33 @@
+{
+ "id": "pseed_dw-8ray",
+ "group": "dw-8ray",
+ "kind": "probe_seeds",
+ "hosts": [
+  "lab",
+  "remote"
+ ],
+ "lane": "gpu",
+ "cmd": "python -u experiments/seed_variance/scripts/probe_seeds.py --run ray_ablation/L-dw-8ray-20m --targets full appearance-fac --seeds 10 6",
+ "env": {},
+ "deps": [],
+ "host_deps": {
+  "remote": [
+   "xfer_dw-8ray_train"
+  ]
+ },
+ "priority": 61,
+ "est_hours": {
+  "lab": 1.5,
+  "remote": 2.0
+ },
+ "inputs": [
+  "runs/ray_ablation/L-dw-8ray-20m"
+ ],
+ "outputs": [
+  "runs/ray_ablation/L-dw-8ray-20m"
+ ],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "note": "10 regression + 6 factorised probe seeds on dw-8ray"
+}

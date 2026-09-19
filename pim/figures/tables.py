@@ -213,7 +213,10 @@ def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False,
     if "steps" not in R:
         R["steps"] = np.nan
     R["steps"] = R["steps"].fillna(-1).astype(int)
-    cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS] + [f"{e} fid" for e in EDITORS]
+    # every editor a row carries (ND / IM-NN included) and its guard: the SD is the readout,
+    # the t-based 95% half-width (``<col>_ci95``) the secondary one, and ``<col>_values`` the
+    # members themselves in seed order (2026-09-18, Sevan)
+    cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS_ALL] + [f"{e} fid" for e in EDITORS_ALL]
     out = {}
     for (parent, basis), g in R.groupby(["parent", "basis"]):
         dropped: list[int] = []
@@ -229,13 +232,44 @@ def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False,
             g = pd.DataFrame(chosen)
         if len(g) < 2:
             continue
+        g = g.sort_values("seed") if "seed" in g else g
+        have = [c for c in cols if c in g and g[c].notna().sum() >= 2]
         out[(parent, basis)] = {
             "n": int(len(g)), "steps": sorted({int(x) for x in g["steps"]}),
             "seeds": sorted(int(x) for x in g["seed"]) if "seed" in g else [],
             "dropped_steps": dropped, "pooled_budgets": bool(pool_budgets),
-            **{c: float(g[c].std(ddof=1)) for c in cols if c in g and g[c].notna().sum() >= 2},
-            **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g}}
+            **{c: float(g[c].std(ddof=1)) for c in have},
+            **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g},
+            **{f"{c}_ci95": ci95_halfwidth(g[c].dropna().to_numpy()) for c in have},
+            **{f"{c}_values": [float(x) for x in g[c]] for c in cols if c in g}}
     return out
+
+
+# Student-t 0.975 quantiles by degrees of freedom (n − 1), for the small replicate sets the
+# tables pool; beyond 30 the normal quantile is used. A 95% interval on the MEAN of n seeds is
+# mean ± t · SD / √n — at n = 3 that is 2.48 SD, at n = 5 1.24 SD.
+_T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306,
+         9: 2.262, 10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131,
+         16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086, 25: 2.060, 30: 2.042}
+
+
+def t975(df: int) -> float:
+    if df in _T975:
+        return _T975[df]
+    if df > 30:
+        return 1.960
+    lower = max(k for k in _T975 if k < df)
+    return _T975[lower]
+
+
+def ci95_halfwidth(values) -> float:
+    """t-based 95% half-width of the mean over a replicate set (NaN below n = 2)."""
+    v = np.asarray(values, float)
+    v = v[np.isfinite(v)]
+    n = int(v.size)
+    if n < 2:
+        return float("nan")
+    return float(t975(n - 1) * v.std(ddof=1) / np.sqrt(n))
 
 
 def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
@@ -732,7 +766,14 @@ def table_bayes(F: Frames, tag: str = "4", path: Path = REPO / "experiments" / "
 # ── Table 5: seed variance ───────────────────────────────────────────────────
 
 
-def table_seed_variance(F: Frames, tag: str = "5"):
+SEED_VARIANCE_COLS = ("skill_LIN", "skill_MLP", "unedited",
+                      "PI EI", "PI fid", "ND EI", "ND fid", "GS EI", "GS fid", "IM EI", "IM fid")
+
+
+def table_seed_variance(F: Frames, tag: str = "5", which: str = "sd"):
+    """Table 5 — the replicate spread per (run, basis) at a matched budget. ``which="sd"``: mean ± SD
+    (the readout, 2026-09-18 Sevan); ``which="ci"``: the t-based 95% interval of the mean, [lo, hi],
+    the secondary readout. Index AND guard for every editor a row carries."""
     if not F.rep_sd:
         return None
     rows = []
@@ -742,10 +783,17 @@ def table_seed_variance(F: Frames, tag: str = "5"):
                "steps": " / ".join(f"{x // 1000}k" for x in v["steps"]) + (" (mixed budgets)" if len(v["steps"]) > 1 and v.get("pooled_budgets") else ""),
                "seeds": ",".join(str(x) for x in v.get("seeds", [])),
                "not pooled": " / ".join(f"{x // 1000}k" for x in v.get("dropped_steps", [])) or "—"}
-        for c in ("skill_LIN", "skill_MLP", "PI EI", "ND EI", "GS EI", "GS fid"):
-            row[f"{c}"] = f"{v.get(f'{c}_mean', np.nan):+.3f} ± {v.get(c, np.nan):.3f}" if c in v else "—"
+        for c in SEED_VARIANCE_COLS:
+            if c not in v:
+                row[c] = "—"
+            elif which == "sd":
+                row[c] = f"{v[f'{c}_mean']:+.3f} ± {v[c]:.3f}"
+            else:
+                h = v.get(f"{c}_ci95", np.nan)
+                row[c] = f"[{v[f'{c}_mean'] - h:+.3f}, {v[f'{c}_mean'] + h:+.3f}]" if np.isfinite(h) else "—"
         rows.append(row)
-    title = (f"Table {tag} — seed replicates: mean ± SD over the replicate set"
+    what = "mean ± SD over the replicate set" if which == "sd" else "95% CI of the mean (t, n − 1) over the replicate set"
+    title = (f"Table {tag} — seed replicates: {what}"
              + (" · budgets POOLED (override)" if mixed else " · matched training budget (±10%)"))
     return image_table(pd.DataFrame(rows).set_index(["run", "basis"]), title, col_width=1.25)
 

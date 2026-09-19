@@ -34,6 +34,7 @@ completed its notebook and figures, and never reported. The work was nearly lost
 | write up a result or update the record | `harness/WORKFLOW.md` |
 | spawn a subagent | `harness/ORCHESTRATION.md` |
 | launch anything that outlives a reply (a training run, a corpus build, an overnight chain) | `harness/OVERNIGHT.md` — the checklist: smoke, capped unit, staged driver, two monitors, pings |
+| launch a SET of jobs over days or across machines | `harness/MULTIDAY.md` — queue + timer dispatcher + per-host watchdog + dashboard + two channels; reference implementation `experiments/paper_ci/` |
 | build the canonical qualitative panel | `research/specs/WATERFALL_SPEC.md` |
 
 **Three hard rules restated here because they are violated most often:**

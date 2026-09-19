@@ -39,23 +39,38 @@ ARCH_FLAG=${ARCH%_tokens}; REPR_FLAG=(); [[ "$ARCH" == *_tokens ]] && REPR_FLAG=
 ping "PIM $NAME: started" "replicate of $PARENT, seed $SEED, $STEPS steps; targets: ${TARGETS[*]:-none}"
 
 stage "A train $RUN ($ENV / $INST / $ARCH, $STEPS steps, seed $SEED)"
-if [ -f "$ROOT/runs/$TOPIC/$RUN/best_model.pt" ] && [ -f "$ROOT/runs/$TOPIC/$RUN/metrics.jsonl" ] \
-   && tail -n 1 "$ROOT/runs/$TOPIC/$RUN/metrics.jsonl" | grep -q "\"step\": $STEPS"; then
+RUN_DIR=$ROOT/runs/$TOPIC/$RUN
+if [ -f "$RUN_DIR/best_model.pt" ] && [ -f "$RUN_DIR/metrics.jsonl" ] \
+   && tail -n 1 "$RUN_DIR/metrics.jsonl" | grep -q "\"step\": $STEPS"; then
   echo "  already trained — skipping" | tee -a "$LOGS/driver.log"
 else
-  # an interrupted replicate resumes from its own ckpt/latest.pt (train.py refuses the dir otherwise)
+  # an interrupted replicate resumes from its own ckpt/latest.pt (train.py refuses the dir otherwise);
+  # a FINISHED replicate at a smaller budget is EXTENDED the same way (exact continuation, constant lr)
+  # and its old scores/variance are parked beside it under the old budget, never deleted
+  # (2026-09-18: the Othello sets moved 390k -> 512k)
   RESUME=()
-  [ -f "$ROOT/runs/$TOPIC/$RUN/ckpt/latest.pt" ] && { RESUME=(--resume); echo "  resuming from ckpt/latest.pt" | tee -a "$LOGS/driver.log"; }
+  OLD_STEP=$( [ -f "$RUN_DIR/metrics.jsonl" ] && tail -n 1 "$RUN_DIR/metrics.jsonl" | "$PY" -c 'import sys,json; print(json.loads(sys.stdin.read()).get("step", 0))' 2>/dev/null || echo 0 )
+  [ -f "$RUN_DIR/ckpt/latest.pt" ] && { RESUME=(--resume); echo "  resuming from ckpt/latest.pt (at step $OLD_STEP)" | tee -a "$LOGS/driver.log"; }
   "$PY" scripts/train.py --env "$ENV" --arch "$ARCH_FLAG" "${REPR_FLAG[@]}" --instance "$INST" \
       --topic "$TOPIC" --run-name "$RUN" --steps "$STEPS" --seed "$SEED" --replicate-of "$PARENT" "${RESUME[@]}" \
       > "$LOGS/a_train.log" 2>&1 || fail "A train" "$(tail -20 "$LOGS/a_train.log")"
+  for F in scores.json variance.json; do
+    if [ -f "$RUN_DIR/$F" ] && [ "$OLD_STEP" != "0" ]; then
+      mv "$RUN_DIR/$F" "$RUN_DIR/${F%.json}.s${OLD_STEP}.json"
+      echo "- $(date +%F) runs/$TOPIC/$RUN/$F -> ${F%.json}.s${OLD_STEP}.json (replicate extended ${OLD_STEP} -> ${STEPS}; rescored at the new budget)" >> "$ROOT/runs/MOVES.md"
+      echo "  parked stale $F as ${F%.json}.s${OLD_STEP}.json" | tee -a "$LOGS/driver.log"
+    fi
+  done
   ping "PIM $NAME: trained" "$(grep '^done' "$LOGS/a_train.log" | tail -1)"
 fi
 
 stage "B parent checkpoint nearest $STEPS as the seed-0 member"
 "$PY" experiments/seed_variance/scripts/layout_checkpoint_replicate.py "$PARENT" "nearest:$STEPS" \
     > "$LOGS/b_layout.log" 2>&1 || fail "B layout" "$(tail -10 "$LOGS/b_layout.log")"
-CKPT_RUN=$(ls -d "$ROOT/runs/$TOPIC/${PNAME}__seed0_s"* | head -n 1 | xargs -n1 basename)
+# the member NEAREST this budget (a parent can carry members at several budgets)
+CKPT_RUN=$(ls -d "$ROOT/runs/$TOPIC/${PNAME}__seed0_s"* | "$PY" -c '
+import sys; want=int(sys.argv[1]); ps=[l.strip() for l in sys.stdin if l.strip()]
+print(min(ps, key=lambda p: abs(int(p.rsplit("_s",1)[1]) - want)).rsplit("/",1)[1])' "$STEPS")
 
 if [ "$ENV" = "discworld" ] && [ ${#TARGETS[@]} -gt 0 ]; then
   stage "C categorical targets on $RUN and $CKPT_RUN: ${TARGETS[*]}"
