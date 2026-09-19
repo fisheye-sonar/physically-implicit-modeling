@@ -266,3 +266,34 @@ twelve runs above (every arm, every point, α and k recorded), `logs/inverse_pro
 `experiments/inverse_probe/scripts/{othello_inverse,discworld_inverse,discworld_tokens_inverse,table}.py`.
 The first Othello launch failed on a 4 GB broadcast in the retrieval search (its OOM path trips
 the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.
+
+
+## 2026-09-15 — IM's adjacent failure is case-level reachability; the flip models generalise past it (`observed`)
+
+`experiments/adjacent_flip_ablation/scripts/ceiling_symdiff.py` scores the canonical IM arm on the
+ordinary reachable single-flip cases (a real history produces the flipped board and the model treats
+it as ordinary) and on a matched sample with no exact counterfactual. Symdiff at the best point:
+
+| run | ordinary reachable | no counterfactual |
+|---|---|---|
+| L-oth-20m | +0.76 (n 13, fid 0.34) | +0.70 (n 30, fid 0.38) |
+| L-oth-adjacent-flip-20m | +0.70 (n 32, fid 0.51) | +0.70 (n 32, fid 0.57) |
+| L-oth-adjacent-20m | **+0.53** (n 29, fid 0.49) | **−0.17** (n 30, fid 1.41) |
+
+With flips, the inverse map generalises to boards no game can produce (colour is an independent
+factor of the training distribution). Without flips, IM lands only where some history produces the
+target board: adjacent's full-bench −0.03 is the average of a landing subset and a destructive one.
+Reading: IM edits a variable wherever the training distribution varies it independently of the
+variables the output consumes; reachability of the specific target is the signature of that
+independence, not the cause. Scratch: `2026-09-15-othello-ceiling-symdiff.md` (addendum).
+
+
+## 2026-09-15 — IM lands on discworld teleports OUTSIDE the training support (`observed`, one run)
+
+Near-teleport pilot on `L-dw-noiseless-20m` (`experiments/near_teleport_pilot/`): the canonical 192
+cases re-teleported to 1.0 < d < 1.6 units from the other disc, inside the generator's exclusion zone.
+IM +0.63 / fid 0.32 vs +0.60 / 0.33 on the same cases with canonical targets; PI +0.26 / 1.52 vs
++0.23 / 1.61; GS ≈ 0 on both. A hole in the joint support does not break the inverse map on
+discworld, so the oth-adjacent failure (which tracks reachability) is not "off-support" per se but a
+code that ties colour to parity features; the working criterion is whether the latent code
+factorises over the edited variable. Scratch: `2026-09-15-near-teleport-pilot.md`.

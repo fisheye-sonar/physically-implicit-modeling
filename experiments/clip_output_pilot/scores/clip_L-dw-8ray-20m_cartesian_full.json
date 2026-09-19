@@ -1,0 +1,156 @@
+{
+ "run": "runs/ray_ablation/L-dw-8ray-20m",
+ "instance": "dw-8ray",
+ "basis": "cartesian",
+ "target": "full",
+ "n": 1000,
+ "arms": [
+  {
+   "editor": "unedited",
+   "point": null,
+   "alpha": null,
+   "frac_rays_out_of_range": 0.202,
+   "min": -0.010286927223205566,
+   "max": 0.80916428565979,
+   "raw": {
+    "edit_index": -0.8973702843459325,
+    "target_rmse": 0.4876874089241028,
+    "ghost_rmse": 0.5973659157752991,
+    "collateral_rmse": 0.13471224904060364,
+    "edit_frame_rmse": 0.3816237151622772
+   },
+   "clipped": {
+    "edit_index": -0.8981101416002816,
+    "target_rmse": 0.48717358708381653,
+    "ghost_rmse": 0.5973659157752991,
+    "collateral_rmse": 0.13471224904060364,
+    "edit_frame_rmse": 0.3814125061035156
+   }
+  },
+  {
+   "editor": "PI",
+   "point": 3,
+   "alpha": 175.0,
+   "frac_rays_out_of_range": 0.206125,
+   "min": -0.9236017465591431,
+   "max": 1.7182962894439697,
+   "raw": {
+    "edit_index": 0.21159017813553235,
+    "target_rmse": 0.32211244106292725,
+    "ghost_rmse": 0.3833419680595398,
+    "collateral_rmse": 0.44470545649528503,
+    "edit_frame_rmse": 0.3803936839103699,
+    "fidelity_ratio": 0.996776847970823
+   },
+   "clipped": {
+    "edit_index": 0.23756573250099874,
+    "target_rmse": 0.2961629331111908,
+    "ghost_rmse": 0.3426535725593567,
+    "collateral_rmse": 0.3952712118625641,
+    "edit_frame_rmse": 0.3462255895137787,
+    "fidelity_ratio": 0.9077457712406861
+   },
+   "clipped_raw_denominator_fidelity": 0.907243380738416
+  },
+  {
+   "editor": "ND",
+   "point": 5,
+   "alpha": 2.0,
+   "frac_rays_out_of_range": 0.045875,
+   "min": -0.04960063099861145,
+   "max": 0.5512391924858093,
+   "raw": {
+    "edit_index": -0.22629377699968134,
+    "target_rmse": 0.40958112478256226,
+    "ghost_rmse": 0.3673526346683502,
+    "collateral_rmse": 0.31027504801750183,
+    "edit_frame_rmse": 0.3309619128704071,
+    "fidelity_ratio": 0.8672467137679657
+   },
+   "clipped": {
+    "edit_index": -0.22564284088490227,
+    "target_rmse": 0.40717217326164246,
+    "ghost_rmse": 0.3673526346683502,
+    "collateral_rmse": 0.31026318669319153,
+    "edit_frame_rmse": 0.3299866318702698,
+    "fidelity_ratio": 0.865169931739761
+   },
+   "clipped_raw_denominator_fidelity": 0.8646911047704415
+  },
+  {
+   "editor": "GS",
+   "point": 0,
+   "alpha": 0.7,
+   "frac_rays_out_of_range": 0.025375,
+   "min": -0.24188628792762756,
+   "max": 0.8905957937240601,
+   "raw": {
+    "edit_index": -0.06967580270819639,
+    "target_rmse": 0.34239670634269714,
+    "ghost_rmse": 0.4188480079174042,
+    "collateral_rmse": 0.2891877293586731,
+    "edit_frame_rmse": 0.33518561720848083,
+    "fidelity_ratio": 0.878314433540773
+   },
+   "clipped": {
+    "edit_index": -0.0702640549458788,
+    "target_rmse": 0.34148693084716797,
+    "ghost_rmse": 0.4187350273132324,
+    "collateral_rmse": 0.28864550590515137,
+    "edit_frame_rmse": 0.3347019553184509,
+    "fidelity_ratio": 0.8775327236585487
+   },
+   "clipped_raw_denominator_fidelity": 0.8770470545210383
+  },
+  {
+   "editor": "IM",
+   "point": 6,
+   "alpha": 1.0,
+   "frac_rays_out_of_range": 0.141125,
+   "min": -0.1284485161304474,
+   "max": 0.8353433609008789,
+   "raw": {
+    "edit_index": 0.7112084747303298,
+    "target_rmse": 0.08947941660881042,
+    "ghost_rmse": 0.12543661892414093,
+    "collateral_rmse": 0.09269233793020248,
+    "edit_frame_rmse": 0.1012948676943779,
+    "fidelity_ratio": 0.2654312708299704
+   },
+   "clipped": {
+    "edit_index": 0.7120565986097226,
+    "target_rmse": 0.08947941660881042,
+    "ghost_rmse": 0.12529371678829193,
+    "collateral_rmse": 0.09269233793020248,
+    "edit_frame_rmse": 0.10122407227754593,
+    "fidelity_ratio": 0.2653926409273891
+   },
+   "clipped_raw_denominator_fidelity": 0.2652457597780646
+  },
+  {
+   "editor": "IM-NN",
+   "point": 7,
+   "alpha": 1.0,
+   "frac_rays_out_of_range": 0.16325,
+   "min": -0.008470267057418823,
+   "max": 0.807948112487793,
+   "raw": {
+    "edit_index": 0.5350348373788428,
+    "target_rmse": 0.18544705212116241,
+    "ghost_rmse": 0.23811490833759308,
+    "collateral_rmse": 0.20512522757053375,
+    "edit_frame_rmse": 0.20186792314052582,
+    "fidelity_ratio": 0.5289711176746075
+   },
+   "clipped": {
+    "edit_index": 0.5352324570236505,
+    "target_rmse": 0.18540120124816895,
+    "ghost_rmse": 0.2381117343902588,
+    "collateral_rmse": 0.20508624613285065,
+    "edit_frame_rmse": 0.20184336602687836,
+    "fidelity_ratio": 0.5291996533855078
+   },
+   "clipped_raw_denominator_fidelity": 0.5289067686504987
+  }
+ ]
+}

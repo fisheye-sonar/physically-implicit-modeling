@@ -1,0 +1,59 @@
+{
+ "run": "runs/adjacency_ablation/L-oth-adjacent-20m",
+ "instance": "oth-adjacent",
+ "n_cases": 1000,
+ "arms": [
+  {
+   "editor": "PI",
+   "tag": "best",
+   "point": 1,
+   "alpha": 60.0,
+   "probe": "linear",
+   "tile_landed": 1.0,
+   "board_landed": 0.871,
+   "board_wrong_squares_mean": 0.14,
+   "recomputed_symdiff": 0.17489034864158248
+  },
+  {
+   "editor": "PI",
+   "tag": "alpha1",
+   "point": 1,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.99,
+   "board_landed": 0.865,
+   "board_wrong_squares_mean": 0.15,
+   "recomputed_symdiff": -0.9573221570119738
+  },
+  {
+   "editor": "ND",
+   "tag": "best",
+   "point": 0,
+   "alpha": 12.0,
+   "probe": "linear",
+   "tile_landed": 0.802,
+   "board_landed": 0.0,
+   "board_wrong_squares_mean": 38.476
+  },
+  {
+   "editor": "GS",
+   "tag": "best",
+   "point": 2,
+   "alpha": 1.5,
+   "probe": "mlp",
+   "tile_landed": 1.0,
+   "board_landed": 0.996,
+   "board_wrong_squares_mean": 0.004
+  },
+  {
+   "editor": "IM",
+   "tag": "best",
+   "point": 1,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.971,
+   "board_landed": 0.009,
+   "board_wrong_squares_mean": 3.642
+  }
+ ]
+}

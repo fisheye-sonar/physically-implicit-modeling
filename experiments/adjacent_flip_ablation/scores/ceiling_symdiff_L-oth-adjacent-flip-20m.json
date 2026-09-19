@@ -1,0 +1,77 @@
+{
+ "run": "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+ "instance": "oth-adjacent-flip",
+ "n_exact": 91,
+ "n_ordinary": 32,
+ "unedited": {
+  "union": -0.6432227370222492,
+  "symdiff": -0.9535255882118374,
+  "fidelity": 1.0
+ },
+ "ceiling_true_counterfactual": {
+  "union": 0.6436826324234235,
+  "symdiff": 0.9075652122027059,
+  "fidelity": 0.2049232448606743
+ },
+ "editors": {
+  "PI": {
+   "point": 2,
+   "alpha": 5.0,
+   "union": 0.08574473090487114,
+   "symdiff": 0.18969378606650222,
+   "fidelity": 0.6401103148494663
+  },
+  "ND": {
+   "point": 1,
+   "alpha": 2.0,
+   "union": 0.2252175485990921,
+   "symdiff": 0.38067821390988243,
+   "fidelity": 0.557880176889826
+  },
+  "GS": {
+   "point": 0,
+   "alpha": 0.35,
+   "union": 0.003785604925118913,
+   "symdiff": 0.18266177116729537,
+   "fidelity": 4.913409276193288
+  }
+ },
+ "IM_ordinary_reachable": {
+  "n": 32,
+  "unedited_symdiff": -0.9535255882118374,
+  "best_point": 5,
+  "symdiff": 0.7000494800709596,
+  "union": 0.37371805361387317,
+  "fidelity": 0.5063589534342819,
+  "by_point_symdiff": {
+   "0": -0.694,
+   "1": -0.793,
+   "2": -0.499,
+   "3": 0.064,
+   "4": 0.543,
+   "5": 0.7,
+   "6": 0.58,
+   "7": 0.484,
+   "8": 0.368
+  }
+ },
+ "IM_no_counterfactual": {
+  "n": 32,
+  "unedited_symdiff": -0.9592174794267925,
+  "best_point": 5,
+  "symdiff": 0.6993121864328602,
+  "union": 0.3592252872900921,
+  "fidelity": 0.5693973537890273,
+  "by_point_symdiff": {
+   "0": -0.627,
+   "1": -0.648,
+   "2": -0.423,
+   "3": 0.005,
+   "4": 0.636,
+   "5": 0.699,
+   "6": 0.644,
+   "7": 0.528,
+   "8": 0.483
+  }
+ }
+}

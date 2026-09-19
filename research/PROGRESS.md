@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-17 09:30 PT — oth-adjacent-flip seed variance PAUSED at seed 2 step 160k (first section)_
+_Last updated: 2026-09-18 18:30 PT — orientation session; nothing running (seed-variance chain still PAUSED at seed 2 step 160k); 2026-09-15/17 paper-session work (clip pilot, probe-space landing, ceiling symdiff, near-teleport) is on disk but UNCOMMITTED_
 
 ## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)
 
@@ -64,6 +64,26 @@ Prep this session: `bigcorpus.INSTANCES["dw-128ray"]` (+ the `dw-16ray` block pu
 sees the 5090); a reboot clears it. **When done:** read `scores.json`, update `findings/ray-ablation.md`
 (128 vs 16 vs noiseless: ray count or disc size?), flip the REGISTRY run row from IN FLIGHT, re-render tables.
 _Previous: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+**2026-09-17 (paper session) — clip-to-[0,1] pilot on dw-noiseless + dw-8ray:** clipping the
+predicted frame changes no conclusion. Largest index move +0.046 (PI, dw-noiseless, cartesian);
+the effect is concentrated in PI's FIDELITY (1.93 → 1.52, 1.71 → 1.41) because only PI's write
+leaves the feasible range by a lot ([−2.16, +2.61] at α=100 vs the unedited model's [−0.02, +0.82]).
+IM / IM-NN untouched (≤0.001). Tables stay UNCLIPPED (decision recorded). Every raw number
+reproduces scores.json. Script `experiments/clip_output_pilot/scripts/clip_pilot.py`, scratch
+`2026-09-17-clip-output-pilot.md`.
+
+**2026-09-17 (paper session) — Othello edits LAND in probe space and still do not edit:** the α=1
+exact-landing PI write reads the requested board (tile 98.4–100%, all 64 squares on standard-noflip)
+and leaves the move distribution at the unedited floor on ALL FOUR instances (−0.70 vs −0.93 standard;
+−0.958 vs −0.98 standard-noflip); standard Othello's +0.82 needs a 3× overshoot, adjacent-noflip's
++0.18 needs 60×. Identical read-out at α=1 and α=3 spans −0.700 → +0.818, so probe-space landing
+carries no information about behavioural landing. GS converges perfectly on the MLP probe (100% /
+99.6%) exactly on the two no-flip variants where it is most destructive (fidelity 4.3–6.7). Validated
+by recomputing PI's canonical symdiff index (matches scores.json on all four). Script
+`experiments/probe_readout_landing/scripts/othello_landing.py`, scores `.../scores/landing_*.json`,
+scratch `2026-09-17-othello-probe-space-landing.md`. Owed: same check on the discworld categorical
+arms; decide whether the per-α landing table goes in the appendix.
 
 **2026-09-15 (evening) — near-teleport pilot (dw-noiseless):** teleports INSIDE the 1.6-unit exclusion zone
 edit as well as canonical ones (IM +0.63/0.32 vs +0.60/0.33; PI +0.26/1.52 vs +0.23/1.61; GS ≈ 0), so a hole in

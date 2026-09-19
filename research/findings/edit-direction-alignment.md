@@ -61,6 +61,27 @@ between the two reference worlds. The edits do not game the metric: Li error aga
 post-edit world falls 2.67 → 0.00 (ND) / 0.21 (PI) while error against the pre-edit world
 rises 0.00 → 2.29 / 2.23, at fidelity 0.20 / 0.30.
 
+### 2026-09-15 — the ceiling under the symmetric-difference headline, on the protocol bench (`observed`)
+
+The 2026-09-09 ceiling above is the UNION index on Li's 1001. Since 2026-09-12 the Othello
+headline is the symmetric difference and every instance scores a 1000-case fixed-prefix bench,
+so the ceiling was re-measured on that bench with the v2 ordinariness filter
+(`experiments/adjacent_flip_ablation/scripts/ceiling_symdiff.py`; scratch
+`2026-09-15-othello-ceiling-symdiff.md`). Edit Index symdiff / union · fidelity, same cases:
+
+| run | ordinary cases | unedited | true counterfactual (ceiling) | PI | ND | GS |
+|---|---|---|---|---|---|---|
+| L-oth-20m | 13 | −0.941 / −0.709 | **+0.909 / +0.692** | +0.751 / +0.531 · 0.29 | +0.826 / +0.637 · 0.18 | +0.399 / +0.119 · 2.89 |
+| L-oth-adjacent-20m | 29 | −0.979 / −0.673 | **+0.916 / +0.674** | +0.078 · 2.99 | +0.668 · 1.55 | −0.658 · 7.45 |
+| L-oth-adjacent-flip-20m | 32 | −0.954 / −0.643 | **+0.908 / +0.644** | +0.190 · 0.64 | +0.381 · 0.56 | +0.183 · 4.91 |
+
+**The ceiling is ≈ +0.91 under the headline on all three instances** (they agree to 0.01, as
+under union), so an Othello index is read against +0.91, not +1. On standard Othello ND
+recovers 91% of it and PI 83%, the same fractions as under union. ⚠ GS, the best full-bench arm
+(+0.828 / 0.28), is destructive on these 13 parity-tile cases (fidelity 2.89) — a flag on GS's
+per-case fidelity, not a finding, at this n. Case counts differ from the 2026-09-11 table
+(42 → 31 exact boards on standard) because the bench changed, not the search.
+
 ## Result 4 — editing ALONG the Haufe directions: helps, does not rescue
 
 `scripts/haufe_edit.py`. The pattern matrix P satisfies W Pᵀ = I, so Pᵀ is a right inverse of
