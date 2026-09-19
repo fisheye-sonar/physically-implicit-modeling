@@ -16,6 +16,7 @@
 :root{--bg:#f6f5f0;--card:#ffffff;--ink:#172239;--muted:#6b7280;--line:#e3e1d8;--ok:#1a7f4b;--warn:#b7791f;--bad:#b42318;--run:#1d4ed8;--bar:#e9e7df;--okbg:#e6f4ec;--badbg:#fbe9e7;}
 @media (prefers-color-scheme: dark){:root{--bg:#0f1420;--card:#171d2b;--ink:#e8eaf0;--muted:#98a2b3;--line:#2a3142;--ok:#3ccf82;--warn:#f2b544;--bad:#ff6b5e;--run:#7aa2ff;--bar:#232b3d;--okbg:#14301f;--badbg:#3a1a17;}}
 *{box-sizing:border-box}
+[hidden]{display:none !important}   /* .badge's display rule was overriding the hidden attribute (PAUSED always showed) */
 html{background:var(--bg)}
 html,body{margin:0;color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
 body{padding:calc(14px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));max-width:1200px;margin:0 auto;overscroll-behavior-y:contain}
@@ -139,10 +140,13 @@ function renderLedger(L){
     const blocks=Object.entries(G.blocks).map(([b,M])=>`<div class="blk">${b}</div>${blockTable(M)}`).join('');
     return `<details class="card" ${n>=2?'open':''}><summary>${g} <span class="mono muted">${G.run}</span> <span class="badge ${n>=3?'ok':n>=2?'warn':''}">n = ${n}</span></summary>${blocks}</details>`;}).join(''):'<div class="card muted">no ledger yet</div>';}
 
+const hms=t=>new Date(t*1000).toTimeString().slice(0,8);
 function render(S){
   LAST=S;
   const gen=S.generated; const stale=Date.now()/1000-gen>600;
-  $('#age').innerHTML=(stale?'<span class="stale">STALE · </span>':'')+'updated '+ago(gen);
+  // absolute clocks: the state's generation time (the dispatcher's last tick) and this page's own
+  // last successful fetch — a frozen app and a dead dispatcher then look different (Sevan, 2026-09-19)
+  $('#age').innerHTML=(stale?'<span class="stale">STALE · </span>':'')+'updated last at <b>'+hms(gen)+'</b> · fetched '+hms(Date.now()/1000)+' · the "ago" fields count from that fetch';
   $('#paused').hidden=!S.paused;
   $('#eta').textContent=S.eta&&S.eta.end_h!=null?clock(S.eta.end_h)+' · '+fmtH(S.eta.end_h)+' left':'—';
   const c=S.counts||{}; $('#counts').innerHTML=['done','running','queued','failed'].map(k=>`<div>${k}</div><div><b>${c[k]||0}</b></div>`).join('');
