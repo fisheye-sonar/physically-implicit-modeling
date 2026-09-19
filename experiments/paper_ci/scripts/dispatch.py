@@ -401,6 +401,9 @@ def tick(dry: bool = False) -> None:
         ping("digest", "PIM CI status", digest_text(jobs, states, hostinfo), "hourglass_flowing_sand", "low")
     if launched or finished_now:
         log(f"launched {launched} · finished {finished_now}")
+    # the tick's heartbeat for the watchdog: a quiet tick writes nothing to the log, and the
+    # watchdog must not mistake quiet for dead (caught 2026-09-18 21:00, first hour of the queue)
+    (STATE / "last_tick.ts").write_text(str(time.time()))
 
 
 # ── ledger + rendering ───────────────────────────────────────────────────────

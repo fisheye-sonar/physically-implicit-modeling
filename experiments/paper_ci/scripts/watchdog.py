@@ -105,10 +105,13 @@ def main(host: str):
     if cp.returncode != 0 and once_per("gpu", 1):
         ping(f"PIM CI [{label}]: nvidia-smi failing", (cp.stderr or cp.stdout)[-300:], "rotating_light")
     if host == "lab":
+        # the tick's own heartbeat file (a quiet tick writes no log line); the log is the fallback
+        hb = Q / "state" / "last_tick.ts"
         dl = ROOT / "logs" / "paper_ci" / "dispatch.log"
-        age = (NOW - dl.stat().st_mtime) / 60 if dl.exists() else 1e9
+        ref = hb.stat().st_mtime if hb.exists() else (dl.stat().st_mtime if dl.exists() else 0)
+        age = (NOW - ref) / 60 if ref else 1e9
         if age > 10 and once_per("dispatcher", 0.5):
-            ping("PIM CI [lab]: dispatcher NOT TICKING", f"dispatch.log last written {age:.0f} min ago; "
+            ping("PIM CI [lab]: dispatcher NOT TICKING", f"last tick {age:.0f} min ago; "
                  "systemctl --user status pimci-dispatch.timer pimci-dispatch.service", "rotating_light")
     else:
         cp = sh(["tailscale", "ping", "-c", "1", "--timeout", "5s", "sevan-ubuntu-lab"], 20)
