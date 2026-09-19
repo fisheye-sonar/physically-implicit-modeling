@@ -1059,3 +1059,17 @@ Discworld peaks at ~3.5e3 and was never affected. The measured damage to the sco
 ≤0.002 Edit Index — too few rows to move an aggregate over 1000 cases — so no recorded number
 changed; the pooled 20k-row R² was the only casualty. **Check the dynamic range before storing
 activations in half**, and prefer float32 for anything whose mean is taken.
+
+## 2026-09-19 — A notebook edited while `nbconvert --execute --inplace` is running is OVERWRITTEN when it ends
+
+`master_eval.ipynb` is executed IN PLACE by every scoring job (`scripts/drivers/score_pending.sh`). nbconvert
+reads the file once at the start and writes its in-memory copy back at the end, up to an hour later. An edit
+saved in between is silently lost: on 2026-09-19 Sevan added a `dw_extra_targets` line at 12:20 while the
+11:59 execution of the seed-replicate queue was running; its write at 13:18 dropped the line. The same
+execution also did not SEE the edit, so whatever it scored used the old settings.
+**Rule:** before editing a notebook a queue executes, check for a running execution
+(`ps -eo pid,lstart,args | grep 'nbconvert.*master_eval'`); if one is running, COMMIT the edit at once and
+restore it (`git checkout -- <notebook>`) the moment that process exits, before the next execution starts.
+**When checking the edit survived, parse the cell SOURCE** — the executed notebook's printed OUTPUT contains
+run paths, and a text match on the file reported "survived" when the line was gone. The sibling trap:
+"Never edit a driver script while bash is executing it" (2026-09-08).
