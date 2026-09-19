@@ -3,9 +3,21 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-18 20:20 PT — paper seed-replicate queue BUILT and SMOKED on both hosts, PAUSED, awaiting Sevan's go (first section)_
+_Last updated: 2026-09-18 20:50 PT — paper seed-replicate queue LAUNCHED 20:48 PT (first section)_
 
-## ⏸ Paper seed-replicate queue (`experiments/paper_ci/`) — READY 2026-09-18 20:20 PT, NOT launched
+## 🔄 Paper seed-replicate queue (`experiments/paper_ci/`) — LAUNCHED 2026-09-18 20:48 PT, ETA ≈ 2026-09-23 03:00 PT
+
+**Live:** 28 jobs, all at 512k; first launches `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), the
+dw-8ray corpus push (lab cpu lane). The dispatcher timer (`pimci-dispatch`, 2 min) and both watchdogs
+are the memory — nothing to re-arm after a session ends or a reboot. **How to check:** the dashboard
+(`https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`), `logs/paper_ci/dispatch.log`, `systemctl --user
+list-units 'pimci-*'` on either host, per-job `logs/paper_ci/<id>/`, `experiments/paper_ci/README.md`
+(pause / hold / reset / add). Alerts on the usual ntfy topic; 2-h digest on `pim-ci-digest-ai691k`.
+**When it drains (`final_tables` done):** read `dashboard/ledger.md`, check Table 5 (SD + CI panels) and the
+± cells in the paper notebook, update `findings/seed-variance.md` (one entry per family: n, budget, SD,
+guard verdicts k/n), the REGISTRY run rows, the brief → `done`; move the smoke artefacts
+(`experiments/paper_ci/state/_smoke/`, `logs/paper_ci/smoke_*`) to an archive folder.
+_(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
 mean ± SD as the readout and a t-based 95% CI secondary, on the two GPUs only, in ≤ 5 days; the
