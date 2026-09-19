@@ -16,11 +16,11 @@
  "host_deps": {},
  "priority": 23,
  "est_hours": {
-  "lab": 6.85,
-  "remote": 8.82
+  "lab": 8.2,
+  "remote": 10.55
  },
- "train_h_lab": 5.25,
- "score_h": 0.8,
+ "train_h_lab": 6.2,
+ "score_h": 1.0,
  "n_scored": 2,
  "inputs": [
   "runs/ray_ablation/L-dw-128ray-20m",

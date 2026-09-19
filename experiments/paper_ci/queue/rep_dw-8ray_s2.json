@@ -21,10 +21,10 @@
  },
  "priority": 20,
  "est_hours": {
-  "lab": 6.6,
-  "remote": 8.5
+  "lab": 7.6,
+  "remote": 7.04
  },
- "train_h_lab": 5.1,
+ "train_h_lab": 6.1,
  "score_h": 0.75,
  "n_scored": 2,
  "inputs": [

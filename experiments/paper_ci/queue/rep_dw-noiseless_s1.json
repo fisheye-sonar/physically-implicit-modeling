@@ -16,11 +16,11 @@
  "host_deps": {},
  "priority": 24,
  "est_hours": {
-  "lab": 2.85,
-  "remote": 3.62
+  "lab": 3.5,
+  "remote": 4.45
  },
- "train_h_lab": 1.25,
- "score_h": 0.8,
+ "train_h_lab": 1.5,
+ "score_h": 1.0,
  "n_scored": 2,
  "inputs": [
   "runs/noise_ablation/L-dw-noiseless-20m",

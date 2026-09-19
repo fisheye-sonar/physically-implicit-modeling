@@ -21,11 +21,11 @@
  },
  "priority": 21,
  "est_hours": {
-  "lab": 6.6,
+  "lab": 8.1,
   "remote": 8.5
  },
- "train_h_lab": 5.1,
- "score_h": 0.75,
+ "train_h_lab": 6.1,
+ "score_h": 1.0,
  "n_scored": 2,
  "inputs": [
   "runs/ray_ablation/L-dw-5ray-20m",
