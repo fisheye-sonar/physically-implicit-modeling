@@ -3,9 +3,27 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-18 20:50 PT — paper seed-replicate queue LAUNCHED 20:48 PT (first section)_
+_Last updated: 2026-09-19 12:15 PT — orientation session; queue check found the dw-16ray fac gap (first section)_
 
 ## 🔄 Paper seed-replicate queue (`experiments/paper_ci/`) — LAUNCHED 2026-09-18 20:48 PT, ETA ≈ 2026-09-23 03:00 PT
+
+**2026-09-19 12:15 check:** healthy. Done: `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), both corpus
+pushes. Running: `rep_dw-8ray_s1` (lab, master_eval since 11:59, ~14:00), `rep_dw-8ray_s2` (remote, 300k/512k,
+~16:30). **⚠ Gap: both dw-16ray members (`__seed1`, `__seed0_s512000`) have NO `appearance-fac` block** — their
+fac probes were fitted (stage C, cached) but `master_eval`'s `dw_extra_targets` on this branch has no
+`ray_ablation/L-dw-16ray-20m` entry (it lives only on the unmerged `dw_16ray` branch, where the parent was
+scored), so the replicates inherit nothing and the ledger shows the 16-ray categorical row at n = 1 — a paper
+Table 2 row. **FIXED by Sevan 2026-09-19:** entry added (762faae); `push_inputs` keeps the trailing slash on
+directory pushes (it was nesting `scripts/scripts/` on the remote) and a held job adds the 16-ray members' fac
+block (507d623).
+
+**2026-09-19 (Sevan) — `tokens/` trimmed to the minimum:** the discworld tokenizer now writes ONLY `train.i16`,
+`vocab.npz`, `meta.json`; every small split is encoded from its h5 at read time (`tokens.encode_h5`, new).
+`experiments/dw_tokens/scripts/{ce_by_position,ngram_floor}.py` and `tests/test_token_bench.py` /
+`test_discworld_tokens.py` switched off `tokens/test.npy` / `edits.npy` (re-encoding verified byte-identical;
+21 token tests pass on CPU under an audit hook that fails any open of the two files). REGISTRY, layout spec,
+`layout.py`, `make_discworld_tokens.py` updated. UNCOMMITTED. The two `.npy` files (lab + remote) are Sevan's to
+delete; the existing `tokens/meta.json` still lists the retired files under `"files"` (nothing reads it).
 
 **Live:** 28 jobs, all at 512k; first launches `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), the
 dw-8ray corpus push (lab cpu lane). The dispatcher timer (`pimci-dispatch`, 2 min) and both watchdogs
@@ -17,6 +35,26 @@ list-units 'pimci-*'` on either host, per-job `logs/paper_ci/<id>/`, `experiment
 ± cells in the paper notebook, update `findings/seed-variance.md` (one entry per family: n, budget, SD,
 guard verdicts k/n), the REGISTRY run rows, the brief → `done`; move the smoke artefacts
 (`experiments/paper_ci/state/_smoke/`, `logs/paper_ci/smoke_*`) to an archive folder.
+**Status 2026-09-19 13:35 PT — 4 of 31 jobs done, all verified on disk.** `rep_dw-5ray_s1` (lab, 8.05 h),
+`rep_dw-16ray_s1` (4090, 10.75 h), `rep_dw-8ray_s1` (lab, 8.44 h), `score_16ray_fac` (9 min). Pooled n = 2 so
+far (member + seed 1): decodability SD 0.000, IM ±0.002–0.007, GS ±0.003–0.02, PI ±0.02–0.03; PI's guard on
+8-ray cartesian is 0.997 on the canonical run and 1.056 ± 0.008 on the 512k members — a guard near 1.0 is read
+as k of n. Measured rates: lab 5090 under its 450 W cap 23.4 steps/s on 8/5-ray (−15%), the 4090 20 steps/s on
+discworld (= the uncapped 5090) but 53 min per factorised fit and 45 min per `master_eval` run (lab 31 / 29);
+`plan.py` estimates recalibrated, ETA ≈ 2026-09-23 12:00. **Fixes made in flight:** the watchdog reads a tick
+heartbeat file (a quiet tick logged nothing → false "not ticking"); progress = the newest write among a job's
+outputs, stall threshold 45 min (the scoring stages write outside the training metrics → false stall 03:22);
+directory pushes keep their trailing slash (scripts/ was nesting on the remote). **The 16-ray gap:**
+`master_eval`'s `dw_extra_targets` had no entry for `ray_ablation/L-dw-16ray-20m` (it lived on the unmerged
+`dw_16ray` branch), so the 16-ray members were scored without `appearance-fac`; Sevan added the line 12:20
+(commit 762faae), an in-flight execution's in-place write dropped it, it was restored from git 13:19 and
+`score_16ray_fac` added the block to both members (values on the parent's). ⚠ A notebook edited while
+`master_eval` is executing is OVERWRITTEN when that execution ends — commit the edit and restore after.
+**Added 2026-09-19 (Sevan):** the probe-corpus-size control (`experiments/probe_corpus_size/`, README) —
+queue jobs `ctrl_corpus_dw` (lab, ~3.5 h, after the ray family) and `ctrl_corpus_oth` (either host, ~1.5 h):
+probes / inverse map refitted on up to 200k sequences / 100k games, editors re-swept, canonical numbers
+untouched. Write its result into `findings/probe-capacity.md` when it lands. Owed still: the Othello PI/ND/GS
+guard CI line in `master_eval` cell [4]; the Othello ceiling bootstrap (deprioritised by Sevan).
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
