@@ -42,29 +42,32 @@ REMOTE_REPO = "research/physically-implicit-modeling"   # relative to the remote
 # member (Othello master_eval 33 min; discworld ~45 min incl. the categorical fit), the categorical
 # targets replicate.sh fits, allowed hosts (preference order), and host-specific deps.
 FAMILIES = {
-    # discworld train hours at 512k (5090): 128-input 5.25, 8/5-ray 5.1, 16-ray 7.35
-    "dw-8ray":     dict(parent="ray_ablation/L-dw-8ray-20m", steps=STEPS_DW, train_h=5.1, score_h=0.75,
+    # discworld train hours at 512k on the LAB 5090 UNDER ITS 450 W CAP (measured 2026-09-18 21:50:
+    # 23.3 steps/s on 5-ray, 15% below the uncapped 27.5): 128-input 6.2, 8/5-ray 6.1, 16-ray 8.6.
+    # The 4090 runs discworld at the uncapped 5090's rate (19.9 steps/s on 16-ray: the loader bounds
+    # it), so its discworld factor is 0.85/1.0 relative to the capped lab; Othello stays 0.77.
+    "dw-8ray":     dict(parent="ray_ablation/L-dw-8ray-20m", steps=STEPS_DW, train_h=6.1, score_h=0.75, remote_rate=1.18,
                         targets=["appearance-fac"], hosts=["remote", "lab"],
                         host_deps={"remote": ["xfer_dw-8ray_train"]}, prio=20),
-    "dw-5ray":     dict(parent="ray_ablation/L-dw-5ray-20m", steps=STEPS_DW, train_h=5.1, score_h=0.75,
+    "dw-5ray":     dict(parent="ray_ablation/L-dw-5ray-20m", steps=STEPS_DW, train_h=6.1, score_h=0.75, remote_rate=1.18,
                         targets=["appearance-fac"], hosts=["lab", "remote"],
                         host_deps={"remote": ["xfer_dw-5ray_train"]}, prio=21),
-    "dw-16ray":    dict(parent="ray_ablation/L-dw-16ray-20m", steps=STEPS_DW, train_h=7.35, score_h=0.8,
+    "dw-16ray":    dict(parent="ray_ablation/L-dw-16ray-20m", steps=STEPS_DW, train_h=8.6, score_h=0.8, remote_rate=1.18,
                         targets=["appearance-fac"], hosts=["remote"], prio=22),
-    "dw-128ray":   dict(parent="ray_ablation/L-dw-128ray-20m", steps=STEPS_DW, train_h=5.25, score_h=0.8,
+    "dw-128ray":   dict(parent="ray_ablation/L-dw-128ray-20m", steps=STEPS_DW, train_h=6.2, score_h=0.8,
                         targets=["appearance-fac"], hosts=["lab"], prio=23),
     "dw-noiseless": dict(parent="noise_ablation/L-dw-noiseless-20m", steps=STEPS_DW, score_h=0.8,
                          targets=["appearance-fac"], hosts=["lab"], prio=24,
                          # EXTENSIONS of the existing 390k members (1.25 h each); the parent's 512k
                          # checkpoint becomes the seed-0 member, the 421,875 one is left outside the pool
-                         seed_train_h={1: 1.25, 2: 1.25}),
+                         seed_train_h={1: 1.5, 2: 1.5}),
     "oth-standard": dict(parent="initial_othello_comparison/L-oth-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
                          targets=[], hosts=["lab", "remote"], prio=30),
     "oth-adjflip": dict(parent="adjacent_flip_ablation/L-oth-adjacent-flip-20m", steps=STEPS_OTH, score_h=0.6,
                         targets=[], hosts=["remote", "lab"], prio=31,
                         # EXTENSIONS of the existing 390k members: seed 2 sits at 160k, seed 1 at 390k
                         seed_train_h={2: 8.7, 1: 3.0}),
-    "dw-blink":    dict(parent="blink_ablation/L-dw-blink-20m", steps=STEPS_DW, train_h=5.25, score_h=0.8,
+    "dw-blink":    dict(parent="blink_ablation/L-dw-blink-20m", steps=STEPS_DW, train_h=6.2, score_h=0.8,
                         targets=["appearance-fac"], hosts=["lab"], prio=40),
     "oth-adjacent": dict(parent="adjacency_ablation/L-oth-adjacent-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
                          targets=[], hosts=["remote", "lab"], prio=50),
@@ -104,7 +107,7 @@ def replicate_job(fam: str, F: dict, seed: int) -> dict:
         "cmd": f"bash scripts/drivers/replicate.sh {F['parent']} {seed} {steps} {targets}".rstrip(),
         "env": dict(ENV_SCORE), "deps": [], "host_deps": F.get("host_deps", {}),
         "priority": F["prio"],
-        "est_hours": {"lab": round(est_lab, 2), "remote": round(train_h / 0.77 + n_scored * F["score_h"] / 0.8, 2)},
+        "est_hours": {"lab": round(est_lab, 2), "remote": round(train_h / F.get("remote_rate", 0.77) + n_scored * F["score_h"] / 0.8, 2)},
         "train_h_lab": train_h, "score_h": F["score_h"], "n_scored": n_scored,
         "inputs": [f"runs/{F['parent']}", f"runs/{topic}/{pname}__seed0_s*", f"runs/{topic}/{run}"],
         "outputs": [f"runs/{topic}/{run}", f"runs/{topic}/{pname}__seed0_s*", f"logs/rep_{pname}_s{seed}", "runs/MOVES.md"],
