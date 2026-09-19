@@ -8,7 +8,7 @@
  "ntfy": {"alerts": "https://ntfy.sh/swirling-tornado-ai691k",
           "digest": "https://ntfy.sh/pim-ci-digest-ai691k"},
  "digest_hours": 2,
- "stall_min": 30,
+ "stall_min": 45,
  "disk_min_gb": 40,
  "unreachable_ticks": 2,
  "dashboard_url": "https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/",
