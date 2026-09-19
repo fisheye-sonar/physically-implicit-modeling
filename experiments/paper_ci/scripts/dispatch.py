@@ -122,7 +122,10 @@ def push_inputs(host: str, job: dict) -> bool:
     # the job's definition, the queue scripts and the config go first: the wrapper on the remote
     # reads the job file from ITS OWN tree (the 2026-09-18 smoke: "no such job")
     for rel in ("experiments/paper_ci/config.json", "experiments/paper_ci/scripts/", f"experiments/paper_ci/queue/{job['id']}.json"):
-        cp = rsync(str(ROOT / rel), f"{H['ssh']}:{H['repo']}/{rel}", 300)
+        # Path() drops a trailing slash, and without it rsync nests the dir (scripts/scripts/ on the
+        # remote, found 2026-09-19): keep the slash on directory sources
+        src = str(ROOT / rel) + ("/" if rel.endswith("/") else "")
+        cp = rsync(src, f"{H['ssh']}:{H['repo']}/{rel}", 300)
         if cp.returncode != 0:
             log(f"push {rel} -> {host} failed: {cp.stderr[-300:]}")
             return False

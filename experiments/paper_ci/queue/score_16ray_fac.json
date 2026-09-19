@@ -1,0 +1,29 @@
+{
+ "id": "score_16ray_fac",
+ "group": "dw-16ray",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/score_pending.sh score_16ray_fac",
+ "env": {
+  "PIM_ONLY_RUNS": "L-dw-16ray-20m__seed0_s512000,L-dw-16ray-20m__seed1",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 1,
+ "est_hours": {
+  "lab": 0.4
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": true,
+ "note": "add the appearance-fac block to the two existing 16-ray members (their probes are cached); HELD until the notebook entry is confirmed restored"
+}
