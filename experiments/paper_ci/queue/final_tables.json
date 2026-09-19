@@ -31,7 +31,14 @@
   "rep_oth-adjacent_s1",
   "rep_oth-adjacent_s2",
   "rep_oth-noflip_s1",
-  "rep_oth-noflip_s2"
+  "rep_oth-noflip_s2",
+  "pseed_oth-standard",
+  "pseed_dw-8ray",
+  "pseed_oth-adjflip_s1",
+  "pseed_oth-adjflip_s2",
+  "pseed_oth-adjflip_s0",
+  "ctrl_corpus_dw",
+  "ctrl_corpus_oth"
  ],
  "host_deps": {},
  "priority": 90,

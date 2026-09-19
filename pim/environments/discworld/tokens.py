@@ -13,11 +13,13 @@ out, cross-entropy on the next frame) trains on discworld with nothing else chan
                        code order (deterministic), id 0 = ``UNK`` reserved — the same
                        convention as Othello's pad token 0.
 * ``encode``/``decode`` ids ↔ frames (row ``UNK`` decodes to NaN).
+* ``encode_h5``        a small split's h5 file → (n, T) int16 ids, encoded at read time.
 * ``tokenize_instance`` writes ``<instance>/tokens/``: ``train.i16`` (N, T) int16 memmap,
-                       ``test.npy``/``edits.npy``, ``vocab.npz``, ``meta.json`` (the probe
-                       corpus joins the vocabulary; ``h5_splits`` names the source files
-                       through ``pim.environments.layout``). Additive — nothing else in the
-                       instance is touched.
+                       ``vocab.npz``, ``meta.json`` — and nothing else. The small splits
+                       (probe corpus, eval, edit bench) join the vocabulary but are not
+                       stored as tokens (``h5_splits`` names them through
+                       ``pim.environments.layout``). Additive — nothing else in the instance
+                       is touched.
 """
 from __future__ import annotations
 
@@ -30,11 +32,12 @@ import h5py
 import numpy as np
 
 UNK = 0
-# The splits also written as token files. The probe corpus joins the VOCABULARY only —
-# token probes re-encode the float corpus through ``token_bench.token_encoder``. (`val`
-# and `probe.npy` left 2026-09-10, layout v2: `eval/val.h5` was read by nothing but this
-# builder, and the vocabulary is a stored artefact — DATASET_LAYOUT_SPEC.md §4d.)
-NPY_SPLITS = ("test", "edits")
+# Only the training corpus is stored as tokens (it is streamed 20M sequences at a time).
+# Every small split joins the VOCABULARY and is re-encoded from its float h5 by whoever
+# reads it — probes and the bench through ``token_bench.token_encoder``, anything else
+# through ``encode_h5`` — so a model and its token twin always read the same file.
+# (`probe.npy` / `val.npy` left 2026-09-10 with layout v2, DATASET_LAYOUT_SPEC.md §4d;
+# `test.npy` / `edits.npy` 2026-09-19 — both re-encoded byte-identically from their h5.)
 
 
 def h5_splits(instance_dir) -> tuple[tuple[str, Path], ...]:
@@ -117,6 +120,13 @@ def decode(ids, vocab: FrameVocab) -> np.ndarray:
     return vocab.frames[np.asarray(ids).astype(np.int64)]
 
 
+def encode_h5(path, vocab: FrameVocab) -> np.ndarray:
+    """A small split's h5 file (``obs_intensity``, (n, T, R)) → (n, T) int16 ids — the
+    read-time form of the token files the builder no longer writes."""
+    with h5py.File(path, "r") as h:
+        return encode(h["obs_intensity"][:], vocab)
+
+
 def tokens_dir(instance_dir: Path) -> Path:
     return Path(instance_dir) / "tokens"
 
@@ -171,15 +181,12 @@ def tokenize_instance(instance_dir: Path, chunk: int = 250_000, levels=None, log
     mm.flush()
     per_split_counts["train"] = tr_counts
     counts += tr_counts
-    # the small splits, held as codes until the vocabulary is fixed
-    split_codes = {}
+    # the small splits join the vocabulary (counted, not stored)
     splits = h5_splits(inst_dir)
     for name, p in splits:
         with h5py.File(p) as h:
             x = h["obs_intensity"][:]
-        c = frame_codes(x, levels)
-        split_codes[name] = c
-        per_split_counts[name] = np.bincount(c.ravel(), minlength=K ** R)
+        per_split_counts[name] = np.bincount(frame_codes(x, levels).ravel(), minlength=K ** R)
         counts += per_split_counts[name]
 
     vocab = vocab_from_counts(counts, levels, R)
@@ -189,9 +196,6 @@ def tokenize_instance(instance_dir: Path, chunk: int = 250_000, levels=None, log
         mm[i: i + chunk] = vocab.code_to_id[mm[i: i + chunk].astype(np.int64)]
     mm.flush()
     del mm
-    for name, c in split_codes.items():
-        if name in NPY_SPLITS:
-            np.save(out / f"{name}.npy", vocab.code_to_id[c])
 
     in_vocab = counts > 0
     meta = {
@@ -206,9 +210,9 @@ def tokenize_instance(instance_dir: Path, chunk: int = 250_000, levels=None, log
         "frame_occurrences_outside_train_vocab": {
             k: int(v[in_vocab & (tr_counts == 0)].sum()) for k, v in per_split_counts.items()
             if k != "train"},
-        "files": {"train": "train.i16 (N, T) int16 memmap", **{n: f"{n}.npy (n, T) int16"
-                                                              for n in NPY_SPLITS},
+        "files": {"train": "train.i16 (N, T) int16 memmap",
                   "vocab": "vocab.npz (levels, frames (V+1, R), code_to_id, counts)"},
+        "small_splits": "not stored as tokens; encode their h5 at read time (tokens.encode_h5)",
         "minutes": round((time.time() - t0) / 60, 1),
     }
     (out / "meta.json").write_text(json.dumps(meta, indent=1))

@@ -1,0 +1,26 @@
+=== S P K INIT = 300 256 16 300
+(b) exact (grouped prior, N=345,001 accepted of 20M, 20s): floor_0 = 0.00714 (416 groups)   floor_1 = 0.00711 (3690 groups)   unconditional Var(frame) = 0.10763
+init 300 sweeps 25s (last acceptance 0.76)
+sampler: S=300 P=256 K=16  256s CPU  resets 87/11700  mean survivors 0.787  MH acceptance 0.55
+(b) sampler floor_0 = 0.00692 ± 0.00025   floor_1 = 0.00659 ± 0.00025
+(c) FLOOR (mean over 39 positions × rays): posterior variance 0.00505 ± 0.00010   posterior-mean MSE vs truth 0.00582 ± 0.00015
+(d) model ray_ablation/L-dw-8ray-20m: MSE 0.00577 ± 0.00012 on the same 300 sequences   excess over floor -0.00005 (vs post-mean MSE) / +0.00072 (vs variance)
+    t :       0       1       2       3       5      10      20      38
+    floor var 0.0069  0.0066  0.0061  0.0060  0.0064  0.0063  0.0053  0.0030
+    floor mse 0.0064  0.0058  0.0070  0.0052  0.0068  0.0082  0.0063  0.0037
+    model     0.0074  0.0065  0.0078  0.0058  0.0071  0.0083  0.0059  0.0037
+    positions where the model beats the floor by > 2 SE: [25]
+=== S P K INIT = 300 512 40 500
+(b) exact (grouped prior, N=345,001 accepted of 20M, 20s): floor_0 = 0.00714 (416 groups)   floor_1 = 0.00711 (3690 groups)   unconditional Var(frame) = 0.10763
+init 500 sweeps 88s (last acceptance 0.76)
+sampler: S=300 P=512 K=40  1194s CPU  resets 28/11700  mean survivors 0.782  MH acceptance 0.55
+(b) sampler floor_0 = 0.00699 ± 0.00023   floor_1 = 0.00676 ± 0.00024
+(c) FLOOR (mean over 39 positions × rays): posterior variance 0.00547 ± 0.00010   posterior-mean MSE vs truth 0.00566 ± 0.00013
+(d) model ray_ablation/L-dw-8ray-20m: MSE 0.00577 ± 0.00012 on the same 300 sequences   excess over floor +0.00011 (vs post-mean MSE) / +0.00031 (vs variance)
+    t :       0       1       2       3       5      10      20      38
+    floor var 0.0070  0.0068  0.0064  0.0065  0.0069  0.0066  0.0059  0.0033
+    floor mse 0.0066  0.0058  0.0073  0.0055  0.0066  0.0083  0.0064  0.0040
+    model     0.0074  0.0065  0.0078  0.0058  0.0071  0.0083  0.0059  0.0037
+    positions where the model beats the floor by > 2 SE: []
+
+[exited with code 0]

@@ -16,7 +16,7 @@ classes; the directory names the split's ROLE, the file name carries its size:
       edits/v1/                 the current edit bench: discworld edits.h5 (+ edits.json,
                                 selection.json); othello cases_<n>.pkl (+ .json)
       edits/v2/                 reserved for the paired-counterfactual bench
-      tokens/                   frames-as-tokens (discworld, unchanged)
+      tokens/                   frames-as-tokens (discworld): train.i16, vocab.npz, meta.json only
       _unused/                  files no code reads — moved, never deleted
 
 Every function here resolves to the **v2** location. (During the 2026-09-10 migration window

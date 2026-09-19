@@ -10211,5 +10211,25 @@
    "version": "2026-09-15.1",
    "minutes": 5.4
   }
+ },
+ "prediction": {
+  "version": "2026-09-19.1",
+  "instance": "oth-uniform",
+  "split": "test",
+  "readings": {
+   "moves": {
+    "objective": "ce",
+    "unit": "CE (nats per move)",
+    "loss": 2.028563248555704,
+    "se": null,
+    "n_sequences": 10000,
+    "loss_paired": 2.028563248555704,
+    "se_paired": null,
+    "n_paired": 10000,
+    "n_positions": 589564,
+    "top1": 0.16946082189550243,
+    "source": "scores.json gates (arms.gates on the test split)"
+   }
+  }
  }
 }

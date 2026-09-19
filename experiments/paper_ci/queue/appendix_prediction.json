@@ -1,0 +1,27 @@
+{
+ "id": "appendix_prediction",
+ "group": "tables",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": ".pim/bin/python -u scripts/bayes_floor.py && .pim/bin/python -u scripts/score_prediction.py && .pim/bin/python .pim/bin/jupyter-nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 notebooks/build_appendix_tables_and_figs.ipynb",
+ "env": {
+  "PIM_SKIP_TOPICS": "training_curve"
+ },
+ "deps": [
+  "final_tables"
+ ],
+ "host_deps": {},
+ "priority": 95,
+ "est_hours": {
+  "lab": 1.0
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "note": "Bayes floors (4 Othello exact + 6 discworld sampled) -> runs/_baselines/<inst>/bayes_floor.json; prediction block folded into every scored run; appendix Table A1 re-rendered. After final_tables."
+}

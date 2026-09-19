@@ -23,6 +23,8 @@ import torch.nn.functional as F
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
+from pim.environments import layout  # noqa: E402
+from pim.environments.discworld.tokens import FrameVocab, encode_h5  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 
 EXP = REPO / "experiments" / "dw_tokens"
@@ -37,7 +39,9 @@ def main() -> None:
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     model, info = load_checkpoint(run_dir / "best_model.pt", device=dev)
     model.eval()
-    tok = np.load(REPO / "datasets" / "discworld" / a.instance / "tokens" / "test.npy")
+    # the held-out split, encoded through the run's own vocabulary (byte-identical to the
+    # tokens/test.npy this read until 2026-09-19)
+    tok = encode_h5(layout.eval_file("discworld", a.instance), FrameVocab.load(run_dir / "vocab.npz"))
     T = tok.shape[1]
     block = T - 1
     ce, acc, ptrue, persist = (np.zeros(block) for _ in range(4))

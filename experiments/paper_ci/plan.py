@@ -145,19 +145,53 @@ def probe_seed_jobs() -> list[dict]:
     return jobs
 
 
+def control_jobs() -> list[dict]:
+    """The probe-corpus-size control (experiments/probe_corpus_size, Sevan 2026-09-19): the regression /
+    Othello probes and the inverse map refitted on more data, editors re-swept; canonical numbers untouched."""
+    return [
+        {"id": "ctrl_corpus_dw", "group": "control", "kind": "custom", "hosts": ["lab"], "lane": "gpu",
+         "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 100000 200000",
+         "env": {}, "deps": [], "host_deps": {}, "priority": 25, "est_hours": {"lab": 3.5}, "inputs": [],
+         "outputs": ["experiments/probe_corpus_size/scores"], "progress": None, "mem_max": None, "max_attempts": 2, "hold": False,
+         "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k/200k, inverse map + IM at 30k/100k"},
+        {"id": "ctrl_corpus_oth", "group": "control", "kind": "custom", "hosts": ["remote", "lab"], "lane": "gpu",
+         "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 60000 100000",
+         "env": {}, "deps": [], "host_deps": {}, "priority": 26, "est_hours": {"lab": 1.5, "remote": 2.0},
+         "inputs": ["runs/initial_othello_comparison/L-oth-20m"], "outputs": ["experiments/probe_corpus_size/scores"],
+         "progress": None, "mem_max": None, "max_attempts": 2, "hold": False,
+         "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/60k/100k games, inverse map + IM at 20k/60k"},
+    ]
+
+
 def build() -> list[dict]:
     jobs = [transfer_job(i, p) for i, p in TRANSFERS.items()]
     for fam, F in FAMILIES.items():
         for seed in (1, 2):
             jobs.append(replicate_job(fam, F, seed))
     jobs += probe_seed_jobs()
-    rep_ids = [j["id"] for j in jobs if j["kind"] in ("replicate", "extend")]
+    jobs += control_jobs()
+    # final_tables waits for EVERYTHING else (2026-09-19): it and the appendix job after it rewrite
+    # scores.json files on the lab, and a remote job finishing meanwhile would pull its parent run dir
+    # back over them. Nothing runs on either host while these two do.
+    everything = [j["id"] for j in jobs if j["kind"] != "transfer"]
     jobs.append({"id": "final_tables", "group": "tables", "kind": "score", "hosts": ["lab"], "lane": "gpu",
                  "cmd": "bash scripts/drivers/score_pending.sh paper_ci_final",
                  "env": {"PIM_DW_BASES": "frustum,cartesian", "PIM_SKIP_TOPICS": "training_curve"},
-                 "deps": rep_ids, "host_deps": {}, "priority": 90, "est_hours": {"lab": 0.5},
+                 "deps": everything, "host_deps": {}, "priority": 90, "est_hours": {"lab": 0.5},
                  "inputs": [], "outputs": [], "progress": None, "mem_max": None, "max_attempts": 2,
                  "note": "master_eval catches anything unscored, both table notebooks re-render with every ± in place"})
+    # the appendix's predictive-loss-vs-Bayes-floor table (experiments/bayes_floor/QUEUE_HANDOFF.md, another
+    # session's work, 2026-09-19): model-free floors + trivial predictors per instance, a `prediction` block
+    # folded into every scored run, Table A1 re-rendered. Lab only, LAST, never beside master_eval.
+    jobs.append({"id": "appendix_prediction", "group": "tables", "kind": "score", "hosts": ["lab"], "lane": "gpu",
+                 "cmd": (".pim/bin/python -u scripts/bayes_floor.py && .pim/bin/python -u scripts/score_prediction.py && "
+                         ".pim/bin/python .pim/bin/jupyter-nbconvert --to notebook --execute --inplace "
+                         "--ExecutePreprocessor.timeout=-1 notebooks/build_appendix_tables_and_figs.ipynb"),
+                 "env": {"PIM_SKIP_TOPICS": "training_curve"}, "deps": ["final_tables"], "host_deps": {},
+                 "priority": 95, "est_hours": {"lab": 1.0}, "inputs": [], "outputs": [], "progress": None,
+                 "mem_max": None, "max_attempts": 2,
+                 "note": "Bayes floors (4 Othello exact + 6 discworld sampled) -> runs/_baselines/<inst>/bayes_floor.json; "
+                         "prediction block folded into every scored run; appendix Table A1 re-rendered. After final_tables."})
     return jobs
 
 

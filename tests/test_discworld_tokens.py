@@ -48,7 +48,7 @@ def test_vocab_ids_are_deterministic_and_unseen_patterns_map_to_unk(tmp_path):
     assert np.array_equal(w.code_to_id, v.code_to_id) and np.allclose(w.frames[1:], v.frames[1:])
 
 
-def test_tokenize_instance_writes_every_file(tmp_path):
+def test_tokenize_instance_writes_only_the_minimal_files(tmp_path):
     rng = np.random.default_rng(2)
     N, T, R = 37, 6, 8
     inst = tmp_path / "dw-tiny"
@@ -75,6 +75,8 @@ def test_tokenize_instance_writes_every_file(tmp_path):
     assert tok.shape == (N, T) and tok.dtype == np.int16 and (ln == T).all()
     assert np.array_equal(tk.decode(np.asarray(tok), v), train)   # train round-trips through the file
     assert meta["frames_only_outside_train"] >= 1 and meta2["vocab_size"] == v.size
-    ed = np.load(inst / "tokens" / "edits.npy")
+    # only the training corpus is stored as tokens; the small splits are encoded at read time
+    assert {p.name for p in (inst / "tokens").iterdir()} == {"train.i16", "vocab.npz", "meta.json"}
+    ed = tk.encode_h5(dict(tk.h5_splits(inst))["edits"], v)
     assert ed.shape == (5, T) and (ed > 0).all()                  # the eval-only frame IS in the vocab
     assert np.array_equal(tk.decode(ed[0, 0], v), eval_only[0])

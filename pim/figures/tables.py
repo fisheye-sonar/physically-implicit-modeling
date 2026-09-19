@@ -763,6 +763,118 @@ def table_bayes(F: Frames, tag: str = "4", path: Path = REPO / "experiments" / "
                        col_width=1.25)
 
 
+# ── Appendix: predictive loss beside the Bayes floor (2026-09-19; supersedes table_bayes) ──
+
+
+def _replicate_losses(run: str, reading: str, rep_sd: dict) -> list[float]:
+    """The pooled replicate set's losses for one reading: the members ``pool_replicates`` chose
+    (matched budget), read from their own ``prediction`` blocks."""
+    steps = next((set(v["steps"]) for (p, _), v in rep_sd.items() if p == run), None)
+    out = []
+    for rp in sorted((REPO / "runs").glob(f"*/{run}__seed*/scores.json")):
+        cfg = rp.parent / "config.json"
+        st = json.loads(cfg.read_text()).get("replicate", {}).get("steps") if cfg.exists() else None
+        rd = json.loads(rp.read_text()).get("prediction", {}).get("readings", {}).get(reading)
+        if rd and (steps is None or st in steps):
+            out.append(float(rd["loss_paired"]))
+    return out
+
+
+def prediction_rows(runs_oth: list[str], runs_dw: list[str], rep_sd: dict | None = None) -> pd.DataFrame:
+    """One row per (run, reading): the run's held-out loss (``scores.json`` → ``prediction``,
+    written by ``scripts/score_prediction.py``), its instance's Bayes floor
+    (``runs/_baselines/<instance>/bayes_floor.json``, ``scripts/bayes_floor.py``) and the
+    excess — numbers only; ``table_prediction`` draws them. The loss shown is the one PAIRED with
+    the floor (the same held-out sequences). The floor is ``value ± pm``: an exact floor (Othello)
+    has pm = 0; a sampled floor is the midpoint of its bracket ± (half-width + one SE) —
+    ``pim.metrics.prediction.floor_estimate``. The raw bracket ends stay in the frame."""
+    from pim.metrics.prediction import excess_estimate, floor_bracket, floor_estimate, gap_closed
+
+    rows = []
+    for env, names in (("othello", runs_oth), ("discworld", runs_dw)):
+        for name in names:
+            sp = find_run(name)
+            if sp is None:
+                continue
+            s = json.loads(sp.read_text())
+            fp = REPO / "runs" / "_baselines" / s["instance"] / "bayes_floor.json"
+            floor = json.loads(fp.read_text()) if fp.exists() else None
+            readings = s.get("prediction", {}).get("readings", {})
+            for key, rd in (readings or {None: None}).items():
+                est = floor_estimate(floor, rd["objective"]) if rd else None
+                br = floor_bracket(floor, rd["objective"]) if rd else None
+                ex = excess_estimate(rd["loss_paired"], est) if rd else None
+                reps = _replicate_losses(name, key, rep_sd or {}) if rd else []
+                tv = ((floor or {}).get("trivial") or {}).get(rd["objective"]) if rd else None
+                rows.append({"env": env, "run": name, "instance": s["instance"], "reading": key,
+                             "objective": rd["objective"] if rd else None, "unit": rd["unit"] if rd else None,
+                             "trivial": tv["value"] if tv else np.nan,
+                             "gap_closed": gap_closed(rd["loss_paired"], tv["value"], est[0]) if (tv and est) else np.nan,
+                             "loss": rd["loss_paired"] if rd else np.nan,
+                             "loss_sd": float(np.std(reps, ddof=1)) if len(reps) >= 2 else np.nan, "n_rep": len(reps),
+                             "floor": est[0] if est else np.nan, "floor_pm": est[1] if est else np.nan,
+                             "floor_lo": br[0] if br else np.nan, "floor_hi": br[1] if br else np.nan,
+                             "excess": ex[0] if ex else np.nan, "excess_pm": ex[1] if ex else np.nan,
+                             "excess_rel": ex[2] if ex else np.nan,
+                             "n_paired": rd["n_paired"] if rd else np.nan})
+    return pd.DataFrame(rows)
+
+
+READING_LABEL = {"moves": "", "frames": "", "tokens": " · token CE", "expected-frame": " · mean frame MSE"}
+
+
+def table_prediction(runs_oth: list[str], runs_dw: list[str], tag: str = "A1", rep_sd: dict | None = None):
+    """Table A1 as a figure, in the master tables' style: (a) the held-out loss beside the Bayes
+    floor, (b) the excess, coloured by its size RELATIVE to the floor (the one scale that is
+    comparable between Othello's nats and discworld's squared intensities); the TRIVIAL predictor
+    (the best history-blind constant, from the instance's floor file) is the point of comparison at
+    the other end — ``gap_closed`` in ``prediction_rows`` places the loss between the two. ``x ± y`` on the loss
+    is the SD over seed replicates; on a floor or an excess it is the floor's estimation
+    uncertainty — absent where the floor is exact (Othello)."""
+    P = prediction_rows(runs_oth, runs_dw, rep_sd)
+    if P.empty:
+        return None
+
+    def pm(v, d, signed=False):
+        if pd.isna(v):
+            return "—"
+        return format(v, "+.5f" if signed else ".5f") + ("" if pd.isna(d) or d == 0 else f"\n± {d:.5f}")
+
+    A = np.array([[pm(r.trivial, np.nan), pm(r.loss, r.loss_sd), pm(r.floor, r.floor_pm)] for r in P.itertuples()], dtype=object)
+    def ex(r):
+        if pd.isna(r.excess):
+            return "—"
+        return (f"{r.excess:+.5f}   ({r.excess_rel:+.1%})"
+                + ("" if pd.isna(r.excess_pm) or r.excess_pm == 0 else f"\n± {r.excess_pm:.5f}"))
+
+    B = np.array([[ex(r)] for r in P.itertuples()], dtype=object)
+    ylab = [f"{r.run}{READING_LABEL.get(r.reading, '')}" for r in P.itertuples()]
+    groups = groups_of([f"{r.env} · {r.instance}" for r in P.itertuples()])
+    eb = env_break_of(P)
+    fig, axes = plt.subplots(1, 2, figsize=(13.2, 0.62 * len(P) + 2.0),
+                             gridspec_kw=dict(width_ratios=[3.0, 1.5], wspace=0.06))
+    # (a) numbers in different units per environment: a neutral ground, no colour scale
+    sns.heatmap(np.zeros((len(P), 3)), annot=A, fmt="", cmap=["#f4f3ee"], cbar=False, linewidths=0,
+                xticklabels=["trivial predictor", "held-out loss", "Bayes floor"], yticklabels=ylab, ax=axes[0],
+                annot_kws=dict(fontsize=8.5))
+    for j in (1, 2):
+        axes[0].axvline(j, color="white", lw=1.2)
+    _title(axes[0], "(a) trivial predictor · held-out loss · Bayes floor", fontsize=10.5, loc="left", pad=8)
+    axes[0].tick_params(labelsize=9, length=0)
+    plt.setp(axes[0].get_yticklabels(), rotation=0)
+    group_rows(axes[0], groups, x=-0.42, env_break=eb)
+    heat(axes[1], P[["excess_rel"]].to_numpy(float) * 100, ["excess  (loss − floor)"], [""] * len(P), fmt="", cmap="YlOrRd",
+         vmin=0.0, vmax=25.0, cbar_label="excess as % of the floor", annot_text=B, title="(b) excess")
+    side_rules(axes[0], groups, eb)
+    side_rules(axes[1], groups, eb)
+    _suptitle(fig, f"Table {tag} — held-out predictive loss beside the Bayes floor\n"
+              "Othello: CE, nats / move · discworld: MSE, intensity² / ray (token CE: nats / frame) · ± on the loss = SD over "
+              "seed replicates · ± on a floor or excess = the floor's estimation uncertainty (none where exact)\n"
+              "trivial predictor = the best history-blind constant (mean frame / move or pattern frequencies), fitted on the probe corpus",
+              fontsize=10.5, y=1.07)
+    return fig
+
+
 # ── Table 5: seed variance ───────────────────────────────────────────────────
 
 

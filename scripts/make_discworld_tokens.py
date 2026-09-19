@@ -3,8 +3,9 @@
 
     python scripts/make_discworld_tokens.py --instance dw-8ray
 
-Writes datasets/discworld/<instance>/tokens/ (train.i16, test/edits.npy, vocab.npz,
-meta.json); the source splits are resolved through pim.environments.layout (v2). Additive;
+Writes datasets/discworld/<instance>/tokens/ (train.i16, vocab.npz, meta.json — nothing else:
+the probe / eval / edits splits join the vocabulary and are encoded from their h5 at read
+time); the source splits are resolved through pim.environments.layout (v2). Additive;
 safe to re-run (overwrites the tokens/ files only).
 Run under a memory cap like every corpus job: peak ≈ one chunk of frames (~0.4 GB).
 """

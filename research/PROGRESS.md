@@ -17,6 +17,26 @@ Table 2 row. **FIXED by Sevan 2026-09-19:** entry added (762faae); `push_inputs`
 directory pushes (it was nesting `scripts/scripts/` on the remote) and a held job adds the 16-ray members' fac
 block (507d623).
 
+**2026-09-19 (Sevan) — PREDICTIVE LOSS vs BAYES FLOOR made canonical; NOTHING RUN YET (queue owns the GPUs).**
+`pim/metrics/prediction.py`, `pim/environments/prediction.py` (a run's `prediction` block),
+`pim/environments/discworld/bayes.py` (floor by posterior sampling over the initial state; blink's marker process
+analytic), `pim/environments/othello/bayes.py` (exact), `scripts/bayes_floor.py` →
+`runs/_baselines/<inst>/bayes_floor.json`, `scripts/score_prediction.py` (fold-in), `tables.table_prediction`,
+`notebooks/build_appendix_tables_and_figs.ipynb` (Table A1; renders `—` until the files exist), 7 tests, REGISTRY
+rows. Scope (Sevan): 4 Othello + dw-noiseless / blink / 16 / 8 / 5-ray, main-table runs + the token run read two
+ways (+ dw-128ray, added the same day); no smooth / pn04 / training curves / per-position curves; columns loss · floor ·
+excess, drawn as a FIGURE in the master tables' style (heat panels, grouped rows). A sampled floor is stored as a
+bracket lo … hi and SHOWN as midpoint ± (half-width + one SE); Othello's exact floor has no ± (Sevan). A TRIVIAL-predictor
+column (Sevan): the best history-blind constant from the probe split, stored in each floor file (`trivial`); measured on
+CPU: oth-uniform 4.094 (= log 60), dw-8ray 0.1007 / token CE 5.18, dw-noiseless 0.0726. ⚠ Repeat-the-current-frame is a far
+stronger naive reference on discworld (dw-8ray 0.0078 vs floor ≈ 0.0056, model 0.00577) — recorded as `persistence_mse`,
+printed not tabulated; put to Sevan. CPU pilot, dw-8ray: floor 0.0055–0.0057 vs model 0.00577 (`scratch/2026-09-19-bayes-floor-pilot.md`);
+the old Table 4 "floor = 0" was a state oracle, not a Bayes floor. Verified on CPU: renderer parity 100% on all five
+instances, blink marker model calibrated within 1.4% on 10k sequences. **To run:** one queue job after
+`final_tables` — `experiments/bayes_floor/QUEUE_HANDOFF.md` (for the session operating the queue; job file in
+`queue_proposal/`, NOT installed). `master_eval` untouched. UNCOMMITTED. When it lands: check the brackets, write
+`findings/predictive-quality.md`, fill the paper's red prediction-quality placeholders, retire Table 4.
+
 **2026-09-19 (Sevan) — `tokens/` trimmed to the minimum:** the discworld tokenizer now writes ONLY `train.i16`,
 `vocab.npz`, `meta.json`; every small split is encoded from its h5 at read time (`tokens.encode_h5`, new).
 `experiments/dw_tokens/scripts/{ce_by_position,ngram_floor}.py` and `tests/test_token_bench.py` /
@@ -55,6 +75,13 @@ queue jobs `ctrl_corpus_dw` (lab, ~3.5 h, after the ray family) and `ctrl_corpus
 probes / inverse map refitted on up to 200k sequences / 100k games, editors re-swept, canonical numbers
 untouched. Write its result into `findings/probe-capacity.md` when it lands. Owed still: the Othello PI/ND/GS
 guard CI line in `master_eval` cell [4]; the Othello ceiling bootstrap (deprioritised by Sevan).
+**Added 2026-09-19 15:00 (Sevan, via another session's hand-off `experiments/bayes_floor/QUEUE_HANDOFF.md`):** job
+`appendix_prediction` — Bayes floors + trivial predictors per instance (`scripts/bayes_floor.py` →
+`runs/_baselines/<inst>/bayes_floor.json`), a `prediction` block folded into every scored run
+(`scripts/score_prediction.py`), appendix Table A1 re-rendered. Lab only, LAST (deps `final_tables`, which now waits
+for EVERY other job so nothing runs on either host while scores.json files are rewritten). CPU smoke passed (parity
+1.0 on all six discworld instances, four exact Othello floors). When it finishes: check each `bayes_floor.json`
+against the hand-off's accept/reject list, record in `findings/predictive-quality.md`, tell Sevan Table A1 is ready.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
