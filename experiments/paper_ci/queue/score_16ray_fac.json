@@ -24,6 +24,6 @@
  "progress": null,
  "mem_max": null,
  "max_attempts": 2,
- "hold": true,
- "note": "add the appearance-fac block to the two existing 16-ray members (their probes are cached); HELD until the notebook entry is confirmed restored"
+ "hold": false,
+ "note": "add the appearance-fac block to the two existing 16-ray members (their probes are cached); runs right after the current lab job"
 }
