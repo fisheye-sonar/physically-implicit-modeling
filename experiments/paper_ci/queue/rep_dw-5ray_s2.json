@@ -7,7 +7,7 @@
   "remote"
  ],
  "lane": "gpu",
- "cmd": "bash scripts/drivers/replicate.sh ray_ablation/L-dw-5ray-20m 2 390000 appearance-fac appearance",
+ "cmd": "bash scripts/drivers/replicate.sh ray_ablation/L-dw-5ray-20m 2 512000 appearance-fac",
  "env": {
   "PIM_DW_BASES": "frustum,cartesian",
   "PIM_SKIP_TOPICS": "training_curve",
@@ -21,10 +21,10 @@
  },
  "priority": 21,
  "est_hours": {
-  "lab": 5.4,
-  "remote": 6.94
+  "lab": 6.6,
+  "remote": 8.5
  },
- "train_h_lab": 3.9,
+ "train_h_lab": 5.1,
  "score_h": 0.75,
  "n_scored": 2,
  "inputs": [
@@ -40,9 +40,9 @@
  ],
  "progress": {
   "metrics": "runs/ray_ablation/L-dw-5ray-20m__seed2/metrics.jsonl",
-  "steps": 390000
+  "steps": 512000
  },
  "mem_max": null,
  "max_attempts": 3,
- "note": "train L-dw-5ray-20m__seed2 to 390k, lay out the seed-0 member if missing, score (both bases, appearance-fac appearance)"
+ "note": "train L-dw-5ray-20m__seed2 to 512k, lay out the seed-0 member if missing, score (both bases, appearance-fac)"
 }

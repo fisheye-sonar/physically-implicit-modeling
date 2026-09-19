@@ -16,11 +16,12 @@ environment contrasts the paper leans on are read against it?
   replicate sets (`pim.figures.tables.pool_replicates`; REGISTRY "replicate spread").
 - **n = 3**: the parent's own checkpoint at the matched budget (seed 0) + two re-trainings
   (`scripts/train.py --replicate-of`, seeds 1 and 2). No third GPU is assumed.
-- **Budgets: Othello 512k steps, discworld 390k.** 780k everywhere would be ~250 GPU-hours at
-  5090 rates — six days on the two GPUs — and the window is 4–5 days. `L-oth-20m` has checkpoints
-  only at 256k / 512k / 780k, so its set is at 512k; the other Othello sets match it (their
-  492,188 checkpoints are 4% off). Discworld editability is flat from 64k (`findings/training-curve.md`)
-  and dw-noiseless already has its n = 3 at 390k. The paper says so in one sentence; the tables
+- **One budget everywhere: 512k steps** (Sevan, 2026-09-18 evening; was Othello 512k / discworld
+  390k). 780k everywhere would be ~250 GPU-hours at 5090 rates — six days on the two GPUs — and
+  the window is 4–5 days. `L-oth-20m` has checkpoints only at 256k / 512k / 780k; every other run
+  has a 512k or 492,188 checkpoint for its seed-0 member. The two sets that existed at 390k
+  (dw-noiseless, oth-adjacent-flip) are EXTENDED to 512k by exact resume; their 421,875 members
+  fall outside the pooling window and stay on disk. The paper says so in one sentence; the tables
   print the budget beside every ±. The Othello point estimate drifts +0.58 → +0.61 → +0.62 over
   256k / 512k / 780k, about one SD, so the 512k spread is a fair estimate of the 780k spread.
 - **Probe seeds are not re-measured per run**: the pilot found them an order of magnitude below
@@ -40,13 +41,12 @@ environment contrasts the paper leans on are read against it?
 
 ## The plan (`experiments/paper_ci/plan.py --show`)
 
-Twenty replicate / extension jobs + two corpus pushes + five probe-seed extras + one tables
-rebuild. Greedy two-host schedule from a cold start: **≈ 90 h wall on both hosts, ≈ 3.8 days**
+Twenty-two replicate / extension jobs + two corpus pushes + five probe-seed extras + one tables
+rebuild. Greedy two-host schedule from a cold start (all at 512k): **see `plan.py --show`; ≈ 4.2 days**
 at 100% duty (lab RTX 5090 rate 1.0; WSL RTX 4090 rate 0.77). Data locality: dw-128ray and
 dw-blink on the lab only (406 GB corpora), dw-16ray on the remote only (its corpus lives there),
 dw-8ray / dw-5ray either side after a ~8 min corpus push, every Othello family either side.
 Priority: ray family → standard Othello and adjacent-flip → blink → adjacent / noflip → extras.
-Trim if needed: the two inert Othello rows at 390k instead of 512k save ~12 GPU-hours.
 
 ## Bootstrap
 
@@ -68,7 +68,7 @@ Replicates pool only at a matched budget (±10%); a set with n < 2 prints no ±.
   `**move_fidelity_ci95(pr, uns_probs, bench.legal_post)` beside `move_fidelity_ratio` (2 places).
 - Bootstrap CI on the Othello ceiling (+0.91 symdiff on n = 13 / 29 / 32 ordinary cases):
   `ceiling_symdiff.py` has the per-case values; a 5-minute addition, no GPU.
-- Which gridified discworld rows (Table 2c) the paper keeps — only `appearance-fac` (and
-  `appearance` on 8-ray / 5-ray) get a spread under this plan.
-- Machine hardening needing sudo on the lab box (Sevan): hold the nvidia packages / pause
-  unattended-upgrades for the week; the 5090's power cap (two PSU freezes at 530 W on 2026-09-16).
+- Gridified discworld rows: only `appearance-fac` gets a spread (Sevan: the 8-ray grid sweep goes
+  to the appendix without one).
+- Machine hardening DONE 2026-09-18 evening (Sevan): nvidia packages held, `apt-daily-upgrade.timer`
+  stopped, the 5090 capped at 450 W (two PSU freezes at 530 W on 2026-09-16).

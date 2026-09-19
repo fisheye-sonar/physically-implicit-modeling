@@ -5,20 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#172239">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PIM CI">
 <link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icon.svg">
 <title>PIM CI</title>
 <style>
-:root{--bg:#f6f5f0;--card:#ffffff;--ink:#172239;--muted:#6b7280;--line:#e3e1d8;--ok:#1a7f4b;--warn:#b7791f;--bad:#b42318;--run:#1d4ed8;--accent:#172239;--bar:#e9e7df;}
-@media (prefers-color-scheme: dark){:root{--bg:#0f1420;--card:#171d2b;--ink:#e8eaf0;--muted:#98a2b3;--line:#2a3142;--ok:#3ccf82;--warn:#f2b544;--bad:#ff6b5e;--run:#7aa2ff;--accent:#c9d3ff;--bar:#232b3d;}}
+:root{--bg:#f6f5f0;--card:#ffffff;--ink:#172239;--muted:#6b7280;--line:#e3e1d8;--ok:#1a7f4b;--warn:#b7791f;--bad:#b42318;--run:#1d4ed8;--bar:#e9e7df;--okbg:#e6f4ec;--badbg:#fbe9e7;}
+@media (prefers-color-scheme: dark){:root{--bg:#0f1420;--card:#171d2b;--ink:#e8eaf0;--muted:#98a2b3;--line:#2a3142;--ok:#3ccf82;--warn:#f2b544;--bad:#ff6b5e;--run:#7aa2ff;--bar:#232b3d;--okbg:#14301f;--badbg:#3a1a17;}}
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-body{padding:12px 16px calc(24px + env(safe-area-inset-bottom));max-width:1200px;margin:0 auto}
+html{background:var(--bg)}
+html,body{margin:0;color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:calc(14px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px));max-width:1200px;margin:0 auto;overscroll-behavior-y:contain}
+@media (display-mode: standalone){body{padding-top:calc(26px + env(safe-area-inset-top,0px))}}
 h1{font-size:20px;margin:6px 0 2px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-h2{font-size:15px;margin:22px 0 8px;letter-spacing:.02em;text-transform:uppercase;color:var(--muted)}
+h2{font-size:13px;margin:22px 0 8px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .sub{color:var(--muted);font-size:13px}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;background:var(--muted)}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;background:var(--muted);white-space:nowrap}
 .badge.ok{background:var(--ok)}.badge.warn{background:var(--warn)}.badge.bad{background:var(--bad)}.badge.run{background:var(--run)}
 .grid{display:grid;grid-template-columns:1fr;gap:12px}
 @media (min-width:720px){.grid{grid-template-columns:1fr 1fr}}
@@ -33,21 +38,27 @@ table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
 th{color:var(--muted);font-weight:600;font-size:12px}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.pass{background:var(--okbg)}td.fail{background:var(--badbg)}
 .wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
 details{margin:6px 0}
-summary{cursor:pointer;font-weight:600;padding:6px 0}
+summary{cursor:pointer;font-weight:600;padding:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ev{font-size:12.5px;color:var(--muted);margin:3px 0}
 .ev b{color:var(--ink);font-weight:600}
 .pill{font-size:11px;padding:1px 6px;border-radius:6px;background:var(--bar);color:var(--ink);margin-left:6px}
 .stale{color:var(--bad);font-weight:700}
 .muted{color:var(--muted)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:baseline}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.blk{margin:8px 0 2px;font-weight:600;font-size:13px}
+.legend{font-size:12px;color:var(--muted);margin:4px 0 8px}
 </style>
 </head>
 <body>
 <h1>PIM CI <span id="paused" class="badge warn" hidden>PAUSED</span> <span id="age" class="sub"></span></h1>
-<div class="sub">seed replicates for the paper · two hosts · <a id="ledgerlink" href="ledger.md">ledger.md</a> · <a href="ledger.csv">csv</a> · <a href="state.json">state.json</a></div>
+<div class="sub">seed replicates for the paper · two hosts · <a href="ledger.md">ledger.md</a> · <a href="ledger.csv">csv</a> · <a href="state.json">state.json</a></div>
 
 <div class="card" style="margin-top:12px">
   <div class="row"><div><div class="sub">everything done</div><div class="eta" id="eta">—</div></div>
@@ -64,6 +75,13 @@ summary{cursor:pointer;font-weight:600;padding:6px 0}
 <div class="card wrap"><table id="queue"><thead><tr><th>job</th><th>status</th><th>host</th><th class="num">est h</th><th class="num">pred start</th><th class="num">pred end</th><th>note</th></tr></thead><tbody></tbody></table></div>
 
 <h2>Scores landing <span class="sub" id="ledgerts"></span></h2>
+<div class="tabs" id="tabs">
+  <button data-v="ei" class="on">Edit Index</button>
+  <button data-v="fid">Fidelity ratio</button>
+  <button data-v="dec">Decodability</button>
+  <button data-v="all">All metrics</button>
+</div>
+<div class="legend" id="legend"></div>
 <div id="ledger"></div>
 
 <h2>Done / failed</h2>
@@ -79,48 +97,80 @@ const ago=t=>{if(!t)return '—';const s=Math.max(0,Date.now()/1000-t);return s<
 const clock=h=>{if(h==null)return '—';const d=new Date(Date.now()+h*3600e3);const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];return days[d.getDay()]+' '+d.toTimeString().slice(0,5);};
 const num=(v,d=3,sign=true)=>v==null?'—':(sign&&v>0?'+':'')+v.toFixed(d);
 const badge=s=>({done:'ok',running:'run',queued:'',failed:'bad',blocked:'warn'}[s]||'');
+const EDITORS=['PI','ND','GS','IM','IM-NN'];
+let VIEW='ei', LAST=null;
+try{VIEW=localStorage.getItem('pimci.view')||'ei';}catch(e){}
+
+function msd(m,sign=true){if(!m||m.canonical==null)return '—';return m.n>=2&&m.sd!=null?num(m.mean,3,sign)+' ± '+m.sd.toFixed(3):'—';}
+function members(m,sign=true){return (m&&m.values||[]).filter(v=>v!=null).map(v=>num(v,3,sign)).join(' ');}
+function guardCell(m){ // fidelity: ≤ 1 passes the guard; colour by the mean over seeds (or the canonical when n = 1)
+  if(!m||m.canonical==null)return '<td class="num">—</td>';
+  const ref=m.n>=2&&m.mean!=null?m.mean:m.canonical; const cls=ref<=1?'pass':'fail';
+  const k=(m.values||[]).filter(v=>v!=null&&v<=1).length, n=(m.values||[]).filter(v=>v!=null).length;
+  return `<td class="num ${cls}">${msd(m,false)}${n>=2?' <span class="pill">'+k+'/'+n+' ≤ 1</span>':''}</td>`;}
+
+function blockTable(M){
+  if(VIEW==='ei'||VIEW==='fid'){
+    const key=VIEW==='ei'?' EI':' fid'; const sign=VIEW==='ei';
+    const rows=EDITORS.filter(e=>M[e+key]&&M[e+key].canonical!=null).map(e=>{const m=M[e+key];
+      const mid=VIEW==='fid'?guardCell(m):`<td class="num">${msd(m,sign)}</td>`;
+      return `<tr><td><b>${e}</b><span class="muted mono"> ${m.arm||''}</span></td><td class="num">${num(m.canonical,3,sign)}</td><td class="num">${m.n}</td>${mid}<td class="num">${m.ci95!=null?m.ci95.toFixed(3):'—'}</td><td class="mono muted">${members(m,sign)||'—'}${m.steps&&m.steps.length?' <span class="pill">'+m.steps.map(s=>Math.round(s/1000)+'k').join('/')+'</span>':''}</td></tr>`;}).join('');
+    const un=M['unedited'];
+    const floor=VIEW==='ei'&&un&&un.canonical!=null?`<tr><td class="muted">unedited floor</td><td class="num muted">${num(un.canonical)}</td><td class="num muted">${un.n}</td><td class="num muted">${msd(un)}</td><td class="num muted">${un.ci95!=null?un.ci95.toFixed(3):'—'}</td><td class="mono muted">${members(un)||'—'}</td></tr>`:'';
+    return `<div class="wrap"><table><thead><tr><th>editor · arm</th><th class="num">canonical</th><th class="num">n</th><th class="num">${VIEW==='ei'?'mean ± SD':'mean ± SD (guard)'}</th><th class="num">CI ±</th><th>members</th></tr></thead><tbody>${rows}${floor}</tbody></table></div>`;}
+  if(VIEW==='dec'){
+    const rows=['skill_LIN','skill_MLP'].filter(k=>M[k]&&M[k].canonical!=null).map(k=>{const m=M[k];return `<tr><td><b>${k.replace('skill_','')}</b></td><td class="num">${num(m.canonical,3,false)}</td><td class="num">${m.n}</td><td class="num">${msd(m,false)}</td><td class="num">${m.ci95!=null?m.ci95.toFixed(4):'—'}</td><td class="mono muted">${members(m,false)||'—'}</td></tr>`;}).join('');
+    return `<div class="wrap"><table><thead><tr><th>probe</th><th class="num">canonical</th><th class="num">n</th><th class="num">mean ± SD</th><th class="num">CI ±</th><th>members</th></tr></thead><tbody>${rows}</tbody></table></div>`;}
+  // all metrics: editors as rows, EI and fid side by side
+  const rows=EDITORS.filter(e=>M[e+' EI']&&M[e+' EI'].canonical!=null).map(e=>{const a=M[e+' EI'],b=M[e+' fid'];
+    return `<tr><td><b>${e}</b><span class="muted mono"> ${a.arm||''}</span></td><td class="num">${num(a.canonical)}</td><td class="num">${msd(a)}</td><td class="num">${b?num(b.canonical,3,false):'—'}</td>${guardCell(b)}<td class="num">${a.n}</td></tr>`;}).join('');
+  const dec=['skill_LIN','skill_MLP','unedited'].filter(k=>M[k]&&M[k].canonical!=null).map(k=>{const m=M[k];return `<tr><td class="muted">${k}</td><td class="num">${num(m.canonical,3,k==='unedited')}</td><td class="num">${msd(m,k==='unedited')}</td><td></td><td></td><td class="num">${m.n}</td></tr>`;}).join('');
+  return `<div class="wrap"><table><thead><tr><th>editor · arm</th><th class="num">EI</th><th class="num">EI mean ± SD</th><th class="num">fid</th><th class="num">fid mean ± SD</th><th class="num">n</th></tr></thead><tbody>${rows}${dec}</tbody></table></div>`;}
+
+function renderLedger(L){
+  $('#ledgerts').textContent=L?'· '+ago(L.generated)+' · basis '+L.basis:'';
+  $('#legend').textContent={ei:'Edit Index of each editor’s best arm: canonical (seed 0 at 780k) · mean ± SD over the replicate set at the matched budget · t-based 95% half-width · every member in seed order.',
+    fid:'Fidelity ratio (the guard) of the same arms: ≤ 1 = the edit left the model no further from the post-edit world than doing nothing. Green / red by the mean over seeds; k/n = seeds passing.',
+    dec:'Probe Skill of the linear and MLP probes (best residual point), canonical and over the replicate set.',
+    all:'Everything at once: index and guard side by side per editor, then the probes and the unedited floor.'}[VIEW];
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));
+  $('#ledger').innerHTML=L?Object.entries(L.groups).map(([g,G])=>{
+    const n=Math.max(0,...Object.values(G.blocks).flatMap(M=>Object.values(M).map(m=>m.n||1)));
+    const blocks=Object.entries(G.blocks).map(([b,M])=>`<div class="blk">${b}</div>${blockTable(M)}`).join('');
+    return `<details class="card" ${n>=2?'open':''}><summary>${g} <span class="mono muted">${G.run}</span> <span class="badge ${n>=3?'ok':n>=2?'warn':''}">n = ${n}</span></summary>${blocks}</details>`;}).join(''):'<div class="card muted">no ledger yet</div>';}
+
 function render(S){
+  LAST=S;
   const gen=S.generated; const stale=Date.now()/1000-gen>600;
   $('#age').innerHTML=(stale?'<span class="stale">STALE · </span>':'')+'updated '+ago(gen);
   $('#paused').hidden=!S.paused;
   $('#eta').textContent=S.eta&&S.eta.end_h!=null?clock(S.eta.end_h)+' · '+fmtH(S.eta.end_h)+' left':'—';
   const c=S.counts||{}; $('#counts').innerHTML=['done','running','queued','failed'].map(k=>`<div>${k}</div><div><b>${c[k]||0}</b></div>`).join('');
-  // hosts
   $('#hosts').innerHTML=Object.entries(S.hosts).map(([h,H])=>{const s=H.snapshot||{};const g=s.gpu||{};
     const st=H.reachable?'<span class="badge ok">up</span>':'<span class="badge bad">unreachable '+H.unreachable_ticks+'×</span>';
     return `<div class="card"><h3>${H.label} ${st}</h3><div class="kv">
-      <div>gpu</div><div>${g.name||'?'} · ${g.util!=null?g.util+'%':'?'} · ${g.power_w!=null?Math.round(g.power_w)+' W / '+Math.round(g.power_limit_w)+' W':''} · ${g.mem_used_mb!=null?(g.mem_used_mb/1024).toFixed(1)+' / '+(g.mem_total_mb/1024).toFixed(0)+' GB':''}${g.error?' <span class="stale">'+g.error+'</span>':''}</div>
+      <div>gpu</div><div>${g.name||'?'} · ${g.util!=null?g.util+'%':'?'} · ${g.power_w!=null?Math.round(g.power_w)+' W / '+Math.round(g.power_limit_w)+' W':''} · ${g.mem_used_mb!=null?(g.mem_used_mb/1024).toFixed(1)+' / '+(g.mem_total_mb/1024).toFixed(0)+' GB':''}${g.temp_c!=null?' · '+g.temp_c+'°C':''}${g.error?' <span class="stale">'+g.error+'</span>':''}</div>
       <div>uptime</div><div>${s.uptime_s!=null?(s.uptime_s/86400).toFixed(1)+' d':'?'} · load ${s.load1!=null?s.load1.toFixed(1):'?'} · disk ${s.disk_free_gb!=null?s.disk_free_gb+' GB free':'?'}</div>
-      <div>probe</div><div>${ago(H.last_seen)}</div>
+      <div>polled</div><div>${ago(H.last_seen)}</div>
       <div>gpu done</div><div>${fmtH(H.gpu_busy_h)} of finished jobs</div>
       <div>lane free</div><div>${H.eta_h!=null?clock(H.eta_h)+' ('+fmtH(H.eta_h)+')':'—'}</div>
       <div>running</div><div>${(H.running||[]).join(', ')||'<span class="muted">idle</span>'}</div></div></div>`;}).join('');
-  // running
   const run=S.jobs.filter(j=>j.status==='running');
   $('#running').innerHTML=run.length?run.map(j=>{const p=j.progress||{};const frac=p.frac!=null?p.frac:null;
     return `<div class="card"><h3><span class="mono">${j.id}</span><span class="badge run">${j.host}</span></h3>
       <div class="sub">${j.note||''}</div>
-      ${frac!=null?`<div class="bar"><i style="width:${(frac*100).toFixed(1)}%"></i></div><div class="sub">${p.step.toLocaleString()} / ${p.total.toLocaleString()} steps · ${(frac*100).toFixed(1)}% · ${p.rate?p.rate.toFixed(1)+' steps/s':''} · val ${p.val_loss!=null?p.val_loss.toExponential(3):'—'}</div>`:`<div class="sub">no training progress file (scoring or a cpu job)</div>`}
-      <div class="kv" style="margin-top:6px"><div>started</div><div>${j.started||'—'} (attempt ${j.attempts})</div>
+      ${frac!=null?`<div class="bar"><i style="width:${(frac*100).toFixed(1)}%"></i></div><div class="sub">${p.step.toLocaleString()} / ${p.total.toLocaleString()} steps · ${(frac*100).toFixed(1)}% · ${p.rate?p.rate.toFixed(1)+' steps/s':''} · val ${p.val_loss!=null?p.val_loss.toExponential(3):'—'}</div>`:`<div class="sub">no training progress file (scoring, or a cpu job)</div>`}
+      <div class="kv" style="margin-top:6px"><div>started</div><div>${(j.started||'—').replace('T',' ')} (attempt ${j.attempts})</div>
       <div>eta</div><div>${p.eta_h!=null?clock(p.eta_h)+' · '+fmtH(p.eta_h)+' left':(j.pred_end_h!=null?clock(j.pred_end_h)+' (est)':'—')}</div>
       <div>last write</div><div>${p.metrics_mtime||p.log_mtime?ago(Math.max(p.metrics_mtime||0,p.log_mtime||0)):'—'}</div></div></div>`;}).join(''):'<div class="card muted">nothing running</div>';
-  // queue
   const q=S.jobs.filter(j=>j.status==='queued'||j.status==='blocked').sort((a,b)=>(a.pred_start_h??1e9)-(b.pred_start_h??1e9)||a.priority-b.priority);
   $('#queue tbody').innerHTML=q.map(j=>`<tr><td class="mono">${j.id}${j.hold?'<span class="pill">hold</span>':''}${j.attempts?'<span class="pill">retry '+j.attempts+'</span>':''}</td><td><span class="badge ${badge(j.status)}">${j.status}</span></td><td>${j.pred_host||(j.hosts||[]).join('/')}</td><td class="num">${j.est_hours?fmtH(j.est_hours[j.pred_host]||Object.values(j.est_hours)[0]):'—'}</td><td class="num">${j.pred_start_h!=null?clock(j.pred_start_h):'—'}</td><td class="num">${j.pred_end_h!=null?clock(j.pred_end_h):'—'}</td><td class="muted">${j.note||''}${j.last_error?' <span class="stale">'+j.last_error+'</span>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">queue empty</td></tr>';
-  // done
   const d=S.jobs.filter(j=>j.status==='done'||j.status==='failed').sort((a,b)=>(b.ended||'').localeCompare(a.ended||''));
   $('#done tbody').innerHTML=d.map(j=>`<tr><td class="mono">${j.id}</td><td><span class="badge ${badge(j.status)}">${j.status}</span>${j.synced===false?' <span class="stale">unsynced</span>':''}</td><td>${j.host||''}</td><td>${(j.started||'').replace('T',' ').slice(0,16)}</td><td>${(j.ended||'').replace('T',' ').slice(0,16)}</td><td class="num">${j.duration_s?(j.duration_s/3600).toFixed(2):'—'}</td><td>${j.attempts}${j.last_error?' <span class="stale">'+j.last_error+'</span>':''}</td></tr>`).join('')||'<tr><td colspan="7" class="muted">nothing finished yet</td></tr>';
-  // ledger
-  const L=S.ledger; $('#ledgerts').textContent=L?'· '+ago(L.generated)+' · basis '+L.basis+' · ± = SD over training seeds, [CI] = t 95% half-width':'';
-  $('#ledger').innerHTML=L?Object.entries(L.groups).map(([g,G])=>{const blocks=Object.entries(G.blocks).map(([b,M])=>{
-      const keys=['skill_LIN','skill_MLP','unedited','PI EI','PI fid','ND EI','ND fid','GS EI','GS fid','IM EI','IM fid'].filter(k=>M[k]&&M[k].canonical!=null);
-      return `<div class="sub" style="margin-top:6px"><b>${b}</b></div><div class="wrap"><table><thead><tr><th>metric</th><th class="num">canonical</th><th class="num">n</th><th class="num">mean ± SD</th><th class="num">CI ±</th><th>members</th></tr></thead><tbody>`+
-        keys.map(k=>{const m=M[k];const sd=m.n>=2&&m.sd!=null;return `<tr><td>${k}</td><td class="num">${num(m.canonical)}</td><td class="num">${m.n}</td><td class="num">${sd?num(m.mean)+' ± '+m.sd.toFixed(3):'—'}</td><td class="num">${m.ci95!=null?m.ci95.toFixed(3):'—'}</td><td class="mono muted">${(m.values||[]).filter(v=>v!=null).map(v=>num(v)).join(' ')}${m.steps&&m.steps.length?' <span class="pill">'+m.steps.map(s=>Math.round(s/1000)+'k').join('/')+'</span>':''}</td></tr>`;}).join('')+'</tbody></table></div>';}).join('');
-    const n=Math.max(0,...Object.values(G.blocks).flatMap(M=>Object.values(M).map(m=>m.n||1)));
-    return `<details class="card" ${n>=2?'open':''}><summary>${g} <span class="mono muted">${G.run}</span> <span class="badge ${n>=3?'ok':n>=2?'warn':''}">n = ${n}</span></summary>${blocks}</details>`;}).join(''):'<div class="card muted">no ledger yet</div>';
-  // events
+  renderLedger(S.ledger);
   $('#events').innerHTML=(S.events||[]).slice(0,40).map(e=>`<div class="ev"><b>${e.iso.replace('T',' ').slice(5,16)}</b> ${e.kind}: ${e.msg}</div>`).join('')||'<div class="muted">—</div>';
 }
+document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{VIEW=b.dataset.v;try{localStorage.setItem('pimci.view',VIEW);}catch(e){}if(LAST)renderLedger(LAST.ledger);}));
 async function load(){try{const r=await fetch('state.json?t='+Date.now(),{cache:'no-store'});render(await r.json());}catch(e){$('#age').innerHTML='<span class="stale">cannot load state.json</span>';}}
 load();setInterval(load,60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}

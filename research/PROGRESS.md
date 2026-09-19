@@ -12,9 +12,9 @@ mean ± SD as the readout and a t-based 95% CI secondary, on the two GPUs only, 
 supplemental runs and the gridified layouts get none. Brief: `research/directions/paper-confidence-intervals.md`.
 Protocol written generically as `harness/MULTIDAY.md` (queue + timer dispatcher + per-host watchdog +
 dashboard + two ntfy channels); `experiments/paper_ci/README.md` is the operator's manual.
-**Plan:** Othello at 512k (L-oth-20m has no ~390k checkpoint; 780k everywhere ≈ 6 days, infeasible),
-discworld at 390k; 20 replicate/extension jobs + 2 corpus pushes (dw-8ray / dw-5ray → remote) + 5
-probe-seed extras + final tables; greedy schedule **≈ 90 h wall ≈ 3.8 days** (`plan.py --show`).
+**Plan (Sevan 20:40: ONE budget, 512k everywhere; `appearance-fac` only):** 22 replicate/extension jobs
+(dw-noiseless and oth-adjacent-flip's 390k sets are extended) + 2 corpus pushes (dw-8ray / dw-5ray → remote)
++ 5 probe-seed extras + final tables; greedy schedule ≈ 4.2 days (`plan.py --show`). 780k everywhere ≈ 6 days.
 **State:** lab timers installed and ticking (`pimci-dispatch` every 2 min, `pimci-watchdog` every 5 min,
 `pimci-dashboard` server); remote watchdog timer installed; `tailscale serve` publishes the dashboard at
 `https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`; smoke jobs ran through the real launch path on BOTH
@@ -26,8 +26,8 @@ and pools every editor's guard, Table 5 has SD and CI panels, `layout_checkpoint
 out a new member when the existing one is > 10% off the budget, `replicate.sh` extends a finished
 replicate and parks its stale scores, `score_pending.sh` honours `PIM_SCORE_ONLY=1`. Tests: 281 + 4 pass.
 **Launch = `rm experiments/paper_ci/state/PAUSED`.** Remote synced (runs, non-train splits, Othello
-corpora, code at HEAD after the pull). Sudo items for Sevan: hold nvidia packages / pause
-unattended-upgrades; the 5090 power cap (his call).
+corpora, code at HEAD after the pull). Hardening done by Sevan 20:40: nvidia packages held,
+apt-daily-upgrade.timer stopped, 5090 at 450 W. Digest topic subscribed. Dashboard: fidelity / decodability views + PWA insets.
 _Previous: 2026-09-18 18:30 PT — orientation session; 2026-09-15/17 paper-session work committed as 4c725b5_
 
 ## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)

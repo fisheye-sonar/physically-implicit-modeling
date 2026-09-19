@@ -20,6 +20,8 @@
   "rep_dw-16ray_s2",
   "rep_dw-128ray_s1",
   "rep_dw-128ray_s2",
+  "rep_dw-noiseless_s1",
+  "rep_dw-noiseless_s2",
   "rep_oth-standard_s1",
   "rep_oth-standard_s2",
   "rep_oth-adjflip_s1",

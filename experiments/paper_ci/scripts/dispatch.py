@@ -417,17 +417,22 @@ def refresh_ledger() -> dict | None:
 
 
 def ledger_lines(group: dict) -> str:
+    """One line per block for the completion ping: each editor's index AND guard as
+    canonical (mean ± SD, n), plus the MLP skill."""
     out = []
+
+    def cell(v):
+        if not v or v.get("canonical") is None:
+            return "—"
+        if v.get("n", 0) >= 2 and v.get("sd") is not None:
+            return f"{v['canonical']:+.3f} ({v['mean']:+.3f}±{v['sd']:.3f}, n{v['n']})"
+        return f"{v['canonical']:+.3f} (n1)"
+
     for blk, metrics in group.get("blocks", {}).items():
-        parts = []
-        for m in ("PI EI", "GS EI", "IM EI", "skill_MLP"):
-            v = metrics.get(m)
-            if not v:
-                continue
-            if v.get("n", 0) >= 2:
-                parts.append(f"{m} {v['canonical']:+.3f} ({v['mean']:+.3f} ± {v['sd']:.3f}, n={v['n']})")
-            else:
-                parts.append(f"{m} {v['canonical']:+.3f} (n=1)")
+        parts = [f"{ed}: EI {cell(metrics.get(f'{ed} EI'))} / fid {cell(metrics.get(f'{ed} fid'))}"
+                 for ed in ("PI", "GS", "IM") if metrics.get(f"{ed} EI")]
+        if metrics.get("skill_MLP"):
+            parts.append(f"MLP {cell(metrics['skill_MLP'])}")
         if parts:
             out.append(f"[{blk}] " + " · ".join(parts))
     return "\n".join(out)

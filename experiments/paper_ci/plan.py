@@ -6,11 +6,12 @@ experiments/paper_ci/queue/<id>.json for the dispatcher.
     python experiments/paper_ci/plan.py --show     # print the plan and a greedy two-host schedule
 
 What it encodes (Sevan, 2026-09-18): n = 3 training seeds per shortlist run — the parent's own
-checkpoint at the matched budget (seed 0) plus two re-trainings — Othello at 512k steps
-(L-oth-20m's saved checkpoints are 256k / 512k / 780k), discworld at 390k (editability is flat from
-64k on discworld; noiseless already has its set at 390k). Replicates are scored by the canonical
-pipeline in BOTH regression bases and on the paper's categorical target; the tables pool them into
-the parent row's ± at a matched budget. Data locality fixes the hosts: dw-128ray and dw-blink read
+checkpoint at the matched budget (seed 0) plus two re-trainings — ONE budget everywhere, 512k
+steps (L-oth-20m's saved checkpoints are 256k / 512k / 780k; every run has a 512k or 492,188
+checkpoint). The sets that already exist at 390k (dw-noiseless, oth-adjacent-flip) are EXTENDED
+to 512k by exact resume. Replicates are scored by the canonical pipeline in BOTH regression bases
+and on the paper's categorical target (`appearance-fac`; the 8-ray grid sweep goes to the appendix
+without a spread); the tables pool them into the parent row's ± at a matched budget. Data locality fixes the hosts: dw-128ray and dw-blink read
 406 GB corpora that live only on the lab box; dw-16ray's corpus lives only on the remote; dw-8ray /
 dw-5ray can go either way once their corpora are pushed (queue jobs, lab cpu lane); every Othello
 corpus is on both. Priorities: the ray family first (the small contrasts), then the two Othello rows
@@ -32,7 +33,7 @@ REPO = Path(__file__).resolve().parents[2]
 Q = REPO / "experiments" / "paper_ci"
 
 STEPS_OTH = 512_000
-STEPS_DW = 390_000
+STEPS_DW = 512_000          # Sevan 2026-09-18 evening: ONE budget everywhere (was 390k for discworld)
 ENV_SCORE = {"PIM_DW_BASES": "frustum,cartesian", "PIM_SKIP_TOPICS": "training_curve", "PIM_SCORE_ONLY": "1"}
 REMOTE_REPO = "research/physically-implicit-modeling"   # relative to the remote's $HOME (rsync target)
 
@@ -41,23 +42,29 @@ REMOTE_REPO = "research/physically-implicit-modeling"   # relative to the remote
 # member (Othello master_eval 33 min; discworld ~45 min incl. the categorical fit), the categorical
 # targets replicate.sh fits, allowed hosts (preference order), and host-specific deps.
 FAMILIES = {
-    "dw-8ray":     dict(parent="ray_ablation/L-dw-8ray-20m", steps=STEPS_DW, train_h=3.9, score_h=0.75,
-                        targets=["appearance-fac", "appearance"], hosts=["remote", "lab"],
+    # discworld train hours at 512k (5090): 128-input 5.25, 8/5-ray 5.1, 16-ray 7.35
+    "dw-8ray":     dict(parent="ray_ablation/L-dw-8ray-20m", steps=STEPS_DW, train_h=5.1, score_h=0.75,
+                        targets=["appearance-fac"], hosts=["remote", "lab"],
                         host_deps={"remote": ["xfer_dw-8ray_train"]}, prio=20),
-    "dw-5ray":     dict(parent="ray_ablation/L-dw-5ray-20m", steps=STEPS_DW, train_h=3.9, score_h=0.75,
-                        targets=["appearance-fac", "appearance"], hosts=["lab", "remote"],
+    "dw-5ray":     dict(parent="ray_ablation/L-dw-5ray-20m", steps=STEPS_DW, train_h=5.1, score_h=0.75,
+                        targets=["appearance-fac"], hosts=["lab", "remote"],
                         host_deps={"remote": ["xfer_dw-5ray_train"]}, prio=21),
-    "dw-16ray":    dict(parent="ray_ablation/L-dw-16ray-20m", steps=STEPS_DW, train_h=5.6, score_h=0.8,
+    "dw-16ray":    dict(parent="ray_ablation/L-dw-16ray-20m", steps=STEPS_DW, train_h=7.35, score_h=0.8,
                         targets=["appearance-fac"], hosts=["remote"], prio=22),
-    "dw-128ray":   dict(parent="ray_ablation/L-dw-128ray-20m", steps=STEPS_DW, train_h=4.0, score_h=0.8,
+    "dw-128ray":   dict(parent="ray_ablation/L-dw-128ray-20m", steps=STEPS_DW, train_h=5.25, score_h=0.8,
                         targets=["appearance-fac"], hosts=["lab"], prio=23),
+    "dw-noiseless": dict(parent="noise_ablation/L-dw-noiseless-20m", steps=STEPS_DW, score_h=0.8,
+                         targets=["appearance-fac"], hosts=["lab"], prio=24,
+                         # EXTENSIONS of the existing 390k members (1.25 h each); the parent's 512k
+                         # checkpoint becomes the seed-0 member, the 421,875 one is left outside the pool
+                         seed_train_h={1: 1.25, 2: 1.25}),
     "oth-standard": dict(parent="initial_othello_comparison/L-oth-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
                          targets=[], hosts=["lab", "remote"], prio=30),
     "oth-adjflip": dict(parent="adjacent_flip_ablation/L-oth-adjacent-flip-20m", steps=STEPS_OTH, score_h=0.6,
                         targets=[], hosts=["remote", "lab"], prio=31,
                         # EXTENSIONS of the existing 390k members: seed 2 sits at 160k, seed 1 at 390k
                         seed_train_h={2: 8.7, 1: 3.0}),
-    "dw-blink":    dict(parent="blink_ablation/L-dw-blink-20m", steps=STEPS_DW, train_h=4.0, score_h=0.8,
+    "dw-blink":    dict(parent="blink_ablation/L-dw-blink-20m", steps=STEPS_DW, train_h=5.25, score_h=0.8,
                         targets=["appearance-fac"], hosts=["lab"], prio=40),
     "oth-adjacent": dict(parent="adjacency_ablation/L-oth-adjacent-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
                          targets=[], hosts=["remote", "lab"], prio=50),
