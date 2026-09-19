@@ -88,6 +88,33 @@ def tail_metrics(rel: str, n: int = 1) -> list[dict]:
         return []
 
 
+def _expand(pattern: str) -> list[str]:
+    import glob
+    hits = glob.glob(str(ROOT / pattern))
+    return [str(Path(h).relative_to(ROOT)) for h in hits] if any(c in pattern for c in "*?[") else [pattern]
+
+
+def newest_mtime(paths: list[Path], cap: int = 20000) -> float | None:
+    """The newest file mtime under the given files/dirs (recursive, at most ``cap`` entries)."""
+    best, n = None, 0
+    for p in paths:
+        if not p.exists():
+            continue
+        it = [p] if p.is_file() else p.rglob("*")
+        for f in it:
+            n += 1
+            if n > cap:
+                return best
+            try:
+                if f.is_file():
+                    m = f.stat().st_mtime
+                    if best is None or m > best:
+                        best = m
+            except OSError:
+                pass
+    return best
+
+
 def main():
     ids = sys.argv[1:]
     d = {"host": os.environ.get("PIM_CI_HOST") or socket.gethostname(), "ts": time.time(),
@@ -116,9 +143,11 @@ def main():
                     j["metrics_tail"] = tail_metrics(prog["metrics"], 1)
                     mp = ROOT / prog["metrics"]
                     j["metrics_mtime"] = mp.stat().st_mtime if mp.exists() else None
-                lg = ROOT / "logs" / "paper_ci" / jid
-                if lg.exists():
-                    j["log_mtime"] = max((p.stat().st_mtime for p in lg.glob("*.log")), default=None)
+                # "progress" = the newest write among the wrapper's logs AND everything the job
+                # produces (its outputs: run dirs, the replicate driver's own log dir) — the scoring
+                # stages write there, not to the training metrics (false stall alarm 2026-09-19 03:22)
+                j["log_mtime"] = newest_mtime([ROOT / "logs" / "paper_ci" / jid] +
+                                              [ROOT / o for pat in job.get("outputs", []) for o in _expand(pat)])
             except Exception:
                 pass
         jobs[jid] = j

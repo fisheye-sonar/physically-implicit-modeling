@@ -83,9 +83,13 @@ def main(host: str):
         prog = (j.get("progress") or {}).get("metrics")
         if prog and (ROOT / prog).exists():
             refs.append((ROOT / prog).stat().st_mtime)
-        lg = ROOT / "logs" / "paper_ci" / jid
-        if lg.exists():
-            refs += [p.stat().st_mtime for p in lg.glob("*.log")]
+        # the wrapper's logs AND everything the job produces (the scoring stages write to the
+        # replicate driver's own log dir and the run dirs, not to the training metrics)
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from hostprobe import _expand, newest_mtime
+        m = newest_mtime([ROOT / "logs" / "paper_ci" / jid] + [ROOT / o for pat in j.get("outputs", []) for o in _expand(pat)])
+        if m:
+            refs.append(m)
         rec = Q / "state" / f"{jid}.run.json"
         if rec.exists():
             try:
