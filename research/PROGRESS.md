@@ -198,6 +198,24 @@ GPU, 5-ray first; point 0 of 5-ray: held-out R² +0.463 = in-sample, no overfit 
 `L-dw-8ray-20m__seed1`: only the factorised block's old IM arms may differ). Logs `../pim-master-eval-refactor/logs/categorical_inverse/`.
 The live tree, the queue and every scores.json are UNTOUCHED. Morning: report the four numbers + the gate, get Sevan's go, then deploy
 per the README (merge in a gap → `clear_continuous_im.py --apply` → catch-up jobs at the top of the queue with `PIM_ADD_CAT_IM=1`).
+**2026-09-20 03:00 — the staging evidence is in (branch `categorical_inverse` @ 0f076a3+, pushed, STILL unmerged; live tree / queue / scores untouched).**
+Previews on the four parents, production recipe, full bench, best arm inside the guard — Edit Index / fidelity, NEW categorical map vs the
+OLD continuous map on the same bench: **5-ray +0.913 / 0.25 vs +0.836 · 8-ray +0.866 / 0.27 vs +0.703 · 16-ray +0.823 / 0.29 vs +0.684 ·
+128-ray +0.637 / 0.29 vs +0.574** (PI +0.513 / +0.380 / −0.061 / −0.308; GS +0.598 / +0.458 / +0.280 / +0.308). g's held-out R² = in-sample
+to three digits everywhere (0.61–0.71): no overfit at 200k × 50 epochs; ~37 min per run sharing the lab GPU. Landing (the run's own
+categorical probes read the target cell off the written residual) sits at the probes' natural-residual ceiling on 5 / 8 / 16-ray; ⚠ on
+128-ray the exact-cell criterion is near-unreachable (LIN 0.06 natural) and the MLP reads the write as the exact cell in 0.12 vs 0.42
+natural — a coarser write than the 1,028-class grid. **What the waterfalls show** (`experiments/categorical_inverse/outputs/`, four
+families): the Edit Index scores rollout step 0 (the edit frame), and the new map's gain is THERE — edit-frame RMSE drops (8-ray 0.106 →
+0.090), whole-rollout RMSE to the edited truth does not move (0.234 → 0.233). How long the edit holds is the family's property, identical
+under both maps: it holds for all 15 steps at 5 / 8-ray and returns to the unsteered trajectory within a frame or two at 128-ray.
+Parity gate on `L-dw-8ray-20m__seed1`, both bases (03:15): 22,386 of 22,390 leaves bit-identical, max |Δ| 0; the cartesian block —
+continuous IM / IM-NN included — is identical to disk, the ONLY differences are the factorised block's old IM arms (282 → 264 arms,
+`best.IM*`, `inverse_map`); the run's `probes/` untouched (27 files). The token path (`L-dw-8ray-tok-20m`) was never exercised by the
+frame previews: its smoke passes, its production-recipe preview runs as unit `catinv_tok` (03:15 →). Catch-up queue jobs are DRAFTED in the branch (`experiments/categorical_inverse/
+queue_drafts/`, not installed): parents (arms only, with the previews' cached maps copied in), then the 5 / 8 / 16-ray members (~1.9 h a
+family on the lab), then 8ray-tok. ⚠ `score_pending.sh` holds no lock — a catch-up must never overlap a replicate's scoring stage on
+the same host (in the `gpu` lane it cannot).
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
