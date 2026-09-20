@@ -41,3 +41,9 @@ select = ["E", "W", "F"]
 ignore = [
     "E501",  # line too long (black handles this)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# pim/scoring was moved VERBATIM out of notebooks/master_eval.ipynb on 2026-09-19 while the
+# paper_ci queue depended on it; these three are style-only hits in the moved lines (semicolons,
+# a lambda assignment, an f-string without placeholders). Tidy them once the queue has drained.
+"pim/scoring/*.py" = ["E702", "E731", "F541"]

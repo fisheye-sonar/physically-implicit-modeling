@@ -1,0 +1,10 @@
+parity gate — ray_ablation/L-dw-5ray-20m__seed1 — 2026-09-19 18:24:55 (RECHECK of saved JSON — no scoring) — new nan min — disk eval_version 2026-09-12.2
+
+=== scores.json ON DISK vs NEW pim.scoring:  A = disk   B = new ===
+  leaves compared 17103 · bit-identical 17103 · within 1e-06 0 · beyond tolerance 0 · keys on one side only 0 · max |Δ| 0
+  settings snapshot (disk vs new): 1 differing entries — /dw_extra_targets/ray_ablation/L-dw-16ray-20m [MISSING in A]
+  `prediction` block present in disk (written by scripts/score_prediction.py, not by the scorer)
+
+  run's probes/ dir: 25 files before, 25 after; new files: none
+
+  VERDICT GREEN: move-induced differences n/a (no --old); scored-field differences against disk 0

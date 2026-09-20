@@ -1,0 +1,253 @@
+{
+ "env": {
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_ONLY_RUNS": null
+ },
+ "old": {
+  "floors": [
+   {
+    "instance": "dw-8ray",
+    "arch": "transformer_l_tokens",
+    "targets": [
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "instance": "dw-8ray",
+    "arch": "transformer_l",
+    "targets": [
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "instance": "dw-noiseless",
+    "arch": "transformer_l",
+    "targets": [
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   }
+  ],
+  "runs": [
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed0_s421875",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed2",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-5ray-20m__seed0_s512000",
+    "action": "add",
+    "blocks": [
+     "appearance"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-5ray-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "appearance"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-8ray-20m__seed0_s512000",
+    "action": "add",
+    "blocks": [
+     "appearance",
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-8ray-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "appearance",
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   }
+  ]
+ },
+ "new": {
+  "floors": [
+   {
+    "instance": "dw-8ray",
+    "arch": "transformer_l_tokens",
+    "targets": [
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "instance": "dw-8ray",
+    "arch": "transformer_l",
+    "targets": [
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "instance": "dw-noiseless",
+    "arch": "transformer_l",
+    "targets": [
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   }
+  ],
+  "runs": [
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed0_s421875",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "noise_ablation/L-dw-noiseless-20m__seed2",
+    "action": "add",
+    "blocks": [
+     "grid-16x8",
+     "grid-8x4",
+     "appearance-lat",
+     "grid-32x16"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-5ray-20m__seed0_s512000",
+    "action": "add",
+    "blocks": [
+     "appearance"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-5ray-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "appearance"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-8ray-20m__seed0_s512000",
+    "action": "add",
+    "blocks": [
+     "appearance",
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   },
+   {
+    "run": "ray_ablation/L-dw-8ray-20m__seed1",
+    "action": "add",
+    "blocks": [
+     "appearance",
+     "appearance-d2",
+     "appearance-d3",
+     "grid-16x8",
+     "appearance-lat",
+     "grid-8x4",
+     "grid-32x16",
+     "grid-6x5",
+     "grid-10x3",
+     "grid-4x2"
+    ]
+   }
+  ]
+ },
+ "identical": {
+  "floors": true,
+  "runs": true
+ }
+}
