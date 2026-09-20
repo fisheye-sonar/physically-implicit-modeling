@@ -23,6 +23,16 @@ notebooks/master_eval.ipynb`. The three environment hooks are honoured where the
 `PIM_ONLY_RUNS` / `PIM_SKIP_TOPICS` in `pim/scoring/runs.py::scan_runs` (moved verbatim, unit-tested),
 `PIM_DW_BASES` in notebook cell [2] (untouched).
 
+## Before merging on the lab box
+
+At 18:26 the live tree carried uncommitted work from another session (`pim/metrics/selection.py`,
+`replicates.py`, `pim/figures/tables.py`, `research/REGISTRY.md`, …). Only **`research/REGISTRY.md`**
+overlaps this branch, and git refuses to merge over a dirty file it must update — commit (or stash) that
+work first. The three-way merge of REGISTRY was simulated with `git merge-file` on the live file as it
+stood: **0 conflicts** (their insertion is at line 234, this branch edits line 235 and appends to
+§Evaluation). Against the committed `sweeps_and_blates` HEAD (`c023401`) the branch merges cleanly
+(`git merge-tree`).
+
 ## Two facts about the hosts that bear on timing
 
 - The dispatcher's `push_inputs` sends only `experiments/paper_ci/{config.json,scripts/,queue/<id>.json}`
