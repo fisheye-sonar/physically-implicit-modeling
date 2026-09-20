@@ -31,18 +31,48 @@ from pim.environments.discworld import token_bench as tkb
 from pim.environments.discworld.tokens import FrameVocab
 from pim.models import n_points
 from pim.probes.mlp import check_probe_sanity
-from pim.scoring.blocks import attach_inverse, discworld_blocks, dw_block_setup, probe_block
+from pim.probes.inverse import CATEGORICAL_STATE
+from pim.scoring.blocks import (attach_inverse, cat_inverse_in_scope, discworld_blocks, dw_block_setup,
+                                probe_block)
 from pim.scoring.runs import REPO
 
 
 def inverse_discworld(model, blocks: dict, benches: dict, ucards: dict, inst: str, probe_dir, s,
                       tokens=None) -> None:
-    """IM / IM-NN for the blocks in ``benches`` ({key: Bench}): one inverse map per point per BASIS
-    (cached in the run's probes/, kind inverse_map) written on every block's own bench; ``ucards``
-    = {key: unsteered card} (frames) or {key: unsteered probs} (tokens; ``tokens=(vocab, arrays)``)."""
+    """IM / IM-NN for the blocks in ``benches`` ({key: Bench}); ``ucards`` = {key: unsteered card}
+    (frames) or {key: unsteered probs} (tokens; ``tokens=(vocab, arrays)``).
+
+    The inverse map inverts THE STATE THE BLOCK'S OWN PROBES READ (2026-09-20, Sevan):
+    * REGRESSION blocks — one map per point per BASIS from the continuous full state (cached in the
+      run's probes/, kind inverse_map), IM and IM-NN, as since 2026-09-15;
+    * CATEGORICAL blocks — the target's own one-hot labels + the discs' Cartesian velocity, fitted with
+      the target's forward-probe recipe (``cat_inverse_in_scope``: SETTINGS ``dw_cat_im`` names the
+      instances and targets; elsewhere a categorical block carries NO IM arm). IM only.
+    Until 2026-09-20 a categorical block was handed its basis's CONTINUOUS map — a state its probes
+    never read — and those arms were removed from every scores.json."""
+    reg = [k for k in benches if blocks[k]["kind"] == "regression"]
+    for k in (k for k in benches if blocks[k]["kind"] != "regression"):
+        if not cat_inverse_in_scope(inst, blocks[k]["target"], s):
+            continue
+        recipe = dwa.probe_recipe(blocks[k]["target"], inst, n_seq=s["dw_probe_seqs"])
+        if tokens is None:
+            arms, st = dwa.inverse_arms(model, {k: benches[k]}, basis_name=blocks[k]["basis"],
+                                        target=blocks[k]["target"], unsteered_cards={k: ucards[k]},
+                                        cache_dir=probe_dir, log=None, **recipe)
+        else:
+            vocab, arrays = tokens
+            arms, st = tkb.inverse_arms(model, {k: benches[k]}, {k: arrays[k]}, vocab,
+                                        basis_name=blocks[k]["basis"], target=blocks[k]["target"],
+                                        uns={k: ucards[k]}, cache_dir=probe_dir, log=None, **recipe)
+        attach_inverse(blocks, arms, st, ei_key="edit_index")
+        blocks[k]["inverse_map"].update({"state": CATEGORICAL_STATE, "epochs": recipe["epochs"],
+                                         "n_seq": recipe["n_seq"], "g_r2_insample": st.get("g_r2_insample")})
+        im = blocks[k]["best"]["IM"]
+        print(f"    {k}: IM[categorical state] {im['edit_index']:+.4f}/{im['fidelity_ratio']:.2f} (pt {im['point']})  "
+              f"g R² max {max(st['g_r2']):+.3f}", flush=True)
     recipe = dwa.probe_recipe("full", inst, n_seq=s["dw_probe_seqs"])
-    for basis in sorted({blocks[k]["basis"] for k in benches}):
-        keys = [k for k in benches if blocks[k]["basis"] == basis]
+    for basis in sorted({blocks[k]["basis"] for k in reg}):
+        keys = [k for k in reg if blocks[k]["basis"] == basis]
         if tokens is None:
             arms, st = dwa.inverse_arms(model, {k: benches[k] for k in keys}, basis_name=basis,
                                         unsteered_cards={k: ucards[k] for k in keys}, cache_dir=probe_dir,

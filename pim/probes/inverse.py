@@ -46,6 +46,123 @@ def fit_inverse_map(s_tr, h_tr, s_te, h_te, *, hidden: int = INVERSE_HIDDEN,
     return g, st
 
 
+# ── the CATEGORICAL inverse map (2026-09-20, Sevan) ────────────────────────────────────────
+#
+# On a categorical discworld block the state g inverts is the block's OWN categorical state —
+# the labels its probes read, one-hot per tile — followed by the discs' continuous Cartesian
+# velocity. The velocity is deliberate and asymmetric: the forward probes on a categorical
+# target read labels only, but the residual also encodes how the discs move, and a map from
+# labels alone returns the mean residual OVER velocities — writing it would erase the model's
+# velocity estimate along with moving the disc. "Set where the discs are, leave how they move."
+# Until this date every categorical block's IM arm was the CONTINUOUS full-state map of its
+# basis scored on the categorical bench; those arms were removed from every scores.json.
+#
+# Recipe = the mirror of the forward probe for the SAME target: the categorical probes'
+# large corpus and epochs (``arms.GRID_PROBE_RECIPE``), streamed — the residual stack stays on
+# disk exactly as it does for ``fit_probe_stream``, only here it is the TARGET, not the input.
+
+CATEGORICAL_STATE = "onehot-labels+cartesian-velocity"      # goes into the cache key and scores.json
+
+
+def encode_categorical_state(labels: torch.Tensor, extra: torch.Tensor | None, n_classes: int) -> torch.Tensor:
+    """(R, n_tiles) long labels [+ (R, m) floats] → (R, n_tiles · n_classes + m) float: one-hot per
+    tile on the shared class axis, the continuous values appended RAW (the map standardises them)."""
+    oh = torch.nn.functional.one_hot(labels.long(), n_classes).reshape(len(labels), -1).float()
+    return oh if extra is None else torch.cat([oh, extra.float()], dim=1)
+
+
+class CategoricalState:
+    """Rows source for the categorical inverse map's INPUT — the same ``build(seq, frame)`` surface as
+    ``baselines.MemmapRows``. Holds only the compact tensors on the GPU — ``labels`` (N, T, n_tiles)
+    and ``extra`` (N, T, m) — and builds the one-hot per minibatch (1,028 wide on dw-128ray: 16 MB a
+    batch, against 26 GB if the whole 200k-sequence design matrix were materialised)."""
+
+    kind = "categorical_state"
+
+    def __init__(self, labels, n_classes: int, extra=None, device="cuda") -> None:
+        self.device = torch.device(device)
+        self.labels = torch.as_tensor(labels).long().to(self.device)
+        self.extra = None if extra is None else torch.as_tensor(extra).float().to(self.device)
+        self.n, self.T, self.n_tiles = self.labels.shape
+        self.n_classes = int(n_classes)
+        self.m = 0 if self.extra is None else int(self.extra.shape[-1])
+        self.dim = self.n_tiles * self.n_classes + self.m
+
+    def build(self, seq: torch.Tensor, frame: torch.Tensor) -> torch.Tensor:
+        return encode_categorical_state(self.labels[seq, frame],
+                                        None if self.extra is None else self.extra[seq, frame], self.n_classes)
+
+    def moments(self, tr_seq: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Input standardisation: the one-hot columns are left as 0/1 (mean 0, sd 1 — a rare class's
+        sd is ~0.03, and dividing by it would hand that column a 30x gain); the continuous tail is
+        standardised on the TRAIN sequences."""
+        xm, xs = torch.zeros(self.dim, device=self.device), torch.ones(self.dim, device=self.device)
+        if self.m:
+            v = self.extra[tr_seq].reshape(-1, self.m)
+            xm[-self.m:], xs[-self.m:] = v.mean(0), v.std(0).clamp_min(1e-6)
+        return xm, xs
+
+
+def fit_inverse_map_stream(state, H, tr_seq, te_seq, *, hidden: int = INVERSE_HIDDEN,
+                           epochs: int = INVERSE_EPOCHS, batch: int = FIT_BATCH,
+                           seed: int = INVERSE_SEED, log=None) -> tuple[WorldStateProbe, dict]:
+    """The STREAMED mirror of ``fit_inverse_map``: ``state`` serves the input rows
+    (``CategoricalState``), ``H`` the residual TARGET rows from disk (``baselines.MemmapRows``), both by
+    ``build(seq, frame)``. Same probe body, optimiser, learning rate, batch size and standardised-target
+    loss as the dense fit; as in ``fit_probe_stream`` the minibatches are drawn by SEQUENCE block so the
+    disk reads are contiguous. Stats: ``r2`` / ``r2_insample`` (against the TRAIN mean, pooled over every
+    residual dimension — ``pim.metrics.decodability.r2``'s definition, accumulated) and ``rmse``."""
+    from pim.probes.baselines import _moments, _row_index
+
+    torch.manual_seed(seed)
+    dev = H.device
+    tr_seq = torch.as_tensor(tr_seq, device=dev).sort().values
+    te_seq = torch.as_tensor(te_seq, device=dev).sort().values
+    s_tr, f_tr = _row_index(tr_seq, H.T, dev)
+    s_te, f_te = _row_index(te_seq, H.T, dev)
+    ym, ys = _moments(H, s_tr, f_tr)
+    xm, xs = state.moments(tr_seq)
+    g = WorldStateProbe(state.dim, H.dim, hidden, x_mean=xm, x_std=xs, y_mean=ym, y_std=ys,
+                        n_classes=None).to(dev)
+    with torch.enable_grad():            # callers write under no_grad; the fit must not inherit it
+        opt = torch.optim.Adam(g.parameters(), lr=FIT_LR)
+        ys_t = g.y_std.detach()
+        bseq = max(1, batch // H.T)
+        for ep in range(epochs):
+            perm = tr_seq[torch.randperm(len(tr_seq), device=dev)]
+            for i in range(0, len(perm), bseq):
+                s_b, f_b = _row_index(perm[i:i + bseq], H.T, dev)
+                loss = (((g(state.build(s_b, f_b)) - H.build(s_b, f_b)) / ys_t) ** 2).mean()
+                opt.zero_grad()
+                loss.backward()
+                opt.step()
+            if log and (ep + 1) % 10 == 0:
+                log(f"      epoch {ep + 1}/{epochs} loss {float(loss.detach()):.5f}")
+    g.eval()
+    for p in g.parameters():
+        p.requires_grad_(False)
+
+    @torch.no_grad()
+    def _sse(s, f, chunk=8192):
+        sse = sst = 0.0
+        n = 0
+        for i in range(0, len(s), chunk):
+            h = H.build(s[i:i + chunk], f[i:i + chunk]).double()
+            pr = g(state.build(s[i:i + chunk], f[i:i + chunk])).double()
+            sse += float(((pr - h) ** 2).sum())
+            sst += float(((h - ym.double()) ** 2).sum())
+            n += h.numel()
+        return sse, sst, n
+
+    sse_te, sst_te, n_te = _sse(s_te, f_te)
+    sse_tr, sst_tr, _ = _sse(s_tr, f_tr)
+    if sst_te <= 0:
+        raise ValueError("trivial predictor has zero error — the residual is constant on this split")
+    return g, {"r2": 1.0 - sse_te / sst_te, "r2_insample": 1.0 - sse_tr / sst_tr,
+               "rmse": float(np.sqrt(sse_te / n_te)), "kind": "inverse_map_stream",
+               "state": CATEGORICAL_STATE, "d_in": int(state.dim), "rows_train": int(len(s_tr))}
+
+
 class RetrievalBank:
     """The k-nearest-state mean residual over one point's TRAINING rows.
 

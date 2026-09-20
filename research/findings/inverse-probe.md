@@ -297,3 +297,24 @@ IM +0.63 / fid 0.32 vs +0.60 / 0.33 on the same cases with canonical targets; PI
 discworld, so the oth-adjacent failure (which tracks reachability) is not "off-support" per se but a
 code that ties colour to parity features; the working criterion is whether the latent code
 factorises over the edited variable. Scratch: `2026-09-15-near-teleport-pilot.md`.
+
+## 2026-09-20 — CORRECTION: no categorical-block "IM" number before this date inverted the categorical state (`supersedes` every such number)
+
+Found by Sevan. `inverse_discworld` fitted ONE inverse map per residual point per BASIS from the continuous full state and
+wrote it on every block that named that basis — including the categorical blocks, which name `frustum`. So a categorical
+block's IM / IM-NN arm was the continuous frustum map evaluated on the categorical bench's case selection: on
+`L-dw-8ray-20m__seed1` the `appearance-fac` block's `inverse_map.g_r2` vector is identical to the frustum block's
+(0.4804, 0.3916, 0.4770, …), same best point, and only the scored cases differ. The labels the categorical probes read never
+entered the editor. That is why factorised-block IM tracked the regression-block IM in every family (8-ray +0.718 vs +0.720,
+5-ray +0.849 vs +0.808, 16-ray +0.693 vs +0.66, 128-ray +0.57 vs +0.57).
+
+Affected, wherever quoted: every `appearance-fac` / `appearance` / `grid-*` IM or IM-NN number — the dw-128ray outcome
+(REGISTRY run row and PROGRESS 2026-09-16: "fac … IM +0.57"), the seed-replicate ledger lines of 2026-09-19 (dw-8ray / dw-5ray /
+dw-16ray factorised IM), and any Table 2c / Table 1b cell for a categorical block. NOT affected: every regression-block IM
+(the subject of this file's 2026-09-14 entries), Othello (its map has always taken the one-hot board), PI / ND / GS anywhere.
+
+What replaces it (`pim.probes.inverse`, `arms._iter_categorical_inverse_maps`; REGISTRY "INVERSE MAP"): on a categorical block
+g maps the target's own one-hot labels + the discs' Cartesian velocity to the residual, fitted with the forward probe's recipe
+for that target (200k sequences, 50 epochs), streamed; IM only; in scope on dw-128ray / 16ray / 8ray / 5ray × `appearance-fac`.
+The old arms were deleted from every scores.json (52 blocks, 22 runs; dated backups kept). Numbers: `experiments/categorical_inverse/`
+(preview on the four parents, 2026-09-20), then the canonical scores once deployed. Status of the new numbers: `observed`.
