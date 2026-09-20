@@ -147,19 +147,26 @@ def probe_seed_jobs() -> list[dict]:
 
 def control_jobs() -> list[dict]:
     """The probe-corpus-size control (experiments/probe_corpus_size, Sevan 2026-09-19): the regression /
-    Othello probes and the inverse map refitted on more data, editors re-swept; canonical numbers untouched."""
+    Othello probes and the inverse map refitted on more data, editors re-swept; canonical numbers untouched.
+    Sizes follow MEASURED memory (2026-09-20: the Othello inverse map at 60k games was OOM-killed at 40.7 GB):
+    Othello probes 20k / 40k / 60k games and the inverse map at 20k / 40k; discworld probes 30k / 100k and the
+    inverse map at 30k / 60k, with the 200k probe size as its OWN single-attempt job so a kill there cannot
+    take the smaller sizes with it. Lab only: the scripts are not pushed to the remote by the dispatcher, and
+    the lab has the larger memory cap. Both scripts skip whatever is already recorded, so a retry is free."""
+    dw = ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian"
+    base = {"group": "control", "kind": "custom", "hosts": ["lab"], "lane": "gpu", "env": {}, "host_deps": {}, "inputs": [],
+            "outputs": ["experiments/probe_corpus_size/scores"], "progress": None, "mem_max": None, "hold": False}
     return [
-        {"id": "ctrl_corpus_dw", "group": "control", "kind": "custom", "hosts": ["lab"], "lane": "gpu",
-         "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 100000 200000",
-         "env": {}, "deps": [], "host_deps": {}, "priority": 25, "est_hours": {"lab": 3.5}, "inputs": [],
-         "outputs": ["experiments/probe_corpus_size/scores"], "progress": None, "mem_max": None, "max_attempts": 2, "hold": False,
-         "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k/200k, inverse map + IM at 30k/100k"},
-        {"id": "ctrl_corpus_oth", "group": "control", "kind": "custom", "hosts": ["remote", "lab"], "lane": "gpu",
-         "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 60000 100000",
-         "env": {}, "deps": [], "host_deps": {}, "priority": 26, "est_hours": {"lab": 1.5, "remote": 2.0},
-         "inputs": ["runs/initial_othello_comparison/L-oth-20m"], "outputs": ["experiments/probe_corpus_size/scores"],
-         "progress": None, "mem_max": None, "max_attempts": 2, "hold": False,
-         "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/60k/100k games, inverse map + IM at 20k/60k"},
+        {**base, "id": "ctrl_corpus_dw", "cmd": f"{dw} --sizes 30000 100000 --im-sizes 30000 60000",
+         "deps": [], "priority": 25, "est_hours": {"lab": 2.5}, "max_attempts": 2,
+         "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k, inverse map + IM at 30k/60k"},
+        {**base, "id": "ctrl_corpus_dw_200k", "cmd": f"{dw} --sizes 200000 --im-sizes",
+         "deps": ["ctrl_corpus_dw"], "priority": 25, "est_hours": {"lab": 1.5}, "max_attempts": 1,
+         "note": "probe-corpus-size control, discworld: probes + PI/GS at 200k sequences (144 GB scratch; ONE attempt — memory)"},
+        {**base, "id": "ctrl_corpus_oth",
+         "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 40000 60000 --im-sizes 20000 40000",
+         "deps": [], "priority": 26, "est_hours": {"lab": 0.8}, "max_attempts": 2,
+         "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/40k/60k games (20k, 60k recorded already), inverse map + IM at 20k/40k"},
     ]
 
 
@@ -173,7 +180,9 @@ def build() -> list[dict]:
     # final_tables waits for EVERYTHING else (2026-09-19): it and the appendix job after it rewrite
     # scores.json files on the lab, and a remote job finishing meanwhile would pull its parent run dir
     # back over them. Nothing runs on either host while these two do.
-    everything = [j["id"] for j in jobs if j["kind"] != "transfer"]
+    # ... except the corpus-size controls (another session, 2026-09-20, kept): they feed no table, pull back
+    # only their own scores folder (never a run dir), and the discworld ones share the lab's gpu lane anyway.
+    everything = [j["id"] for j in jobs if j["kind"] != "transfer" and j["group"] != "control"]
     jobs.append({"id": "final_tables", "group": "tables", "kind": "score", "hosts": ["lab"], "lane": "gpu",
                  "cmd": "bash scripts/drivers/score_pending.sh paper_ci_final",
                  "env": {"PIM_DW_BASES": "frustum,cartesian", "PIM_SKIP_TOPICS": "training_curve"},

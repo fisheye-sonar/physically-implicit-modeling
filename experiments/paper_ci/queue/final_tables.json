@@ -48,5 +48,5 @@
  "progress": null,
  "mem_max": null,
  "max_attempts": 2,
- "note": "master_eval catches anything unscored, both table notebooks re-render with every \u00b1 in place | 2026-09-20: no longer waits on the two probe-corpus-size controls (they feed no table; a control killed twice by its memory cap must not block the paper's tables \u2014 they still run first on priority)."
+ "note": "master_eval catches anything unscored, both table notebooks re-render with every \u00b1 in place"
 }

@@ -1,26 +1,26 @@
 {
- "id": "ctrl_corpus_dw",
  "group": "control",
  "kind": "custom",
  "hosts": [
   "lab"
  ],
  "lane": "gpu",
- "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 100000 200000",
  "env": {},
- "deps": [],
  "host_deps": {},
- "priority": 25,
- "est_hours": {
-  "lab": 3.5
- },
  "inputs": [],
  "outputs": [
   "experiments/probe_corpus_size/scores"
  ],
  "progress": null,
  "mem_max": null,
- "max_attempts": 2,
  "hold": false,
- "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k/200k, inverse map + IM at 30k/100k"
+ "id": "ctrl_corpus_dw",
+ "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 100000 --im-sizes 30000 60000",
+ "deps": [],
+ "priority": 25,
+ "est_hours": {
+  "lab": 2.5
+ },
+ "max_attempts": 2,
+ "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k, inverse map + IM at 30k/60k"
 }

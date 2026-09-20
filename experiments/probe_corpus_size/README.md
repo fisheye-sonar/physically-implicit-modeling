@@ -51,3 +51,22 @@ The retry is redefined to exactly that (`--sizes 20000 60000 --im-max-n 20000`; 
 again. NOT run: 100k games, and the inverse map above 20k — the inverse map's corpus sensitivity is answered on
 discworld (`ctrl_corpus_dw`, 30k vs 100k, whose dense path memmaps). `final_tables` no longer depends on the two
 controls (they feed no table).
+
+## 2026-09-20 05:40 — the reconciled definition (supersedes the retry described above)
+
+Two sessions reacted to the 05:00 kill at once; this is the single definition that stands, written in
+`experiments/paper_ci/plan.py::control_jobs` (the queue files are generated from it):
+
+| job | host | what | attempts |
+|---|---|---|---|
+| `ctrl_corpus_oth` | lab | linear grid + PI / ND at 20k / 40k / 60k games (20k and 60k are recorded already and are skipped); inverse map + IM / IM-NN at 20k / 40k | 2 |
+| `ctrl_corpus_dw` | lab | LIN + MLP-128 + PI / GS at 30k / 100k sequences; inverse map + IM / IM-NN at 30k / 60k | 2 |
+| `ctrl_corpus_dw_200k` | lab | LIN + MLP-128 + PI / GS at 200k sequences (144 GB scratch) — its own job, ONE attempt, after `ctrl_corpus_dw`, so a memory kill at 200k cannot take the smaller sizes with it | 1 |
+
+Kept from the other session's note: the controls are not dependencies of `final_tables` (they feed no table and pull
+back only `scores/`), and the Othello inverse map is NOT fitted at 60k games. Added: a 40k-game point for both Othello
+parts (the inverse map's corpus sensitivity is then measured on Othello too, at 2× the rows, inside the measured memory:
+40.7 GB at 60k games ⇒ ~27 GB at 40k). Both scripts now take `--im-sizes` (the old `--im-max-n` still parses as an
+alias) and SKIP every part already recorded in their scores file, so a retry, or a later job adding a size, is free.
+The partial results and the fitted-probe cache of the killed run were pulled from the 4090 to the lab at 05:10.
+Smokes of both rewritten scripts reproduce the 2026-09-19 smoke numbers exactly.

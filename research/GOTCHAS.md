@@ -1073,3 +1073,15 @@ restore it (`git checkout -- <notebook>`) the moment that process exits, before 
 **When checking the edit survived, parse the cell SOURCE** — the executed notebook's printed OUTPUT contains
 run paths, and a text match on the file reported "survived" when the line was gone. The sibling trap:
 "Never edit a driver script while bash is executing it" (2026-09-08).
+
+## 2026-09-20 — The inverse-map fit holds a residual point's rows about FIVE times over: size it from measurement
+
+`arms.inverse_arms` (Othello) is dense: per residual point it holds the harvested activations, the masked rows, their
+train / test copies, the fit's standardised copies and the retrieval bank's staging copy. Measured on the 4090
+(`ctrl_corpus_oth`, 2026-09-20): 60k games = 3.5M rows = **40.7 GB anonymous**, OOM-killed at the unit's 40 GB cap
+(the LINEAR grid at the same 60k fitted fine). A cgroup kill is not a Python exception — a `try/except` does not
+catch it, the job just vanishes ("unit gone without an end record"). Rules: budget ~0.7 GB of anonymous memory per
+1k Othello games for the inverse map (canonical 20k ≈ 14 GB); put any size whose memory is uncertain in its OWN job
+with one attempt, last; write results after every part so a kill keeps what finished. The discworld inverse map
+(`iter_inverse_maps`) memmaps its residuals but still makes the train / test / bank copies — the same factor applies
+to its rows (30k sequences = 1.2M rows).

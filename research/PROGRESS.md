@@ -219,6 +219,14 @@ queue_drafts/`, not installed): parents (arms only, with the previews' cached ma
 family on the lab), then 8ray-tok. ⚠ `score_pending.sh` holds no lock — a catch-up must never overlap a replicate's scoring stage on
 the same host (in the `gpu` lane it cannot).
 **2026-09-20 04:26 — dw-16ray complete (n = 3); the refactored scorer VERIFIED on the 4090 too.** `rep_dw-16ray_s2` (9.26 h) was its first pass on `pim/scoring`: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors; five `nothing added` lines there (its tree lacks the lab-scored 5-ray members and 8-ray seed 1 — the lab shows eight); the remote notebook is still 6 cells / 174 lines with the 16-ray entry after its in-place write; seed 2 came back with frustum / cartesian / **appearance-fac** on its own (the `dw_extra_targets` line works — no catch-up job), eval version unchanged, MLP skill identical to its siblings, case-level fields present. Stage B's moved layout script (forwarder) worked on that host as well. dw-16ray (guarded selection): cartesian IM +0.663 ± 0.007 (guard +0.288 ± 0.004), PI +0.153 ± 0.021 (+0.925 ± 0.020), GS -0.121 ± 0.010; appearance-fac IM +0.689 ± 0.007, GS +0.255 ± 0.006, PI -0.050 ± 0.014. Factorised IM across the ray family so far: 5-ray +0.849 ± 0.005 > 8-ray +0.718 ± 0.013 > 16-ray +0.689 ± 0.007 — 8 vs 16 is the closest contrast (gap 0.029, ~2–3 SD). The 4090 moved on to `ctrl_corpus_oth` (the Othello probe-corpus-size control, its first run through the queue); the lab is in `rep_dw-128ray_s1`'s scoring stages. 9/32 done.
+**2026-09-20 05:45 — corpus-size controls redefined after a memory kill; TWO SESSIONS were editing the queue.** `ctrl_corpus_oth`
+was OOM-killed on the 4090 at 05:00 (40.7 GB anonymous in the Othello inverse-map fit at 60k games; GOTCHAS 2026-09-20). Kept and
+pulled to the lab: 20k games LIN 0.9747 · PI +0.819 · ND +0.748 · IM +0.810 (canonical 0.9751 / +0.818 / +0.749 / +0.806 — a different
+20k games reproduces everything to ±0.004); 60k games LIN 0.9752 · PI +0.819 · ND +0.746 — flat at 3× the rows. Another session
+redefined the retry in the queue JSON at 05:05 (commits 4735a94, 7053ddc) while this one was rewriting the scripts; reconciled at 05:40
+into `plan.py::control_jobs` (the single source): Othello 20k/40k/60k probes + IM at 20k/40k; discworld 30k/100k + IM 30k/60k; 200k as
+its own single-attempt job; all lab-only; controls are not `final_tables` deps; both scripts skip recorded parts and accept either flag
+spelling. ⚠ Sevan has been asked to name ONE operator for `experiments/paper_ci/`. The 4090 moved on to `rep_oth-standard_s1` at 05:02.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
