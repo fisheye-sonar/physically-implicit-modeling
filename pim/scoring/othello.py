@@ -27,7 +27,7 @@ from pim.environments.othello import corpus as oc
 from pim.environments.othello import case_targets, load_benchmark
 from pim.environments.othello.data import tokens_and_labels, canonical_vocab
 from pim.metrics.decodability import probe_skill_from_stats
-from pim.metrics.set_editability import move_fidelity_ratio
+from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio
 from pim.models import n_points
 from pim.probes.mlp import check_probe_sanity
 from pim.scoring.blocks import EDITORS_SCORED, IM_VERSION, probe_block
@@ -61,6 +61,9 @@ def othello_arms(model, bench, lin, mlp, tgt, cur, uns_probs, alphas, s):
                 pr, card = oa.linear_arm(model, bench, lin, tgt, cur, mode=mode, alpha=a, points={ell})
                 arms_out.append({"editor": label, "point": ell, "alpha": a,
                                  "fidelity_ratio": move_fidelity_ratio(pr, uns_probs, bench.legal_post),
+                                 # the guard's case-level 95% interval (2026-09-19, Sevan) — new fields only,
+                                 # as IM / IM-NN and every discworld arm already carry (REGISTRY "case-level spread")
+                                 **move_fidelity_ci95(pr, uns_probs, bench.legal_post),
                                  **{k: v for k, v in card.items() if isinstance(v, (int, float))}})
     # GS steers the mine/theirs probes toward mine-coordinate targets. The frames MUST
     # match: feeding absolute-colour labels to these probes is the 2026-08-31 bug, worth
@@ -71,6 +74,7 @@ def othello_arms(model, bench, lin, mlp, tgt, cur, uns_probs, alphas, s):
                                          beta=s["oth_gs_beta"], target_labels=tgt)
             arms_out.append({"editor": "GS", "point": ls, "alpha": a,
                              "fidelity_ratio": move_fidelity_ratio(pr, uns_probs, bench.legal_post),
+                             **move_fidelity_ci95(pr, uns_probs, bench.legal_post),
                              **{k: v for k, v in card.items() if isinstance(v, (int, float))}})
     for r in arms_out:                       # the shared block reads `edit_index`
         r["edit_index"] = r["edit_index_union"]

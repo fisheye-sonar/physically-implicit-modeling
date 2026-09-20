@@ -63,9 +63,8 @@ Replicates pool only at a matched budget (±10%); a set with n < 2 prints no ±.
 
 ## Owed / open
 
-- One notebook line: `master_eval` cell [4] builds Othello's PI / ND / GS arm records itself, so
-  they lack `fidelity_ci95_lo/_hi` (IM / IM-NN and every discworld arm have it) — add
-  `**move_fidelity_ci95(pr, uns_probs, bench.legal_post)` beside `move_fidelity_ratio` (2 places).
+- DONE 2026-09-19: Othello's PI / ND / GS arms carry the guard's case-level CI (`pim/scoring/othello.py::othello_arms`, after
+  the scorer moved into `pim/scoring/`); smoke on `L-oth-20m` reproduced the canonical PI arm to the last digit.
 - Bootstrap CI on the Othello ceiling (+0.91 symdiff on n = 13 / 29 / 32 ordinary cases):
   `ceiling_symdiff.py` has the per-case values; a 5-minute addition, no GPU.
 - Gridified discworld rows: only `appearance-fac` gets a spread (Sevan: the 8-ray grid sweep goes
