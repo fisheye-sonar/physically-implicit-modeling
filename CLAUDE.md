@@ -41,8 +41,8 @@ completed its notebook and figures, and never reported. The work was nearly lost
 - **Import the canonical implementations; never re-derive them.** Probes = `pim.probes`,
   editors = `pim.editors`, metrics = `pim.metrics`. A genuinely new object is fine — add
   its `research/REGISTRY.md` row in the same commit.
-- **Canonical scores come from `notebooks/master_eval.ipynb` and land in each run's
-  `scores.json`.** No metric math in notebooks; a number that matters is a one-line call
+- **Canonical scores come from `notebooks/master_eval.ipynb` (SETTINGS + three calls into
+  `pim/scoring/`) and land in each run's `scores.json`.** No metric math in notebooks; a number that matters is a one-line call
   into `pim.*`, or it is not a canonical number.
 - **Any claim about an effect on the model's generations ships with a waterfall** —
   built through `pim.figures.waterfall_grid`, per the spec. A scorecard hides the
@@ -146,6 +146,10 @@ bash harness/check.sh
                    distinct names, quote which one you mean.
     training/      ONE loop, two objectives; the TrainConfig defaults ARE the matched
                    canonical recipe. Entry: scripts/train.py.
+    scoring/       the canonical scorer behind notebooks/master_eval.ipynb (2026-09-19):
+                   which runs and blocks, the scores.json block schema, the per-environment
+                   scorers, the decodability floors, the add-only-what-is-missing driver.
+                   Wiring only — it calls the packages above and computes no metric.
 
 Cross-environment comparisons are only meaningful because the architecture, probes,
 editors, and training recipe are IDENTICAL across environments up to the input/output

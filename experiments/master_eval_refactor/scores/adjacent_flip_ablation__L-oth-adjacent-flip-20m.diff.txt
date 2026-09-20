@@ -1,0 +1,91 @@
+parity gate — adjacent_flip_ablation/L-oth-adjacent-flip-20m — 2026-09-19 18:24:57 (RECHECK of saved JSON — no scoring) — new nan min, old nan min — disk eval_version 2026-09-12.1
+
+=== OLD notebook code vs NEW pim.scoring (the move itself):  A = old   B = new ===
+  leaves compared 14610 · bit-identical 14610 · within 1e-06 0 · beyond tolerance 0 · keys on one side only 0 · max |Δ| 0
+  settings snapshot (old vs new): 0 differing entries
+
+=== scores.json ON DISK vs NEW pim.scoring:  A = disk   B = new ===
+  leaves compared 8606 · bit-identical 8484 · within 1e-06 87 · beyond tolerance 35 · keys on one side only 6004 · max |Δ| 1.54e-05
+    DIFF /arms[265]/edit_index: -0.44493874846536186 vs -0.44494142498812533  (|Δ| 2.68e-06)
+    DIFF /arms[265]/edit_index_symdiff: -0.6378959836098358 vs -0.6379084190674283  (|Δ| 1.24e-05)
+    DIFF /arms[265]/edit_index_union: -0.44493874846536186 vs -0.44494142498812533  (|Δ| 2.68e-06)
+    DIFF /arms[265]/fidelity_ratio: 1.4746578658209077 vs 1.4746732468884467  (|Δ| 1.54e-05)
+    DIFF /arms[265]/legal_mass: 0.840074360370636 vs 0.8400719165802002  (|Δ| 2.44e-06)
+    DIFF /arms[267]/fidelity_ratio: 1.3025005270959182 vs 1.302502487448785  (|Δ| 1.96e-06)
+    DIFF /arms[269]/edit_index: -0.26103149175131135 vs -0.26103044208549986  (|Δ| 1.05e-06)
+    DIFF /arms[269]/edit_index_union: -0.26103149175131135 vs -0.26103044208549986  (|Δ| 1.05e-06)
+    DIFF /arms[271]/edit_index_symdiff: -0.5257173782378678 vs -0.5257153017146027  (|Δ| 2.08e-06)
+    DIFF /arms[273]/edit_index_symdiff: -0.44069551997894824 vs -0.4406936624819873  (|Δ| 1.86e-06)
+    DIFF /arms[273]/fidelity_ratio: 2.07032011602958 vs 2.07031907764236  (|Δ| 1.04e-06)
+    DIFF /arms[275]/fidelity_ratio: 3.1722221564785786 vs 3.1722207174768755  (|Δ| 1.44e-06)
+    DIFF /arms[277]/edit_index_symdiff: -0.36531538318891343 vs -0.3653140289945032  (|Δ| 1.35e-06)
+    DIFF /arms[277]/fidelity_ratio: 3.853359697237175 vs 3.853351043722671  (|Δ| 8.65e-06)
+    DIFF /arms[279]/fidelity_ratio: 4.044854343575364 vs 4.044856567236026  (|Δ| 2.22e-06)
+    DIFF /arms[281]/fidelity_ratio: 4.073405449687483 vs 4.073403652704547  (|Δ| 1.8e-06)
+    DIFF /bases/mine_signed/arms[276]/edit_index: -0.44493874846536186 vs -0.44494142498812533  (|Δ| 2.68e-06)
+    DIFF /bases/mine_signed/arms[276]/edit_index_symdiff: -0.6378959836098358 vs -0.6379084190674283  (|Δ| 1.24e-05)
+    DIFF /bases/mine_signed/arms[276]/edit_index_union: -0.44493874846536186 vs -0.44494142498812533  (|Δ| 2.68e-06)
+    DIFF /bases/mine_signed/arms[276]/fidelity_ratio: 1.4746578658209077 vs 1.4746732468884467  (|Δ| 1.54e-05)
+    DIFF /bases/mine_signed/arms[276]/legal_mass: 0.840074360370636 vs 0.8400719165802002  (|Δ| 2.44e-06)
+    DIFF /bases/mine_signed/arms[278]/fidelity_ratio: 1.3025005270959182 vs 1.302502487448785  (|Δ| 1.96e-06)
+    DIFF /bases/mine_signed/arms[280]/edit_index: -0.26103149175131135 vs -0.26103044208549986  (|Δ| 1.05e-06)
+    DIFF /bases/mine_signed/arms[280]/edit_index_union: -0.26103149175131135 vs -0.26103044208549986  (|Δ| 1.05e-06)
+    DIFF /bases/mine_signed/arms[282]/edit_index_symdiff: -0.5257173782378678 vs -0.5257153017146027  (|Δ| 2.08e-06)
+    DIFF /bases/mine_signed/arms[284]/edit_index_symdiff: -0.44069551997894824 vs -0.4406936624819873  (|Δ| 1.86e-06)
+    DIFF /bases/mine_signed/arms[284]/fidelity_ratio: 2.07032011602958 vs 2.07031907764236  (|Δ| 1.04e-06)
+    DIFF /bases/mine_signed/arms[286]/fidelity_ratio: 3.1722221564785786 vs 3.1722207174768755  (|Δ| 1.44e-06)
+    DIFF /bases/mine_signed/arms[288]/edit_index_symdiff: -0.36531538318891343 vs -0.3653140289945032  (|Δ| 1.35e-06)
+    DIFF /bases/mine_signed/arms[288]/fidelity_ratio: 3.853359697237175 vs 3.853351043722671  (|Δ| 8.65e-06)
+    DIFF /bases/mine_signed/arms[290]/fidelity_ratio: 4.044854343575364 vs 4.044856567236026  (|Δ| 2.22e-06)
+    DIFF /bases/mine_signed/arms[292]/fidelity_ratio: 4.073405449687483 vs 4.073403652704547  (|Δ| 1.8e-06)
+    DIFF /bases/mine_signed/best/IM-NN/fidelity_ratio: 4.073405449687483 vs 4.073403652704547  (|Δ| 1.8e-06)
+    DIFF /bases/mine_signed/best_by_dims/all/IM-NN/fidelity_ratio: 4.073405449687483 vs 4.073403652704547  (|Δ| 1.8e-06)
+    DIFF /best/IM-NN/fidelity_ratio: 4.073405449687483 vs 4.073403652704547  (|Δ| 1.8e-06)
+    MISSING in A: /arms[0]/edit_index_symdiff_case_sd
+    MISSING in A: /arms[0]/edit_index_symdiff_case_se
+    MISSING in A: /arms[0]/edit_index_symdiff_ci95_hi
+    MISSING in A: /arms[0]/edit_index_symdiff_ci95_lo
+    MISSING in A: /arms[0]/edit_index_symdiff_n_cases
+    MISSING in A: /arms[0]/edit_index_union_case_sd
+    MISSING in A: /arms[0]/edit_index_union_case_se
+    MISSING in A: /arms[0]/edit_index_union_ci95_hi
+    MISSING in A: /arms[0]/edit_index_union_ci95_lo
+    MISSING in A: /arms[0]/edit_index_union_n_cases
+    MISSING in A: /arms[1]/edit_index_symdiff_case_sd
+    MISSING in A: /arms[1]/edit_index_symdiff_case_se
+    MISSING in A: /arms[1]/edit_index_symdiff_ci95_hi
+    MISSING in A: /arms[1]/edit_index_symdiff_ci95_lo
+    MISSING in A: /arms[1]/edit_index_symdiff_n_cases
+    MISSING in A: /arms[1]/edit_index_union_case_sd
+    MISSING in A: /arms[1]/edit_index_union_case_se
+    MISSING in A: /arms[1]/edit_index_union_ci95_hi
+    MISSING in A: /arms[1]/edit_index_union_ci95_lo
+    MISSING in A: /arms[1]/edit_index_union_n_cases
+    MISSING in A: /arms[2]/edit_index_symdiff_case_sd
+    MISSING in A: /arms[2]/edit_index_symdiff_case_se
+    MISSING in A: /arms[2]/edit_index_symdiff_ci95_hi
+    MISSING in A: /arms[2]/edit_index_symdiff_ci95_lo
+    MISSING in A: /arms[2]/edit_index_symdiff_n_cases
+    MISSING in A: /arms[2]/edit_index_union_case_sd
+    MISSING in A: /arms[2]/edit_index_union_case_se
+    MISSING in A: /arms[2]/edit_index_union_ci95_hi
+    MISSING in A: /arms[2]/edit_index_union_ci95_lo
+    MISSING in A: /arms[2]/edit_index_union_n_cases
+    MISSING in A: /arms[3]/edit_index_symdiff_case_sd
+    MISSING in A: /arms[3]/edit_index_symdiff_case_se
+    MISSING in A: /arms[3]/edit_index_symdiff_ci95_hi
+    MISSING in A: /arms[3]/edit_index_symdiff_ci95_lo
+    MISSING in A: /arms[3]/edit_index_symdiff_n_cases
+    MISSING in A: /arms[3]/edit_index_union_case_sd
+    MISSING in A: /arms[3]/edit_index_union_case_se
+    MISSING in A: /arms[3]/edit_index_union_ci95_hi
+    MISSING in A: /arms[3]/edit_index_union_ci95_lo
+    MISSING in A: /arms[3]/edit_index_union_n_cases
+    … 5964 more one-sided keys
+  settings snapshot (disk vs new): 15 differing entries — /dw_bases [changed]; /dw_bases_by_instance [MISSING in A]; /dw_extra_targets/interface_ablation/L-dw-8ray-tok-20m [changed]; /dw_extra_targets/interface_ablation/L-dw-8ray-tok-20m[10] [changed]; /dw_extra_targets/noise_ablation/L-dw-noiseless-20m [changed]; /dw_extra_targets/noise_ablation/L-dw-noiseless-20m[4] [changed]; /dw_extra_targets/noise_ablation/L-dw-noiseless-20m__seed0_s421875 [MISSING in B]; /dw_extra_targets/noise_ablation/L-dw-noiseless-20m__seed1 [MISSING in B]
+  `prediction` block present in disk (written by scripts/score_prediction.py, not by the scorer)
+  the OLD code differs from disk in exactly the same 6039 entries: True (True = drift since the file was written, not the move)
+
+  run's probes/ dir: 31 files before, 31 after; new files: none
+
+  VERDICT GREEN: move-induced differences 0; scored-field differences against disk 6039
