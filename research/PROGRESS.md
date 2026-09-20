@@ -5,6 +5,55 @@
 
 _Last updated: 2026-09-19 12:15 PT — orientation session; queue check found the dw-16ray fac gap (first section)_
 
+## 2026-09-19 (night) — follow-up to the scoring audit (Sevan): ONE change made, the rest deliberately left
+
+**Changed:** `master_eval.ipynb` SETTINGS `dw_bases` default `"frustum"` → `"frustum,cartesian"` (Sevan: both by default,
+cartesian is the de facto basis). Frustum stays FIRST on purpose — categorical probes are keyed under `bases[0]`; putting
+cartesian first would orphan every cached categorical probe and skip those blocks on newly scored runs. Proven inert: a
+dry run of `score_all` + `score_all_baselines` gives the IDENTICAL to-do list under both defaults (every run and floor
+file already has both blocks), every queue job that runs the scorer sets `PIM_DW_BASES` itself, and with that variable
+set SETTINGS is identical before / after. Edited while the lab was mid-training (128ray_s1, ~6 h from its scoring stage);
+the remote's copy is unchanged until its next pull (harmless, same reason). **Sevan: NO other fix from the audit now** —
+none is worth any risk to the queue; revisit after it drains (list in the entry below).
+**⚠ For Sevan's decision (paper wording, not code):** in the CATEGORICAL rows IM does NOT invert from the categorical grid.
+`dwa.inverse_arms` feeds g the CONTINUOUS 8-d post-edit state (`full_state_pair`, exact target position + velocity) in
+every block; a categorical block contributes only its bench (cell-changing cases) and its basis label (frustum). So in
+those rows PI / GS are told the target CELL and IM the exact POSITION. The draft already says "IM … writes the full state
+either way"; Sevan expected a categorical inverse. Options: keep + say so in the caption (no compute), or add a
+categorical inverse map g_cat(labels → residual) as a new arm (an instrument change; ~IM's cost per run).
+**Variance on the guard:** the tables' ± on every fidelity cell = SD over training seeds (`pool_replicates` pools
+`<ed> fid`; e.g. 8-ray cartesian PI 0.921 ± 0.041, GS 0.886 ± 0.017, IM 0.265 ± 0.008, n = 3). There is NO case-level SD
+of the guard anywhere (only a bootstrap CI, and only on IM / IM-NN + Othello arms scored since this evening); the Edit
+Index has both (seed SD in the tables, `edit_index_case_sd` / `_se` on every arm scored since 2026-09-18).
+**Seen in the executed notebook:** every pass retries the replicates' inherited-but-never-fitted extra targets (8-ray
+replicates inherit 10 grid targets; 23 runs + 2 floor files are perpetually "adding … SKIPPED") — seconds each, harmless,
+noisy; fix later by letting a replicate inherit only the targets its probes exist for.
+
+## 2026-09-19 (evening) — AUDIT of `pim/scoring` (Sevan: is it pure plumbing? any bugs?) — read in full, nothing changed
+
+**No metric is defined there** (no numeric reduction in the package; ruff F clean; every recorded `best` = the true argmax
+on all 157 blocks of 51 runs, no NaN index anywhere; arm counts match SETTINGS exactly: 293 regression / 282 categorical).
+**It does make choices:** `best` = UNGUARDED argmax (Othello: on the UNION index, and the bare `edit_index` of an Othello arm IS
+the union) — not what the tables report since today (`pim.metrics.selection`); `scripts/index_ceiling.py --editors` and
+`paper/figs/history_rewrite` still read it. Categorical blocks live in `dw_bases[0]`, so Table 2's categorical IM is the
+FRUSTUM-basis inverse map beside cartesian continuous rows (8-ray +0.703 vs +0.711; ~0.02). The scored bases come from the
+env var `PIM_DW_BASES` (default frustum only — CLAUDE.md's plain nbconvert command does not produce the cartesian blocks
+the paper reads). Floors' large-corpus recipe (250k / 50 epochs), seed, which floor point is reported live in `baselines.py`.
+**Bugs / hazards (none changes a reported number):** (1) `scan_runs` excludes `_`-TOPICS only → quarantined
+`ray_ablation/_R-dw-8ray-20m` is still scored (cartesian + IM were added to it) while its SETTINGS entry (`R-dw-8ray-20m`)
+no longer matches; (2) `except RuntimeError` around `fit_probes` also swallows CUDA OOM on a REGRESSION block → run
+written without its canonical block, rc 0 (self-heals next pass); (3) discworld PI / ND / GS arms do NOT carry
+`fidelity_ci95_*` (only IM does — `score(…)` is called without the unsteered card; REGISTRY / 37edca0 say otherwise);
+(4) `score_all_baselines`: an arch on file with no scanned run (`recurrent_l` on dw-noiseless, dw-pn04) → KeyError the day
+a basis is added; baselines.json written non-atomically; (5) a metrics.jsonl line caught mid-write aborts `scan_runs`;
+(6) `inverse_discworld`'s print dereferences `best["IM"]` (None if no IM arm); (7) scores.json is read-modify-write with
+an hour-long window and a full rescore drops foreign blocks (`prediction`): the remote's pull of the shared seed-0 member
+`L-dw-8ray-20m__seed0_s512000` overwrote the lab's copy (prediction block lost; `score_prediction.py` re-adds it).
+**Found on the way (upstream, `pim.probes`):** the LINEAR probe at residual point 0 is numerically broken on every
+regression block (held-out R² −0.1 … −2.2; SAME checkpoint: lab −1.12 vs remote +0.10) — rank-deficient embedding point;
+invisible in the tables (max over points; no reported PI arm at pt 0). Same-checkpoint lab-vs-remote scoring otherwise:
+PI identical, IM ±0.011, GS up to 0.06 per arm (best GS −0.074 vs −0.032) = measurement noise of refitting the MLP probes.
+
 ## 🔄 Paper seed-replicate queue (`experiments/paper_ci/`) — LAUNCHED 2026-09-18 20:48 PT, ETA ≈ 2026-09-23 03:00 PT
 
 **2026-09-19 12:15 check:** healthy. Done: `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), both corpus
@@ -136,6 +185,19 @@ cartesian IM +0.720 ± 0.006 (guard 0.265 ± 0.008), PI +0.207 ± 0.022 (0.921 �
 reads through `pim.figures.tables`, whose arm selection became GUARDED on 2026-09-19 (another session, `pim/metrics/selection.py`):
 ledger / ping / dashboard numbers for PI in particular differ from anything quoted before that change.
 **20:53 — dw-5ray complete (n = 3) and the refactored scorer VERIFIED on the lab.** Its first pass (`rep_dw-5ray_s2`, 20:22–20:52) met CUTOVER.md's checks: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors; eight `nothing added` lines = the note's seven + the 8-ray seed-2 member synced back after the note was written; seed 2's eval version / blocks unchanged, MLP skill identical to its siblings to three decimals, scoring 29.3 min (seed 1: 28.8 under the old scorer); notebook still 6 cells / 174 lines with the 16-ray entry after the in-place write. dw-5ray (guarded selection): cartesian IM +0.808 ± 0.009 (guard +0.230 ± 0.007), PI +0.132 ± 0.036 (+0.898 ± 0.051), GS -0.093 ± 0.015; appearance-fac IM +0.849 ± 0.005, GS +0.559 ± 0.012, PI +0.538 ± 0.017; MLP skill SD 0.000 / 0.000. Lab now on `rep_dw-128ray_s1`. STILL OWED: the same three checks on the 4090's first pass (`rep_dw-16ray_s2`, early 2026-09-20), which must also produce `appearance-fac` without help.
+**2026-09-19 23:55 — CATEGORICAL INVERSE MAP: branch built, NOT deployed (Sevan decides in the morning).** Sevan found that every
+categorical discworld block's "IM" was its basis's CONTINUOUS full-state map scored on the categorical bench (identical `g_r2` vector
+to the frustum block; 52 blocks in 22 runs). His spec: on a categorical block g inverts the block's own one-hot labels + the discs'
+Cartesian velocity (deliberately asymmetric to the forward probes), recipe = the forward probe's (200k sequences, 50 epochs, streamed),
+IM only, scope dw-128ray / 16ray / 8ray / 5ray (+ 8ray-tok) × `appearance-fac`; old arms DELETED from every scores.json; he will
+likely move one categorical-IM run per ray family to the TOP of the queue (it shapes the writing). **Where:** staging clone
+`../pim-master-eval-refactor`, branch `categorical_inverse` (commit 70685a7, pushed, unmerged); `experiments/categorical_inverse/README.md`
+there holds the design, the evidence and the 5-step deployment. **Running from the clone, writing ONLY inside it:** unit
+`catinv_preview` (the four parents at the production recipe → `scores/preview_<run>_appearance-fac.json`, ~45 min each sharing the lab
+GPU, 5-ray first; point 0 of 5-ray: held-out R² +0.463 = in-sample, no overfit gap) then unit `catinv_gate` (parity gate on
+`L-dw-8ray-20m__seed1`: only the factorised block's old IM arms may differ). Logs `../pim-master-eval-refactor/logs/categorical_inverse/`.
+The live tree, the queue and every scores.json are UNTOUCHED. Morning: report the four numbers + the gate, get Sevan's go, then deploy
+per the README (merge in a gap → `clear_continuous_im.py --apply` → catch-up jobs at the top of the queue with `PIM_ADD_CAT_IM=1`).
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
