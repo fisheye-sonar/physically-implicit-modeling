@@ -1,0 +1,30 @@
+{
+ "id": "catim_5ray",
+ "group": "categorical-IM",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/score_pending.sh catim_5ray",
+ "env": {
+  "PIM_ONLY_RUNS": "L-dw-5ray-20m__seed0_s512000,L-dw-5ray-20m__seed1,L-dw-5ray-20m__seed2",
+  "PIM_ADD_CAT_IM": "1",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 1,
+ "est_hours": {
+  "lab": 1.9
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "note": "categorical inverse map on the three dw-5ray members at 512k (fit ~32 min + arms ~5 min each)"
+}

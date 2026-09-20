@@ -1,0 +1,30 @@
+{
+ "id": "catim_parents",
+ "group": "categorical-IM",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/score_pending.sh catim_parents",
+ "env": {
+  "PIM_ONLY_RUNS": "L-dw-5ray-20m,L-dw-8ray-20m,L-dw-16ray-20m,L-dw-128ray-20m",
+  "PIM_ADD_CAT_IM": "1",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "deps": [],
+ "host_deps": {},
+ "priority": 0,
+ "est_hours": {
+  "lab": 0.5
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "note": "categorical inverse map on the four ray-family parents (appearance-fac). With the staging previews' cached maps copied into each parent's probes/ first (README step 4) this is the arms only, ~5 min a run; without them ~37 min a run (2.5 h)"
+}

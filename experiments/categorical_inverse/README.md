@@ -55,6 +55,40 @@ dw-128ray) is built per minibatch.
   expected: the factorised block loses its old IM / IM-NN arms, `best.IM*`, `inverse_map`; nothing else differs.
   → `scores/gate_L-dw-8ray-20m__seed1.diff.txt`.
 
+## Results (2026-09-20 02:45, staging only — nothing under `runs/` written)
+
+**Preview, production recipe (200k sequences / 50 epochs), full bench, reported arm = best inside the guard.**
+Edit Index / fidelity ratio; "old" is the continuous-state map scored on the same bench in the same pass.
+
+| parent | NEW categorical IM | old continuous "IM" | PI | GS | g R² held-out / in-sample | fit + arms |
+|---|---|---|---|---|---|---|
+| L-dw-5ray-20m | **+0.913** / 0.25 (pt 5) | +0.836 / 0.26 (pt 0) | +0.513 | +0.598 | 0.650 / 0.651 | 37 min |
+| L-dw-8ray-20m | **+0.866** / 0.27 (pt 6) | +0.703 / 0.31 (pt 0) | +0.380 | +0.458 | 0.618 / 0.618 | 36 min |
+| L-dw-16ray-20m | **+0.823** / 0.29 (pt 6) | +0.684 / 0.28 (pt 6) | −0.061 | +0.280 | 0.610 / 0.610 | 36 min |
+| L-dw-128ray-20m | **+0.637** / 0.29 (pt 6) | +0.574 / 0.32 (pt 6) | −0.308 | +0.308 | 0.707 / 0.708 | 39 min |
+
+- No overfit gap anywhere (held-out = in-sample to the third digit): 50 epochs over 200k sequences is not memorising.
+- **Landing vs its ceiling** (`scripts/landing_ceiling.py`; exact match on every tile of the edited object; natural
+  residual → true labels / written residual → target labels): 5-ray LIN 0.923 / 0.985, MLP 0.938 / 0.941 · 8-ray
+  0.939 / 0.963, 0.947 / 0.958 · 16-ray 0.846 / 0.891, 0.931 / 0.911 · **128-ray LIN 0.059 / 0.072, MLP 0.418 / 0.116**.
+  ⚠ At 128-ray the exact-cell criterion is near-unreachable for the LIN probe even on natural residuals (1,028 classes
+  per object), and the MLP probe reads the written residual as the exact target cell far less often (0.12) than it
+  reads natural ones (0.42) — the 128-ray write is coarser than the label grid. The Edit Index still rises (+0.574 →
+  +0.637) because the ray-zone index scores the decoded frame, not the label.
+- **What the gain is, and is not** (the waterfalls, `outputs/waterfall_*.png`, first 32 cases: 8-ray +0.662 → +0.869,
+  5-ray +0.849 → +0.887, 16-ray +0.738 → +0.847, 128-ray +0.605 → +0.690). The Edit Index is scored on rollout step 0 —
+  the decode of the edit frame (`edit_scorecard`: `p0 = roll[:, 0]`), and on a transformer the write shapes that one
+  prediction; the rest of the rollout is recomputed from the observation window (`arms._roll_hook`). The pictures show
+  exactly that for BOTH maps: one strongly rewritten row at the edit frame, then a rollout that carries the edited frame
+  as one observation among the window's unedited ones. The whole-rollout RMSE to the edited ground truth is the same for
+  old and new (128-ray 0.279 vs 0.283, 16-ray 0.276 vs 0.277, 8-ray 0.233 vs 0.234, 5-ray 0.228 vs 0.227). So the
+  categorical map buys a **better edit frame**, not a more persistent edit. At 8-ray the difference is visible by eye;
+  at 128-ray the old and new columns are hard to tell apart in the four rows drawn.
+- **Parity gate, frustum only** (`scores/gate_L-dw-8ray-20m__seed1.diff.txt`): 16,551 of 16,555 leaves bit-identical,
+  max |Δ| 0; the 7 differences are the expected ones (the factorised block's arms 282 → 264, four `best` IM / IM-NN
+  entries, `inverse_map`; plus the cartesian block "missing" — a launch omission, `PIM_DW_BASES` not set). `probes/` 27
+  files before and after. **Both bases**: `scores/gate_L-dw-8ray-20m__seed1_both_bases.diff.txt` (unit `catinv_gate2`).
+
 ## Deployment (NOT done — Sevan's call)
 
 1. Merge `categorical_inverse` into `sweeps_and_blates` on the lab while no `master_eval` execution is running

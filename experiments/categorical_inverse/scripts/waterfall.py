@@ -65,7 +65,7 @@ for run in sys.argv[1:]:
             dwa.as_activations(model, pt_old)
             roll = model.rollout_with_edit(b.state, pt_old, inverse_overwrite(g, s_post), dwb.K_ROLL).cpu().numpy()
             c = dwa.score(model, b, roll, cu)
-            lab = f"OLD: continuous-state map (pt{pt_old}, fid {c['fidelity_ratio']:.2f})"
+            lab = f"OLD continuous · pt{pt_old} · fid {c['fidelity_ratio']:.2f}"          # short: long titles collide (STYLE legibility)
             cols[lab], metrics[lab] = roll[:N_ROWS], c["edit_index"]
         rec = dict(prev["recipe"])
         velc = torch.from_numpy(full_state_pair(b.pos, b.vel, b.edit_object, b.sim, "cartesian")[1]).to(dwb.DEV)[:, -4:]
@@ -75,7 +75,7 @@ for run in sys.argv[1:]:
         h_new = inverse_overwrite(g, encode_categorical_state(b.tgt, velc, gst["n_classes"]))
         roll = model.rollout_with_edit(b.state, pt_new, h_new, dwb.K_ROLL).cpu().numpy()
         c = dwa.score(model, b, roll, cu)
-        lab = f"NEW: categorical state + velocity (pt{pt_new}, fid {c['fidelity_ratio']:.2f})"
+        lab = f"NEW categorical · pt{pt_new} · fid {c['fidelity_ratio']:.2f}"
         cols[lab], metrics[lab] = roll[:N_ROWS], c["edit_index"]
     fig = waterfall_grid(
         columns=cols, context=b.obs[:N_ROWS, dwb.EF - N_CTX: dwb.EF], gt=b.gt_roll[:N_ROWS],
@@ -88,6 +88,6 @@ for run in sys.argv[1:]:
     name = f"waterfall_{run_dir.name}_{TARGET}_categorical_IM.png"
     fig.savefig(OUT / name, dpi=120, bbox_inches="tight")
     plt.close(fig)
-    print(f"{name}: " + " · ".join(f"{k.split(':')[0]} EI {v:+.3f}" for k, v in metrics.items()), flush=True)
+    print(f"{name}: " + " · ".join(f"{k.split(' · ')[0]} EI {v:+.3f}" for k, v in metrics.items()), flush=True)
     del model
     torch.cuda.empty_cache()
