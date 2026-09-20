@@ -17,6 +17,17 @@ Table 2 row. **FIXED by Sevan 2026-09-19:** entry added (762faae); `push_inputs`
 directory pushes (it was nesting `scripts/scripts/` on the remote) and a held job adds the 16-ray members' fac
 block (507d623).
 
+**2026-09-19 (Sevan) — THE PAPER NO LONGER DEPENDS ON `experiments/`** (audit: 5 of 37 experiment folders fed a paper
+claim). Moved: the Edit-Index CEILING → `scripts/index_ceiling.py` (+ `pim/environments/othello/counterfactual.py`: the
+counterfactual-game search; writes `runs/<run>/index_ceiling.json`; `L-oth-20m` re-run on CPU reproduces +0.909, 13 cases,
+new CI 0.854–0.956; discworld ceilings on the 1000-case bench STILL TO RUN — in the proposed queue job; 24-case CPU smoke on
+8-ray +0.87); flips per move → `scripts/othello_corpus_stats.py` (run: 2.245 / 0.269 / 0 / 0 → `runs/_baselines/<inst>/
+corpus_stats.json`); the seed-0 member layout → `scripts/layout_checkpoint_replicate.py` with a FORWARDER at the old path
+(replicate.sh untouched while the queue runs — switch its stage B after the drain, see `experiments/bayes_floor/
+QUEUE_HANDOFF.md`); `build_paper_tables_and_figs` cell [5] (old Table 4 from `experiments/bayes_floor`) DELETED;
+`experiments/history_rewrite` → `paper/figs/history_rewrite/` (script moved + paths fixed, compiled, NOT re-run — GPU).
+Still reading `experiments/`: `tables.table_bayes` / `table_alignment` / `fig_capacity` (long-list notebook only).
+
 **2026-09-19 (Sevan) — PREDICTIVE LOSS vs BAYES FLOOR made canonical; NOTHING RUN YET (queue owns the GPUs).**
 `pim/metrics/prediction.py`, `pim/environments/prediction.py` (a run's `prediction` block),
 `pim/environments/discworld/bayes.py` (floor by posterior sampling over the initial state; blink's marker process
@@ -32,7 +43,12 @@ CPU: oth-uniform 4.094 (= log 60), dw-8ray 0.1007 / token CE 5.18, dw-noiseless 
 stronger naive reference on discworld (dw-8ray 0.0078 vs floor ≈ 0.0056, model 0.00577) — recorded as `persistence_mse`,
 printed not tabulated; put to Sevan. CPU pilot, dw-8ray: floor 0.0055–0.0057 vs model 0.00577 (`scratch/2026-09-19-bayes-floor-pilot.md`);
 the old Table 4 "floor = 0" was a state oracle, not a Bayes floor. Verified on CPU: renderer parity 100% on all five
-instances, blink marker model calibrated within 1.4% on 10k sequences. **To run:** one queue job after
+instances, blink marker model calibrated within 1.4% on 10k sequences. **FILLED ON CPU 2026-09-19 15:10 (lab in a training phase, no scorer running):** the 4 exact Othello floors + every
+instance's trivial predictor (`bayes_floor.py`; discworld files are `+trivial-only` until the sampler runs), the
+`prediction` block in 22 runs (paper runs + their scored replicates; CPU, 26 s a run), Table A1 rendered — Othello rows
+complete (excess +0.0179 / +0.0052 / +0.0023 / +0.0015 nats), discworld rows show trivial + loss, floor pending the GPU.
+Token run: CE 0.4638 nats/frame; mean-frame MSE 0.00573 vs the frame model's 0.00574 on the same sequences.
+**To run:** one queue job after
 `final_tables` — `experiments/bayes_floor/QUEUE_HANDOFF.md` (for the session operating the queue; job file in
 `queue_proposal/`, NOT installed). `master_eval` untouched. UNCOMMITTED. When it lands: check the brackets, write
 `findings/predictive-quality.md`, fill the paper's red prediction-quality placeholders, retire Table 4.

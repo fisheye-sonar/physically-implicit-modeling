@@ -13,7 +13,8 @@ Arms (all scored on the canonical bench, first 32 selected cases):
   hist+IM  (rewritten history, then the same write at EF−1)
   hist     (rewritten history, no write at EF−1 — does the history alone carry the edit?)
 Also reported: RMSE of the rewritten history against the SIM'S clean counterfactual render.
-Outputs in ../outputs/; everything canonical comes from pim.*."""
+Outputs land beside this script; everything canonical comes from pim.* — nothing under experiments/
+(moved here 2026-09-19 from experiments/history_rewrite/, so the paper does not depend on that tree)."""
 from __future__ import annotations
 import json, sys
 from pathlib import Path
@@ -32,7 +33,7 @@ from pim.editors.inverse import inverse_overwrite
 from pim.figures import waterfall_grid
 
 RUN, BLOCK, N_BENCH, N_ROWS, N_CTX = "noise_ablation/L-dw-noiseless-20m", "cartesian", 32, 4, 6
-OUT = REPO / "experiments/history_rewrite/outputs"; OUT.mkdir(exist_ok=True)
+OUT = Path(__file__).resolve().parent            # outputs land beside this script (paper/figs/history_rewrite/)
 run_dir = REPO / "runs" / RUN
 inst = json.loads((run_dir / "config.json").read_text())["data"]["instance"]
 best = json.loads((run_dir / "scores.json").read_text())["bases"][BLOCK]["best"]["IM"]

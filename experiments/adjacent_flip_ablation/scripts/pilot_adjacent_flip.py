@@ -1,4 +1,7 @@
-"""Pilot gate for oth-adjacent-flip (2026-09-09), BEFORE the 20M corpus.
+"""The flips-per-move statistic is now ``scripts/othello_corpus_stats.py`` (2026-09-19, on the real corpus).
+This pilot gate is kept for the record.
+
+Pilot gate for oth-adjacent-flip (2026-09-09), BEFORE the 20M corpus.
 Adjacency placement WITH enclosure recolouring. Same report as the oth-adjacent pilot plus the
 recolouring rate (discs flipped per game / per move) — the number that proves this is not
 oth-adjacent — and the fraction of games in which one side is wiped out (a wiped-out player can

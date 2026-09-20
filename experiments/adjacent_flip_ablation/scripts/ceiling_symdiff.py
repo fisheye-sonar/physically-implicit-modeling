@@ -1,4 +1,7 @@
-"""The Edit-Index CEILING under BOTH constructions (2026-09-15).
+"""SUPERSEDED 2026-09-19 by ``scripts/index_ceiling.py`` (both environments; reproduces this file's numbers;
+writes runs/<topic>/<run>/index_ceiling.json). Kept for the record.
+
+The Edit-Index CEILING under BOTH constructions (2026-09-15).
 
 `honesty_check_v2.py` (2026-09-11) established the honest ceiling — the model run on a true
 counterfactual history whose board equals the flipped board, kept only when the model treats

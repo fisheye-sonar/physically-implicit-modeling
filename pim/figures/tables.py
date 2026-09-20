@@ -838,7 +838,8 @@ def table_prediction(runs_oth: list[str], runs_dw: list[str], tag: str = "A1", r
     def pm(v, d, signed=False):
         if pd.isna(v):
             return "—"
-        return format(v, "+.5f" if signed else ".5f") + ("" if pd.isna(d) or d == 0 else f"\n± {d:.5f}")
+        return format(v, "+.5f" if signed else ".5f") + (
+            "" if pd.isna(d) or d == 0 else ("\n± < 0.00001" if d < 5e-6 else f"\n± {d:.5f}"))
 
     A = np.array([[pm(r.trivial, np.nan), pm(r.loss, r.loss_sd), pm(r.floor, r.floor_pm)] for r in P.itertuples()], dtype=object)
     def ex(r):

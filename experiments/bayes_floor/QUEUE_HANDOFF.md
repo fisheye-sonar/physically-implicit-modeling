@@ -17,7 +17,12 @@ install the job so it runs on the LAB GPU after everything else, and to check it
    (one forward pass over the 10k held-out sequences per discworld run; Othello runs are read from their
    `gates`). One dated backup per run under `scores_backup/`, atomic replace, skips runs already done,
    honours `PIM_SKIP_TOPICS`.
-3. Re-executes `notebooks/build_appendix_tables_and_figs.ipynb` (Table A1).
+3. `scripts/index_ceiling.py` on eight paper runs — the Edit Index CEILING (the paper's "+0.91" sanity check) →
+   `runs/<topic>/<run>/index_ceiling.json`. Discworld: the overwrite oracle on the 1000-case bench (the old number was
+   on the 192-case bench). Othello: a real game with the flipped board, `--reachability` adds IM on legal vs illegal
+   targets. `L-oth-20m` is already done on CPU (+0.909, 95% CI 0.854–0.956, 13 cases — reproduces the experiment's
+   file); re-running it is harmless.
+4. Re-executes `notebooks/build_appendix_tables_and_figs.ipynb` (Table A1).
 
 ## Install
 
@@ -71,6 +76,14 @@ started jobs.
 - Then: record the numbers in `research/findings/predictive-quality.md` (a dated entry, `observed`),
   update `research/PROGRESS.md`, and tell Sevan the table is ready. The paper's red placeholders in
   §Results ("within 0.02 nats", "below 0.006") and appendix `app:predict_skill` are filled from this table.
+
+## After the queue has drained — one line in a driver
+
+`scripts/drivers/replicate.sh` stage B still calls `experiments/seed_variance/scripts/layout_checkpoint_replicate.py`,
+which is now a FORWARDER to the canonical `scripts/layout_checkpoint_replicate.py` (identical code; both paths tested on
+an existing member). It was left alone because a live job is executing that driver. When nothing is running: point
+stage B at `scripts/layout_checkpoint_replicate.py`, delete the forwarder, and make sure the remote has both changes
+before its next replicate job (a git pull brings the new script and the forwarder together, so either order is safe).
 
 ## Files (all new unless marked)
 

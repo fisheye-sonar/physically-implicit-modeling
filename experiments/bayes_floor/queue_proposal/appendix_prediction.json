@@ -6,7 +6,7 @@
   "lab"
  ],
  "lane": "gpu",
- "cmd": ".pim/bin/python -u scripts/bayes_floor.py && .pim/bin/python -u scripts/score_prediction.py && .pim/bin/python .pim/bin/jupyter-nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 notebooks/build_appendix_tables_and_figs.ipynb",
+ "cmd": ".pim/bin/python -u scripts/bayes_floor.py && .pim/bin/python -u scripts/score_prediction.py && for r in initial_othello_comparison/L-oth-20m adjacent_flip_ablation/L-oth-adjacent-flip-20m adjacency_ablation/L-oth-adjacent-20m noise_ablation/L-dw-noiseless-20m ray_ablation/L-dw-128ray-20m ray_ablation/L-dw-16ray-20m ray_ablation/L-dw-8ray-20m ray_ablation/L-dw-5ray-20m; do .pim/bin/python -u scripts/index_ceiling.py --run $r --reachability || exit 1; done && .pim/bin/python .pim/bin/jupyter-nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=-1 notebooks/build_appendix_tables_and_figs.ipynb",
  "env": {
   "PIM_SKIP_TOPICS": "training_curve"
  },
@@ -16,12 +16,12 @@
  "host_deps": {},
  "priority": 95,
  "est_hours": {
-  "lab": 1.0
+  "lab": 1.5
  },
  "inputs": [],
  "outputs": [],
  "progress": null,
  "mem_max": null,
  "max_attempts": 2,
- "note": "Bayes floors (4 Othello exact + 6 discworld sampled) -> runs/_baselines/<inst>/bayes_floor.json; prediction block folded into every scored run; appendix notebook (Table A1) re-rendered. Runs AFTER final_tables so no master_eval is writing scores.json at the same time."
+ "note": "Bayes floors (4 Othello exact + 6 discworld sampled) -> runs/_baselines/<inst>/bayes_floor.json; prediction block folded into every scored run; appendix notebook (Table A1) re-rendered. Runs AFTER final_tables so no master_eval is writing scores.json at the same time. Also the Edit Index ceilings (scripts/index_ceiling.py \u2192 runs/<run>/index_ceiling.json; Othello with --reachability = legal vs illegal targets; oth-noflip has no reachable flipped board and dw-blink is refused by design, so both are left out)."
 }
