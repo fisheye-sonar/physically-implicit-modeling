@@ -135,6 +135,7 @@ cartesian IM +0.720 ± 0.006 (guard 0.265 ± 0.008), PI +0.207 ± 0.022 (0.921 �
 `rep_dw-16ray_s2`'s training stage (refactor + guard CI; no execution running, no executing script changed). ⚠ The ledger
 reads through `pim.figures.tables`, whose arm selection became GUARDED on 2026-09-19 (another session, `pim/metrics/selection.py`):
 ledger / ping / dashboard numbers for PI in particular differ from anything quoted before that change.
+**20:53 — dw-5ray complete (n = 3) and the refactored scorer VERIFIED on the lab.** Its first pass (`rep_dw-5ray_s2`, 20:22–20:52) met CUTOVER.md's checks: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors; eight `nothing added` lines = the note's seven + the 8-ray seed-2 member synced back after the note was written; seed 2's eval version / blocks unchanged, MLP skill identical to its siblings to three decimals, scoring 29.3 min (seed 1: 28.8 under the old scorer); notebook still 6 cells / 174 lines with the 16-ray entry after the in-place write. dw-5ray (guarded selection): cartesian IM +0.808 ± 0.009 (guard +0.230 ± 0.007), PI +0.132 ± 0.036 (+0.898 ± 0.051), GS -0.093 ± 0.015; appearance-fac IM +0.849 ± 0.005, GS +0.559 ± 0.012, PI +0.538 ± 0.017; MLP skill SD 0.000 / 0.000. Lab now on `rep_dw-128ray_s1`. STILL OWED: the same three checks on the 4090's first pass (`rep_dw-16ray_s2`, early 2026-09-20), which must also produce `appearance-fac` without help.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
