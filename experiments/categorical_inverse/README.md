@@ -91,7 +91,12 @@ Edit Index / fidelity ratio; "old" is the continuous-state map scored on the sam
 - **Parity gate, frustum only** (`scores/gate_L-dw-8ray-20m__seed1.diff.txt`): 16,551 of 16,555 leaves bit-identical,
   max |Δ| 0; the 7 differences are the expected ones (the factorised block's arms 282 → 264, four `best` IM / IM-NN
   entries, `inverse_map`; plus the cartesian block "missing" — a launch omission, `PIM_DW_BASES` not set). `probes/` 27
-  files before and after. **Both bases**: `scores/gate_L-dw-8ray-20m__seed1_both_bases.diff.txt` (unit `catinv_gate2`).
+  files before and after. **Both bases** (`scores/gate_L-dw-8ray-20m__seed1_both_bases.diff.txt`, 03:05): 22,390 leaves compared,
+  22,386 bit-identical, max |Δ| 0, nothing within-tolerance-only; the cartesian block — its continuous IM / IM-NN arms included —
+  is identical to disk, and the ONLY differences are the factorised block's old arms (282 → 264, `best.IM`, `best.IM-NN`, their
+  `best_by_dims` copies, `inverse_map`). The gate's rc = 1 is those expected differences. `probes/` 27 files, unchanged.
+- **Token model** (`scripts/preview_tokens.py`, the scorer's token path end to end): smoke passes (tiny recipe: fit + write run);
+  production-recipe preview → `scores/preview_L-dw-8ray-tok-20m_appearance-fac_tokens.json` (unit `catinv_tok`).
 
 ## Deployment (NOT done — Sevan's call)
 
