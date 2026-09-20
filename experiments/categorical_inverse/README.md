@@ -96,7 +96,10 @@ Edit Index / fidelity ratio; "old" is the continuous-state map scored on the sam
   is identical to disk, and the ONLY differences are the factorised block's old arms (282 → 264, `best.IM`, `best.IM-NN`, their
   `best_by_dims` copies, `inverse_map`). The gate's rc = 1 is those expected differences. `probes/` 27 files, unchanged.
 - **Token model** (`scripts/preview_tokens.py`, the scorer's token path end to end): smoke passes (tiny recipe: fit + write run);
-  production-recipe preview → `scores/preview_L-dw-8ray-tok-20m_appearance-fac_tokens.json` (unit `catinv_tok`).
+  production-recipe preview (03:15–03:52, 36.7 min, `scores/preview_L-dw-8ray-tok-20m_appearance-fac_tokens.json`): **NEW +0.780 / 0.20
+  (pt 8)** vs the old continuous map +0.623 / 0.30 (pt 8) on the same 951 kept cases; PI +0.228, ND +0.283, GS +0.351; g R² rises
+  monotonically with depth 0.206 → 0.641, held-out = in-sample at every point. (Frame-set Edit Index — shares an axis with the
+  frame models' ray-zone index, not a formula.)
 
 ## Deployment (NOT done — Sevan's call)
 
