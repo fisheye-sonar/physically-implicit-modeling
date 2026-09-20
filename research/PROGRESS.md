@@ -89,9 +89,10 @@ guard verdicts k/n), the REGISTRY run rows, the brief → `done`; move the smoke
 (`experiments/paper_ci/state/_smoke/`, `logs/paper_ci/smoke_*`) to an archive folder.
 **Status 2026-09-19 13:35 PT — 4 of 31 jobs done, all verified on disk.** `rep_dw-5ray_s1` (lab, 8.05 h),
 `rep_dw-16ray_s1` (4090, 10.75 h), `rep_dw-8ray_s1` (lab, 8.44 h), `score_16ray_fac` (9 min). Pooled n = 2 so
-far (member + seed 1): decodability SD 0.000, IM ±0.002–0.007, GS ±0.003–0.02, PI ±0.02–0.03; PI's guard on
-8-ray cartesian is 0.997 on the canonical run and 1.056 ± 0.008 on the 512k members — a guard near 1.0 is read
-as k of n. Measured rates: lab 5090 under its 450 W cap 23.4 steps/s on 8/5-ray (−15%), the 4090 20 steps/s on
+far (member + seed 1): decodability SD 0.000, IM ±0.002–0.007, GS ±0.003–0.02, PI ±0.02–0.03. _(Corrected 19:20: the
+"PI guard 1.056 on the 512k members" remark made here at 13:35 was under the OLD unguarded arm selection; the tables' rule
+changed that afternoon to the best arm INSIDE the guard (`pim.metrics.selection`), under which all three 8-ray members
+have a passing PI arm, guard 0.89 / 0.90 / 0.97 at index +0.18 / +0.23 / +0.21.)_ Measured rates: lab 5090 under its 450 W cap 23.4 steps/s on 8/5-ray (−15%), the 4090 20 steps/s on
 discworld (= the uncapped 5090) but 53 min per factorised fit and 45 min per `master_eval` run (lab 31 / 29);
 `plan.py` estimates recalibrated, ETA ≈ 2026-09-23 12:00. **Fixes made in flight:** the watchdog reads a tick
 heartbeat file (a quiet tick logged nothing → false "not ticking"); progress = the newest write among a job's
@@ -128,6 +129,12 @@ training stage (before its next scoring pass); verify the first post-cut-over sc
 three checks: one `=== scoring` per new run, the same seven `nothing added` lines, blocks + sibling-consistent numbers).
 Rollback: `git revert 108ed90`. Now possible (NOT done, Sevan's call): `nn_r2` in `pim/scoring/blocks.py::attach_inverse`
 (+ the Othello inverse_map dicts), the guard CI in `pim/scoring/othello.py::othello_arms`.
+**19:10 — dw-8ray is the first complete family (n = 3, all members with frustum / cartesian / pos@appearance / appearance-fac):**
+cartesian IM +0.720 ± 0.006 (guard 0.265 ± 0.008), PI +0.207 ± 0.022 (0.921 ± 0.041), GS −0.074 ± 0.030; appearance-fac IM +0.718 ±
+0.013, GS +0.445 ± 0.014, PI +0.392 ± 0.006; MLP skill SD 0.000. The 4090 was pulled to 84c2e78 at 19:09 during
+`rep_dw-16ray_s2`'s training stage (refactor + guard CI; no execution running, no executing script changed). ⚠ The ledger
+reads through `pim.figures.tables`, whose arm selection became GUARDED on 2026-09-19 (another session, `pim/metrics/selection.py`):
+ledger / ping / dashboard numbers for PI in particular differ from anything quoted before that change.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,

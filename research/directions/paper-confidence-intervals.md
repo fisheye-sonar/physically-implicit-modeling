@@ -58,7 +58,9 @@ Ledger `experiments/paper_ci/dashboard/ledger.md`. Tables: `notebooks/build_pape
 ## Decision rules
 
 A contrast between two rows is "outside the seed spread" when it exceeds ~3 pooled SDs
-(n = 3 each). A guard verdict holds when every seed of the set is on the same side of 1.0.
+(n = 3 each). Since 2026-09-19 the tables (and this queue's ledger, which reads through them) report each editor's best arm INSIDE the
+fidelity guard (`pim.metrics.selection.best_arm`; the unguarded best only when no arm passes, flagged `within_guard` False),
+so "fails the guard" now means NO arm passes on that run — read it as k of n seeds.
 Replicates pool only at a matched budget (±10%); a set with n < 2 prints no ±.
 
 ## Owed / open

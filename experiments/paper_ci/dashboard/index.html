@@ -130,8 +130,8 @@ function blockTable(M){
 
 function renderLedger(L){
   $('#ledgerts').textContent=L?'· '+ago(L.generated)+' · basis '+L.basis:'';
-  $('#legend').textContent={ei:'Edit Index of each editor’s best arm: canonical (seed 0 at 780k) · mean ± SD over the replicate set at the matched budget · t-based 95% half-width · every member in seed order.',
-    fid:'Fidelity ratio (the guard) of the same arms: ≤ 1 = the edit left the model no further from the post-edit world than doing nothing. Green / red by the mean over seeds; k/n = seeds passing.',
+  $('#legend').textContent={ei:'Edit Index of each editor’s REPORTED arm — the tables’ rule since 2026-09-19 (pim.metrics.selection): the best index among the arms INSIDE the fidelity guard (≤ 1), the unguarded best only if no arm passes. Canonical (seed 0 at 780k) · mean ± SD over the replicate set at the matched budget · t-based 95% half-width · every member in seed order.',
+    fid:'Fidelity ratio (the guard) of the same reported arms: ≤ 1 = the edit left the model no further from the post-edit world than doing nothing. Because the reported arm is chosen inside the guard, red means NO arm of that editor passes on that run; k/n = seeds that have an arm inside the guard.',
     dec:'Probe Skill of the linear and MLP probes (best residual point), canonical and over the replicate set.',
     all:'Everything at once: index and guard side by side per editor, then the probes and the unedited floor.'}[VIEW];
   document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===VIEW));

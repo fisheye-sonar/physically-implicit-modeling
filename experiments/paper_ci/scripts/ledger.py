@@ -77,7 +77,8 @@ def main():
         w = csv.DictWriter(fh, fieldnames=["run", "group", "block", "metric", "canonical", "n", "mean", "sd", "ci95", "values", "steps", "seeds"])
         w.writeheader()
         w.writerows(rows)
-    md = [f"# Ledger — {ledger['generated_iso']} · basis {CFG['basis']} · ± = SD over training seeds (n), [CI] = t-based 95% half-width\n"]
+    md = [f"# Ledger — {ledger['generated_iso']} · basis {CFG['basis']} · ± = SD over training seeds (n), [CI] = t-based 95% half-width\n",
+          "Editor cells are the tables' REPORTED arm (pim.metrics.selection, 2026-09-19): the best Edit Index among arms inside the fidelity guard (≤ 1); the unguarded best only when no arm passes.\n"]
     for gname, g in groups.items():
         md.append(f"\n## {gname} — `{g['run']}`\n")
         for blk, metrics in g["blocks"].items():
