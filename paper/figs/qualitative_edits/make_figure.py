@@ -51,6 +51,7 @@ from pim.environments.discworld.config import SimConfig  # noqa: E402
 from pim.environments.discworld.edits_dataset import _generate_one_edit  # noqa: E402
 from pim.environments.discworld.renderer import render_scene  # noqa: E402
 from pim.environments.discworld.sim import Scene  # noqa: E402
+from pim.metrics.selection import best_arm as _select_arm  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
@@ -106,7 +107,11 @@ def bench_for(model, sc: dict, obs, clean, vis, sim: dict, target: str, basis: s
 
 
 def best_arm(scores: dict, block: str, editor: str) -> dict:
-    return scores["bases"][block]["best"][editor]
+    """The arm the TABLES report for this editor (``pim.metrics.selection.best_arm``: the best Edit Index
+    inside the fidelity guard, the unguarded best only if there is none) — so the figure draws the write
+    whose numbers the paper quotes. Until 2026-09-19 this read the scorer's unguarded ``best``."""
+    B = scores["bases"][block]
+    return _select_arm(B["arms"], editor, "edit_index") or B["best"][editor]
 
 
 @torch.no_grad()
@@ -327,6 +332,7 @@ if __name__ == "__main__":
     ap.add_argument("--find", action="store_true",
                     help="advance the seed until the teleport changes a categorical tile on every variant")
     ap.add_argument("--max-tries", type=int, default=50)
+    ap.add_argument("--out-dir", default=None, help="write the outputs here instead of beside this script")
     ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions for this seed (.scratch/)")
     ap.add_argument("--diff-scale", type=float, default=1.0, help="± range of the error map in the _diff variant")
     ap.add_argument("--tint-gamma", type=float, default=1.0, help="exponent on |error|/scale for the overlay tints")
@@ -337,9 +343,9 @@ if __name__ == "__main__":
     a = ap.parse_args()
     import pickle
     seed = a.seed
-    cache = REPO / ".scratch" / f"qualitative_edits_seed{seed}_ctx{a.context}.pkl"
     for attempt in range(a.max_tries if a.find else 1):
         print(f"seed {seed}", flush=True)
+        cache = REPO / ".scratch" / f"qualitative_edits_guarded_seed{seed}_ctx{a.context}.pkl"   # per seed (--find advances it)
         if a.redraw and cache.exists():
             data = pickle.load(open(cache, "rb"))
         else:
@@ -355,7 +361,9 @@ if __name__ == "__main__":
     if not ok:
         print("⚠ on some variant the teleport does not change a factorised tile — the categorical rows there "
               "ask for no change (use --find)")
-    out = HERE / f"qualitative_edits_seed{seed}"
+    out_dir = Path(a.out_dir) if a.out_dir else HERE
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"qualitative_edits_seed{seed}"
     kw = dict(diff_scale=a.diff_scale, tint_gamma=a.tint_gamma, locators=not a.no_locators, raw_error=a.raw_error)
     draw(data, a.context, out, **kw)
     for mode in ("diff", "overlay", "abs", "paired"):
@@ -364,4 +372,4 @@ if __name__ == "__main__":
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "(+ _diff, _overlay, _abs, _paired) and .png / .json")
+    print("→", out.with_suffix(".pdf"), "(+ _diff, _overlay, _abs, _paired) and .png / .json")

@@ -1,12 +1,22 @@
 """pim.figures.tables — the master tables, as figures (2026-09-12).
 
-The two table notebooks (``notebooks/build_paper_tables_and_figs.ipynb``, the paper's tables and
-figures — the canonical replication notebook shipped with the public code; ``notebooks/build_full_tables.ipynb``,
-the long list) are thin callers of this module: they
-set the run lists and call one function per table. Everything here reads the run
-directories' ``scores.json`` (written by ``master_eval.ipynb``), the baselines under
-``runs/_baselines/``, and two experiment score files (Table 3, Table 4); nothing is
-recomputed and no metric is defined here — selection and drawing only.
+The table notebooks (``notebooks/build_paper_tables_and_figs.ipynb``, the paper's tables and figures — the
+canonical replication notebook shipped with the public code; ``build_appendix_tables_and_figs.ipynb``;
+``build_full_tables.ipynb``, the long list) are thin callers of this module: they set the run lists and call
+one function per table. Everything here reads the run directories' ``scores.json`` (written by
+``master_eval.ipynb`` and the fold-in scripts) and the instance files under ``runs/_baselines/`` — NOTHING
+under ``experiments/`` (2026-09-19).
+
+What this module does and does not decide. It DRAWS, and it assembles rows. Every number's definition and
+every rule that picks which number a cell shows is imported from ``pim.metrics``:
+    selection.best_arm / best_point   the editor arm and the residual point a cell reports
+                                      (best Edit Index INSIDE the fidelity guard; ``ARM_GUARD`` below)
+    replicates.pool_replicates        every ± (SD over seed replicates at a matched budget) and the t-based CI
+    decodability.insample_gap_from_stats, prediction.*   the overfit gap; loss / floor / excess
+What remains here are DISPLAY POLICIES, each a named constant or a short documented branch: the editors shown
+(``EDITORS``), the regression basis (``set_basis`` / ``BASIS_BY_INSTANCE``), Othello's headline index
+construction (``OTH_EI``), ND left blank on discworld regression rows, per-component skill at each
+component's own best point, and Tables 1d/1e = skill minus the random-init floor in the same basis.
 
 Conventions (Sevan, 2026-09-12): rows follow the run lists as given, Othello before
 discworld with a heavy rule between the environments; Othello's Edit Index is the
@@ -24,6 +34,11 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.colors import TwoSlopeNorm
+
+from pim.metrics.decodability import insample_gap_from_stats
+from pim.metrics.replicates import ci95_halfwidth, t975  # noqa: F401  (re-exported: tests and the CI ledger import them here)
+from pim.metrics.replicates import pool_replicates as _pool_replicates
+from pim.metrics.selection import GUARD, best_arm, best_arm_by_fidelity, best_point
 
 REPO = Path(__file__).resolve().parents[2]
 # The editors SHOWN in every editability table (Sevan, 2026-09-15): PI, GS, IM — the inverse-map
@@ -119,13 +134,19 @@ def find_run(name: str, root: Path = REPO / "runs") -> Path | None:
     return hits[0] if hits else None
 
 
+# THE ARM-SELECTION RULE lives in pim.metrics.selection (2026-09-19): the best Edit Index among the arms
+# INSIDE the fidelity guard, the unguarded best only when an editor has no arm inside it. ``ARM_GUARD = None``
+# restores the old unguarded argmax for every table at once.
+ARM_GUARD: "float | None" = GUARD
+
+
+ARM_SELECT = "index"          # "index" (the rule above) | "fidelity" (lowest fidelity ratio) — set per collect() call
+
+
 def _best_by(arms: list[dict], editor: str, key: str) -> dict | None:
-    """The arm with the highest `key` among an editor's arms. Arm labels are "PI[zspace]",
-    "ND", "GS@L0" on discworld and "PI" / "ND" / "GS" on Othello."""
-    sub = [a for a in arms if a["editor"] == editor or a["editor"].startswith(editor + "[")
-           or a["editor"].startswith(editor + "@")]
-    sub = [a for a in sub if a.get(key) is not None and not (isinstance(a.get(key), float) and np.isnan(a[key]))]
-    return max(sub, key=lambda a: a[key]) if sub else None
+    if ARM_SELECT == "fidelity":
+        return best_arm_by_fidelity(arms, editor, key)
+    return best_arm(arms, editor, key, guard=ARM_GUARD)
 
 
 def _arm_str(a: dict | None) -> str:
@@ -137,12 +158,12 @@ def _arm_str(a: dict | None) -> str:
 def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical: bool | None = None) -> dict:
     row = {**base, "basis": key, "kind": kind,
            "canonical": (key == CANONICAL[base["env"]]) if canonical is None else canonical,
-           "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),
+           "skill_LIN": best_point(T["probe_skill_linear"])[0], "skill_MLP": best_point(T["probe_skill_mlp"])[0],
            "tripwire": T.get("probe_sanity", {}).get("n_violations", 0),
            "unedited": T["unedited"].get(ei_key, T["unedited"].get("edit_index", np.nan))}
     for fam, k in (("linear", "LIN"), ("mlp", "MLP")):
         ps = {r["point"]: r for r in T.get("probe_sanity", {}).get("rows", [])}
-        bp = int(np.argmax(T[f"probe_skill_{fam}"]))
+        bp = best_point(T[f"probe_skill_{fam}"])[1]
         row[f"gap_{k}"] = ps.get(bp, {}).get(f"insample_gap_{fam}", np.nan)
     arms = T.get("arms", [])
     inv = T.get("inverse_map") or {}
@@ -151,8 +172,8 @@ def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical:
     for name, key in (("g_r2", "g_r2"), ("nn_r2", "nn_r2")):
         vals = inv.get(key)
         row[f"{name}@IM"] = (vals[pt] if vals and pt is not None and pt < len(vals) else np.nan)
-        row[f"{name} max"] = max(vals) if vals else np.nan
-        row[f"{name} argmax"] = int(np.argmax(vals)) if vals else -1
+        row[f"{name} max"] = best_point(vals)[0] if vals else np.nan
+        row[f"{name} argmax"] = best_point(vals)[1] if vals else -1
     row["IM point"] = pt if pt is not None else -1
     for ed in EDITORS_ALL:
         b = _best_by(arms, ed, ei_key) if arms else T["best"].get(ed)
@@ -161,6 +182,7 @@ def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical:
         row[f"{ed} EI"] = b.get(ei_key, np.nan) if b else np.nan
         row[f"{ed} fid"] = b["fidelity_ratio"] if b else np.nan
         row[f"{ed} arm"] = _arm_str(b)
+        row[f"{ed} guarded"] = bool(b.get("within_guard", True)) if b else False   # False = no arm inside the guard
     return row
 
 
@@ -193,89 +215,31 @@ class Frames:
         return out
 
 
-def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False,
-                    budget_tolerance: float = 0.10) -> dict:
-    """The replicate spread per (parent run, basis): ``{"n", "steps", "seeds", "dropped_steps",
-    <col>: SD (ddof 1), <col>_mean}`` over the pooled replicate set.
-
-    GUARD (default): replicates are pooled only at a MATCHED training budget — rows whose
-    ``steps`` lie within ``budget_tolerance`` (relative) of each other form one set; when a
-    parent has replicates at several budgets, the largest set is used (ties → the larger
-    budget) and the others are listed under ``dropped_steps`` so the table can say so. A
-    390k re-training and the parent's own 421,875-step checkpoint pool (8% apart); a 390k
-    and a 780k replicate do not. ``pool_budgets=True`` overrides the guard and pools every
-    replicate of the parent regardless of budget (Sevan, 2026-09-14) — the ± then mixes
-    training budgets and Table 5 shows every budget it contains.
-    """
-    if not rep_rows:
-        return {}
-    R = pd.DataFrame(rep_rows)
-    if "steps" not in R:
-        R["steps"] = np.nan
-    R["steps"] = R["steps"].fillna(-1).astype(int)
-    # every editor a row carries (ND / IM-NN included) and its guard: the SD is the readout,
-    # the t-based 95% half-width (``<col>_ci95``) the secondary one, and ``<col>_values`` the
-    # members themselves in seed order (2026-09-18, Sevan)
+def pool_replicates(rep_rows: list[dict], *, pool_budgets: bool = False, budget_tolerance: float = 0.10) -> dict:
+    """``pim.metrics.replicates.pool_replicates`` over the columns a table row carries: both probe skills, the
+    unedited index, and every editor's Edit Index and guard (ND / IM-NN included)."""
     cols = ["skill_LIN", "skill_MLP", "unedited"] + [f"{e} EI" for e in EDITORS_ALL] + [f"{e} fid" for e in EDITORS_ALL]
-    out = {}
-    for (parent, basis), g in R.groupby(["parent", "basis"]):
-        dropped: list[int] = []
-        if not pool_budgets:
-            groups: list[list] = []
-            for _, r in g.sort_values("steps").iterrows():
-                if groups and r["steps"] <= groups[-1][0]["steps"] * (1 + budget_tolerance):
-                    groups[-1].append(r)
-                else:
-                    groups.append([r])
-            chosen = max(groups, key=lambda grp: (len(grp), max(r["steps"] for r in grp)))
-            dropped = sorted({int(r["steps"]) for grp in groups if grp is not chosen for r in grp})
-            g = pd.DataFrame(chosen)
-        if len(g) < 2:
-            continue
-        g = g.sort_values("seed") if "seed" in g else g
-        have = [c for c in cols if c in g and g[c].notna().sum() >= 2]
-        out[(parent, basis)] = {
-            "n": int(len(g)), "steps": sorted({int(x) for x in g["steps"]}),
-            "seeds": sorted(int(x) for x in g["seed"]) if "seed" in g else [],
-            "dropped_steps": dropped, "pooled_budgets": bool(pool_budgets),
-            **{c: float(g[c].std(ddof=1)) for c in have},
-            **{f"{c}_mean": float(g[c].mean()) for c in cols if c in g},
-            **{f"{c}_ci95": ci95_halfwidth(g[c].dropna().to_numpy()) for c in have},
-            **{f"{c}_values": [float(x) for x in g[c]] for c in cols if c in g}}
-    return out
-
-
-# Student-t 0.975 quantiles by degrees of freedom (n − 1), for the small replicate sets the
-# tables pool; beyond 30 the normal quantile is used. A 95% interval on the MEAN of n seeds is
-# mean ± t · SD / √n — at n = 3 that is 2.48 SD, at n = 5 1.24 SD.
-_T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306,
-         9: 2.262, 10: 2.228, 11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131,
-         16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086, 25: 2.060, 30: 2.042}
-
-
-def t975(df: int) -> float:
-    if df in _T975:
-        return _T975[df]
-    if df > 30:
-        return 1.960
-    lower = max(k for k in _T975 if k < df)
-    return _T975[lower]
-
-
-def ci95_halfwidth(values) -> float:
-    """t-based 95% half-width of the mean over a replicate set (NaN below n = 2)."""
-    v = np.asarray(values, float)
-    v = v[np.isfinite(v)]
-    n = int(v.size)
-    if n < 2:
-        return float("nan")
-    return float(t975(n - 1) * v.std(ddof=1) / np.sqrt(n))
+    return _pool_replicates(rep_rows, cols, pool_budgets=pool_budgets, budget_tolerance=budget_tolerance)
 
 
 def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
-            pool_budgets: bool = False, budget_tolerance: float = 0.10) -> Frames:
+            pool_budgets: bool = False, budget_tolerance: float = 0.10, select: str = "index") -> Frames:
     """Every listed run's rows + its seed replicates' spread (see ``pool_replicates`` for
-    the budget guard and its override)."""
+    the budget guard and its override). ``select`` = which arm an editor is reported at
+    (``pim.metrics.selection``): ``"index"`` — the best Edit Index inside the fidelity guard (the
+    tables' rule); ``"fidelity"`` — the lowest fidelity ratio (the appendix's alternative reading).
+    The replicates are read by the same rule, so the ± follows it."""
+    global ARM_SELECT
+    if select not in ("index", "fidelity"):
+        raise ValueError(f"select must be 'index' or 'fidelity', got {select!r}")
+    prev, ARM_SELECT = ARM_SELECT, select
+    try:
+        return _collect(runs_oth, runs_dw, label, pool_budgets=pool_budgets, budget_tolerance=budget_tolerance)
+    finally:
+        ARM_SELECT = prev
+
+
+def _collect(runs_oth: list[str], runs_dw: list[str], label: str, *, pool_budgets: bool, budget_tolerance: float) -> Frames:
     rows, perdim, frame_set, missing = [], [], set(), []
     rep_rows = []
     for env, names in (("othello", runs_oth), ("discworld", runs_dw)):
@@ -300,8 +264,7 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
                     sub = [x for x in s["probe_stats"] if x["target"] == "mine" and x["split"] == "sequence"
                            and x["family"] == fam]
                     b = min(sub, key=lambda x: x["error_rate"]) if sub else None
-                    row[f"gap_{k}"] = ((b["error_rate"] - b["error_rate_insample"]) / b["majority_class_error_rate"]
-                                      if b else np.nan)
+                    row[f"gap_{k}"] = insample_gap_from_stats(b) if b else np.nan
                 row["legal_mass"] = s["gates"]["legal_mass"]
                 rows.append(row)
                 for key, T in s.get("bases", {}).items():
@@ -583,27 +546,31 @@ def table_inverse_r2(F: Frames, tag: str = "1b"):
 # ── Tables 1b–1e: discworld per-component, per-cell optimum ──────────────────
 
 
-def _rand_perdim(F: Frames, instance: str, arch: str, fam: str) -> np.ndarray:
+def _rand_perdim(F: Frames, instance: str, arch: str, fam: str, basis: str) -> np.ndarray:
     """Random-init per-component skill at each COMPONENT'S OWN best point, from the cached
-    baseline probes (runs/_baselines/<instance>/probes/*.pt)."""
+    baseline probes (runs/_baselines/<instance>/probes/*.pt) fitted in the SAME regression basis
+    as the row (until 2026-09-19 this read the frustum caches whatever the row's basis — a
+    cartesian row had frustum floors subtracted). Where a pre-layout-v2 cache of the same fit
+    survives beside the current one, the current (logical ``data`` key) is used."""
     import torch
 
     pdir = REPO / "runs" / "_baselines" / instance / "probes"
     want_arch = "recurrent_l" if str(arch).startswith("recurrent") else (
         "transformer_l_tokens" if str(arch).endswith("_tokens") else "transformer_l")
+    found = []
     for pt in sorted(pdir.glob("probes_*.pt")) if pdir.exists() else []:
         blob = torch.load(pt, map_location="cpu", weights_only=False)
         prov = blob["provenance"]
         if prov.get("model", "none") == "none" or prov.get("target") != "full" or prov.get("family") != fam \
-                or prov.get("basis") != "frustum":
+                or prov.get("basis") != basis:
             continue
         parch = "recurrent_l" if int(prov.get("span", 39)) > 100 else (
             "transformer_l_tokens" if prov.get("encoder") else "transformer_l")
         if parch != want_arch:
             continue
         pp = np.array([blob["probes"][p][1]["per_dim_r2"][:len(COMPONENTS)] for p in sorted(blob["probes"])], float)
-        return pp.max(0)
-    return np.full(len(COMPONENTS), np.nan)
+        found.append((str(prov.get("data", "")).startswith("/"), pp.max(0)))      # legacy path-keyed caches sort last
+    return min(found, key=lambda t: t[0])[1] if found else np.full(len(COMPONENTS), np.nan)
 
 
 def tables_components(F: Frames, above_floor: bool = False):
@@ -616,7 +583,7 @@ def tables_components(F: Frames, above_floor: bool = False):
         D = P[list(COMPONENTS)].values.astype(float)
         if above_floor:
             famkey = {"LIN": "linear", "MLP": "mlp"}[fam]          # the probe family as the cache names it
-            D = D - np.stack([_rand_perdim(F, r.instance, r.arch, famkey) for r in P.itertuples()])
+            D = D - np.stack([_rand_perdim(F, r.instance, r.arch, famkey, r.basis) for r in P.itertuples()])
         fig, ax = plt.subplots(figsize=(8.6, 0.52 * len(P) + 1.5))
         heat(ax, D, list(COMPONENTS), _mark(F, P["run"]), fmt="+.3f",
              cmap="RdYlGn" if above_floor else "Greens", vmin=-1.0 if above_floor else 0.0, vmax=1.0,
@@ -634,7 +601,9 @@ def tables_components(F: Frames, above_floor: bool = False):
 # ── Table 2: editability ─────────────────────────────────────────────────────
 
 
-def table_editability(F: Frames, tag: str = "2"):
+def table_editability(F: Frames, tag: str = "2", note: str = ""):
+    """(a) Edit Index with the unedited floor, (b) fidelity ratio — each editor at the arm ``collect`` selected
+    (``note`` names a non-default selection in the title)."""
     C = F.canonical
     if not len(C):
         return None
@@ -653,7 +622,8 @@ def table_editability(F: Frames, tag: str = "2"):
          norm=TwoSlopeNorm(vmin=0.0, vcenter=1.0, vmax=3.0), cbar_label="fidelity ratio", annot_text=Af,
          title="(b) fidelity ratio  (1 = unedited; >1 degraded)")
     side_rules(axes[1], groups, eb)
-    _suptitle(fig, f"Table {tag} — editability" + ("   ± = SD over seed replicates" if F.rep_sd else ""), fontsize=12, y=1.0)
+    _suptitle(fig, f"Table {tag} — editability" + (f" · {note}" if note else "")
+              + ("   ± = SD over seed replicates" if F.rep_sd else ""), fontsize=12, y=1.0)
     return fig
 
 
@@ -701,66 +671,6 @@ def table_gridified(F: Frames, tag: str = "2c"):
         side_rules(ax, groups)
     _suptitle(fig, f"Table {tag} — gridified discworld targets (label · cells), coarse → fine", fontsize=12, y=1.0)
     return fig
-
-
-# ── Table 3: edit-direction alignment ────────────────────────────────────────
-
-
-def table_alignment(F: Frames, tag: str = "3",
-                    path: Path = REPO / "experiments" / "edit_direction_alignment" / "scores" / "table3_alignment.json",
-                    haufe_path: Path = REPO / "experiments" / "edit_direction_alignment" / "scores" / "table3_haufe_edit.json"):
-    """Rows: every listed run × (canonical target, appearance-fac). Alignment columns from the
-    experiment's JSON; PI before Haufe from scores.json; PI after Haufe from the (queued) Haufe file."""
-    A = {(r["run"].split("/")[-1], r["target"]): r for r in json.loads(path.read_text())} if path.exists() else {}
-    H = {(r["run"].split("/")[-1], r["target"]): r for r in json.loads(haufe_path.read_text())} if haufe_path.exists() else {}
-    rows = []
-    for r in F.df.to_dict("records"):
-        if not r["canonical"] and r["basis"] != "appearance-fac":
-            continue
-        a, h = A.get((r["run"], r["basis"]), {}), H.get((r["run"], r["basis"]), {})
-        rows.append({"env": r["env"], "run": r["run"], "target": r["basis"], "pt": a.get("point", "—"),
-                     "n": a.get("n_cases", "—"),
-                     "rows": a.get("rows_frac"), "rows rnd": a.get("rows_generic"), "× rnd": a.get("rows_ratio"),
-                     "Haufe": a.get("haufe_frac"), "Haufe rnd": a.get("haufe_generic"), "× rnd (H)": a.get("haufe_ratio"),
-                     "PI EI": r["PI EI"], "PI fid": r["PI fid"],
-                     "PI EI (H)": h.get("pi_ei"), "PI fid (H)": h.get("pi_fid")})
-    if not rows:
-        return None
-    T = pd.DataFrame(rows)
-    for c in ("rows", "rows rnd", "Haufe", "Haufe rnd"):
-        T[c] = T[c].map(lambda v: _fmt(v, ".3f") if v is not None else "—")
-    for c in ("× rnd", "× rnd (H)"):
-        T[c] = T[c].map(lambda v: _fmt(v, ".1f") if v is not None else "—")
-    for c in ("PI EI", "PI EI (H)"):
-        T[c] = T[c].map(lambda v: _fmt(v, "+.3f") if v is not None else "—")
-    for c in ("PI fid", "PI fid (H)"):
-        T[c] = T[c].map(lambda v: _fmt(v, ".2f") if v is not None else "—")
-    d = T.set_index(["env", "run", "target"])
-    return image_table(d, f"Table {tag} — true edit direction vs the probe row space (at the best PI point); "
-                          f"(H) = Haufe-corrected", col_width=0.95, fontsize=8)
-
-
-# ── Table 4: Bayes floor vs test loss ────────────────────────────────────────
-
-
-def table_bayes(F: Frames, tag: str = "4", path: Path = REPO / "experiments" / "bayes_floor" / "scores" / "test_loss.json"):
-    L = json.loads(path.read_text()) if path.exists() else {}
-    rows = []
-    seen = set()
-    for r in F.df.itertuples():
-        if r.run in seen:
-            continue
-        seen.add(r.run)
-        key = next((k for k in L if k.split("/")[-1] == r.run), None)
-        e = L.get(key, {})
-        rows.append({"env": r.env, "run": r.run, "instance": r.instance, "unit": e.get("unit", "—"),
-                     "test loss": _fmt(e.get("test_loss"), ".5f") if e else "—",
-                     "Bayes floor": _fmt(e.get("bayes_floor"), ".5f") if e.get("bayes_floor") is not None else "—",
-                     "excess": _fmt(e.get("excess"), ".5f") if e.get("excess") is not None else "—"})
-    if not rows:
-        return None
-    return image_table(pd.DataFrame(rows).set_index(["env", "run"]), f"Table {tag} — test loss vs the estimated Bayes floor",
-                       col_width=1.25)
 
 
 # ── Appendix: predictive loss beside the Bayes floor (2026-09-19; supersedes table_bayes) ──
@@ -945,7 +855,7 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
             T = s["bases"][rk]
             k = "edit_index"
         row = {"source": src, "env": s["env"], "instance": s["instance"], "arch": s["arch"], "step": step, "run": name,
-               "skill_LIN": max(T["probe_skill_linear"]), "skill_MLP": max(T["probe_skill_mlp"]),
+               "skill_LIN": best_point(T["probe_skill_linear"])[0], "skill_MLP": best_point(T["probe_skill_mlp"])[0],
                "unedited": T["unedited"].get(k, T["unedited"].get("edit_index")), "_arms": T["arms"], "_k": k}
         rows.append(row)
     if not rows:
@@ -1041,16 +951,4 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
         dress(c, steps, f"(c) {src} — fidelity ratio, tracked arm", "fidelity ratio", extra=[HOLLOW] if any_h else [], loc="upper left")
     _suptitle(fig, f"Fig {tag} — training curve: decodability, editability, guard (the final checkpoint's arm, read at every step)",
                  fontsize=11.5, y=1.02)
-    return fig
-
-
-def fig_capacity(tag: str = "2"):
-    from pim.figures.probe_capacity import capacity_figure
-
-    cap = REPO / "experiments" / "probe_capacity" / "scores"
-    files = [cap / f"probe_capacity_{e}.json" for e in ("discworld", "othello")]
-    if not any(p.exists() for p in files):
-        return None
-    fig = capacity_figure(files)
-    _suptitle(fig, f"Fig {tag} — probe-capacity sweep", fontsize=11.5, y=1.02)
     return fig

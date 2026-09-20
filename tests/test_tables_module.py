@@ -26,15 +26,18 @@ def test_collect_orders_and_symdiff():
     import json
     s = json.loads(T.find_run(OTH).read_text())
     assert oth["unedited"] == s["unedited"]["edit_index_symdiff"]
-    best_pi = max((a for a in s["arms"] if a["editor"] == "PI"), key=lambda a: a["edit_index_symdiff"])
-    assert oth["PI EI"] == best_pi["edit_index_symdiff"]
+    # the reported arm: best index INSIDE the fidelity guard, the unguarded best only if there is none
+    pi = [a for a in s["arms"] if a["editor"] == "PI"]
+    inside = [a for a in pi if a["fidelity_ratio"] <= 1.0]
+    best_pi = max(inside or pi, key=lambda a: a["edit_index_symdiff"])
+    assert oth["PI EI"] == best_pi["edit_index_symdiff"] and oth["PI guarded"] == bool(inside)
     assert set(F.perdim["probe"]) == {"LIN", "MLP"}
 
 
 def test_every_table_renders_or_declines():
     F = T.collect([OTH], [DW], label="test")
     for fn in (T.table_decodability, T.table_editability, T.table_arms, T.table_gridified,
-               T.table_alignment, T.table_bayes, T.table_seed_variance):
+               T.table_seed_variance):
         fig = fn(F)
         assert fig is None or hasattr(fig, "savefig")
     figs = T.tables_components(F) + T.tables_components(F, above_floor=True)

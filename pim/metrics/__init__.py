@@ -1,6 +1,6 @@
 """pim.metrics — canonical scoring, arrays in, numbers out. Never imports matplotlib.
 
-Five modules:
+Seven modules:
 
     decodability.py      can a probe read the state out?  Probe Skill (the cross-
                          environment axis: 1 = perfect, 0 = trivial baseline).
@@ -12,6 +12,9 @@ Five modules:
     prediction.py        how well does the model PREDICT? the held-out loss per sequence, a token
                          model's mean frame, and the loss's excess over the instance's Bayes
                          floor (exact on Othello, a sampled bracket on discworld).
+    selection.py         WHICH number a table reports: the best arm INSIDE the fidelity guard, the
+                         best residual point.
+    replicates.py        the ± over a seed-replicate set (SD, t-based CI, matched-budget pooling).
     set_editability.py   did an edit land, for a model that predicts a DISTRIBUTION over
                          a vocabulary? the legal-set Edit Index (``edit_index_legal``),
                          Li error, legal mass, the guard (``move_fidelity_ratio``) —

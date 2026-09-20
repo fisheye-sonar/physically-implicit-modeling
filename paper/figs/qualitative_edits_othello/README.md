@@ -18,3 +18,17 @@ wide by 4 tall, the paper-width shape. `cols`: the sketch's arrangement, variant
 down (n games per variant side by side). Every write is computed once for all 1000 cases per run and
 cached in `.scratch/othello_edits_cache.pkl`, so a new seed, layout or game count is a redraw
 (`--recompute` refreshes it). The sidecar JSON records the cases, move numbers and arms used.
+
+## Which arm is drawn (2026-09-19)
+
+Each editor is drawn at the arm the TABLES report — `pim.metrics.selection.best_arm`: the best Edit Index among the
+arms inside the fidelity guard (ratio ≤ 1), the unguarded best only where an editor has none. Until 2026-09-19 the
+figure used the scorer's unguarded `best`, which for PI on the fine-ray instances and on the adjacency Othello
+variants is a different (more destructive) write than the one whose numbers the paper quotes. The cached writes in
+`.scratch/` carry `_guarded` in their names, so the old caches are not reused.
+
+## more_seeds/
+
+`more_seeds/seed<k>/` holds the same figure for other seeds (k = 1…5: `--seed <k> --out-dir more_seeds/seed<k>`,
+file names `othello_edits_seed<k>_{cols,rows}`), to see how much the picture depends on the drawn scenario. Same arms, same models — only the
+scenario (discworld) or the sampled bench cases (Othello) change.

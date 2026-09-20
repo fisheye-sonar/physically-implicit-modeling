@@ -58,9 +58,11 @@ DEV = oa.DEV
 
 
 def best_arm(scores: dict, editor: str) -> dict:
-    sub = [a for a in scores["arms"] if a["editor"] == editor or a["editor"].startswith(editor + "[")
-           or a["editor"].startswith(editor + "@")]
-    return max(sub, key=lambda a: a[EI])
+    """The arm the TABLES report (``pim.metrics.selection.best_arm``: best Edit Index inside the fidelity
+    guard, the unguarded best only if there is none). Until 2026-09-19: the unguarded argmax."""
+    from pim.metrics.selection import best_arm as select
+
+    return select(scores["arms"], editor, EI)
 
 
 @torch.no_grad()
@@ -207,8 +209,9 @@ if __name__ == "__main__":
     ap.add_argument("--tint-scale", type=float, default=TINT_SCALE, help="probability at which a square is fully tinted")
     ap.add_argument("--no-locator", action="store_true", help="drop the outline on the edited tile")
     ap.add_argument("--recompute", action="store_true", help="ignore the cached writes")
+    ap.add_argument("--out-dir", default=None, help="write the outputs here instead of beside this script")
     a = ap.parse_args()
-    cache = REPO / ".scratch" / "othello_edits_cache.pkl"
+    cache = REPO / ".scratch" / "othello_edits_guarded_cache.pkl"      # writes at the guarded arms (2026-09-19)
     cols = pickle.load(open(cache, "rb")) if cache.exists() and not a.recompute else {}
     for name, run in VARIANTS:
         if name not in cols or cols[name]["run"] != run:
@@ -225,9 +228,11 @@ if __name__ == "__main__":
         picks[name] = [int(x) for x in rng.choice(ok, size=a.games, replace=False)]
         print(f"  {name:<16} cases {picks[name]}  moves in {[int(L[i]) for i in picks[name]]}  "
               f"arms {cols[name]['arms']}  EI {{{', '.join(f'{e} {x:+.2f}' for e, x in cols[name]['ei'].items())}}}")
-    out = HERE / f"othello_edits_seed{a.seed}_{a.layout}"
+    out_dir = Path(a.out_dir) if a.out_dir else HERE
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"othello_edits_seed{a.seed}_{a.layout}"
     draw(cols, picks, out, layout=a.layout, gamma=a.gamma, tint_scale=a.tint_scale, locator=not a.no_locator)
     json.dump({"seed": a.seed, "layout": a.layout, "picks": picks,
                "arms": {n: cols[n]["arms"] for n in picks}, "moves": {n: [int(cols[n]["lengths"][i]) for i in picks[n]] for n in picks}},
               open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf").relative_to(REPO), "and .png / .json")
+    print("→", out.with_suffix(".pdf"), "and .png / .json")

@@ -17,6 +17,23 @@ Table 2 row. **FIXED by Sevan 2026-09-19:** entry added (762faae); `push_inputs`
 directory pushes (it was nesting `scripts/scripts/` on the remote) and a held job adds the 16-ray members' fac
 block (507d623).
 
+**2026-09-19 (Sevan) — ⚠ THE TABLES' ARM-SELECTION RULE CHANGED: best Edit Index INSIDE the fidelity guard** (≤ 1.0; the
+unguarded best only where an editor has no guarded arm) — `pim/metrics/selection.py`, read from the arms already in
+scores.json, no re-scoring. **16 of the paper's 48 cells move** (list in the REGISTRY row): every discworld PI number on the
+128-ray-class instances drops to ≤ 0 (noiseless +0.20 → −0.10, 128ray +0.24 → −0.02, blink +0.17 → +0.02), oth-adjacent-flip
+PI +0.40 / 2.09 → +0.35 / 0.83 (now INSIDE the guard), GS there → −0.06. **The draft's Table 2 and §Results text quote the
+OLD numbers — to be redone from the notebook** (and the seed ± re-pool under the new rule automatically; the CI ledger /
+dashboard already show it). The qualitative figure scripts now draw the SAME guarded arms (re-rendered on the lab GPU beside the
+queue's training job, + `more_seeds/seed1…5/` for each; write caches renamed `_guarded`). Appendix notebook gained Table A2 / A2b =
+the paper's editability table with every editor at its LOWEST FIDELITY RATIO (`collect(select="fidelity")`,
+`selection.best_arm_by_fidelity`): under it only IM (and standard Othello) keeps a positive index — PI / GS fall to −0.15 … −0.60
+on Rayworld.
+Same session: `pool_replicates` / `ci95_halfwidth` / `t975` → `pim/metrics/replicates.py` and the best-point / gap rules →
+`pim.metrics` with EVERY table value bit-identical under the old rule (58 rows × 2 bases + 10 replicate sets); Tables 1d/1e
+basis bug fixed (`_rand_perdim` matched frustum caches for cartesian rows); `table_alignment`, `table_bayes`, `fig_capacity`
+REMOVED (they read `experiments/`) with their long-list cells (Table 4 there is now `table_prediction`). Notebooks NOT
+re-executed (final_tables will; or run them by hand).
+
 **2026-09-19 (Sevan) — THE PAPER NO LONGER DEPENDS ON `experiments/`** (audit: 5 of 37 experiment folders fed a paper
 claim). Moved: the Edit-Index CEILING → `scripts/index_ceiling.py` (+ `pim/environments/othello/counterfactual.py`: the
 counterfactual-game search; writes `runs/<run>/index_ceiling.json`; `L-oth-20m` re-run on CPU reproduces +0.909, 13 cases,
@@ -26,7 +43,6 @@ corpus_stats.json`); the seed-0 member layout → `scripts/layout_checkpoint_rep
 (replicate.sh untouched while the queue runs — switch its stage B after the drain, see `experiments/bayes_floor/
 QUEUE_HANDOFF.md`); `build_paper_tables_and_figs` cell [5] (old Table 4 from `experiments/bayes_floor`) DELETED;
 `experiments/history_rewrite` → `paper/figs/history_rewrite/` (script moved + paths fixed, compiled, NOT re-run — GPU).
-Still reading `experiments/`: `tables.table_bayes` / `table_alignment` / `fig_capacity` (long-list notebook only).
 
 **2026-09-19 (Sevan) — PREDICTIVE LOSS vs BAYES FLOOR made canonical; NOTHING RUN YET (queue owns the GPUs).**
 `pim/metrics/prediction.py`, `pim/environments/prediction.py` (a run's `prediction` block),

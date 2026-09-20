@@ -1,0 +1,90 @@
+{
+ "seed": 1,
+ "layout": "cols",
+ "picks": {
+  "Standard": [
+   473
+  ],
+  "Adjacent Flip": [
+   511
+  ],
+  "Adjacent NoFlip": [
+   755
+  ],
+  "Standard NoFlip": [
+   950
+  ]
+ },
+ "arms": {
+  "Standard": {
+   "PI": [
+    4,
+    3.0
+   ],
+   "GS": [
+    4,
+    0.2
+   ],
+   "IM": [
+    5,
+    1.0
+   ]
+  },
+  "Adjacent Flip": {
+   "PI": [
+    2,
+    5.0
+   ],
+   "GS": [
+    0,
+    0.2
+   ],
+   "IM": [
+    5,
+    1.0
+   ]
+  },
+  "Adjacent NoFlip": {
+   "PI": [
+    1,
+    10.0
+   ],
+   "GS": [
+    2,
+    1.5
+   ],
+   "IM": [
+    1,
+    1.0
+   ]
+  },
+  "Standard NoFlip": {
+   "PI": [
+    6,
+    0.25
+   ],
+   "GS": [
+    0,
+    1.5
+   ],
+   "IM": [
+    7,
+    1.0
+   ]
+  }
+ },
+ "moves": {
+  "Standard": [
+   20
+  ],
+  "Adjacent Flip": [
+   20
+  ],
+  "Adjacent NoFlip": [
+   20
+  ],
+  "Standard NoFlip": [
+   20
+  ]
+ }
+}
