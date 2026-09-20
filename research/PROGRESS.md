@@ -212,7 +212,7 @@ under both maps: it holds for all 15 steps at 5 / 8-ray and returns to the unste
 Parity gate on `L-dw-8ray-20m__seed1`, both bases (03:15): 22,386 of 22,390 leaves bit-identical, max |Δ| 0; the cartesian block —
 continuous IM / IM-NN included — is identical to disk, the ONLY differences are the factorised block's old IM arms (282 → 264 arms,
 `best.IM*`, `inverse_map`); the run's `probes/` untouched (27 files). The token path (`L-dw-8ray-tok-20m`) was never exercised by the
-frame previews: its smoke passes, its production-recipe preview runs as unit `catinv_tok` (03:15 →). Catch-up queue jobs are DRAFTED in the branch (`experiments/categorical_inverse/
+frame previews: its smoke passes, and its production-recipe preview (03:52) gives **8ray-tok +0.780 / 0.20 vs the old map's +0.623 / 0.30** (PI +0.228, GS +0.351; R² 0.641 = in-sample). Catch-up queue jobs are DRAFTED in the branch (`experiments/categorical_inverse/
 queue_drafts/`, not installed): parents (arms only, with the previews' cached maps copied in), then the 5 / 8 / 16-ray members (~1.9 h a
 family on the lab), then 8ray-tok. ⚠ `score_pending.sh` holds no lock — a catch-up must never overlap a replicate's scoring stage on
 the same host (in the `gpu` lane it cannot).
