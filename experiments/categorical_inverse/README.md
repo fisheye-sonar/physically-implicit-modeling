@@ -78,12 +78,16 @@ Edit Index / fidelity ratio; "old" is the continuous-state map scored on the sam
 - **What the gain is, and is not** (the waterfalls, `outputs/waterfall_*.png`, first 32 cases: 8-ray +0.662 → +0.869,
   5-ray +0.849 → +0.887, 16-ray +0.738 → +0.847, 128-ray +0.605 → +0.690). The Edit Index is scored on rollout step 0 —
   the decode of the edit frame (`edit_scorecard`: `p0 = roll[:, 0]`), and on a transformer the write shapes that one
-  prediction; the rest of the rollout is recomputed from the observation window (`arms._roll_hook`). The pictures show
-  exactly that for BOTH maps: one strongly rewritten row at the edit frame, then a rollout that carries the edited frame
-  as one observation among the window's unedited ones. The whole-rollout RMSE to the edited ground truth is the same for
-  old and new (128-ray 0.279 vs 0.283, 16-ray 0.276 vs 0.277, 8-ray 0.233 vs 0.234, 5-ray 0.228 vs 0.227). So the
-  categorical map buys a **better edit frame**, not a more persistent edit. At 8-ray the difference is visible by eye;
-  at 128-ray the old and new columns are hard to tell apart in the four rows drawn.
+  prediction; the rest of the rollout is recomputed from the observation window (`arms._roll_hook`), which now holds
+  the edited frame as one observation among unedited ones. After step 0 the two maps behave alike: the whole-rollout
+  RMSE to the edited ground truth is the same for new and old (128-ray 0.279 vs 0.283, 16-ray 0.276 vs 0.277, 8-ray
+  0.233 vs 0.234, 5-ray 0.228 vs 0.227; PI's is 0.30–0.32), while the edit-FRAME RMSE moves with the index (8-ray
+  0.090 vs 0.106, 128-ray 0.086 vs 0.095). So the categorical map buys a **better edit frame**, not a more persistent
+  edit. How long the edit HOLDS is a property of the family, not of the map: in the rows drawn, at 8-ray and 5-ray the
+  moved disc stays at the target for the whole 15-step rollout under both maps; at 128-ray the edit frame is rewritten
+  and the rollout returns close to the unsteered trajectory within a frame or two under both maps (16-ray in between).
+  At 8-ray the old-vs-new difference is visible by eye (sample 0: the old write leaves the disc where it was, the new
+  one moves it); at 128-ray the two columns are hard to tell apart.
 - **Parity gate, frustum only** (`scores/gate_L-dw-8ray-20m__seed1.diff.txt`): 16,551 of 16,555 leaves bit-identical,
   max |Δ| 0; the 7 differences are the expected ones (the factorised block's arms 282 → 264, four `best` IM / IM-NN
   entries, `inverse_map`; plus the cartesian block "missing" — a launch omission, `PIM_DW_BASES` not set). `probes/` 27
