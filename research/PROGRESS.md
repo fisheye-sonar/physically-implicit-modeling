@@ -114,6 +114,20 @@ guard CI line in `master_eval` cell [4]; the Othello ceiling bootstrap (depriori
 for EVERY other job so nothing runs on either host while scores.json files are rewritten). CPU smoke passed (parity
 1.0 on all six discworld instances, four exact Othello floors). When it finishes: check each `bayes_floor.json`
 against the hand-off's accept/reject list, record in `findings/predictive-quality.md`, tell Sevan Table A1 is ready.
+**2026-09-19 18:45 — `master_eval` refactor CUT OVER on the lab (merge 108ed90, branch `master_eval_module`, another
+session's work; `experiments/master_eval_refactor/` README + CUTOVER.md).** The scorer moved out of the notebook into
+`pim/scoring/` as a PURE MOVE (notebook 1,251 → 174 code lines; SETTINGS cell hash-identical incl. the 16-ray entry;
+no driver, `paper_ci`, trainer, metric, probe or editor file touched; `EVAL_VERSION`s and the scores.json schema
+unchanged; `best_arm` unchanged — the one-rule consolidation waits for the queue to drain). Gate (theirs): Othello
+fixture 14,610 leaves and `L-dw-5ray-20m__seed1` 17,103 leaves bit-identical, decision equivalence over 32 runs, real
+nbconvert entry point. Audit (mine, independent): 37 old-notebook functions → 20 byte-identical, 17 differ only by the
+threaded `s` / `runs` argument (21 lines), the two driver loops differ only by that threading and inert `dry_run`
+branches, module constants identical; suite 301 pass on the merged tree; dry listing under the queue's environment =
+0 full rescores + the 7 known skip-when-uncached add-block items. **Still to do:** `git pull` on the 4090 during a
+training stage (before its next scoring pass); verify the first post-cut-over scoring pass on EACH host (CUTOVER.md's
+three checks: one `=== scoring` per new run, the same seven `nothing added` lines, blocks + sibling-consistent numbers).
+Rollback: `git revert 108ed90`. Now possible (NOT done, Sevan's call): `nn_r2` in `pim/scoring/blocks.py::attach_inverse`
+(+ the Othello inverse_map dicts), the guard CI in `pim/scoring/othello.py::othello_arms`.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
