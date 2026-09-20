@@ -33,3 +33,21 @@ moves by more than that with corpus size, it is reported as such and the recipe 
 **Run.** Queue jobs `ctrl_corpus_dw` (lab only, ~3.5 h) and `ctrl_corpus_oth` (either host,
 ~1.5 h) in `experiments/paper_ci/queue/`, priority after the ray family. Smoke: `--smoke`.
 Result: to be written into `research/findings/probe-capacity.md` as a dated entry when it lands.
+
+## 2026-09-20 05:00 — Othello control: attempt 1 killed by the memory cap; what was kept
+
+`ctrl_corpus_oth` (4090, unit cap 40 GB) was OOM-killed by its cgroup 4 minutes into the inverse-map fit at 60k games
+(journal: `Failed with result 'oom-kill'`, 40.0 G peak). The Othello inverse-map path is DENSE: per residual point it
+holds the harvested activations, the masked rows (3.5M × 512 floats = 7 GB at 60k) and their train/test copies, plus
+the retrieval bank's copy — it fits at the canonical 20k, not at 60k. Written before the kill (`scores/oth_L-oth-20m.json`
+on the 4090, synced back when the retry ends):
+
+| games | skill LIN | PI | ND | IM | IM-NN |
+|---|---|---|---|---|---|
+| 20k (canonical) | 0.9747 | +0.819 / 0.29 | +0.748 / 0.34 | +0.810 / 0.38 | +0.036 / 2.14 |
+| 60k | 0.9752 | +0.819 / 0.28 | +0.746 / 0.34 | — | — |
+
+The retry is redefined to exactly that (`--sizes 20000 60000 --im-max-n 20000`; cache hits) so it cannot meet the cap
+again. NOT run: 100k games, and the inverse map above 20k — the inverse map's corpus sensitivity is answered on
+discworld (`ctrl_corpus_dw`, 30k vs 100k, whose dense path memmaps). `final_tables` no longer depends on the two
+controls (they feed no table).

@@ -7,14 +7,14 @@
   "lab"
  ],
  "lane": "gpu",
- "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 60000 100000",
+ "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 60000 --im-max-n 20000",
  "env": {},
  "deps": [],
  "host_deps": {},
  "priority": 26,
  "est_hours": {
-  "lab": 1.5,
-  "remote": 2.0
+  "lab": 0.7,
+  "remote": 0.2
  },
  "inputs": [
   "runs/initial_othello_comparison/L-oth-20m"
@@ -26,5 +26,5 @@
  "mem_max": null,
  "max_attempts": 2,
  "hold": false,
- "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/60k/100k games, inverse map + IM at 20k/60k"
+ "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/60k games, inverse map + IM at the canonical 20k only. 2026-09-20 05:00: attempt 1 (20k/60k/100k, IM to 60k) was killed by the unit's 40 GB memory cap inside the DENSE inverse-map fit at 60k games (3.5M rows; several copies of a 7 GB residual stack per point). 20k (all) and 60k (LIN/PI/ND) had been written; the retry keeps exactly those (cache hits on the 4090) so it cannot hit the cap again \u2014 a second failure would block final_tables. 100k and IM>20k: a separate job if wanted."
 }
