@@ -1,2 +1,3 @@
 # PNG previews of per-piece exports are regenerable from each folder's script; the PDFs are the deliverable.
 **/pieces/**/*.png
+__pycache__/
