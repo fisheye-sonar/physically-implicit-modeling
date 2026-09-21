@@ -91,3 +91,24 @@ A different 30k sequences reproduces every canonical number to ±0.007. Doubling
 scaling; ONE attempt); `ctrl_corpus_dw_200k` is deleted. What stands in for the 200k question Sevan asked: the
 capacity sweep's STREAMED fits at 250k sequences (`findings/probe-capacity.md`: LIN 0.983 / MLP-128 0.997 on `L-dw-20m`,
 the canonical values to three decimals) for decodability, and this control's 2× point for editability.
+
+## 2026-09-20 20:30 — RESULT: both controls complete; flat, except the discworld inverse map
+
+`ctrl_corpus_oth` (lab, 19:58–20:13, 41 GB peak — the inverse map at 40k games fitted under the 45 GB cap with little
+margin) and the redefined `ctrl_corpus_dw` (lab, 20:13–20:28, its recorded 30k part skipped) both exited 0; no scratch
+left behind. The sizes actually measured are the ones in the 20:10 note above, NOT the 30k / 100k / 200k of the Method
+paragraph: Othello probes 20k / 40k / 60k games + inverse map 20k / 40k; discworld probes and inverse map 30k / 60k
+sequences. The full tables, the reading against the decision rule, scope and caveats are the dated entry in
+**`research/findings/probe-capacity.md` (2026-09-20)**. In one line per quantity:
+
+| quantity | across sizes | verdict by the decision rule |
+|---|---|---|
+| LIN / MLP-128 skill (both worlds) | ≤ 0.0007 / 0.0010 | flat |
+| PI, ND best arm | same point and alpha; ≤ 0.006 (Othello), ≤ 0.001 (discworld) | flat |
+| GS (discworld) | −0.063 → −0.081 | inside its seed SD (± 0.027); downward; a failing arm throughout |
+| IM, Othello | +0.810 → +0.808 (g R² 0.886 → 0.892) | flat |
+| IM, discworld | +0.592 → +0.604 (g R² 0.742 → 0.755) | MOVES: ~2 training-seed SDs per doubling; canonical IM is a slight under-estimate; no ordering changes |
+| IM-NN, discworld | +0.321 → +0.364 | moves by construction (the bank is the corpus) |
+
+Not answered: the literal 30k-vs-200k comparison for editability (needs a streamed regression fit — post-deadline
+`pim` work), and the GUARDED PI / GS cells on discworld (the scripts record the scorer's unguarded best arm).

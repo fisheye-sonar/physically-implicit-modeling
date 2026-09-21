@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-19 12:15 PT — orientation session; queue check found the dw-16ray fac gap (first section)_
+_Last updated: 2026-09-20 20:35 PT — both corpus-size controls done and recorded (findings/probe-capacity.md); queue 15 of 32, Othello replicates running on both hosts_
 
 ## 2026-09-19 (night) — follow-up to the scoring audit (Sevan): ONE change made, the rest deliberately left
 
@@ -251,6 +251,13 @@ MLP 0.9727 / PI +0.197 / GS −0.063 / IM +0.592); the inverse map at 60k gives 
 72 GB scratch memmap (+ a 2.4 GB orphan from 18:26; `fuser` clean), redefined in `plan.py`: probes 30k / 60k, IM 30k / 60k, ONE attempt, starts after `ctrl_corpus_oth`
 (running on the lab since 19:57). Sevan's "30k vs 200k" question is answered by the capacity sweep's streamed 250k fits for decodability and by this control's 2× point
 for editability; a 200k editability point needs a streamed regression fit — not mid-queue. 32 jobs, 13 done.
+**2026-09-20 20:35 — both corpus-size controls DONE and recorded; `rep_oth-standard_s2` launched on the lab (20:30).** `ctrl_corpus_oth` (lab, 0.25 h, 41 GB peak; inverse map
+at 40k games fitted) and the redefined `ctrl_corpus_dw` (lab, 0.24 h; 30k part skipped as recorded) exited 0, no scratch leaked. Result = dated entry in
+`findings/probe-capacity.md`: at 2–3× the canonical probe rows LIN / MLP skill move ≤ 0.001, PI / ND keep the same arm (≤ 0.006), Othello IM is flat, discworld GS drifts
+down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.592 → +0.604 per doubling, ~2 seed SDs; canonical IM a slight under-estimate, no ordering
+changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
+Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
+UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
@@ -2494,7 +2501,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-08-05 (branch `orthogonal_edit_analysis`: editor gallery — 17 editors in 3 slide figures; canonical editor names fixed; Decoder Grad k=15 is the only editor that both lands AND persists)_
+_Last updated: 2026-09-20 20:35 PT — both corpus-size controls done and recorded (findings/probe-capacity.md); queue 15 of 32, Othello replicates running on both hosts_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
