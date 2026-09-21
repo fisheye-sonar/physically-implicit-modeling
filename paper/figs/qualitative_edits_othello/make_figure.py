@@ -35,7 +35,8 @@ ps.apply()                                  # one look for every paper figure (A
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import to_rgb  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
-from matplotlib.patches import Circle, Patch, Rectangle  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
+from matplotlib.patches import Circle, Rectangle  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -147,12 +148,12 @@ def mark(ax, squares, color: str, lw: float = MARK_LW) -> None:
         ax.add_patch(Rectangle((c, 7 - r), 1, 1, facecolor="none", edgecolor=color, linewidth=lw, zorder=5))
 
 
-def mark_key(owner, *, lw: float = MARK_LW, fontsize: float = 8, **kw):
-    """The key, once per figure: a cyan swatch "pre-edit", a pink swatch "post-edit". ``owner`` is a Figure,
-    SubFigure or Axes; ``kw`` goes to its ``legend`` (loc, bbox_to_anchor, ncol)."""
-    handles = [Patch(facecolor="none", edgecolor=ps.ORIGIN_C, lw=lw), Patch(facecolor="none", edgecolor=ps.DEST_C, lw=lw)]
-    return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=1.0,
-                        handleheight=1.0, handletextpad=0.5, columnspacing=1.0, borderaxespad=0.0, **kw)
+def mark_key(owner, *, fontsize: float = 8, markersize: float = 5, **kw):
+    """The key, once per figure: a cyan DOT "pre-edit", a pink DOT "post-edit" (Sevan, round 3). ``owner`` is a
+    Figure, SubFigure or Axes; ``kw`` goes to its ``legend`` (loc, bbox_to_anchor, ncol)."""
+    handles = [Line2D([], [], marker="o", linestyle="none", color=c, markersize=markersize) for c in (ps.ORIGIN_C, ps.DEST_C)]
+    return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=0.8,
+                        handletextpad=0.4, columnspacing=1.0, borderaxespad=0.0, **kw)
 
 
 def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.6,
@@ -225,7 +226,7 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
         fig.text(ax.get_position().x0 - 0.008, y, shown(text), ha="right", va="center", fontsize=label_size, color="black",
                  fontweight="bold" if text == "Ground truth" else "normal")
     if locator:                                   # the key, in the free corner above the row labels
-        mark_key(fig, lw=MARK_LW * 1.6, fontsize=label_size - 1, loc="upper left", bbox_to_anchor=(0.005, 0.995))
+        mark_key(fig, markersize=9, fontsize=label_size - 1, loc="upper left", bbox_to_anchor=(0.005, 0.995))
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", pad_inches=0, facecolor="white")
     fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", pad_inches=0, facecolor="white")
     plt.close(fig)

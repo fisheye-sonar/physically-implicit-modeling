@@ -50,9 +50,9 @@ re-renders without reloading the five models. Nothing on the figure names the en
   for the state). The map is read from the run's `probes/` cache only (`_cache_hits_only`: a miss raises instead of
   starting a 30-minute fit). Until this date the row showed the continuous full-state map on the categorical bench,
   which is no longer a scored arm anywhere.
-- **Blank cells.** A block with no arm for an editor (`best_arm` None) is drawn as an empty framed cell: today the
-  categorical IM on Standard (dw-noiseless) and Blink (dw-blink), whose table cells are blank; the ray family
-  (16 / 8 / 5-ray) carries the categorical arm (points 6 / 6 / 5). No text is put in the cell.
+- **Blank cells.** A block with no arm for an editor (`best_arm` None) leaves its spot fully empty — no panel, no
+  frame, no strip; the row label stays (Sevan, round 3): today the categorical IM on Standard (dw-noiseless) and Blink
+  (dw-blink), whose table cells are blank; the ray family (16 / 8 / 5-ray) carries the categorical arm (points 6 / 6 / 5).
 - Caches are `.scratch/qualitative_edits_catim_seed<k>_ctx8.pkl` (seeds 0..5, 2026-09-21); the `_guarded` caches
   hold the old categorical IM frames and are not read any more. `build(seed, context, variants=None)` accepts
   another variant list (the main-text figure uses it for the 128-ray Standard); the scenario is always generated

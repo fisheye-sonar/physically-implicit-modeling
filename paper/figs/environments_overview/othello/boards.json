@@ -7,362 +7,6 @@
   "chosen move / placed disc": "#00bcd4",
   "flipped disc": "#ff4fa3"
  },
- "standard": {
-  "instance": "oth-uniform",
-  "rules": {
-   "flip": true,
-   "placement": "enclosure"
-  },
-  "own_game": {
-   "bench_case_id": 459,
-   "board_after_move": 14,
-   "mover": "black",
-   "legal_moves": [
-    "a2",
-    "b4",
-    "c3",
-    "e8",
-    "f6",
-    "f7",
-    "f8",
-    "g4",
-    "g6",
-    "h2",
-    "h3",
-    "h5"
-   ],
-   "chosen_move": {
-    "number": 15,
-    "square": 51,
-    "name": "g4"
-   },
-   "flipped_by_chosen_move": [
-    "f4",
-    "f5"
-   ],
-   "frames": {
-    "O3_1": {
-     "after_move": 14,
-     "placed": "g3",
-     "flipped": [
-      "f4"
-     ]
-    },
-    "O3_2": {
-     "after_move": 15,
-     "placed": "g4",
-     "flipped": [
-      "f4",
-      "f5"
-     ]
-    },
-    "O3_3": {
-     "after_move": 16,
-     "placed": "h4",
-     "flipped": [
-      "d4",
-      "e4",
-      "f4",
-      "g4"
-     ]
-    }
-   }
-  },
-  "terminal": {
-   "source": "synthetic_games(1, seed=0, **rules_of(inst))[0]",
-   "n_moves": 60
-  },
-  "shared_board": {
-   "sequence": [
-    "d3",
-    "e3",
-    "f2",
-    "c3",
-    "f3",
-    "d2"
-   ],
-   "legal_moves": [
-    "b3",
-    "c1",
-    "c2",
-    "c4",
-    "c5",
-    "d1",
-    "e6",
-    "f5"
-   ],
-   "chosen_move": {
-    "square": 19,
-    "name": "c4"
-   },
-   "flipped": [
-    "d4"
-   ],
-   "alt_chosen_move": {
-    "square": 24,
-    "name": "d1"
-   },
-   "alt_flipped": [
-    "d2",
-    "d3",
-    "d4"
-   ]
-  }
- },
- "adjacent_flip": {
-  "instance": "oth-adjacent-flip",
-  "rules": {
-   "flip": true,
-   "placement": "adjacent"
-  },
-  "own_game": {
-   "bench_case_id": 358,
-   "board_after_move": 14,
-   "mover": "black",
-   "legal_moves": [
-    "a5",
-    "a7",
-    "a8",
-    "b5",
-    "b7",
-    "c6",
-    "c8",
-    "d1",
-    "d2",
-    "d7",
-    "d8",
-    "e1",
-    "e3",
-    "e6",
-    "e7",
-    "f1",
-    "f2",
-    "f3",
-    "f5"
-   ],
-   "chosen_move": {
-    "number": 15,
-    "square": 12,
-    "name": "b5"
-   },
-   "flipped_by_chosen_move": [
-    "c4"
-   ],
-   "frames": {
-    "O3_1": {
-     "after_move": 14,
-     "placed": "c2",
-     "flipped": []
-    },
-    "O3_2": {
-     "after_move": 15,
-     "placed": "b5",
-     "flipped": [
-      "c4"
-     ]
-    },
-    "O3_3": {
-     "after_move": 16,
-     "placed": "e3",
-     "flipped": [
-      "d3",
-      "e4"
-     ]
-    }
-   }
-  },
-  "terminal": {
-   "source": "synthetic_games(1, seed=0, **rules_of(inst))[0]",
-   "n_moves": 60
-  },
-  "shared_board": {
-   "sequence": [
-    "f3",
-    "d3",
-    "f2",
-    "d2",
-    "e3",
-    "c3"
-   ],
-   "legal_moves": [
-    "c4",
-    "c5",
-    "c6",
-    "d6",
-    "e1",
-    "e2",
-    "e6",
-    "f1",
-    "f4",
-    "f5",
-    "g1",
-    "g2",
-    "g3",
-    "g4"
-   ],
-   "chosen_move": {
-    "square": 19,
-    "name": "c4"
-   },
-   "flipped": [
-    "d4"
-   ],
-   "alt_chosen_move": {
-    "square": 19,
-    "name": "c4"
-   },
-   "alt_flipped": [
-    "d4"
-   ]
-  }
- },
- "adjacent_noflip": {
-  "instance": "oth-adjacent",
-  "rules": {
-   "flip": false,
-   "placement": "adjacent"
-  },
-  "own_game": {
-   "bench_case_id": 72,
-   "board_after_move": 14,
-   "mover": "black",
-   "legal_moves": [
-    "c1",
-    "c2",
-    "c4",
-    "c5",
-    "c6",
-    "d1",
-    "d6",
-    "d7",
-    "d8",
-    "e1",
-    "e8",
-    "f1",
-    "f2",
-    "f7",
-    "f8",
-    "g2",
-    "g3",
-    "g5",
-    "g7",
-    "h5",
-    "h6",
-    "h7"
-   ],
-   "chosen_move": {
-    "number": 15,
-    "square": 19,
-    "name": "c4"
-   },
-   "flipped_by_chosen_move": [],
-   "frames": {
-    "O3_1": {
-     "after_move": 14,
-     "placed": "h3",
-     "flipped": []
-    },
-    "O3_2": {
-     "after_move": 15,
-     "placed": "c4",
-     "flipped": []
-    },
-    "O3_3": {
-     "after_move": 16,
-     "placed": "f2",
-     "flipped": []
-    }
-   }
-  },
-  "terminal": {
-   "source": "synthetic_games(1, seed=0, **rules_of(inst))[0]",
-   "n_moves": 60
-  },
-  "shared_board": {
-   "sequence": [
-    "f3",
-    "d3",
-    "f2",
-    "d2",
-    "e3",
-    "c3"
-   ],
-   "legal_moves": [
-    "c4",
-    "c5",
-    "c6",
-    "d6",
-    "e1",
-    "e2",
-    "e6",
-    "f1",
-    "f4",
-    "f5",
-    "g1",
-    "g2",
-    "g3",
-    "g4"
-   ],
-   "chosen_move": {
-    "square": 19,
-    "name": "c4"
-   },
-   "flipped": [],
-   "alt_chosen_move": {
-    "square": 21,
-    "name": "c6"
-   },
-   "alt_flipped": []
-  }
- },
- "standard_noflip": {
-  "instance": "oth-noflip",
-  "rules": {
-   "flip": false,
-   "placement": "enclosure"
-  },
-  "own_game": {
-   "bench_case_id": 943,
-   "board_after_move": 14,
-   "mover": "black",
-   "legal_moves": [
-    "a4",
-    "b3",
-    "e2",
-    "e6",
-    "f5",
-    "g2",
-    "h3"
-   ],
-   "chosen_move": {
-    "number": 15,
-    "square": 49,
-    "name": "g2"
-   },
-   "flipped_by_chosen_move": [],
-   "frames": {
-    "O3_1": {
-     "after_move": 14,
-     "placed": "g3",
-     "flipped": []
-    },
-    "O3_2": {
-     "after_move": 15,
-     "placed": "g2",
-     "flipped": []
-    },
-    "O3_3": {
-     "after_move": 16,
-     "placed": "f2",
-     "flipped": []
-    }
-   }
-  },
-  "terminal": {
-   "source": "synthetic_games(1, seed=0, **rules_of(inst))[0]",
-   "n_moves": 60
-  }
- },
  "shared_board": {
   "bench_instance": "oth-uniform",
   "bench_case_id": 182,
@@ -487,30 +131,12 @@
    "g3",
    "g4"
   ],
-  "shared_legal": [
+  "legal_under_all_three": [
    "c4",
    "c5",
    "e6",
    "f5"
   ],
-  "chosen_move": {
-   "square": 19,
-   "name": "c4"
-  },
-  "alt_chosen_moves": {
-   "oth-uniform": {
-    "square": 24,
-    "name": "d1"
-   },
-   "oth-adjacent-flip": {
-    "square": 19,
-    "name": "c4"
-   },
-   "oth-adjacent": {
-    "square": 21,
-    "name": "c6"
-   }
-  },
   "search": {
    "moves_scanned": "14 down to 4, stopping at the first move count with a survivor",
    "reachable_under_all_three_by_move": {
@@ -523,12 +149,278 @@
    "condition": "exact for adjacent-noflip; for adjacent-flip a sufficient condition (flip-free order or adjacency-legal standard prefix)"
   }
  },
- "midgame_board": {
-  "result": "no shared board for ['oth-adjacent-flip'] at moves [14, 13, 12, 11, 10, 9, 8]",
-  "shared_by": [
-   "standard",
-   "adjacent_flip"
-  ],
-  "condition": "flip-free adjacency order or adjacency-legal standard prefix"
+ "panel_moves": {
+  "a": "the enclosure-legal move flipping the most discs",
+  "b": "the adjacency-legal move flipping the most discs",
+  "c": {
+   "composite_O2": "the same move as (b)",
+   "composite_O2_altmove": "the move legal under all three rule sets farthest from (b)'s"
+  },
+  "d": "the own game's real move K+1"
+ },
+ "panels": {
+  "composite_O2": {
+   "a": {
+    "variant": "standard",
+    "instance": "oth-uniform",
+    "board": "shared",
+    "sequence": [
+     "d3",
+     "e3",
+     "f2",
+     "c3",
+     "f3",
+     "d2"
+    ],
+    "legal_moves": [
+     "b3",
+     "c1",
+     "c2",
+     "c4",
+     "c5",
+     "d1",
+     "e6",
+     "f5"
+    ],
+    "move": {
+     "square": 24,
+     "name": "d1"
+    },
+    "flipped": [
+     "d2",
+     "d3",
+     "d4"
+    ]
+   },
+   "b": {
+    "variant": "adjacent_flip",
+    "instance": "oth-adjacent-flip",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": [
+     "d4"
+    ]
+   },
+   "c": {
+    "variant": "adjacent_noflip",
+    "instance": "oth-adjacent",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": []
+   },
+   "d": {
+    "variant": "standard_noflip",
+    "instance": "oth-noflip",
+    "board": "own game",
+    "bench_case_id": 943,
+    "board_after_move": 14,
+    "mover": "black",
+    "legal_moves": [
+     "a4",
+     "b3",
+     "e2",
+     "e6",
+     "f5",
+     "g2",
+     "h3"
+    ],
+    "move": {
+     "number": 15,
+     "square": 49,
+     "name": "g2"
+    },
+    "flipped": []
+   }
+  },
+  "composite_O2_altmove": {
+   "a": {
+    "variant": "standard",
+    "instance": "oth-uniform",
+    "board": "shared",
+    "sequence": [
+     "d3",
+     "e3",
+     "f2",
+     "c3",
+     "f3",
+     "d2"
+    ],
+    "legal_moves": [
+     "b3",
+     "c1",
+     "c2",
+     "c4",
+     "c5",
+     "d1",
+     "e6",
+     "f5"
+    ],
+    "move": {
+     "square": 24,
+     "name": "d1"
+    },
+    "flipped": [
+     "d2",
+     "d3",
+     "d4"
+    ]
+   },
+   "b": {
+    "variant": "adjacent_flip",
+    "instance": "oth-adjacent-flip",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": [
+     "d4"
+    ]
+   },
+   "c": {
+    "variant": "adjacent_noflip",
+    "instance": "oth-adjacent",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 44,
+     "name": "f5"
+    },
+    "flipped": []
+   },
+   "d": {
+    "variant": "standard_noflip",
+    "instance": "oth-noflip",
+    "board": "own game",
+    "bench_case_id": 943,
+    "board_after_move": 14,
+    "mover": "black",
+    "legal_moves": [
+     "a4",
+     "b3",
+     "e2",
+     "e6",
+     "f5",
+     "g2",
+     "h3"
+    ],
+    "move": {
+     "number": 15,
+     "square": 49,
+     "name": "g2"
+    },
+    "flipped": []
+   }
+  }
+ },
+ "own_game_rule": {
+  "rule": "first case in a seeded permutation of the instance's 1000 bench cases whose moves K+1 and K+2 are regular (no pass) and, where the rule set flips, whose move K+1 flips at least min_flips discs; applied to every instance in VARIANTS order, only standard-noflip is drawn",
+  "picks": {
+   "oth-uniform": 459,
+   "oth-adjacent-flip": 358,
+   "oth-adjacent": 72,
+   "oth-noflip": 943
+  }
  }
 }

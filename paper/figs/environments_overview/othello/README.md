@@ -1,50 +1,35 @@
 # Othello and its three rule variants (fig:othello_and_variants)
 
-Pieces and composites for the environment figure of the paper's Othello section. Round 2 (2026-09-21, after
-Sevan's review): option O2 (before / after) is the main figure; panels (a) standard, (b) adjacent-flip and
+Two candidate main figures for the paper's Othello section (round 3, 2026-09-21): before / after boards under
+the four rule sets, one move per panel, the discs it flips ringed. Panels (a) standard, (b) adjacent-flip and
 (c) adjacent-noflip show ONE shared board, a real standard position that is provably reachable under the other
-two rule sets, so the three panels differ only in the legal squares and in what the move flips; (d)
-standard-noflip keeps its own board. All text is Arial and every PDF is cropped to its content with no padding
-(`paper_style` as of 11:50 PT).
+two rule sets, so the panels differ only in the legal squares and in what a move flips; (d) standard-noflip is
+on its own game. Text is Arial (bold panel letters), every PDF is cropped to its content with no padding.
 
 Everything canonical is imported: rules from `pim.environments.othello.corpus.rules_of`, board replay and
 legality from the vendored `OthelloBoardState` (`umpire`, `get_valid_moves`, `tentative_move`), games from
 `pim.environments.othello.bench.load_benchmark`, the board drawing from
 `paper/figs/qualitative_edits_othello/make_figure.py::draw_board`, colours and fonts from
-`paper/figs/paper_style.py`. No metric is computed anywhere in this folder.
+`paper/figs/paper_style.py`. No metric is computed here.
 
-Regenerate (CPU, ~20 s and ~10 s):
+Regenerate (CPU, ~15 s):
 
-    .pim/bin/python paper/figs/environments_overview/othello/make_figure.py        # --seed 0 --move 14 --min-flips 1
-    .pim/bin/python paper/figs/environments_overview/othello/make_predictive.py    # --seed 0   (appendix)
+    .pim/bin/python paper/figs/environments_overview/othello/make_figure.py     # --seed 0 --move 14 --min-flips 1
 
 ## Files
 
-Top level (`.pdf` vector, Arial embedded as TrueType, page box = content; a 300 dpi `.png` preview beside each):
-
 | file | what it is |
 |---|---|
-| `composite_O2.pdf` | **Main figure** (5.5 x 3.5 in): (a) to (c) the shared board before (top) and after (bottom) the shared move c4, (d) standard-noflip on its own game; arrows between rows; key strip beneath. |
-| `composite_O2_alt.pdf` | Same boards, per-rule-set chosen moves: (a) the standard move that flips the most discs (d1, three flips), (b) the adjacency-legal move that flips the most (c4), (c) a square legal only by adjacency (c6). |
-| `composite_O1.pdf` | One board per variant (5.5 x 2.0 in): the shared board for (a) to (c) with the discs c4 would flip ringed, (d) own game. |
-| `composite_O3.pdf` | Three consecutive positions per variant from each instance's own game (tall, 5.5 x 5.1 in; appendix material). |
-| `legend_key.pdf` | The key alone (3.4 x 0.3 in): legal move, chosen move, flipped disc. |
-| `predictive_composite.pdf` | Appendix: per variant the board tinted by its true legal set ("legal moves") over the same board tinted by the trained model's unedited next-move distribution ("model"). |
-| `boards.json` | Sidecar: the shared board (case, move, board array, standard moves, the placement orders that prove reachability, both legal sets, chosen and alternative moves, the search record), the failed mid-game fallback, and every variant's own-game facts. |
-| `predictive.json` | Sidecar for the appendix figure: cache column, run, instance, case id, legal-set size, tint parameters. |
+| `composite_O2.pdf` / `.png` | 5.5 x 3.5 in. (a) d1 flips d2, d3, d4; (b) c4 flips d4; **(c) c4**, the same board and move as (b), flips nothing; (d) own game, g2 flips nothing. Key strip beneath. |
+| `composite_O2_altmove.pdf` / `.png` | Same, except **(c) f5**: a move that would flip e5 under the flip rules (it is legal under all three rule sets) and flips nothing here. |
+| `legend_key.pdf` / `.png` | The key alone (3.4 x 0.3 in): legal move, chosen move, flipped disc. |
+| `boards.json` | Sidecar: the shared board (case, move, board array, standard moves, the placement orders that prove reachability, both legal sets, the search record), every panel's move and flips for both composites, the own-game rule and its picks. |
+| `make_figure.py` | The one script (search, drawing, composites). |
+| `pieces/<variant>_before.pdf`, `_after.pdf`, `_O2_pair.pdf` | Each panel's two boards at 2.0 in and the pair with an arrow (`standard`, `adjacent_flip`, `adjacent_noflip`, `standard_noflip`); `adjacent_noflip_*_altmove.pdf` are panel (c) of the altmove composite. PNG previews beside them are gitignored. |
 
-`pieces/` (boards 2.0 in on the page, one PDF + PNG per element; `<v>` in `standard`, `adjacent_flip`,
-`adjacent_noflip`, `standard_noflip`):
-
-| piece | board | what it shows |
-|---|---|---|
-| `<v>_legal` | shared (a to c), own (d) | The position with the mover's legal squares dotted. |
-| `<v>_before`, `<v>_after`, `<v>_O2_pair` | shared (a to c), own (d) | O2: before = legal dots + the chosen move as a ghost disc with a cyan ring; after = the placed disc ringed cyan, the flipped discs ringed pink; the pair with an arrow. |
-| `<v>_before_alt`, `<v>_after_alt`, `<v>_O2_pair_alt` | shared (a to c) | O2 with the per-rule-set chosen moves. |
-| `<v>_O1` | shared (a to c), own (d) | O1: legal dots, ghost disc, the discs the move would flip ringed (still in their pre-move colour). |
-| `<v>_O3_1`, `_O3_2`, `_O3_3`, `<v>_O3_seq` | own (all four) | The positions after moves 14, 15, 16 of the own game: the disc just placed ringed cyan, the discs it flipped ringed pink, the next mover's legal squares dotted. |
-| `<v>_terminal` | generator | The final position of one whole game from the instance's generator (`synthetic_games(1, seed=0, **rules_of(inst))[0]`, game 0 of the training pool by the index law). Standard-noflip's is the checkerboard every game of that rule set ends in. |
-| `predictive_<v>_legal`, `_model`, `_pair` | bench (cache) | The appendix figure's boards, singly and as a pair. |
+(`make_predictive.py`, `predictive.json`, `predictive_composite.*` and `pieces/predictive_*` belong to the
+appendix figure being moved to `paper/figs/predictive_quality/`; not part of this figure. Earlier options O1 and
+O3, the terminal boards and the round-2 pieces were pruned on 2026-09-21; the round-2 tree in git has them.)
 
 ## Markers (defined once in `make_figure.py`, colours from `paper_style`)
 
@@ -52,15 +37,14 @@ Top level (`.pdf` vector, Arial embedded as TrueType, page box = content; a 300 
 - Chosen move: cyan ring (`ps.ORIGIN_C`, #00bcd4); before the move around a half-transparent disc of the mover's
   colour (alpha 0.5), after the move around the placed disc.
 - Flipped disc: pink ring (`ps.DEST_C`, #ff4fa3), the pink the qualitative figures use for a tile whose colour
-  changed. In O1 the ringed discs are in their pre-move colour (they would flip); in after boards and O3 frames
-  they have flipped.
+  changed.
 - Boards: `draw_board`'s geometry and colours. Rows a to h run top to bottom, columns 1 to 8 left to right, as in
   the vendored code ("c4" = row c, column 4).
 
 ## The shared board (panels a, b, c)
 
 Position after move 6 of standard bench case 182 (`datasets/othello/oth-uniform/edits/v1/cases_1000.pkl`, a
-held-out 20-move game), 10 discs, black to move. Rows a to h top to bottom, columns 1 to 8 left to right:
+held-out 20-move game), 10 discs, black to move:
 
     a  . . . . . . . .
     b  . . . . . . . .
@@ -71,24 +55,31 @@ held-out 20-move game), 10 discs, black to move. Rows a to h top to bottom, colu
     g  . . . . . . . .
     h  . . . . . . . .
 
-- Standard game: `d3 e3 f2 c3 f3 d2` (black first; several discs flipped along the way).
+- Standard game: `d3 e3 f2 c3 f3 d2` (black first; discs flipped along the way).
 - Adjacent-noflip and adjacent-flip: the placement order `f3 d3 f2 d2 e3 c3` (black first, strict alternation)
   rebuilds the same board with no flip at any step; under adjacent-flip none of these placements encloses a
-  disc, so the same order is valid there too. Both replays are re-run and asserted equal to the standard board
-  in the script; the orders are in `boards.json` under `shared_board.placement_orders`.
-- Legal squares for black: standard (enclosure) `b3 c1 c2 c4 c5 d1 e6 f5` (8); adjacency (b and c, identical)
-  `c4 c5 c6 d6 e1 e2 e6 f1 f4 f5 g1 g2 g3 g4` (14). Legal under all three: `c4 c5 e6 f5`.
-- Shared chosen move: **c4** (black), which encloses d4 against e4 and flips it under (a) and (b); under (c) the
-  disc is placed and nothing changes colour. Every move legal under all three flips exactly one disc here.
-- Alternative moves (`_alt`): (a) `d1`, flipping `d2 d3 d4` along row d against d5; (b) `c4`; (c) `c6`, adjacent
-  to a black disc but enclosing nothing, so illegal under the enclosure rule.
+  disc, so the same order holds there. Both replays are re-run and asserted equal to the standard board by the
+  script; the orders are in `boards.json` under `shared_board.placement_orders`.
+- Legal squares for black: enclosure rule `b3 c1 c2 c4 c5 d1 e6 f5` (8, panel a); adjacency rule
+  `c4 c5 c6 d6 e1 e2 e6 f1 f4 f5 g1 g2 g3 g4` (14, panels b and c, identical). Legal under all three:
+  `c4 c5 e6 f5`; each of them encloses exactly one disc (c4 and c5 enclose d4, e6 and f5 enclose e5).
 
-### How it was found (`shared_board` / `reach` in `make_figure.py`)
+Panel moves (rules in `boards.json` under `panel_moves`):
+- (a) the enclosure-legal move flipping the most discs: **d1**, which encloses d2, d3, d4 along row d against d5.
+- (b) the adjacency-legal move flipping the most discs (adjacency-only squares enclose nothing, so this is the best
+  move legal under all three): **c4**, enclosing d4 against e4.
+- (c) `composite_O2`: **c4**, the same move as (b), so the before boards of (b) and (c) are identical and the
+  after boards differ only in d4. `composite_O2_altmove`: **f5**, the move legal under all three rule sets that
+  lies farthest from c4 (three squares); it would flip e5 under the flip rules and flips nothing here.
+- (d) the own game's real next move: **g2** (standard-noflip case 943, board after move 14, black to move, 7
+  legal squares `a4 b3 e2 e6 f5 g2 h3`), flipping nothing.
+
+### How the shared board was found (`shared_board` / `reach` in `make_figure.py`)
 
 Candidates are the positions after m moves of the 1000 standard bench games, m = 14, 13, ..., 4. For each, a
 depth-first search over placement orders from the opening uses the vendor's own legality (`get_valid_moves`,
 `umpire`), only lands on the target's occupied squares, and keeps a child only while every disc on the board
-has the target's colour. Under adjacent-noflip this is exact (discs never change, passes follow the vendor's
+has the target's colour. Under adjacent-noflip this is exact (discs never change; passes follow the vendor's
 forfeit logic). Under adjacent-flip it accepts only flip-free orders, a sufficient condition; an adjacency-legal
 standard prefix (same sequence, same flips, same board) is accepted as well. Visited states are skipped, so
 every candidate was searched exhaustively (at most ~1600 states; cap 20000 never reached). The scan stops at
@@ -96,64 +87,36 @@ the first m with a survivor; among survivors the one whose best shared move flip
 largest legal-set difference, then the lowest case id.
 
 Result: **no position after 7 to 14 moves survives; after 6 moves three do (cases 138, 182, 745)**, each with a
-flip-free adjacency order, black to move, 4 to 5 shared legal moves, all shared moves flipping one disc; case
-182 wins on the legal-set difference (14 squares) and the lowest id. The fallback layout (a mid-game board after
-8 to 14 moves shared by (a) and (b) only) does not exist for this bench within the same sufficient condition (0
-of 1000 games at every m from 8 to 14), so it was not built; `boards.json` records the negative result. An
-order with flips that happens to end on the target board is not excluded by this search, so "not reachable"
-for adjacent-flip means "not reachable by a flip-free order or the standard sequence".
+flip-free adjacency order, black to move, 4 to 5 shared legal moves that each flip one disc; case 182 wins on
+the legal-set difference (14 squares) and the lowest id. A mid-game board (8 to 14 moves) shared by (a) and (b)
+only does not exist either under the same condition (0 of 1000 games at every m; round 2, reproducible with
+`shared_board(hist, range(14, 7, -1), ["oth-adjacent-flip"])`). An adjacency order with flips that happens to end
+on the target board is not excluded by this search, so "not reachable" for adjacent-flip means "not by a
+flip-free order or by the standard sequence".
 
-## Own-game boards (panel d, the O3 frames, terminal boards)
+## Panel (d): the own game
 
 Seeded rule (`--seed 0`, `--move 14`, `--min-flips 1`): the instance's 1000 bench cases in a seeded permutation,
 the first whose moves 15 and 16 are regular (no pass) and, where the rule set flips, whose move 15 flips at
-least one disc. Boards after move 14 (18 discs), black to move, the chosen move = the game's real move 15.
+least one disc. The rule is applied to every instance in the order standard, adjacent-flip, adjacent-noflip,
+standard-noflip (picks 459, 358, 72, 943, so the seeded stream matches rounds 1 and 2) and only standard-noflip
+is drawn: case 943, board after move 14 (18 discs), black to move, the game's real move 15 = g2.
 
-| variant | instance | bench case | move 15 | flips | legal at move 14 | O3 frame flips (moves 14, 15, 16) |
-|---|---|---|---|---|---|---|
-| standard | `oth-uniform` | 459 | g4 | f4, f5 | 12 | 1, 2, 4 |
-| adjacent-flip | `oth-adjacent-flip` | 358 | b5 | c4 | 19 | 0, 1, 2 |
-| adjacent-noflip | `oth-adjacent` | 72 | c4 | none | 22 | 0, 0, 0 |
-| standard-noflip (panel d) | `oth-noflip` | 943 | g2 | none | 7 | 0, 0, 0 |
+## Caption facts
 
-Only standard-noflip's own game appears in the O2 / O1 composites; the other three own games appear in the O3
-composite and pieces only.
-
-## Appendix figure (`make_predictive.py`)
-
-One random case per variant (`rng.integers` over the 1000 cached cases, seed 0) from
-`.scratch/othello_edits_guarded_cache.pkl` (the qualitative Othello figure's cache, guarded best arms,
-2026-09-19). Boards are the bench's 20-move positions; the "legal moves" row is
-`pim.metrics.set_editability.uniform_over_legal(legal_pre)`, the "model" row the cached `probs["Unedited"]`.
-Tint as `draw_board` draws it (full at 0.02 probability mass and above, `(p / 0.02) ** 0.6` below).
-
-| panel | run | bench case | legal squares |
-|---|---|---|---|
-| (a) | `initial_othello_comparison/L-oth-20m` | 850 | 18 |
-| (b) | `adjacent_flip_ablation/L-oth-adjacent-flip-20m` | 636 | 24 |
-| (c) | `adjacency_ablation/L-oth-adjacent-20m` | 511 | 19 |
-| (d) | `flip_ablation/L-oth-noflip-20m` | 269 | 8 |
-
-## Caption facts (main figure, `composite_O2`)
-
-- (a) to (c): one real position (a standard bench game after six moves, black to move) that can also arise
-  under the adjacency rule sets, so only the rules differ. Yellow dots: the squares black may play; the enclosure
-  rule allows 8, adjacency 14. Cyan ring: the move c4, a ghost disc before, the placed disc after. Pink ring: the
-  disc it flips (d4, enclosed against e4) under standard and adjacent-flip; under adjacent-noflip the disc is
-  placed and nothing changes colour.
-- (d): a standard-noflip game after 14 moves; the enclosure rule allows 7 squares, the move g2 flips nothing, and
-  the discs already form the checkerboard (orthogonal neighbours always differ) that every game of that rule set
-  ends in (`pieces/standard_noflip_terminal.pdf`).
-- `_alt`: (a) d1 flips the three white discs d2, d3, d4 in a row; (c) c6 is legal only because it touches a black
-  disc.
-- No number appears inside any figure; the only text is panel letters, the key's three labels, and the appendix
-  figure's two row labels.
+- (a) to (c): one real position (a standard game after six moves, black to move) that can also arise under the
+  adjacency rule sets, so only the rules differ. Yellow dots: the squares black may play; the enclosure rule
+  allows 8, adjacency 14. Cyan ring: the move (a ghost disc before, the placed disc after). Pink rings: the discs
+  it flips. (a) d1 flips the three white discs in row d; (b) c4 flips d4; (c) the same placement (or f5 in the
+  altmove version) flips nothing under adjacent-noflip.
+- (d): a standard-noflip game after 14 moves; the enclosure rule allows 7 squares, g2 flips nothing, and the discs
+  already form the checkerboard (orthogonal neighbours always differ) that every game of that rule set ends in.
+- No number appears inside either figure; the only text is the bold panel letters and the key's three labels.
 
 ## Notes
 
-- PDFs are cropped to their content with no padding (composites exactly 5.5 in wide), so spacing is set in
-  LaTeX; panel letters sit at the top edge of the box.
-- The shared board is early-game (10 discs) because nothing later survives the reachability test; the alt
-  composite is the way to show a longer flip line on the same board.
-- The appendix figure's rows look identical at the canonical tint saturation (0.02); a model that puts 1/|L| on
-  every legal square looks exactly like the legal-set board, which is the intended message.
+- PDFs are cropped to their content (composites exactly 5.5 in wide, no padding), so spacing is set in LaTeX;
+  the panel letters sit at the top edge of the box.
+- The shared board is early-game (10 discs) because nothing later survives the reachability test.
+- (d) is at move 14 (18 discs) while (a) to (c) are at move 6; `--move 6` would re-pick (d) at the same disc
+  count (a different case).

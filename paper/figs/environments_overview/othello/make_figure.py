@@ -1,27 +1,30 @@
-"""Othello and its three rule variants (paper ``fig:othello_and_variants``): real boards, the mover's legal
-squares, one move and the discs it flips, under each of the four rule sets.
+"""Othello and its three rule variants (paper ``fig:othello_and_variants``): before / after boards under each of
+the four rule sets, one move per panel, the discs it flips ringed.
 
-Panels (a) standard, (b) adjacent-flip and (c) adjacent-noflip share ONE board: a position from a real
-standard bench game (``load_benchmark("oth-uniform")``) that is provably reachable under the other two rule
-sets, so the panels differ only in the legal squares and in what the move flips. Reachability is decided with
-the vendor's own ``OthelloBoardState``: ``reach`` is a depth-first search over placement orders from the
-opening that only lands on the target's occupied squares (moves from ``get_valid_moves``, applied by
-``umpire``) and keeps a child only while every disc on the board has the target's colour, so under a flipping
-rule set only flip-free orders count (a sufficient condition; an adjacency-legal standard prefix is accepted
-too, since the same sequence rebuilds the same board under adjacent-flip). Visited states are skipped, so the
-search is exhaustive at these sizes (at most ~1600 states). ``shared_board`` scans the positions after 14, 13,
-... 4 moves of all 1000 bench games and stops at the first move count with a survivor; among survivors it takes
-the one whose best shared move (legal under all three rule sets) flips the most discs, then the largest
-legal-set difference, then the lowest case id. The placement orders are the evidence, recorded in
-``boards.json``. Result (2026-09-21): nothing survives after 7 to 14 moves; three positions after 6 moves do.
+Panels (a) standard, (b) adjacent-flip and (c) adjacent-noflip share ONE board: a position from a real standard
+bench game (``load_benchmark("oth-uniform")``) that is provably reachable under the other two rule sets, so the
+panels differ only in the legal squares and in what a move flips. Reachability is decided with the vendor's own
+``OthelloBoardState``: ``reach`` is a depth-first search over placement orders from the opening that only lands
+on the target's occupied squares (moves from ``get_valid_moves``, applied by ``umpire``) and keeps a child only
+while every disc on the board has the target's colour, so under a flipping rule set only flip-free orders count
+(a sufficient condition; an adjacency-legal standard prefix is accepted too, since the same sequence rebuilds
+the same board under adjacent-flip). Visited states are skipped, so the search is exhaustive at these sizes
+(at most ~1600 states). ``shared_board`` scans the positions after 14, 13, ... 4 moves of all 1000 bench games
+and stops at the first move count with a survivor; among survivors it takes the one whose best shared move
+(legal under all three rule sets) flips the most discs, then the largest legal-set difference, then the lowest
+case id. Result (2026-09-21): nothing survives after 7 to 14 moves; three positions after 6 moves do, and case
+182 is drawn. The placement orders are the evidence, recorded in ``boards.json``.
 
-Panel (d) standard-noflip, the O3 sequences and the terminal boards use each instance's own bench game
-(seeded pick: ``--seed``, ``--move`` K, ``--min-flips``). Options: O1 one board; O2 before / after (Sevan's
-choice), also with per-rule-set chosen moves (``_alt``); O3 three consecutive positions of the own games. The
-fallback layout (a mid-game board after 8 to 14 moves shared by (a) and (b) only, ``_mid``) is attempted and
-does not exist for this bench within the sufficient condition, which ``boards.json`` records. Every board is
-its own PDF + PNG under ``pieces/``; colours and geometry come from ``paper_style`` and the qualitative Othello
-figure's ``draw_board``.
+Panel moves: (a) the enclosure-legal move that flips the most discs; (b) the adjacency-legal move that flips the
+most discs; (c) in ``composite_O2`` the same move as (b), so the only difference between (b) and (c) is that
+nothing flips, and in ``composite_O2_altmove`` the move legal under all three rule sets that lies farthest from
+(b)'s (it would flip a different disc under the flip rules, and flips nothing here). Panel (d) standard-noflip
+uses its own bench game: the seeded rule (``--seed``, ``--move`` K, ``--min-flips``) is applied to every instance
+in order and only standard-noflip is drawn.
+
+Outputs: ``composite_O2`` and ``composite_O2_altmove`` (5.5 in wide, bold panel letters, key strip beneath),
+``legend_key``, the before / after / pair boards under ``pieces/`` (2.0 in boards), ``boards.json``. Colours and
+geometry come from ``paper_style`` and the qualitative Othello figure's ``draw_board``.
 
     .pim/bin/python paper/figs/environments_overview/othello/make_figure.py
 """
@@ -47,7 +50,7 @@ from matplotlib.patches import Circle, FancyArrowPatch, Rectangle  # noqa: E402
 
 from pim.environments.othello.bench import load_benchmark  # noqa: E402
 from pim.environments.othello.corpus import rules_of  # noqa: E402
-from pim.environments.othello.data import canonical_vocab, synthetic_games  # noqa: E402
+from pim.environments.othello.data import canonical_vocab  # noqa: E402
 from pim.environments.othello.vendor.othello import OthelloBoardState, permit_reverse  # noqa: E402
 
 
@@ -148,7 +151,7 @@ def legal_sequence(moves: list[int], rules: dict) -> bool:
 def shared_board(hist: list[list[int]], ms, insts: list[str]) -> dict:
     """The standard bench position reachable under every rule set in ``insts`` (adjacency legality read off
     ``insts[0]``), chosen as the module docstring says. Returns the case, move count, the standard moves, the
-    orders per instance, both legal sets, the chosen shared move and the survivors per move count scanned."""
+    orders per instance, both legal sets, the best shared move and the survivors per move count scanned."""
     scan = {}
     for m in ms:
         found = []
@@ -182,18 +185,6 @@ def shared_board(hist: list[list[int]], ms, insts: list[str]) -> dict:
     raise RuntimeError(f"no shared board for {insts} at moves {list(ms)}")
 
 
-def views(P: dict, Q: dict, R: dict | None = None) -> dict:
-    """What each board shows. P / Q: the position and the position after the chosen move; R: one move later."""
-    ghost = (Q["placed"], Q["board"][Q["placed"]])
-    V = {"legal": dict(X=P, dots=True),
-         "O1": dict(X=P, dots=True, ghost=ghost, placed=Q["placed"], flipped=Q["flipped"]),
-         "before": dict(X=P, dots=True, ghost=ghost, placed=Q["placed"]),
-         "after": dict(X=Q, placed=Q["placed"], flipped=Q["flipped"])}
-    if R is not None:
-        V.update({f"O3_{j + 1}": dict(X=Y, dots=True, placed=Y["placed"], flipped=Y["flipped"]) for j, Y in enumerate((P, Q, R))})
-    return V
-
-
 # ── drawing ──────────────────────────────────────────────────────────────────────────────
 def xy(sq: int) -> tuple[float, float]:
     r, c = divmod(int(sq), 8)
@@ -216,6 +207,13 @@ def board(ax, X: dict, *, probs=None, dots: bool = False, ghost=None, placed=Non
     rings = ([(placed, PLACED_C)] if placed is not None else []) + [(sq, FLIP_C) for sq in flipped]
     for sq, colour in rings:
         ax.add_patch(Circle(xy(sq), RING_R, facecolor="none", edgecolor=colour, linewidth=lw, zorder=6))
+
+
+def pair(P: dict, Q: dict) -> dict:
+    """The O2 boards: before = the position with legal dots and the move as a ghost disc; after = the position
+    after the move, the placed disc and the flipped discs ringed."""
+    return {"before": dict(X=P, dots=True, ghost=(Q["placed"], Q["board"][Q["placed"]]), placed=Q["placed"]),
+            "after": dict(X=Q, placed=Q["placed"], flipped=Q["flipped"])}
 
 
 def arrow(fig, p0, p1) -> None:
@@ -242,7 +240,7 @@ KEY_W, KEY_H = 3.4, 0.3          # the legend key strip, inches
 
 def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, labels: list[str] | None = None,
               key: bool = True) -> None:
-    """The four rule sets across (panel letters only), one row per key (a short label each if ``labels``),
+    """The four rule sets across (bold panel letters only), one row per key (a short label each if ``labels``),
     the legend key strip beneath if ``key``, at the text width."""
     W, cg, top = ps.TEXT_WIDTH_IN, 0.12, 0.2
     left = 0.62 if labels else 0.0
@@ -257,7 +255,7 @@ def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, lab
     rows_y = [H - top - (r + 1) * s - r * rg for r in range(n)]
     for c, (name, _) in enumerate(VARIANTS):
         x0 = left + c * (s + cg)
-        fig.text(x0 / W, 1 - 0.5 * top / H, f"({'abcd'[c]})", ha="left", va="center", fontsize=9)
+        fig.text(x0 / W, 1 - 0.5 * top / H, f"({'abcd'[c]})", ha="left", va="center", fontsize=9, fontweight="bold")
         for r, k in enumerate(keys):
             y0 = rows_y[r]
             board(fig.add_axes([x0 / W, y0 / H, s / W, s / H]), **all_views[name][k], lw=1.1, dot_r=0.1)
@@ -298,12 +296,11 @@ def legend_key(stem: Path) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--move", type=int, default=14, help="own games: the board after move K; the chosen move is move K+1")
-    ap.add_argument("--min-flips", type=int, default=1, help="own games: discs move K+1 must flip, where the rule set flips")
+    ap.add_argument("--move", type=int, default=14, help="own game (d): the board after move K; the move shown is K+1")
+    ap.add_argument("--min-flips", type=int, default=1, help="own game: discs move K+1 must flip, where the rule set flips")
     a = ap.parse_args()
     k, pieces = a.move, HERE / "pieces"
     pieces.mkdir(exist_ok=True)
-    rng = np.random.default_rng(a.seed)
     hist = {inst: histories(inst) for _, inst in VARIANTS}
     sq = lambda s: {"square": int(s), "name": permit_reverse(int(s))}          # noqa: E731
     names = lambda seq: [permit_reverse(int(s)) for s in seq]                 # noqa: E731
@@ -313,98 +310,72 @@ if __name__ == "__main__":
             row([v[key]], pieces / f"{name}_{key}{suffix}", arrows=False)
         row([v["before"], v["after"]], pieces / f"{name}_O2_pair{suffix}")
 
-    # own games (seeded pick): (d)'s boards, every variant's O3 frames and terminal board
-    own, record = {}, {}
-    for name, inst in VARIANTS:
-        i = pick(inst, hist[inst], k, rng, a.min_flips)
-        h = hist[inst][i]
-        P, Q, R = (position(inst, h[:t]) for t in (k, k + 1, k + 2))
-        own[name] = views(P, Q, R)
-        record[name] = {"instance": inst, "rules": rules_of(inst), "own_game": {
-            "bench_case_id": i, "board_after_move": k, "mover": P["mover"], "legal_moves": names(P["legal"]),
-            "chosen_move": {"number": k + 1, **sq(Q["placed"])}, "flipped_by_chosen_move": names(Q["flipped"]),
-            "frames": {f"O3_{j + 1}": {"after_move": Y["n"], "placed": permit_reverse(Y["placed"]), "flipped": names(Y["flipped"])}
-                       for j, Y in enumerate((P, Q, R))}}}
-        print(f"{name:<16} own game {inst:<18} case {i:4d}  move {k + 1} = {permit_reverse(Q['placed'])} by {P['mover']}, "
-              f"flips {names(Q['flipped'])}; frame flips {[len(Y['flipped']) for Y in (P, Q, R)]}")
-        for key in ("O3_1", "O3_2", "O3_3"):
-            row([own[name][key]], pieces / f"{name}_{key}", arrows=False)
-        row([own[name][f"O3_{j}"] for j in (1, 2, 3)], pieces / f"{name}_O3_seq", gap=0.35)
-        g = synthetic_games(1, seed=a.seed, n_workers=1, **rules_of(inst))[0]     # one whole game, the generator's own
-        row([dict(X=position(inst, g))], pieces / f"{name}_terminal", arrows=False)
-        record[name]["terminal"] = {"source": f"synthetic_games(1, seed={a.seed}, **rules_of(inst))[0]", "n_moves": len(g)}
-    o2_pieces(own["standard_noflip"], "standard_noflip")
-    for key in ("legal", "O1"):
-        row([own["standard_noflip"][key]], pieces / f"standard_noflip_{key}", arrows=False)
-
-    # the shared board for (a), (b), (c), with the shared chosen move and with per-rule-set chosen moves (_alt)
+    # the shared board and the panel moves
     S = shared_board(hist[STD], range(14, 3, -1), SHARED)
     seqs = {STD: S["moves"], **S["orders"]}
     L_std, L_adj = set(S["legal_std"]), set(S["legal_adj"])
     n_flips = lambda mv: len(position(STD, S["moves"] + [mv])["flipped"])       # noqa: E731
-    alt = {STD: max(L_std, key=lambda s: (n_flips(s), -s)),        # (a): the standard move flipping the most discs
-           "oth-adjacent-flip": S["chosen"],                        # (b): the adjacency move flipping the most (the shared one)
-           "oth-adjacent": min(L_adj - L_std)}                      # (c): a square legal only by adjacency
+    most = lambda L: max(L, key=lambda s: (n_flips(s), -s))                    # noqa: E731  the move flipping the most discs
+    far = lambda s, t: max(abs(s // 8 - t // 8), abs(s % 8 - t % 8))            # noqa: E731  squares apart (king moves)
+    mv_b = most(L_std & L_adj)      # (b): adjacency-only squares enclose nothing, so the most-flipping adjacency move is shared
+    COMPOSITES = {"composite_O2": {STD: most(L_std), "oth-adjacent-flip": mv_b, "oth-adjacent": mv_b},
+                  "composite_O2_altmove": {STD: most(L_std), "oth-adjacent-flip": mv_b,
+                                           "oth-adjacent": max(L_std & L_adj, key=lambda s: (far(s, mv_b), -s))}}
     P_std = position(STD, S["moves"])
-    V, V_alt = dict(own), dict(own)
-    for name, inst in VARIANTS[:3]:
-        P, Q, Qa = (position(inst, seqs[inst] + extra) for extra in ([], [S["chosen"]], [alt[inst]]))
+    V, panels = {c: {} for c in COMPOSITES}, {c: {} for c in COMPOSITES}
+    for (name, inst), letter in zip(VARIANTS[:3], "abc"):
+        P = position(inst, seqs[inst])
         assert (P["board"] == P_std["board"]).all() and P["mover"] == P_std["mover"], inst   # the evidence, re-checked
-        V[name], V_alt[name] = {**own[name], **views(P, Q)}, {**own[name], **views(P, Qa)}
-        for key in ("legal", "O1"):
-            row([V[name][key]], pieces / f"{name}_{key}", arrows=False)
-        o2_pieces(V[name], name)
-        o2_pieces(V_alt[name], name, "_alt")
-        record[name]["shared_board"] = {"sequence": names(seqs[inst]), "legal_moves": names(P["legal"]),
-                                        "chosen_move": sq(S["chosen"]), "flipped": names(Q["flipped"]),
-                                        "alt_chosen_move": sq(alt[inst]), "alt_flipped": names(Qa["flipped"])}
-        print(f"{name:<16} shared board: {len(P['legal'])} legal, move {permit_reverse(S['chosen'])} flips {names(Q['flipped'])}; "
-              f"alt {permit_reverse(alt[inst])} flips {names(Qa['flipped'])}")
-    record["shared_board"] = {
-        "bench_instance": STD, "bench_case_id": S["case"], "board_after_move": S["m"], "mover": P_std["mover"],
-        "board_white0_blank1_black2": [int(x) for x in P_std["board"]], "standard_moves": names(S["moves"]),
-        "placement_orders": {inst: names(o) for inst, o in S["orders"].items()},
-        "adjacent_flip_evidence": ("the standard sequence itself is adjacency-legal" if S["orders"]["oth-adjacent-flip"] == S["moves"]
-                                   else "a flip-free adjacency order"),
-        "legal_standard": names(S["legal_std"]), "legal_adjacency": names(S["legal_adj"]),
-        "shared_legal": names(sorted(L_std & L_adj)), "chosen_move": sq(S["chosen"]),
-        "alt_chosen_moves": {inst: sq(mv) for inst, mv in alt.items()},
-        "search": {"moves_scanned": "14 down to 4, stopping at the first move count with a survivor",
-                   "reachable_under_all_three_by_move": {str(m): ids for m, ids in S["survivors"].items()},
-                   "condition": "exact for adjacent-noflip; for adjacent-flip a sufficient condition (flip-free order or "
-                                "adjacency-legal standard prefix)"}}
-    print(f"shared board: case {S['case']} after move {S['m']}, {P_std['mover']} to move, survivors by move "
-          f"{ {m: len(v) for m, v in S['survivors'].items()} }")
+        for comp, mv in ((c, m[inst]) for c, m in COMPOSITES.items()):
+            Q = position(inst, seqs[inst] + [mv])
+            V[comp][name] = pair(P, Q)
+            panels[comp][letter] = {"variant": name, "instance": inst, "board": "shared", "sequence": names(seqs[inst]),
+                                    "legal_moves": names(P["legal"]), "move": sq(mv), "flipped": names(Q["flipped"])}
+            print(f"{comp:<20} ({letter}) {name:<16} {len(P['legal']):2d} legal, move {permit_reverse(mv)} flips {names(Q['flipped'])}")
+        o2_pieces(V["composite_O2"][name], name)
+        if COMPOSITES["composite_O2_altmove"][inst] != COMPOSITES["composite_O2"][inst]:
+            o2_pieces(V["composite_O2_altmove"][name], name, "_altmove")
 
-    # the fallback layout (a mid-game board shared by (a) and (b) only, (c) and (d) on their own games) is
-    # attempted at moves 14 down to 8; with this bench nothing is reachable under adjacent-flip there, and the
-    # negative result is recorded instead
-    try:
-        M = shared_board(hist[STD], range(14, 7, -1), ["oth-adjacent-flip"])
-    except RuntimeError as err:
-        M = None
-        record["midgame_board"] = {"result": str(err), "shared_by": ["standard", "adjacent_flip"],
-                                   "condition": "flip-free adjacency order or adjacency-legal standard prefix"}
-        print("mid-game fallback:", err)
-    if M is not None:
-        V_mid = dict(own)
-        for name, inst in VARIANTS[:2]:
-            seq = M["moves"] if inst == STD else M["orders"][inst]
-            P, Q = position(inst, seq), position(inst, seq + [M["chosen"]])
-            V_mid[name] = {**own[name], **views(P, Q)}
-            o2_pieces(V_mid[name], name, "_mid")
-        record["midgame_board"] = {"bench_instance": STD, "bench_case_id": M["case"], "board_after_move": M["m"],
-                                   "shared_by": ["standard", "adjacent_flip"], "standard_moves": names(M["moves"]),
-                                   "adjacent_flip_order": names(M["orders"]["oth-adjacent-flip"]), "chosen_move": sq(M["chosen"])}
-        composite(V_mid, ["before", "after"], HERE / "composite_O2_mid", arrows=True)
-        print(f"mid-game fallback: case {M['case']} after move {M['m']}, move {permit_reverse(M['chosen'])}")
+    # panel (d): standard-noflip on its own game (the seeded rule applied to every instance in order)
+    rng = np.random.default_rng(a.seed)
+    own = {inst: pick(inst, hist[inst], k, rng, a.min_flips) for _, inst in VARIANTS}
+    h = hist["oth-noflip"][own["oth-noflip"]]
+    Pd, Qd = position("oth-noflip", h[:k]), position("oth-noflip", h[:k + 1])
+    for comp in COMPOSITES:
+        V[comp]["standard_noflip"] = pair(Pd, Qd)
+        panels[comp]["d"] = {"variant": "standard_noflip", "instance": "oth-noflip", "board": "own game",
+                             "bench_case_id": own["oth-noflip"], "board_after_move": k, "mover": Pd["mover"],
+                             "legal_moves": names(Pd["legal"]), "move": {"number": k + 1, **sq(Qd["placed"])},
+                             "flipped": names(Qd["flipped"])}
+    o2_pieces(V["composite_O2"]["standard_noflip"], "standard_noflip")
+    print(f"(d) standard_noflip own game case {own['oth-noflip']}, move {k + 1} = {permit_reverse(Qd['placed'])} by {Pd['mover']}, "
+          f"{len(Pd['legal'])} legal; own-game picks in order {own}")
 
     legend_key(HERE / "legend_key")
-    composite(V, ["O1"], HERE / "composite_O1", arrows=False)
-    composite(V, ["before", "after"], HERE / "composite_O2", arrows=True)
-    composite(V_alt, ["before", "after"], HERE / "composite_O2_alt", arrows=True)
-    composite(own, ["O3_1", "O3_2", "O3_3"], HERE / "composite_O3", arrows=True)
-    json.dump({"seed": a.seed, "move": k, "min_flips": a.min_flips,
-               "markers": {"legal move": LEGAL_C, "chosen move / placed disc": PLACED_C, "flipped disc": FLIP_C},
-               **record}, open(HERE / "boards.json", "w"), indent=1)
+    for comp in COMPOSITES:
+        composite(V[comp], ["before", "after"], HERE / comp, arrows=True)
+    json.dump({
+        "seed": a.seed, "move": k, "min_flips": a.min_flips,
+        "markers": {"legal move": LEGAL_C, "chosen move / placed disc": PLACED_C, "flipped disc": FLIP_C},
+        "shared_board": {
+            "bench_instance": STD, "bench_case_id": S["case"], "board_after_move": S["m"], "mover": P_std["mover"],
+            "board_white0_blank1_black2": [int(x) for x in P_std["board"]], "standard_moves": names(S["moves"]),
+            "placement_orders": {inst: names(o) for inst, o in S["orders"].items()},
+            "adjacent_flip_evidence": ("the standard sequence itself is adjacency-legal"
+                                       if S["orders"]["oth-adjacent-flip"] == S["moves"] else "a flip-free adjacency order"),
+            "legal_standard": names(S["legal_std"]), "legal_adjacency": names(S["legal_adj"]),
+            "legal_under_all_three": names(sorted(L_std & L_adj)),
+            "search": {"moves_scanned": "14 down to 4, stopping at the first move count with a survivor",
+                       "reachable_under_all_three_by_move": {str(m): ids for m, ids in S["survivors"].items()},
+                       "condition": "exact for adjacent-noflip; for adjacent-flip a sufficient condition (flip-free "
+                                    "order or adjacency-legal standard prefix)"}},
+        "panel_moves": {"a": "the enclosure-legal move flipping the most discs", "b": "the adjacency-legal move flipping "
+                        "the most discs", "c": {"composite_O2": "the same move as (b)", "composite_O2_altmove": "the move "
+                        "legal under all three rule sets farthest from (b)'s"}, "d": "the own game's real move K+1"},
+        "panels": panels,
+        "own_game_rule": {"rule": "first case in a seeded permutation of the instance's 1000 bench cases whose moves "
+                                  "K+1 and K+2 are regular (no pass) and, where the rule set flips, whose move K+1 flips "
+                                  "at least min_flips discs; applied to every instance in VARIANTS order, only "
+                                  "standard-noflip is drawn", "picks": own}},
+        open(HERE / "boards.json", "w"), indent=1)
     print("->", HERE / "boards.json")

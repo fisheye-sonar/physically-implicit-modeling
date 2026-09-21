@@ -33,6 +33,8 @@ GAP_IN, PI_GAP_IN, TOP_IN, PAD_IN, KEY_IN = 0.05, 0.10, 0.18, 0.03, 0.17      # 
 S_MIN = 5                                    # the zoom is 5 x 5 (T3; the eligibility cap) even when a case needs less
 LEFT_IN = C.GUTTER_IN
 OPTIONS = {"T1": dict(zoom=False, tint="all"), "T2": dict(zoom=False, tint="symdiff"), "T3": dict(zoom=True, tint="all")}
+DISPLAY = {"Unedited": "Unedited Pred"}                                        # condition key -> label
+WRAPPED = {"Unedited": "Unedited\nPred", "Ground truth": "Ground\ntruth"}      # row labels in the narrow gutter
 
 
 def variants(cut):
@@ -50,7 +52,7 @@ def axes_of(names, conds, transpose):
     return columns, rows, gaps(columns, transpose), gaps(rows, not transpose)
 
 
-def size_in(names, conds, board_in, *, transpose=False, key=True, top_in=TOP_IN):
+def size_in(names, conds, board_in, *, transpose=False, key=False, top_in=TOP_IN):
     columns, rows, gx, gy = axes_of(names, conds, transpose)
     return (LEFT_IN + len(columns) * board_in + sum(gx) + PAD_IN,
             top_in + len(rows) * board_in + sum(gy) + PAD_IN + (KEY_IN if key else 0.0))
@@ -85,9 +87,10 @@ def board(ax, col, i, cond, *, tint="all", marks=True, lw=oth.MARK_LW, window=No
 
 
 def panel(F, cols, picks, names, conds, *, zoom=False, tint="all", titles=True, letter=None, transpose=False,
-          lw=oth.MARK_LW, key=True, letter_size=10, top_in=TOP_IN):
+          lw=oth.MARK_LW, key=False, letter_size=10, top_in=TOP_IN):
     """Draw into Figure / SubFigure ``F`` (sized by ``size_in`` with the same arguments). Default: variants
-    across, conditions down; ``transpose``: variants down, conditions across."""
+    across, conditions down; ``transpose``: variants down, conditions across. ``key``: the marks key in the
+    bottom-right corner (the composites draw it at the top right of the figure instead)."""
     W, H = F.bbox.width / F.dpi, F.bbox.height / F.dpi
     columns, rows, gx, gy = axes_of(names, conds, transpose)
     b = (W - LEFT_IN - PAD_IN - sum(gx)) / len(columns)                      # board side, inches
@@ -101,14 +104,14 @@ def panel(F, cols, picks, names, conds, *, zoom=False, tint="all", titles=True, 
             ax = F.add_axes([x0[c] / W, y0[r] / H, b / W, b / H])
             board(ax, cols[name], picks[name], cond, tint=tint, lw=lw, window=win.get(name))
             if r == 0 and titles:
-                ax.set_title(wrap(cname) if b < 0.9 else cname, pad=3, fontsize=9, color=ps.TEXT, linespacing=0.95,
-                             fontweight="bold" if cname == "Ground truth" else "normal")
+                ax.set_title(wrap(cname) if b < 0.9 else DISPLAY.get(cname, cname), pad=3, fontsize=9, color=ps.TEXT,
+                             linespacing=0.95, fontweight="bold" if cname == "Ground truth" else "normal")
             if c == 0:
-                ax.annotate({"Ground truth": "Ground\ntruth"}.get(rname, wrap(rname)), xy=(0, 0.5), xycoords="axes fraction",
+                ax.annotate(WRAPPED.get(rname, wrap(rname)), xy=(0, 0.5), xycoords="axes fraction",
                             xytext=(-4, 0), textcoords="offset points", ha="right", va="center", fontsize=8, color=ps.TEXT,
                             linespacing=0.95, fontweight="bold" if rname == "Ground truth" else "normal")
     if key:
-        oth.mark_key(F, lw=lw, fontsize=7.5, loc="lower right", bbox_to_anchor=(1 - PAD_IN / W, 0.0), ncol=2)
+        oth.mark_key(F, fontsize=7.5, markersize=4.5, loc="lower right", bbox_to_anchor=(1 - PAD_IN / W, 0.0), ncol=2)
     if letter:
         F.text(0.02 / W, 1 - 0.02 / H, letter, ha="left", va="top", fontsize=letter_size, fontweight="bold", color=ps.TEXT)
     return win
@@ -138,7 +141,7 @@ def pieces(cols, picks, names, conds, out_dir, *, zoom, tint, lw=oth.MARK_LW, bo
             ps.save(fig, out_dir / f"{name.replace(' ', '')}_case{picks[name]}_thumbnail")
             plt.close(fig)
     fig = plt.figure(figsize=(1.2, 0.5))
-    oth.mark_key(fig, lw=lw, fontsize=8, loc="center", ncol=1)
+    oth.mark_key(fig, fontsize=8, markersize=5, loc="center", ncol=1)
     ps.save(fig, out_dir / "key_marks")
     plt.close(fig)
     fig = plt.figure(figsize=(1.4, 0.3))
@@ -196,9 +199,9 @@ if __name__ == "__main__":
         # 2row: the same two variants down, conditions across (full width; its boards are 2col's pieces)
         for cut, width, transpose in (("4col", ps.TEXT_WIDTH_IN, False), ("2col", ps.HALF_WIDTH_IN, False), ("2row", ps.TEXT_WIDTH_IN, True)):
             names = [n for n, _ in variants(cut)]
-            size = size_in(names, conds, board_for_width(width, names, conds, transpose=transpose), transpose=transpose)
+            size = size_in(names, conds, board_for_width(width, names, conds, transpose=transpose), transpose=transpose, key=True)
             fig = plt.figure(figsize=size)
-            panel(fig, cols, picks, names, conds, transpose=transpose, **OPTIONS[opt])
+            panel(fig, cols, picks, names, conds, transpose=transpose, key=True, **OPTIONS[opt])
             ps.save(fig, C.HERE / f"othello_{opt}_{cut}{tag}")
             plt.close(fig)
             if not a.no_pieces and not transpose:

@@ -269,8 +269,9 @@ def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0, 
 
 
 def _blank(ax):
-    """An empty cell — the block carries no arm for this editor (the table's blank): thin frame, nothing drawn."""
-    _frame(ax)
+    """An empty cell — the block carries no arm for this editor (the table's blank): the spot is left fully empty
+    (no panel, no frame; Sevan, round 3), the axes only holds the place so the row label and gaps stay put."""
+    ax.set_axis_off()
 
 
 def _frame(ax):

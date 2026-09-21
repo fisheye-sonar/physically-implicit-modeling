@@ -31,12 +31,14 @@ import common as C
 from common import plt, ps, rw
 
 CTX, STRIP, DIFF, GAP, BIG = 0.42, 1.0, 0.7, 0.3, 0.75        # row heights, in strip units
-RIGHT_IN, BOT_IN = 0.5, 0.03                                  # gutters, inches
+GAP_U, BIG_F = 0.65, 0.9        # the final cut: room for the two-line "Unedited / Pred" and "Ground / truth" labels
+RIGHT_IN, RIGHT_F, BOT_IN = 0.5, 0.72, 0.03                   # gutters, inches; RIGHT_F leaves room for the marks key
 UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A1": 0.155, "A2": 0.155}   # inches per strip unit
 FINAL = ("A1", "A2")
 SOURCE = {"A1": "appendix", "A2": "128ray"}
 GROUP = {"cont": "Standard (continuous)", "cat": "Standard (categorical)"}
-LABELS = {"context": "Context", "unedited": "Unedited", "gt": "Ground truth"}
+LABELS = {"context": "Context", "unedited": "Unedited Pred", "gt": "Ground truth"}
+WRAPPED = {"unedited": "Unedited\nPred", "gt": "Ground\ntruth"}      # the final cut's narrow gutter
 
 
 def edit(blk, ed, label=None):
@@ -55,6 +57,10 @@ ROWS["A2"] = ROWS["A1"]
 
 def left_in(option):
     return C.GUTTER_IN if option in FINAL else 0.8
+
+
+def right_in(option):
+    return RIGHT_F if option in FINAL else RIGHT_IN
 
 
 def top_in(option, narrow=False):
@@ -92,7 +98,7 @@ def columns(option):
                 + [("5-ray\nscenario 1", "5-ray", C.HERO_SEEDS[0], "appendix", None)])
     if option in FINAL:
         src = SOURCE[option]
-        return [(f"Scenario {k + 1}", "Standard", s, src, blk) for blk in ("cont", "cat") for k, s in enumerate(final_seeds(src))]
+        return [(f"Example {k + 1}", "Standard", s, src, blk) for blk in ("cont", "cat") for k, s in enumerate(final_seeds(src))]
     raise ValueError(option)
 
 
@@ -114,7 +120,8 @@ def geometry(option):
             lay += [("pred", r, STRIP), ("diff", r, DIFF)]
         else:
             lay.append((kind, r, STRIP))
-        lay.append(("gap", None, BIG if kind == "gt" else GAP))
+        final = option in FINAL
+        lay.append(("gap", None, (BIG_F if final else BIG) if kind == "gt" else (GAP_U if final and kind == "unedited" else GAP)))
     lay.pop()
     return cols, data, lay
 
@@ -162,9 +169,7 @@ def cell(ax, kind, spec, col, blk_col=None, diff_scale=1.0):
 
 
 def row_label(ax, kind, spec, wrap=False):
-    text = spec[3] if kind == "pred" else LABELS[kind]
-    if wrap and kind == "gt":
-        text = "Ground\ntruth"
+    text = spec[3] if kind == "pred" else (WRAPPED.get(kind, LABELS[kind]) if wrap else LABELS[kind])
     y = 0.5 if kind != "pred" else (1 - DIFF / STRIP) / 2            # centred on prediction + error pair
     ax.annotate(text, xy=(0, y), xycoords="axes fraction", xytext=(-4, 0), textcoords="offset points",
                 ha="right", va="center", fontsize=8, color=ps.TEXT, linespacing=0.95,
@@ -177,7 +182,7 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
     W, H = F.bbox.width / F.dpi, F.bbox.height / F.dpi
     final = option in FINAL
     gs = GridSpec(len(lay), len(cols), figure=F, height_ratios=[h for *_, h in lay], left=left_in(option) / W,
-                  right=1 - RIGHT_IN / W, top=1 - top_in(option, narrow) / H, bottom=BOT_IN / H,
+                  right=1 - right_in(option) / W, top=1 - top_in(option, narrow) / H, bottom=BOT_IN / H,
                   wspace=0.13 if narrow else 0.06, hspace=0.0)
     for c, (title, v, s, src, blk) in enumerate(cols):
         col = data[(src, v, s)]
