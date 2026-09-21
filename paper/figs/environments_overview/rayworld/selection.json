@@ -222,14 +222,29 @@
   "max_hidden_frames": 3,
   "draw": "numpy default_rng(SEED).choice over the survivors, in the order standard, blink, 16-ray, 8-ray, 5-ray"
  },
- "composites": {
-  "composite_v2_rows": "(a) frustum + waterfall on top; (b) | (c) | (d) below; 5.5 x 3.0 in",
-  "composite_v2_split": "(a) frustum + waterfall and (b) on top; (c) | (d) below; 5.5 x 3.0 in (recommended)",
-  "composite_v1(_dark)": "round-1 attempt, Times New Roman, kept for reference, not regenerated"
+ "outputs": {
+  "composite": "composite.pdf/.png at the top level: (a) frustum with the t* strip + waterfall and (b) blink across the top, (c) 16/8/5-ray matched strips and (d) the cells below; 5.5 in wide (round 3 of the split layout)",
+  "pieces": [
+   "blink_waterfall",
+   "categorical_frustum_8ray",
+   "categorical_frustum_8ray_crop",
+   "key_frustum",
+   "nray_frustum_8ray",
+   "nray_frustum_8ray_strip",
+   "nray_waterfall_16ray_matched",
+   "nray_waterfall_5ray_matched",
+   "nray_waterfall_8ray_matched",
+   "standard_frame_tstar",
+   "standard_frustum_light",
+   "standard_frustum_light_every3",
+   "standard_frustum_light_every3_strip",
+   "standard_frustum_light_strip",
+   "standard_waterfall"
+  ],
+  "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays partition, composite_v1(_dark), composite_v2_rows: regenerate with --all (git history keeps the committed ones)"
  },
  "recommended": {
   "rays_drawn_every": 3,
-  "composite": "composite_v2_split",
   "nray_strips": "matched",
   "frustum_page": "light"
  }
