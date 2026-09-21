@@ -1,0 +1,471 @@
+{
+ "rule": "typical",
+ "seed": 0,
+ "rank": 2,
+ "eligibility": "at least 3 squares change legality; window (flipped tile + changed squares + 1 margin) fits 5 x 5",
+ "tint": "yellow = predicted next-move probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (draw_board defaults)",
+ "marks": "outlined squares = the flipped tile + every square whose legality the flip switches (legal_pre XOR legal_post, the squares the symmetric-difference Edit Index scores): cyan on the pre-edit (Unedited) board, pink on every post-edit board; nothing else is outlined",
+ "cases": {
+  "Standard": {
+   "run": "initial_othello_comparison/L-oth-20m",
+   "instance": "oth-uniform",
+   "case": 342,
+   "moves_played": 20,
+   "edited_tile": 50,
+   "edited_tile_rc": [
+    6,
+    2
+   ],
+   "changed_squares": [
+    49,
+    57,
+    58
+   ],
+   "marked_squares": [
+    49,
+    50,
+    57,
+    58
+   ],
+   "legal_pre": [
+    3,
+    4,
+    9,
+    10,
+    12,
+    13,
+    14,
+    16,
+    20,
+    22,
+    30,
+    44,
+    45
+   ],
+   "legal_post": [
+    3,
+    4,
+    9,
+    10,
+    12,
+    13,
+    14,
+    16,
+    20,
+    22,
+    30,
+    44,
+    45,
+    49,
+    57,
+    58
+   ],
+   "window_rc": [
+    5,
+    7,
+    0,
+    3
+   ],
+   "window_side": 4,
+   "n_eligible": 65,
+   "per_case_edit_index_symdiff": {
+    "Unedited": -0.9996878488123314,
+    "PI": 0.828769716344915,
+    "GS": 0.8279858186925947,
+    "IM": 0.8070986781128631,
+    "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": 0.818,
+    "GS": 0.828,
+    "IM": 0.806
+   },
+   "arms_drawn": {
+    "PI": {
+     "point": 4,
+     "alpha": 3.0
+    },
+    "GS": {
+     "point": 4,
+     "alpha": 0.2
+    },
+    "IM": {
+     "point": 5,
+     "alpha": 1.0
+    }
+   },
+   "table2": {
+    "unedited": -0.933,
+    "PI": {
+     "point": 4,
+     "alpha": 3.0,
+     "edit_index": 0.818,
+     "fidelity_ratio": 0.299,
+     "within_guard": true
+    },
+    "GS": {
+     "point": 4,
+     "alpha": 0.2,
+     "edit_index": 0.828,
+     "fidelity_ratio": 0.284,
+     "within_guard": true
+    },
+    "IM": {
+     "point": 5,
+     "alpha": 1.0,
+     "edit_index": 0.806,
+     "fidelity_ratio": 0.379,
+     "within_guard": true
+    }
+   }
+  },
+  "Adjacent Flip": {
+   "run": "adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+   "instance": "oth-adjacent-flip",
+   "case": 261,
+   "moves_played": 20,
+   "edited_tile": 41,
+   "edited_tile_rc": [
+    5,
+    1
+   ],
+   "changed_squares": [
+    32,
+    33,
+    40,
+    48,
+    49,
+    50
+   ],
+   "marked_squares": [
+    32,
+    33,
+    40,
+    41,
+    48,
+    49,
+    50
+   ],
+   "legal_pre": [
+    3,
+    4,
+    5,
+    6,
+    10,
+    11,
+    14,
+    15,
+    18,
+    20,
+    23,
+    29,
+    30,
+    31,
+    38,
+    46,
+    52,
+    54,
+    55,
+    61
+   ],
+   "legal_post": [
+    3,
+    4,
+    5,
+    6,
+    10,
+    11,
+    14,
+    15,
+    18,
+    20,
+    23,
+    29,
+    30,
+    31,
+    32,
+    33,
+    38,
+    40,
+    46,
+    48,
+    49,
+    50,
+    52,
+    54,
+    55,
+    61
+   ],
+   "window_rc": [
+    3,
+    7,
+    0,
+    3
+   ],
+   "window_side": 5,
+   "n_eligible": 396,
+   "per_case_edit_index_symdiff": {
+    "Unedited": -0.9996684198321116,
+    "PI": 0.3621774173253329,
+    "GS": -0.06977584271608311,
+    "IM": 0.8713860630793075,
+    "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": 0.348,
+    "GS": -0.058,
+    "IM": 0.664
+   },
+   "arms_drawn": {
+    "PI": {
+     "point": 2,
+     "alpha": 5.0
+    },
+    "GS": {
+     "point": 0,
+     "alpha": 0.2
+    },
+    "IM": {
+     "point": 5,
+     "alpha": 1.0
+    }
+   },
+   "table2": {
+    "unedited": -0.964,
+    "PI": {
+     "point": 2,
+     "alpha": 5.0,
+     "edit_index": 0.348,
+     "fidelity_ratio": 0.835,
+     "within_guard": true
+    },
+    "GS": {
+     "point": 0,
+     "alpha": 0.2,
+     "edit_index": -0.058,
+     "fidelity_ratio": 0.787,
+     "within_guard": true
+    },
+    "IM": {
+     "point": 5,
+     "alpha": 1.0,
+     "edit_index": 0.664,
+     "fidelity_ratio": 0.514,
+     "within_guard": true
+    }
+   }
+  },
+  "Adjacent NoFlip": {
+   "run": "adjacency_ablation/L-oth-adjacent-20m",
+   "instance": "oth-adjacent",
+   "case": 39,
+   "moves_played": 20,
+   "edited_tile": 37,
+   "edited_tile_rc": [
+    4,
+    5
+   ],
+   "changed_squares": [
+    38,
+    45,
+    46
+   ],
+   "marked_squares": [
+    37,
+    38,
+    45,
+    46
+   ],
+   "legal_pre": [
+    4,
+    5,
+    6,
+    14,
+    16,
+    18,
+    19,
+    22,
+    29,
+    34,
+    41,
+    48,
+    56,
+    57,
+    58
+   ],
+   "legal_post": [
+    4,
+    5,
+    6,
+    14,
+    16,
+    18,
+    19,
+    22,
+    29,
+    34,
+    38,
+    41,
+    45,
+    46,
+    48,
+    56,
+    57,
+    58
+   ],
+   "window_rc": [
+    3,
+    6,
+    4,
+    7
+   ],
+   "window_side": 4,
+   "n_eligible": 379,
+   "per_case_edit_index_symdiff": {
+    "Unedited": -0.9999110533530087,
+    "PI": -0.00488679592222706,
+    "GS": -0.5395130657806524,
+    "IM": -0.07743741553173282,
+    "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": -0.228,
+    "GS": -0.157,
+    "IM": -0.025
+   },
+   "arms_drawn": {
+    "PI": {
+     "point": 1,
+     "alpha": 10.0
+    },
+    "GS": {
+     "point": 2,
+     "alpha": 1.5
+    },
+    "IM": {
+     "point": 1,
+     "alpha": 1.0
+    }
+   },
+   "table2": {
+    "unedited": -0.96,
+    "PI": {
+     "point": 1,
+     "alpha": 10.0,
+     "edit_index": -0.228,
+     "fidelity_ratio": 0.813,
+     "within_guard": true
+    },
+    "GS": {
+     "point": 2,
+     "alpha": 1.5,
+     "edit_index": -0.157,
+     "fidelity_ratio": 6.68,
+     "within_guard": false
+    },
+    "IM": {
+     "point": 1,
+     "alpha": 1.0,
+     "edit_index": -0.025,
+     "fidelity_ratio": 0.742,
+     "within_guard": true
+    }
+   }
+  },
+  "Standard NoFlip": {
+   "run": "flip_ablation/L-oth-noflip-20m",
+   "instance": "oth-noflip",
+   "case": 389,
+   "moves_played": 20,
+   "edited_tile": 26,
+   "edited_tile_rc": [
+    3,
+    2
+   ],
+   "changed_squares": [
+    25,
+    33,
+    34
+   ],
+   "marked_squares": [
+    25,
+    26,
+    33,
+    34
+   ],
+   "legal_pre": [
+    3,
+    8,
+    12,
+    39
+   ],
+   "legal_post": [
+    3,
+    8,
+    12,
+    25,
+    33,
+    34,
+    39
+   ],
+   "window_rc": [
+    2,
+    5,
+    0,
+    3
+   ],
+   "window_side": 4,
+   "n_eligible": 67,
+   "per_case_edit_index_symdiff": {
+    "Unedited": -0.9999322048660926,
+    "PI": -0.9999411849762007,
+    "GS": -0.35832806379748317,
+    "IM": -0.9900305764270513,
+    "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": -0.951,
+    "GS": -0.522,
+    "IM": -0.553
+   },
+   "arms_drawn": {
+    "PI": {
+     "point": 6,
+     "alpha": 0.25
+    },
+    "GS": {
+     "point": 0,
+     "alpha": 1.5
+    },
+    "IM": {
+     "point": 7,
+     "alpha": 1.0
+    }
+   },
+   "table2": {
+    "unedited": -0.976,
+    "PI": {
+     "point": 6,
+     "alpha": 0.25,
+     "edit_index": -0.951,
+     "fidelity_ratio": 0.998,
+     "within_guard": true
+    },
+    "GS": {
+     "point": 0,
+     "alpha": 1.5,
+     "edit_index": -0.522,
+     "fidelity_ratio": 4.779,
+     "within_guard": false
+    },
+    "IM": {
+     "point": 7,
+     "alpha": 1.0,
+     "edit_index": -0.553,
+     "fidelity_ratio": 2.576,
+     "within_guard": false
+    }
+   }
+  }
+ }
+}

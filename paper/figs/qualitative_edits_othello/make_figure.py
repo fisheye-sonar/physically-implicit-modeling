@@ -6,7 +6,8 @@ variants do not share a scenario (their rules differ). Per board: Unedited (the 
 model's move distribution), Ground truth (the post-edit board, uniform over its legal moves — the
 reference the Edit Index scores against), then PI / GS / IM (the post-edit board, the distribution
 after each write at the run's scored best arm, symmetric-difference construction). Squares are tinted
-by probability mass; the edited tile is outlined.
+by probability mass; the flipped tile and the squares whose legality it switches are outlined — cyan on
+the pre-edit board, pink on the post-edit boards (``mark``, shared with the main-text figure).
 
 Everything canonical comes from ``pim``: the bench and its legal sets (``load_benchmark``), boards
 replayed by ``tokens_and_labels`` under the instance's rules, probes from the run's cache, the
@@ -24,19 +25,17 @@ import pickle
 import sys
 from pathlib import Path
 
-import matplotlib
 import numpy as np
 import torch
 
-matplotlib.use("Agg")
-matplotlib.rcParams.update({"font.family": "serif",
-                            "font.serif": ["Times New Roman", "Liberation Serif", "Nimbus Roman"],
-                            "mathtext.fontset": "stix",      # Times-like maths, should any appear
-                            "pdf.fonttype": 42, "ps.fonttype": 42})   # embed as TrueType, editable in the PDF
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))          # paper/figs
+import paper_style as ps  # noqa: E402
+
+ps.apply()                                  # one look for every paper figure (Arial, TrueType, white page)
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import to_rgb  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
-from matplotlib.patches import Circle, Rectangle  # noqa: E402
+from matplotlib.patches import Circle, Patch, Rectangle  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
@@ -121,9 +120,39 @@ def compute(run: str) -> dict:
 
 
 # ── drawing ──────────────────────────────────────────────────────────────────────────
-GREEN, LINE, TINT, EDIT_C = "#33a852", "#1e1e1e", "#ffe600", "#ff4fa3"
+GREEN, LINE, TINT, EDIT_C = ps.BOARD_GREEN, ps.BOARD_LINE, ps.BOARD_TINT, ps.BOARD_EDIT
 DISC_R = 0.38
 TINT_SCALE = 0.02     # the probability at which a square is fully tinted (Sevan: 10x louder than 0.2)
+
+# ── the marking (Sevan, 2026-09-21) — one helper for the appendix and the main-text figure ──────────
+# On the PRE-edit board (Unedited) the flipped tile and every square whose legality the flip switches
+# (legal_pre XOR legal_post — exactly the squares the symmetric-difference Edit Index scores) are outlined
+# in cyan (``ps.ORIGIN_C``); on every POST-edit board the same squares in pink (``ps.DEST_C``). Nothing
+# else is outlined; the yellow tint stays.
+MARK_LW = 1.6
+
+
+def marked_squares(pos: int, legal_pre, legal_post) -> list[int]:
+    """The flipped tile plus the symmetric difference of the two legal sets."""
+    return sorted({int(pos)} | (set(map(int, legal_pre)) ^ set(map(int, legal_post))))
+
+
+def mark_color(cond: str) -> str:
+    return ps.ORIGIN_C if cond == "Unedited" else ps.DEST_C
+
+
+def mark(ax, squares, color: str, lw: float = MARK_LW) -> None:
+    for sq in squares:
+        r, c = divmod(int(sq), 8)
+        ax.add_patch(Rectangle((c, 7 - r), 1, 1, facecolor="none", edgecolor=color, linewidth=lw, zorder=5))
+
+
+def mark_key(owner, *, lw: float = MARK_LW, fontsize: float = 8, **kw):
+    """The key, once per figure: a cyan swatch "pre-edit", a pink swatch "post-edit". ``owner`` is a Figure,
+    SubFigure or Axes; ``kw`` goes to its ``legend`` (loc, bbox_to_anchor, ncol)."""
+    handles = [Patch(facecolor="none", edgecolor=ps.ORIGIN_C, lw=lw), Patch(facecolor="none", edgecolor=ps.DEST_C, lw=lw)]
+    return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=1.0,
+                        handleheight=1.0, handletextpad=0.5, columnspacing=1.0, borderaxespad=0.0, **kw)
 
 
 def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.6,
@@ -176,7 +205,10 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
                 ax = fig.add_subplot(gs[r_, c_])
                 board = col["board_pre"] if cond == "Unedited" else col["board_post"]
                 draw_board(ax, board[i], col["probs"][cond][i], col["pos"][i], gamma=gamma, tint_scale=tint_scale,
-                           locator=locator)
+                           locator=False)
+                if locator:
+                    mark(ax, marked_squares(col["pos"][i], col["legal_pre"][i], col["legal_post"][i]), mark_color(cond),
+                         lw=MARK_LW * 1.6)                        # the appendix page is drawn large and scaled down
                 axes[(r_, c_)] = ax
     shown = lambda t: {"Unedited": "Unedited Pred"}.get(t, t)   # noqa: E731
     for c_, text in col_titles:
@@ -192,8 +224,10 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
         y = (ax.get_position().y0 + ax.get_position().y1) / 2
         fig.text(ax.get_position().x0 - 0.008, y, shown(text), ha="right", va="center", fontsize=label_size, color="black",
                  fontweight="bold" if text == "Ground truth" else "normal")
-    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
-    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")
+    if locator:                                   # the key, in the free corner above the row labels
+        mark_key(fig, lw=MARK_LW * 1.6, fontsize=label_size - 1, loc="upper left", bbox_to_anchor=(0.005, 0.995))
+    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", pad_inches=0, facecolor="white")
+    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", pad_inches=0, facecolor="white")
     plt.close(fig)
 
 
@@ -207,7 +241,7 @@ if __name__ == "__main__":
     ap.add_argument("--max-moves", type=int, default=45)
     ap.add_argument("--gamma", type=float, default=0.6, help="tint = (p / tint-scale) ** gamma, capped at 1")
     ap.add_argument("--tint-scale", type=float, default=TINT_SCALE, help="probability at which a square is fully tinted")
-    ap.add_argument("--no-locator", action="store_true", help="drop the outline on the edited tile")
+    ap.add_argument("--no-locator", action="store_true", help="drop the cyan / pink marks (flipped tile + changed squares)")
     ap.add_argument("--recompute", action="store_true", help="ignore the cached writes")
     ap.add_argument("--out-dir", default=None, help="write the outputs here instead of beside this script")
     a = ap.parse_args()

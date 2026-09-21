@@ -19,6 +19,20 @@ down (n games per variant side by side). Every write is computed once for all 10
 cached in `.scratch/othello_edits_cache.pkl`, so a new seed, layout or game count is a redraw
 (`--recompute` refreshes it). The sidecar JSON records the cases, move numbers and arms used.
 
+## 2026-09-21: Arial and the marking
+
+- Fonts and page come from `paper/figs/paper_style.py` (`ps.apply()`: Arial, TrueType embedding, white page,
+  no outer padding on save) instead of the script's own Times New Roman block; board colours are `ps.BOARD_*`.
+- **Marking (Sevan's semantics, shared with the main-text figure through `marked_squares` / `mark_color` /
+  `mark` / `mark_key`).** On the pre-edit board (Unedited) the flipped tile AND every square whose legality the
+  flip switches (`legal_pre` XOR `legal_post`, exactly the squares the symmetric-difference Edit Index scores) are
+  outlined in cyan (`ps.ORIGIN_C`); on every post-edit board (Ground truth, PI, GS, IM) the same squares in pink
+  (`ps.DEST_C`). Nothing else is outlined; the yellow tint is unchanged. A two-swatch key ("pre-edit" / "post-edit")
+  sits once per figure in the free corner above the row labels. The old lone pink outline of the edited tile is gone
+  (`draw_board(..., locator=False)`); `--no-locator` now drops the marks.
+- The writes are the 2026-09-19 guarded cache, unchanged (`.scratch/othello_edits_guarded_cache.pkl`); the
+  2026-09-21 outputs (seed 0 and `more_seeds/`) are redraws.
+
 ## Which arm is drawn (2026-09-19)
 
 Each editor is drawn at the arm the TABLES report — `pim.metrics.selection.best_arm`: the best Edit Index among the

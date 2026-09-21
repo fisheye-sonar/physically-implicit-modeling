@@ -11,10 +11,13 @@
  "columns": [
   {
    "title": "Scenario 1",
+   "group": null,
    "variant": "Standard",
    "instance": "dw-noiseless",
    "run": "noise_ablation/L-dw-noiseless-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 107.5,
    "destination_x": 28.5,
@@ -43,10 +46,7 @@
       "point": 0,
       "alpha": 0.35
      },
-     "IM": {
-      "point": 6,
-      "alpha": 1.0
-     }
+     "IM": null
     }
    },
    "table2": {
@@ -98,10 +98,13 @@
   },
   {
    "title": "Scenario 2",
+   "group": null,
    "variant": "Standard",
    "instance": "dw-noiseless",
    "run": "noise_ablation/L-dw-noiseless-20m",
    "seed": 1,
+   "source_cache": "qualitative_edits_catim_seed1_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 31.5,
    "destination_x": 81.5,
@@ -130,10 +133,7 @@
       "point": 0,
       "alpha": 0.35
      },
-     "IM": {
-      "point": 6,
-      "alpha": 1.0
-     }
+     "IM": null
     }
    },
    "table2": {
@@ -185,10 +185,13 @@
   },
   {
    "title": "Scenario 3",
+   "group": null,
    "variant": "Standard",
    "instance": "dw-noiseless",
    "run": "noise_ablation/L-dw-noiseless-20m",
    "seed": 2,
+   "source_cache": "qualitative_edits_catim_seed2_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 109.5,
    "destination_x": 61.5,
@@ -217,10 +220,7 @@
       "point": 0,
       "alpha": 0.35
      },
-     "IM": {
-      "point": 6,
-      "alpha": 1.0
-     }
+     "IM": null
     }
    },
    "table2": {
@@ -271,6 +271,7 @@
    }
   }
  ],
- "selection": "Scenarios are the appendix caches (seed = generator seed of the teleport case, radius-1.0 geometry, rendered under each variant); R1 / R2 use seed 0 like the appendix figure; R3 / R4 use the first three cached seeds whose edited disc is visible before the edit on the Standard variant (finite origin locator): 0, 1, 2. Arms are the tables' guarded best arms (pim.metrics.selection.best_arm).",
+ "blank_cells": [],
+ "selection": "Scenarios are the appendix caches (seed = generator seed of the teleport case, radius-1.0 geometry, rendered under each variant); R1 / R2 use seed 0 like the appendix figure; R3 / R4 the first three cached seeds whose edited disc is visible before the edit on Standard (0, 1, 2); A1 / A2 the first two cached seeds whose edited disc is visible before the edit AND whose teleport changes a categorical tile, on the drawn model. Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.",
  "error_strip": "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale \u00b11"
 }

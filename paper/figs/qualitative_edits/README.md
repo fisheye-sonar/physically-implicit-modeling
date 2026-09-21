@@ -38,6 +38,26 @@ single-frame rows mark the edited disc's origin (its unedited rays at the edit f
 (its target rays); `--no-locators` drops them. Predictions are cached in `.scratch/` per seed so `--redraw`
 re-renders without reloading the five models. Nothing on the figure names the environment.
 
+## 2026-09-21: Arial, the categorical inverse map, blank cells
+
+- Fonts and page come from `paper/figs/paper_style.py` (`ps.apply()`: Arial, TrueType embedding, white page,
+  no outer padding on save) instead of the script's own Times New Roman block.
+- **The categorical rows' IM is the categorical inverse map** (deployed 2026-09-20,
+  `experiments/categorical_inverse/README.md`): on the `appearance-fac` block the write is g(one-hot of the
+  block's own post-edit labels, the discs' Cartesian velocity) at the block's guarded arm, obtained exactly as
+  `pim/scoring/discworld.py::inverse_discworld` obtains it (`arms.iter_inverse_maps(..., target=target,
+  **probe_recipe(target))`, the forward probe's 200k / 50-epoch recipe, `pim.probes.inverse.encode_categorical_state`
+  for the state). The map is read from the run's `probes/` cache only (`_cache_hits_only`: a miss raises instead of
+  starting a 30-minute fit). Until this date the row showed the continuous full-state map on the categorical bench,
+  which is no longer a scored arm anywhere.
+- **Blank cells.** A block with no arm for an editor (`best_arm` None) is drawn as an empty framed cell: today the
+  categorical IM on Standard (dw-noiseless) and Blink (dw-blink), whose table cells are blank; the ray family
+  (16 / 8 / 5-ray) carries the categorical arm (points 6 / 6 / 5). No text is put in the cell.
+- Caches are `.scratch/qualitative_edits_catim_seed<k>_ctx8.pkl` (seeds 0..5, 2026-09-21); the `_guarded` caches
+  hold the old categorical IM frames and are not read any more. `build(seed, context, variants=None)` accepts
+  another variant list (the main-text figure uses it for the 128-ray Standard); the scenario is always generated
+  under the appendix's base geometry, so an extra variant sees the same world as the appendix columns.
+
 ## Which arm is drawn (2026-09-19)
 
 Each editor is drawn at the arm the TABLES report — `pim.metrics.selection.best_arm`: the best Edit Index among the

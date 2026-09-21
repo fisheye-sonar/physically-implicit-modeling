@@ -11,8 +11,10 @@ appearance, frustum) targets. The write targets the PRE-dynamics state, as in th
 
 Everything canonical comes from ``pim``: the scenario from the edit-set generator, the bench
 from ``bench.bench_from_arrays`` (the scorer's own construction), probes / inverse maps from
-each run's cache, the writes from ``arms`` (first step of the scored rollout). Output:
-``qualitative_edits_seed<seed>.{pdf,png}`` beside this script.
+each run's cache (never fitted here), the writes from ``arms`` (first step of the scored rollout).
+On a categorical block the IM write goes through the block's OWN inverse map (one-hot labels +
+Cartesian velocity, 2026-09-20); a block with no IM arm (Standard, Blink) draws a blank cell.
+Output: ``qualitative_edits_seed<seed>.{pdf,png}`` beside this script.
 
     python paper/figs/qualitative_edits/make_figure.py --seed 7
     python paper/figs/qualitative_edits/make_figure.py --seed 7 --find   # advance the seed until the
@@ -21,21 +23,20 @@ each run's cache, the writes from ``arms`` (first step of the scored rollout). O
 from __future__ import annotations
 
 import argparse
+import contextlib
 import dataclasses
 import json
 import sys
 from pathlib import Path
 
 import h5py
-import matplotlib
 import numpy as np
 import torch
 
-matplotlib.use("Agg")
-matplotlib.rcParams.update({"font.family": "serif",
-                            "font.serif": ["Times New Roman", "Liberation Serif", "Nimbus Roman"],
-                            "mathtext.fontset": "stix",      # Times-like maths, should any appear
-                            "pdf.fonttype": 42, "ps.fonttype": 42})   # embed as TrueType, editable in the PDF
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))          # paper/figs
+import paper_style as ps  # noqa: E402
+
+ps.apply()                                  # one look for every paper figure (Arial, TrueType, white page)
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
 
@@ -53,6 +54,7 @@ from pim.environments.discworld.renderer import render_scene  # noqa: E402
 from pim.environments.discworld.sim import Scene  # noqa: E402
 from pim.metrics.selection import best_arm as _select_arm  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
+from pim.probes.inverse import encode_categorical_state  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 # ── the columns: (display name, instance, run) — edit this list to change the figure ──
@@ -106,17 +108,33 @@ def bench_for(model, sc: dict, obs, clean, vis, sim: dict, target: str, basis: s
     return dwb.bench_of(model, a), a
 
 
-def best_arm(scores: dict, block: str, editor: str) -> dict:
+def best_arm(scores: dict, block: str, editor: str) -> dict | None:
     """The arm the TABLES report for this editor (``pim.metrics.selection.best_arm``: the best Edit Index
     inside the fidelity guard, the unguarded best only if there is none) — so the figure draws the write
-    whose numbers the paper quotes. Until 2026-09-19 this read the scorer's unguarded ``best``."""
+    whose numbers the paper quotes. Until 2026-09-19 this read the scorer's unguarded ``best``. ``None``
+    where the block carries no arm for the editor at all (since 2026-09-20 the categorical IM on every
+    instance outside the ray family): the table cell is blank, and so is the figure's."""
     B = scores["bases"][block]
-    return _select_arm(B["arms"], editor, "edit_index") or B["best"][editor]
+    return _select_arm(B["arms"], editor, "edit_index") or B["best"].get(editor)
+
+
+@contextlib.contextmanager
+def _cache_hits_only():
+    """The categorical inverse map is a ~30 min streamed fit over 200k sequences; this figure may only USE
+    the map the scorer cached in the run's ``probes/``. A cache miss fails loudly instead of fitting."""
+    def refuse(*a, **k):
+        raise RuntimeError("categorical inverse map not in the run's probe cache — this figure never fits one")
+    saved, dwa.collect_residuals = dwa.collect_residuals, refuse
+    try:
+        yield
+    finally:
+        dwa.collect_residuals = saved
 
 
 @torch.no_grad()
 def predictions(model, run_dir: Path, inst: str, sc: dict, obs, clean, vis, sim: dict, block: tuple) -> dict:
-    """Next-step frames for unedited / PI / GS / IM at the run's scored best arms on one block."""
+    """Next-step frames for unedited / PI / GS / IM at the run's scored best arms on one block. An editor
+    with no arm in the block (``best_arm`` None) gets ``None`` — drawn as a blank cell."""
     target, basis = block
     scores = json.loads((run_dir / "scores.json").read_text())
     b, a = bench_for(model, sc, obs, clean, vis, sim, target, basis)
@@ -136,25 +154,45 @@ def predictions(model, run_dir: Path, inst: str, sc: dict, obs, clean, vis, sim:
     gs = arm["GS"]
     out["GS"] = dwa.grad_steer_rollout(model, b, mlp, gs["point"], gs["alpha"], dims=gs.get("dims", "all"))[0, 0]
     im = arm["IM"]
-    _, s_post = full_state_pair(b.pos, b.vel, b.edit_object, b.sim, basis)
-    # the inverse map is fitted on the FULL state under the full/30k recipe in every block (the
-    # scorer's inverse_discworld); only its basis follows the block — the cache key depends on it
-    gen = dwa.iter_inverse_maps(model, basis_name=basis, points=[im["point"]], cache_dir=cache, log=None,
-                                **dwa.probe_recipe("full", inst, n_seq=30_000))
-    _, g, _, _ = next(gen)
-    gen.close()                                   # frees the retrieval bank on the GPU
-    dwa.as_activations(model, im["point"])
-    out["IM"] = model.decode_with_edit(b.state, im["point"], inverse_overwrite(g, torch.from_numpy(s_post).to(DEV)))[0].cpu().numpy()
-    out["arms"] = {ed: (arm[ed]["point"], arm[ed]["alpha"]) for ed in EDITORS}
+    if im is None:
+        out["IM"] = None                          # no IM arm in this block: the cell is blank, like the table's
+    else:
+        # The write ``arms.inverse_arms`` makes at the arm's point, h' = g(s_post), with the map the block's own
+        # probes read (2026-09-20). REGRESSION block: g is the continuous full-state map of the block's basis
+        # (the scorer's full/30k recipe). CATEGORICAL block: g is the categorical map — the target's own labels
+        # one-hot (``Bench.tgt``) plus the discs' Cartesian velocity, the forward probe's recipe
+        # (``probe_recipe(target)`` = ``GRID_PROBE_RECIPE``) — exactly as ``inverse_discworld`` calls it.
+        cat = target != "full"
+        _, s_post = full_state_pair(b.pos, b.vel, b.edit_object, b.sim, "cartesian" if cat else basis)
+        s_post = torch.from_numpy(s_post).to(DEV)
+        if cat:
+            with _cache_hits_only():
+                gen = dwa.iter_inverse_maps(model, basis_name=basis, target=target, points=[im["point"]],
+                                            cache_dir=cache, log=None, **recipe)
+                _, g, _, st = next(gen)
+            gen.close()
+            s_post = encode_categorical_state(b.tgt, s_post[:, 2 * N_OBJ:], st["n_classes"])
+        else:
+            gen = dwa.iter_inverse_maps(model, basis_name=basis, points=[im["point"]], cache_dir=cache, log=None,
+                                        **dwa.probe_recipe("full", inst, n_seq=30_000))
+            _, g, _, _ = next(gen)
+            gen.close()                           # frees the retrieval bank on the GPU
+        dwa.as_activations(model, im["point"])
+        out["IM"] = model.decode_with_edit(b.state, im["point"], inverse_overwrite(g, s_post))[0].cpu().numpy()
+    out["arms"] = {ed: None if arm[ed] is None else (arm[ed]["point"], arm[ed]["alpha"]) for ed in EDITORS}
     return out
 
 
-def build(seed: int, context: int) -> dict:
-    cfgs = {inst: sim_config(inst) for _, inst, _ in VARIANTS}
-    base = max(cfgs.values(), key=lambda c: c.radius)      # the tightest geometry hosts the scenario
+def build(seed: int, context: int, variants=None) -> dict:
+    """Predictions for every (name, instance, run) in ``variants`` (default ``VARIANTS``). The scenario is
+    always generated under the appendix's base geometry (the tightest among ``VARIANTS``), so an extra
+    variant — the main text's 128-ray Standard — sees the same world as the appendix columns of that seed."""
+    variants = list(VARIANTS if variants is None else variants)
+    cfgs = {inst: sim_config(inst) for _, inst, _ in VARIANTS + variants}
+    base = max((cfgs[inst] for _, inst, _ in VARIANTS), key=lambda c: c.radius)   # the tightest geometry hosts the scenario
     sc = scenario(seed, base)
     cols = {}
-    for name, inst, run in VARIANTS:
+    for name, inst, run in variants:
         run_dir = REPO / "runs" / run
         model, _ = load_checkpoint(run_dir / "best_model.pt", device=DEV)
         model.eval()
@@ -184,8 +222,8 @@ CTX_ROW = 0.55       # height of one waterfall (context) frame, in the same unit
 COL_W = 3.3          # inches per column
 PAIR_DIFF = 0.75     # the error strip under a prediction in the "paired" variant
 GAP, BIGGAP = 0.22, 0.8
-TEXT = "black"
-FRAME = "#6f6f6f"    # thin panel border
+TEXT = ps.TEXT
+FRAME = ps.FRAME     # thin panel border
 
 
 OVERLAY_ALPHA = 0.85     # a fully wrong ray keeps a trace of its own grey under the tint
@@ -227,12 +265,21 @@ def _panel(ax, img: np.ndarray, *, diff: bool = False, diff_scale: float = 1.0, 
     else:
         ax.imshow(img, cmap="gray", vmin=0.0, vmax=1.0, aspect="auto", interpolation="nearest")
     ax.set_facecolor(DARK_BG)
+    _frame(ax)
+
+
+def _blank(ax):
+    """An empty cell — the block carries no arm for this editor (the table's blank): thin frame, nothing drawn."""
+    _frame(ax)
+
+
+def _frame(ax):
     ax.set_xticks([]); ax.set_yticks([])
     for sp in ax.spines.values():
         sp.set_linewidth(0.5); sp.set_edgecolor(FRAME)
 
 
-ORIGIN_C, DEST_C = "#00bcd4", "#ff4fa3"     # cyan = where the edited disc came from, pink = where it was moved to
+ORIGIN_C, DEST_C = ps.ORIGIN_C, ps.DEST_C   # cyan = where the edited disc came from, pink = where it was moved to
 
 
 def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_scale: float = 1.0,
@@ -263,6 +310,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             if kind == "gap":
                 continue
             ax = fig.add_subplot(gs[r, c])
+            blank = False
             if kind == "waterfall":
                 _panel(ax, col["context"])
                 ax.set_title(name, fontsize=title_size, pad=8, color=TEXT)
@@ -272,7 +320,10 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
                 _panel(ax, col["gt"])                             # the reference every row below is judged against
             else:
                 blk, ed, *sub = kind.split(":")
-                if sub:                                           # the paired variant's error strip
+                blank = col[blk][ed] is None                      # no arm in this block (the table's blank cell)
+                if blank:
+                    _blank(ax)
+                elif sub:                                         # the paired variant's error strip
                     _panel(ax, error(col[blk][ed], col["gt"], raw_error), diff=True, diff_scale=diff_scale)
                 elif mode == "diff":
                     _panel(ax, error(col[blk][ed], col["gt"], raw_error), diff=True, diff_scale=diff_scale)
@@ -281,7 +332,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
                                            gamma=tint_gamma, raw=raw_error), rgb=True)
                 else:
                     _panel(ax, col[blk][ed])
-            if locators and kind != "waterfall":
+            if locators and kind != "waterfall" and not blank:
                 for key, colr in (("ghost_x", ORIGIN_C), ("target_x", DEST_C)):
                     x = col["cont"].get(key, float("nan"))
                     if np.isfinite(x):
@@ -320,8 +371,8 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         cb.set_ticks([-diff_scale, 0, diff_scale]); cb.ax.tick_params(labelsize=12, colors=TEXT, length=2)
         cb.outline.set_edgecolor(FRAME); cb.outline.set_linewidth(0.5)
         cb.set_label("red = under-prediction, green = over", fontsize=14, color=TEXT, rotation=90, labelpad=6)
-    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", facecolor="white")
-    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", facecolor="white")
+    fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", pad_inches=0, facecolor="white")
+    fig.savefig(out.with_suffix(".png"), dpi=170, bbox_inches="tight", pad_inches=0, facecolor="white")
     plt.close(fig)
 
 
@@ -345,7 +396,8 @@ if __name__ == "__main__":
     seed = a.seed
     for attempt in range(a.max_tries if a.find else 1):
         print(f"seed {seed}", flush=True)
-        cache = REPO / ".scratch" / f"qualitative_edits_guarded_seed{seed}_ctx{a.context}.pkl"   # per seed (--find advances it)
+        # per seed (--find advances it); `_catim` (2026-09-21): the categorical blocks' IM through the categorical map
+        cache = REPO / ".scratch" / f"qualitative_edits_catim_seed{seed}_ctx{a.context}.pkl"
         if a.redraw and cache.exists():
             data = pickle.load(open(cache, "rb"))
         else:

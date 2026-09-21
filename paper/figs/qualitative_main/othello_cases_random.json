@@ -1,9 +1,10 @@
 {
  "rule": "random",
  "seed": 0,
- "eligibility": "at least 3 squares change legality; window (edited tile + changed squares + 1 margin) fits 5 x 5",
+ "rank": 1,
+ "eligibility": "at least 3 squares change legality; window (flipped tile + changed squares + 1 margin) fits 5 x 5",
  "tint": "yellow = predicted next-move probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (draw_board defaults)",
- "outline": "thin dark outline = squares whose legality the flip changes (legal_pre XOR legal_post), the symdiff support of the Edit Index",
+ "marks": "outlined squares = the flipped tile + every square whose legality the flip switches (legal_pre XOR legal_post, the squares the symmetric-difference Edit Index scores): cyan on the pre-edit (Unedited) board, pink on every post-edit board; nothing else is outlined",
  "cases": {
   "Standard": {
    "run": "initial_othello_comparison/L-oth-20m",
@@ -18,6 +19,12 @@
    "changed_squares": [
     2,
     3,
+    11
+   ],
+   "marked_squares": [
+    2,
+    3,
+    10,
     11
    ],
    "legal_pre": [
@@ -58,12 +65,18 @@
     4
    ],
    "window_side": 4,
+   "n_eligible": 65,
    "per_case_edit_index_symdiff": {
     "Unedited": -0.7757161468161861,
     "PI": 0.9997256005824343,
     "GS": 0.9998300262898743,
     "IM": 0.9975843262461562,
     "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": 0.818,
+    "GS": 0.828,
+    "IM": 0.806
    },
    "arms_drawn": {
     "PI": {
@@ -119,6 +132,12 @@
     59,
     61
    ],
+   "marked_squares": [
+    52,
+    59,
+    60,
+    61
+   ],
    "legal_pre": [
     3,
     5,
@@ -171,12 +190,18 @@
     6
    ],
    "window_side": 5,
+   "n_eligible": 396,
    "per_case_edit_index_symdiff": {
     "Unedited": -0.9997854678515254,
     "PI": 0.2152357119684586,
     "GS": -0.748156567069543,
     "IM": 0.06618101696027472,
     "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": 0.348,
+    "GS": -0.058,
+    "IM": 0.664
    },
    "arms_drawn": {
     "PI": {
@@ -228,6 +253,12 @@
     4
    ],
    "changed_squares": [
+    59,
+    60,
+    61
+   ],
+   "marked_squares": [
+    52,
     59,
     60,
     61
@@ -290,12 +321,18 @@
     6
    ],
    "window_side": 5,
+   "n_eligible": 379,
    "per_case_edit_index_symdiff": {
     "Unedited": -0.9996834547622107,
     "PI": -0.9984021787524308,
     "GS": -0.6935621748923274,
     "IM": 0.8754631068314006,
     "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": -0.228,
+    "GS": -0.157,
+    "IM": -0.025
    },
    "arms_drawn": {
     "PI": {
@@ -351,6 +388,12 @@
     34,
     41
    ],
+   "marked_squares": [
+    33,
+    34,
+    41,
+    42
+   ],
    "legal_pre": [
     12,
     19,
@@ -379,12 +422,18 @@
     3
    ],
    "window_side": 4,
+   "n_eligible": 67,
    "per_case_edit_index_symdiff": {
     "Unedited": -0.9982844164152712,
     "PI": -0.9984501180440658,
     "GS": 0.019400693474685666,
     "IM": -0.9997952823135762,
     "Ground truth": 1.0
+   },
+   "population_mean_edit_index_symdiff": {
+    "PI": -0.951,
+    "GS": -0.522,
+    "IM": -0.553
    },
    "arms_drawn": {
     "PI": {

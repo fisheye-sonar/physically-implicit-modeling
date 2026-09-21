@@ -11,10 +11,13 @@
  "columns": [
   {
    "title": "Standard",
+   "group": null,
    "variant": "Standard",
    "instance": "dw-noiseless",
    "run": "noise_ablation/L-dw-noiseless-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 107.5,
    "destination_x": 28.5,
@@ -43,10 +46,7 @@
       "point": 0,
       "alpha": 0.35
      },
-     "IM": {
-      "point": 6,
-      "alpha": 1.0
-     }
+     "IM": null
     }
    },
    "table2": {
@@ -98,10 +98,13 @@
   },
   {
    "title": "Blink",
+   "group": null,
    "variant": "Blink",
    "instance": "dw-blink",
    "run": "blink_ablation/L-dw-blink-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 107.5,
    "destination_x": 28.5,
@@ -130,10 +133,7 @@
       "point": 0,
       "alpha": 0.7
      },
-     "IM": {
-      "point": 7,
-      "alpha": 1.0
-     }
+     "IM": null
     }
    },
    "table2": {
@@ -185,10 +185,13 @@
   },
   {
    "title": "16-ray",
+   "group": null,
    "variant": "16-ray",
    "instance": "dw-16ray",
    "run": "ray_ablation/L-dw-16ray-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 13.5,
    "destination_x": 2.0,
@@ -278,10 +281,13 @@
   },
   {
    "title": "8-ray",
+   "group": null,
    "variant": "8-ray",
    "instance": "dw-8ray",
    "run": "ray_ablation/L-dw-8ray-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 6.5,
    "destination_x": 1.0,
@@ -311,7 +317,7 @@
       "alpha": 0.35
      },
      "IM": {
-      "point": 0,
+      "point": 6,
       "alpha": 1.0
      }
     }
@@ -371,10 +377,13 @@
   },
   {
    "title": "5-ray",
+   "group": null,
    "variant": "5-ray",
    "instance": "dw-5ray",
    "run": "ray_ablation/L-dw-5ray-20m",
    "seed": 0,
+   "source_cache": "qualitative_edits_catim_seed0_ctx8.pkl",
+   "block": null,
    "edit_object": 0,
    "origin_x": 4.0,
    "destination_x": 0.0,
@@ -404,7 +413,7 @@
       "alpha": 0.35
      },
      "IM": {
-      "point": 0,
+      "point": 5,
       "alpha": 1.0
      }
     }
@@ -463,6 +472,7 @@
    }
   }
  ],
- "selection": "Scenarios are the appendix caches (seed = generator seed of the teleport case, radius-1.0 geometry, rendered under each variant); R1 / R2 use seed 0 like the appendix figure; R3 / R4 use the first three cached seeds whose edited disc is visible before the edit on the Standard variant (finite origin locator): 0, 1, 2. Arms are the tables' guarded best arms (pim.metrics.selection.best_arm).",
+ "blank_cells": [],
+ "selection": "Scenarios are the appendix caches (seed = generator seed of the teleport case, radius-1.0 geometry, rendered under each variant); R1 / R2 use seed 0 like the appendix figure; R3 / R4 the first three cached seeds whose edited disc is visible before the edit on Standard (0, 1, 2); A1 / A2 the first two cached seeds whose edited disc is visible before the edit AND whose teleport changes a categorical tile, on the drawn model. Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.",
  "error_strip": "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale \u00b11"
 }

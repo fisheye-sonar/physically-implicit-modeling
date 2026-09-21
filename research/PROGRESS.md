@@ -67,7 +67,18 @@ all three rule sets EXISTS only early-game — standard bench case 182 after mov
 `f3 d3 f2 d2 e3 c3`, flip-free, asserted equal to the standard board; nothing after moves 7–14 survives in 1000 games, exact
 DFS for adjacent-noflip, flip-free sufficient condition for adjacent-flip); `composite_O2` = shared board (a)–(c), one move
 c4 legal under all three (flips d4 in a, b; nothing in c), (d) own checkerboard game; `composite_O2_alt` = per-rule moves
-(d1 flipping three in a row in a). Search ~45 lines, orders in `boards.json`.
+(d1 flipping three in a row in a). Search ~45 lines, orders in `boards.json`. **Qualitative round 2 DONE 15:25 — ROUND 2 COMPLETE.**
+`composite_final_A2` recommended (5.5 × 4.78 in): (a) the 128-ray ray-family model (`ray_ablation/L-dw-128ray-20m`) × 2 scenarios
+× continuous + categorical columns — every one of the 12 edit cells a scored arm (cartesian PI −0.02 / GS −0.10 / IM +0.57;
+appearance-fac PI −0.31 / GS +0.31 / categorical IM +0.64); `_A1` = dw-noiseless with the two categorical IM cells blank (no arm).
+(b) 5×5 zoom, Standard (case 342) / Adjacent NoFlip (case 39), `typical` rank 2, Unedited / GT / PI / GS / IM, CYAN outlines
+(flipped tile + legality-switching squares) in Unedited, PINK on the same squares elsewhere, key "pre-edit / post-edit";
+boards +6 % (a five-column row at 5.5 in cannot give +10 %). `composite_final_sidebyside_A1/_A2` (5.5 × 3.26 in; Othello variants
+as columns incl. Adjacent Flip case 261, no GS, rims 1 pt; the Rayworld strips there are 0.44 in wide — readable, not pretty).
+APPENDIX figures regenerated in Arial with the CURRENT arms: `qualitative_edits/` categorical IM through the canonical
+categorical map (cache hits only; 16 / 8 / 5-ray at pt 6 / 6 / 5), BLANK cells on Standard and Blink (no arm since 2026-09-20),
+new caches `.scratch/qualitative_edits_catim_*`; `qualitative_edits_othello/` with the cyan / pink marking (shared helper).
+All five folders committed; GPU freed.
 **Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
 Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
 captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.

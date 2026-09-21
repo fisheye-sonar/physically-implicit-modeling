@@ -1,5 +1,6 @@
-"""The composed main-text figure: (a) a Rayworld option above (b) an Othello option, panel letters only.
-Also a side-by-side arrangement. Both panels are drawn by the panel scripts into SubFigures.
+"""Round 1's composites: (a) a Rayworld option above (b) an Othello option, panel letters only; also a
+side-by-side arrangement. Both panels are drawn by the panel scripts into SubFigures. Superseded by
+``composite_final.py`` (round 2); kept so the round-1 options regenerate under the current scripts.
 
     .pim/bin/python paper/figs/qualitative_main/composite.py [--rayworld R3] [--othello T3] [--cut 4col] [--rule random]
 """
@@ -15,9 +16,9 @@ from common import oth, plt, ps
 
 def stacked(cols, picks, r_opt, t_opt, names, conds, out, *, transpose=False, board=None):
     """(a) above (b) at full width. ``transpose``: (b) with the variants down and the conditions across."""
-    n_cols, n_rows = (len(conds), len(names)) if transpose else (len(names), len(conds))
     ha = R.height_in(r_opt, R.UNIT[r_opt])
-    wb, hb = T.size_in(n_cols, n_rows, board or T.board_for_width(ps.TEXT_WIDTH_IN, n_cols))
+    wb, hb = T.size_in(names, conds, board or T.board_for_width(ps.TEXT_WIDTH_IN, names, conds, transpose=transpose),
+                       transpose=transpose)
     gap = 0.12
     fig = plt.figure(figsize=(ps.TEXT_WIDTH_IN, ha + hb + gap))
     sa, sb = fig.subfigures(2, 1, height_ratios=[ha, hb], hspace=gap / (ha + hb))
@@ -32,8 +33,8 @@ def side_by_side(cols, picks, r_opt, t_opt, conds, out, *, unit=0.2):
     """(a) left, (b) the two-column cut right, both the same height."""
     names = list(T.TWO)
     h = R.height_in(r_opt, unit)
-    b = (h - T.TOP_IN - T.PAD_IN - (len(conds) - 1) * T.GAP_IN) / len(conds)
-    wb = T.size_in(len(names), len(conds), b)[0]
+    b = (h - T.TOP_IN - T.PAD_IN - T.KEY_IN - sum(T.gaps(conds, True))) / len(conds)
+    wb = T.size_in(names, conds, b)[0]
     wa = ps.TEXT_WIDTH_IN - wb
     fig = plt.figure(figsize=(ps.TEXT_WIDTH_IN, h))
     sa, sb = fig.subfigures(1, 2, width_ratios=[wa, wb], wspace=0.0)
