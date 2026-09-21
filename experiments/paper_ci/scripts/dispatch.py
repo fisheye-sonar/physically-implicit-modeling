@@ -175,6 +175,22 @@ def pull_outputs(host: str, job: dict) -> bool:
         else:
             hits = [rel]
         for r in hits:
+            if r == "runs/MOVES.md":
+                # append-only ledger: MERGE the remote's lines in, never overwrite. A plain rsync
+                # replaced the lab's copy with the remote's OLDER checkout twice (2026-09-21, the
+                # two noiseless / adjflip parking lines vanished until restored from git).
+                cp = host_cmd(host, f"cat {shlex.quote(r)}", 60)
+                if cp.returncode != 0:
+                    log(f"pull {r} <- {host} failed: {cp.stderr[-300:]}"); ok = False
+                    continue
+                local = ROOT / r
+                have = set(local.read_text().splitlines()) if local.exists() else set()
+                extra = [l for l in cp.stdout.splitlines() if l.startswith("- ") and l not in have]
+                if extra:
+                    with local.open("a") as fh:
+                        fh.write("\n".join(extra) + "\n")
+                    log(f"pull {r} <- {host}: merged {len(extra)} new line(s)")
+                continue
             isdir = host_cmd(host, f"test -d {shlex.quote(r)} && echo d || echo f", 60).stdout.strip() == "d"
             src = f"{H['ssh']}:{H['repo']}/{r}" + ("/" if isdir else "")
             dst = str(ROOT / r) + ("/" if isdir else "")
