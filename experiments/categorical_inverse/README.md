@@ -109,7 +109,12 @@ first pass per host. ⛔ Merge in the LIVE tree only: this clone's `runs/` is a 
 `sweeps_and_blates` changes the tracked `runs/MOVES.md`, so a merge / rebase / pull of that branch INSIDE this clone would
 write through the symlink into the live working tree (git refuses; do not force it). Cleanliness is checked without a
 working tree: `git merge-tree --write-tree origin/sweeps_and_blates categorical_inverse` → rc 0, no file changed on both
-sides (2026-09-20 20:15).
+sides (2026-09-20 20:15). ⚠ That check sees COMMITS only: the live tree carries an UNCOMMITTED source edit to
+`notebooks/master_eval.ipynb` cell [2] (the `dw_bases` default `frustum` → `frustum,cartesian`, another session on Sevan's
+word, 2026-09-19 night) — and this branch inserts cell [2b] right after cell [2]. Before the merge: commit that edit on
+`sweeps_and_blates` (never while a `master_eval` execution runs), cherry-pick THAT commit onto this branch in the clone (it
+touches no `runs/` path, so the symlink hazard does not apply), resolve the adjacent-hunk conflict here (keep both: the new
+cell [2] and cell [2b]), re-run the merge-tree check, then merge in the live tree.
 
 1. Merge `categorical_inverse` into `sweeps_and_blates` on the lab while no `master_eval` execution is running
    (GOTCHAS 2026-09-19); `git pull` on the 4090 during one of its training stages. No driver changes.
