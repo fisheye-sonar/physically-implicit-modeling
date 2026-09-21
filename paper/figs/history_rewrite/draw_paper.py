@@ -1,28 +1,29 @@
-"""The paper figure for history rewriting (appendix): three edits, four columns (2026-09-21, round 2).
+"""The paper figure for history rewriting (appendix): three edits, four columns (2026-09-21, round 3).
 
 Reads ``.scratch/history_rewrite_arrays.npz``, written by ``make_figure.py`` beside this script, and
-touches no model and computes no metric. Each panel is one 128-ray waterfall, time downward. In the main
-figure EVERY column shows the same ground-truth pre-edit history above the edit-frame line (the last
-``N_CTX`` original observed frames, ``obs_hist``; asserted identical across the columns of a row); below the
-line each column shows its own free-run:
+touches no model and computes no metric. Each panel is one 128-ray waterfall, time downward: the same
+ground-truth pre-edit history in EVERY column above the edit-frame line (the last ``N_CTX`` original
+observed frames, ``obs_hist``, asserted identical across the columns of a row), each column's own free-run
+below it:
 
     Ground truth       the clean edited-world rollout (gt_roll)
     Unedited           the model's free-run, no edit
     Single-point edit  the IM write at the edit frame (one point, one step), then free-run
     History rewrite    free-run from the REWRITTEN history plus the same write at the edit frame (hist+IM);
-                       ``_histonly``: from the rewritten history with NO write at the edit frame (hist)
+                       ``history_rewrite_histonly``: from the rewritten history with NO write (hist)
 
-The rewritten frames themselves are the appendix piece ``history_frames_<rows>``: the original observed
-frames | the rewritten frames | the simulator's clean render of the counterfactual history, all 20 history
-frames, no edit-frame line (the edit frame is the frame after the last row).
+Rows: three cases drawn at random among the edits large enough to see. Eligible = a teleport displacement
+|target_x - ghost_x| of at least ``MIN_DISP`` rays (the origin / destination ray centres the scorer's zones
+give; a case whose origin is not visible at the edit frame is ineligible); then
+``numpy.random.default_rng(SEED).choice`` of three among the eligible (ascending case index), sorted.
+``history_frames`` shows the same cases' 20 history frames as original | rewritten | the simulator's clean
+counterfactual render (no edit-frame line: the edit frame is the frame after the last row). The rule, the
+threshold, the eligible count and the cases land in ``history_rewrite_paper.json``.
 
-Rows: ``top3`` = the three cases with the largest teleport displacement |target_x - ghost_x| in rays (the
-origin / destination ray centres the scorer's zones give); ``random3`` = three cases drawn with
-``numpy.random.default_rng(0)``. Case indices, arms and the rule land in ``history_rewrite_paper.json``.
-
-Outputs beside this script: ``history_rewrite_<rows>[_k10][_histonly].{pdf,png}``,
-``history_frames_<rows>.{pdf,png}``, ``prediction_quality.{pdf,png}`` (stretch: the clean UNEDITED world
-against the model's free-run, no edit), and every panel plus both legend keys as their own PDF under ``pieces/``.
+Outputs beside this script: ``history_rewrite.{pdf,png}``, ``history_rewrite_histonly.{pdf,png}``,
+``history_frames.{pdf,png}``, the sidecar, and one PDF per column per drawn case plus the two keys under
+``pieces/``. The Rayworld predictive-quality figure that used to be drawn here is
+``paper/figs/predictive_quality/rayworld.py`` (same npz; it imports this module's panel code).
 
     .pim/bin/python paper/figs/history_rewrite/draw_paper.py
 """
@@ -49,6 +50,7 @@ from pim.figures.waterfall import DARK_BG, EDIT_LINE  # noqa: E402
 ARRAYS = REPO / ".scratch" / "history_rewrite_arrays.npz"
 PIECES = HERE / "pieces"
 N_CTX = 8                                     # history frames above the edit-frame line
+MIN_DISP, SEED = 20.0, 0                      # eligible edits move the disc by at least this many rays; the draw's seed
 # (column label, drawn above the line, drawn below it; None = history alone, no line)
 COLUMNS = [("Ground truth", "obs_hist", "gt_roll"),
            ("Unedited", "obs_hist", "roll_unsteered"),
@@ -57,7 +59,6 @@ COLUMNS = [("Ground truth", "obs_hist", "gt_roll"),
 HIST_ONLY = COLUMNS[:3] + [("History rewrite", "obs_hist", "roll_hist")]
 FRAMES = [("Original frames", "obs_hist", None), ("Rewritten frames", "obs_cf", None),
           ("Counterfactual render", "cf_clean", None)]
-QUALITY = [("Ground truth", "obs_hist", "gt_unedited_roll"), ("Prediction", "obs_hist", "roll_unsteered")]
 PIECE_KEY = {"gt_roll": "gt", "roll_unsteered": "unedited", "roll_IM": "im", "roll_hist+IM": "hist_im",
              "roll_hist": "hist", "obs_hist": "frames_original", "obs_cf": "frames_rewritten",
              "cf_clean": "frames_cfrender"}
@@ -163,8 +164,8 @@ def figure(d, cases, columns, *, n_ctx: int, K: int, width: float, locators: boo
 
 
 def pieces(d, cases, K: int) -> list[str]:
-    """Every panel as its own PDF: the four columns and the hist-alone fourth column (history + K steps), the
-    three history_frames panels (20 frames), and both legend keys."""
+    """One PDF per column per drawn case: the four main columns and the hist-alone fourth column (history +
+    K steps), the three history_frames columns (20 frames), plus both legend keys."""
     EF = d["obs_hist"].shape[1]
     PIECES.mkdir(exist_ok=True)
     specs = [(N_CTX, K, len(COLUMNS), col) for col in COLUMNS + [HIST_ONLY[-1]]] + [(EF, 0, len(FRAMES), col) for col in FRAMES]
@@ -187,48 +188,42 @@ def pieces(d, cases, K: int) -> list[str]:
 if __name__ == "__main__":
     d = dict(np.load(ARRAYS))
     scores = json.loads(str(d["scores_json"]))
-    EF, K_FULL = d["obs_hist"].shape[1], d["gt_roll"].shape[1]
+    EF, K = d["obs_hist"].shape[1], d["gt_roll"].shape[1]
     disp = np.abs(d["target_x"] - d["ghost_x"])                    # teleport displacement in rays; NaN = origin not visible
-    ranked = [int(i) for i in np.argsort(-np.nan_to_num(disp, nan=-1.0)) if np.isfinite(disp[i])]
-    rows = {"top3": ranked[:3],
-            "random3": sorted(int(i) for i in np.random.default_rng(0).choice(len(disp), 3, replace=False))}
-    written = []
-    for sel, cases in rows.items():
-        for K, ktag in ((K_FULL, ""), (10, "_k10")):
-            for cols, htag in ((COLUMNS, ""), (HIST_ONLY, "_histonly")):
-                stem = HERE / f"history_rewrite_{sel}{ktag}{htag}"
-                fig = figure(d, cases, cols, n_ctx=N_CTX, K=K, width=ps.TEXT_WIDTH_IN)
-                ps.save(fig, stem); plt.close(fig); written.append(stem.name)
-        # the rewritten frames themselves, beside the original and the counterfactual render (appendix piece)
-        fig = figure(d, cases, FRAMES, n_ctx=EF, K=0, width=ps.TEXT_WIDTH_IN, legend=KEY_POS, same_context=False)
-        ps.save(fig, HERE / f"history_frames_{sel}"); plt.close(fig); written.append(f"history_frames_{sel}")
-    # stretch: predictive quality with no edit, the clean unedited world against the model's free-run
-    fig = figure(d, rows["random3"], QUALITY, n_ctx=N_CTX, K=K_FULL, width=ps.HALF_WIDTH_IN, locators=False, legend=KEY_FREE)
-    ps.save(fig, HERE / "prediction_quality"); plt.close(fig); written.append("prediction_quality")
-    piece_files = pieces(d, sorted(set(rows["top3"]) | set(rows["random3"])), K_FULL)
+    eligible = [int(i) for i in np.where(np.nan_to_num(disp, nan=-1.0) >= MIN_DISP)[0]]      # ascending case index
+    cases = sorted(int(i) for i in np.random.default_rng(SEED).choice(eligible, 3, replace=False))
+    fig = figure(d, cases, COLUMNS, n_ctx=N_CTX, K=K, width=ps.TEXT_WIDTH_IN)
+    ps.save(fig, HERE / "history_rewrite"); plt.close(fig)
+    fig = figure(d, cases, HIST_ONLY, n_ctx=N_CTX, K=K, width=ps.TEXT_WIDTH_IN)
+    ps.save(fig, HERE / "history_rewrite_histonly"); plt.close(fig)
+    fig = figure(d, cases, FRAMES, n_ctx=EF, K=0, width=ps.TEXT_WIDTH_IN, legend=KEY_POS, same_context=False)
+    ps.save(fig, HERE / "history_frames"); plt.close(fig)
+    piece_files = pieces(d, cases, K)
     side = {
         "run": scores["run"], "instance": "dw-noiseless", "block": scores["block"], "im_point": scores["point"],
-        "n_cases": int(scores["n"]), "n_ctx": N_CTX, "k_roll": K_FULL, "edit_frame": int(EF),
+        "n_cases": int(scores["n"]), "n_ctx": N_CTX, "k_roll": K, "edit_frame": int(EF),
         "context": f"the original observed frames {EF - N_CTX}..{EF - 1} (obs_hist) above the line in every column "
-                   "of history_rewrite_*; asserted identical across the columns of each row",
+                   "of history_rewrite and history_rewrite_histonly; asserted identical across the columns of each row",
         "columns_below_the_line": {name: bottom for name, _, bottom in COLUMNS},
         "histonly_fourth_column": HIST_ONLY[-1][2],
         "selection": {
-            "top3": {"rule": "the three of the 32 bench cases with the largest |target_x - ghost_x| (teleport "
-                             "displacement in rays, from the scorer's target / ghost ray zones); a case whose origin "
-                             "is not visible at the edit frame (ghost_x NaN) is excluded", "cases": rows["top3"],
-                     "displacement_rays": [float(disp[i]) for i in rows["top3"]]},
-            "random3": {"rule": "numpy.random.default_rng(0).choice(32, 3, replace=False), sorted", "seed": 0,
-                        "cases": rows["random3"], "displacement_rays": [float(disp[i]) for i in rows["random3"]]},
-            "prediction_quality": {"rule": "the random3 cases; no edit, unedited world vs free-run", "cases": rows["random3"]}},
+            "rule": f"eligible = the bench cases whose teleport displacement |target_x - ghost_x| is at least {MIN_DISP:g} rays "
+                    "(the scorer's target / ghost ray-zone centres at the edit frame; a case whose origin is not visible, "
+                    "ghost_x NaN, is ineligible); then numpy.random.default_rng(SEED).choice(eligible, 3, replace=False) "
+                    "over the eligible cases in ascending index order, sorted",
+            "min_displacement_rays": MIN_DISP, "seed": SEED, "n_eligible": len(eligible), "eligible": eligible,
+            "cases": cases, "displacement_rays": [float(disp[i]) for i in cases],
+            "median_displacement_rays": float(np.nanmedian(disp))},
         "per_case": {"displacement_rays": [None if not np.isfinite(x) else float(x) for x in disp],
                      "ghost_x": [None if not np.isfinite(x) else float(x) for x in d["ghost_x"]],
                      "target_x": [float(x) for x in d["target_x"]], "edit_object": [int(x) for x in d["edit_object"]]},
         "arms": {k: {"edit_index": c["edit_index"], "fidelity_ratio": c["fidelity_ratio"],
                      "edit_index_by_step": c["edit_index_by_step"]} for k, c in scores["cards"].items()},
         "history_rmse": scores["history_rmse"],
-        "files": {"figures": written, "pieces": piece_files},
+        "files": {"figures": ["history_rewrite", "history_rewrite_histonly", "history_frames"], "pieces": piece_files},
     }
     json.dump(side, open(HERE / "history_rewrite_paper.json", "w"), indent=1)
-    print("rows:", rows, "\ncontext identical across the columns of every row: asserted for every history_rewrite_* composite",
-          "\n->", ", ".join(written), f"+ {len(piece_files)} pieces, history_rewrite_paper.json")
+    print(f"eligible (>= {MIN_DISP:g} rays): {len(eligible)} of {len(disp)}; cases {cases} with displacements",
+          [round(float(disp[i]), 1) for i in cases],
+          "\ncontext identical across the columns of every row: asserted",
+          f"\n-> history_rewrite, history_rewrite_histonly, history_frames + {len(piece_files)} pieces, history_rewrite_paper.json")

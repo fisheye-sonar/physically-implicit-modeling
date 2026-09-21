@@ -79,6 +79,17 @@ APPENDIX figures regenerated in Arial with the CURRENT arms: `qualitative_edits/
 categorical map (cache hits only; 16 / 8 / 5-ray at pt 6 / 6 / 5), BLANK cells on Standard and Blink (no arm since 2026-09-20),
 new caches `.scratch/qualitative_edits_catim_*`; `qualitative_edits_othello/` with the cyan / pink marking (shared helper).
 All five folders committed; GPU freed.
+**ROUND 3 (Sevan's second review, 15:40 → 17:10 PT) COMPLETE, all committed.** Othello: per-rule moves, (c) plays the would-flip move c4
+that no longer flips (alt f5), bold letters. Rayworld: bigger frustum, t* row outlined, "hidden" centred, centre dots in (d), tighter
+(composite 5.46 × 3.26 in). Qualitative: "Unedited Pred", "Example 1/2", dot key top-right above the colour bar, 128-ray model
+throughout (Sevan: "effectively the standard model", named in the caption), A1 dropped; appendix Rayworld no-arm categorical IM
+spots left fully empty (no frame). Trends: legend 0.18 in under the x labels; renamed by_point / by_rays / by_rays_half. History:
+random-3 among the 15 of 32 cases with displacement ≥ 20 rays (seed 0 → cases 14 / 18 / 25), hist+IM default, histonly alt,
+history_frames appendix piece. NEW `paper/figs/predictive_quality/` = rayworld (transposed, GT / Prediction × 3 examples) +
+othello (moved from environments_overview/othello). **PRUNED per Sevan** ("drop the million extra versions"): every folder's top level
+= the chosen figure(s) + at most one alternative + script(s) + README + sidecars; per-element PDFs under pieces/ (PNG previews
+gitignored); dropped variants regenerable via script flags (git history keeps them). Worker briefs moved to `paper/figs/briefs/`.
+**Open for Sevan:** categorical IM for dw-noiseless / dw-blink would need two ~40-min map fits (a scoring job, not started).
 **Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
 Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
 captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.

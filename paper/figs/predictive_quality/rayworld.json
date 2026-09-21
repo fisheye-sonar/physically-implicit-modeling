@@ -1,0 +1,32 @@
+{
+ "run": "noise_ablation/L-dw-noiseless-20m",
+ "instance": "dw-noiseless",
+ "arrays": ".scratch/history_rewrite_arrays.npz",
+ "rows": {
+  "Ground truth": "gt_unedited_roll",
+  "Prediction": "roll_unsteered"
+ },
+ "context": "obs_hist frames 12..19 above the line",
+ "k_roll": 15,
+ "selection": {
+  "rule": "numpy.random.default_rng(0).choice(32, 3, replace=False), sorted; no edit, so no displacement filter",
+  "seed": 0,
+  "cases": [
+   16,
+   19,
+   25
+  ]
+ },
+ "files": {
+  "figure": "rayworld",
+  "pieces": [
+   "rayworld_case16_gt.pdf",
+   "rayworld_case16_pred.pdf",
+   "rayworld_case19_gt.pdf",
+   "rayworld_case19_pred.pdf",
+   "rayworld_case25_gt.pdf",
+   "rayworld_case25_pred.pdf",
+   "rayworld_key.pdf"
+  ]
+ }
+}

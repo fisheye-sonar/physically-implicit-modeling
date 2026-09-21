@@ -7,7 +7,7 @@
  "n_ctx": 8,
  "k_roll": 15,
  "edit_frame": 20,
- "context": "the original observed frames 12..19 (obs_hist) above the line in every column of history_rewrite_*; asserted identical across the columns of each row",
+ "context": "the original observed frames 12..19 (obs_hist) above the line in every column of history_rewrite and history_rewrite_histonly; asserted identical across the columns of each row",
  "columns_below_the_line": {
   "Ground truth": "gt_roll",
   "Unedited": "roll_unsteered",
@@ -16,41 +16,38 @@
  },
  "histonly_fourth_column": "roll_hist",
  "selection": {
-  "top3": {
-   "rule": "the three of the 32 bench cases with the largest |target_x - ghost_x| (teleport displacement in rays, from the scorer's target / ghost ray zones); a case whose origin is not visible at the edit frame (ghost_x NaN) is excluded",
-   "cases": [
-    4,
-    2,
-    1
-   ],
-   "displacement_rays": [
-    91.5,
-    75.0,
-    61.0
-   ]
-  },
-  "random3": {
-   "rule": "numpy.random.default_rng(0).choice(32, 3, replace=False), sorted",
-   "seed": 0,
-   "cases": [
-    16,
-    19,
-    25
-   ],
-   "displacement_rays": [
-    7.5,
-    44.5,
-    39.0
-   ]
-  },
-  "prediction_quality": {
-   "rule": "the random3 cases; no edit, unedited world vs free-run",
-   "cases": [
-    16,
-    19,
-    25
-   ]
-  }
+  "rule": "eligible = the bench cases whose teleport displacement |target_x - ghost_x| is at least 20 rays (the scorer's target / ghost ray-zone centres at the edit frame; a case whose origin is not visible, ghost_x NaN, is ineligible); then numpy.random.default_rng(SEED).choice(eligible, 3, replace=False) over the eligible cases in ascending index order, sorted",
+  "min_displacement_rays": 20.0,
+  "seed": 0,
+  "n_eligible": 15,
+  "eligible": [
+   1,
+   2,
+   4,
+   6,
+   7,
+   10,
+   12,
+   14,
+   18,
+   19,
+   24,
+   25,
+   27,
+   28,
+   31
+  ],
+  "cases": [
+   14,
+   18,
+   25
+  ],
+  "displacement_rays": [
+   37.5,
+   29.5,
+   39.0
+  ],
+  "median_displacement_rays": 19.5
  },
  "per_case": {
   "displacement_rays": [
@@ -283,59 +280,27 @@
  },
  "files": {
   "figures": [
-   "history_rewrite_top3",
-   "history_rewrite_top3_histonly",
-   "history_rewrite_top3_k10",
-   "history_rewrite_top3_k10_histonly",
-   "history_frames_top3",
-   "history_rewrite_random3",
-   "history_rewrite_random3_histonly",
-   "history_rewrite_random3_k10",
-   "history_rewrite_random3_k10_histonly",
-   "history_frames_random3",
-   "prediction_quality"
+   "history_rewrite",
+   "history_rewrite_histonly",
+   "history_frames"
   ],
   "pieces": [
-   "case01_gt.pdf",
-   "case01_unedited.pdf",
-   "case01_im.pdf",
-   "case01_hist_im.pdf",
-   "case01_hist.pdf",
-   "case01_frames_original.pdf",
-   "case01_frames_rewritten.pdf",
-   "case01_frames_cfrender.pdf",
-   "case02_gt.pdf",
-   "case02_unedited.pdf",
-   "case02_im.pdf",
-   "case02_hist_im.pdf",
-   "case02_hist.pdf",
-   "case02_frames_original.pdf",
-   "case02_frames_rewritten.pdf",
-   "case02_frames_cfrender.pdf",
-   "case04_gt.pdf",
-   "case04_unedited.pdf",
-   "case04_im.pdf",
-   "case04_hist_im.pdf",
-   "case04_hist.pdf",
-   "case04_frames_original.pdf",
-   "case04_frames_rewritten.pdf",
-   "case04_frames_cfrender.pdf",
-   "case16_gt.pdf",
-   "case16_unedited.pdf",
-   "case16_im.pdf",
-   "case16_hist_im.pdf",
-   "case16_hist.pdf",
-   "case16_frames_original.pdf",
-   "case16_frames_rewritten.pdf",
-   "case16_frames_cfrender.pdf",
-   "case19_gt.pdf",
-   "case19_unedited.pdf",
-   "case19_im.pdf",
-   "case19_hist_im.pdf",
-   "case19_hist.pdf",
-   "case19_frames_original.pdf",
-   "case19_frames_rewritten.pdf",
-   "case19_frames_cfrender.pdf",
+   "case14_gt.pdf",
+   "case14_unedited.pdf",
+   "case14_im.pdf",
+   "case14_hist_im.pdf",
+   "case14_hist.pdf",
+   "case14_frames_original.pdf",
+   "case14_frames_rewritten.pdf",
+   "case14_frames_cfrender.pdf",
+   "case18_gt.pdf",
+   "case18_unedited.pdf",
+   "case18_im.pdf",
+   "case18_hist_im.pdf",
+   "case18_hist.pdf",
+   "case18_frames_original.pdf",
+   "case18_frames_rewritten.pdf",
+   "case18_frames_cfrender.pdf",
    "case25_gt.pdf",
    "case25_unedited.pdf",
    "case25_im.pdf",
