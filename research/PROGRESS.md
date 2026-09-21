@@ -43,6 +43,22 @@ with the hidden span bracketed and the 0.5 edge markers; (c) 8-ray frustum + the
 21 vector pieces, light and dark variants; sequences by a stated `default_rng(0)` rule in `selection.json`).
 **ALL FIVE DONE in ~50 min wall clock; GPU freed (only the queue's training job remains).** Committed with the scripts, READMEs,
 sidecars, top-level PDFs / PNGs and piece PDFs; piece PNG previews are gitignored (`paper/figs/.gitignore`, regenerable).
+**ROUND 2 (Sevan's review, 11:50 PT):** ALL figure text → **Arial** (was Times New Roman; `paper_style.py` switched, maths in
+Arial via the custom mathtext set; the two appendix qualitative scripts get the same) and `ps.save` crops with ZERO outer
+padding (spacing is set in LaTeX). Asked: Othello O2 layout with ONE board reachable under standard / adjacent-flip /
+adjacent-noflip for (a)–(c) (reachability search over standard bench prefixes with the vendor board class; (d) stays);
+Rayworld pieces: fewer drawn rays in the big frustum (64 / 43 / 32 variants, strips stay 128), wider N-ray waterfalls,
+"(signaled)" under "hidden", (c) without the small frustum, (d) bigger with translucent discs, a flatter composite with
+letters set apart and less whitespace; main qualitative figure `composite_final` (Rayworld 2 × continuous + 2 × categorical
+columns — A1 dw-noiseless with BLANK categorical IM cells (no arm by Sevan's own spec) vs A2 the 128-ray ray-family model
+where the categorical map exists; Othello + GS, new `typical` rank-2 cases, CYAN on the flipped tile + legality-switching
+squares in Unedited and PINK on the same squares elsewhere, boards +10 %, larger GT→PI gap, bigger panel letters) and
+`composite_final_sidebyside` (variants as columns incl. Adjacent Flip, no GS, thinner rims); the appendix qualitative figures
+regenerated in Arial with the CURRENT arms (categorical IM = the categorical map on 5/8/16/128-ray, blank on Standard /
+Blink — the cached old-map frames matched no scored arm); history figure: original observed history above the line in EVERY
+column, "origin / destination position". Trends re-rendered (done, 12:00). History round 2 DONE 12:10 (context rows asserted
+identical across columns; `history_frames_*` = original | rewritten | counterfactual render as a separate appendix piece).
+Othello / Rayworld / qualitative round-2 workers running (brief `qualitative_main/BRIEF_ROUND2.md`).
 **Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
 Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
 captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.

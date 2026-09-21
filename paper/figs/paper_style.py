@@ -4,8 +4,9 @@
     import paper_style as ps
     ps.apply()
 
-Times New Roman (Liberation Serif / Nimbus Roman fall back), text embedded as TrueType so the PDF
-stays editable and vector, white page, black text, one colour per editor in every figure. Raw
+Arial (Liberation Sans / Nimbus Sans fall back; Sevan 2026-09-21 — was Times New Roman until 11:50 PT), text
+embedded as TrueType so the PDF stays editable and vector, white page, black text, one colour per editor in
+every figure. ``save`` crops to the content with NO outer padding, so the spacing around a figure is set in LaTeX. Raw
 observations are drawn as the canonical waterfall draws them: ``gray`` on the dark panel
 (``pim.figures.waterfall.DARK_BG``), fixed 0–1 range, nearest interpolation.
 
@@ -22,9 +23,12 @@ import matplotlib
 matplotlib.use("Agg")
 
 RC = {
-    "font.family": "serif",
-    "font.serif": ["Times New Roman", "Liberation Serif", "Nimbus Roman"],
-    "mathtext.fontset": "stix",
+    "font.family": "sans-serif",
+    "font.sans-serif": ["Arial", "Liberation Sans", "Nimbus Sans"],
+    "mathtext.fontset": "custom",          # maths in Arial too (R², t*)
+    "mathtext.rm": "Arial",
+    "mathtext.it": "Arial:italic",
+    "mathtext.bf": "Arial:bold",
     "pdf.fonttype": 42,
     "ps.fonttype": 42,
     "font.size": 9,
@@ -58,9 +62,10 @@ def apply() -> None:
     matplotlib.rcParams.update(RC)
 
 
-def save(fig, stem: Path, dpi: int = 300) -> None:
-    """Vector PDF for the paper and a PNG preview beside it (same stem)."""
+def save(fig, stem: Path, dpi: int = 300, pad: float = 0.0) -> None:
+    """Vector PDF for the paper and a PNG preview beside it (same stem), cropped to the content with no
+    outer padding (``pad`` inches, default 0): the figure touches its own bounding box, LaTeX sets the rest."""
     stem = Path(stem)
     stem.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight")
-    fig.savefig(stem.with_suffix(".png"), dpi=dpi, bbox_inches="tight")
+    fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight", pad_inches=pad)
+    fig.savefig(stem.with_suffix(".png"), dpi=dpi, bbox_inches="tight", pad_inches=pad)

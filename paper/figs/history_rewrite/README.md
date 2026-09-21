@@ -36,37 +36,43 @@ centres per case · `edit_object`, `s_post` · `scores_json` (the text of `score
 ## Paper figure — `draw_paper.py`
 
 `.pim/bin/python paper/figs/history_rewrite/draw_paper.py` (CPU; needs the npz above). Every output is a
-vector PDF (Times New Roman embedded as TrueType, the observation strips the only rasters, nearest
-interpolation, 600 ppi so all 128 rays survive) with a 300-dpi PNG preview beside it.
+vector PDF (Arial embedded as TrueType, the observation strips the only rasters, nearest interpolation at
+600 ppi so all 128 rays survive, cropped to the content with no outer padding) with a 300-dpi PNG preview
+beside it. Round 2 (2026-09-21, after Sevan's review): every column shows the real pre-edit history above
+the line; the rewritten frames moved to their own appendix piece; legend wording "origin position" /
+"destination position".
 
 | file | what it shows |
 |---|---|
-| `history_rewrite_top3.{pdf,png}` | **recommended.** Three edits (rows) x four columns, 8 history frames above the edit-frame line, all 15 free-run steps below; full text width 5.5 in, about 3.7 in tall |
-| `history_rewrite_top3_k10.{pdf,png}` | the same cropped to the first 10 free-run steps (about 3.1 in tall) |
-| `history_rewrite_top3_histonly.{pdf,png}`, `..._k10_histonly` | the fourth column's rollout is `hist` (rewritten history, no write at the edit frame) instead of `hist+IM` |
+| `history_rewrite_top3.{pdf,png}` | **recommended.** Three edits (rows) x four columns; the last 8 original observed frames above the edit-frame line in EVERY column, all 15 free-run steps below; 5.42 x 3.50 in at the printed size |
+| `history_rewrite_top3_k10.{pdf,png}` | the same cropped to the first 10 free-run steps (5.42 x 2.87 in) |
+| `history_rewrite_top3_histonly.{pdf,png}`, `..._k10_histonly` | the hist-alone variant: the fourth column is the free-run from the rewritten history with NO write at the edit frame, versus the default fourth column, which is the free-run from the rewritten history PLUS the inverse-map write at the edit frame |
 | `history_rewrite_random3*.{pdf,png}` | the same four variants on three random cases (seed 0) — the honest control; one of them (case 16, 7.5 rays) is a barely visible edit |
-| `prediction_quality.{pdf,png}` | stretch: half width (2.65 in), Ground truth (clean unedited world) against the model's free-run, no edit, on the random-3 cases; the dashed line marks where the free-run starts |
-| `pieces/case<idx>_{gt,unedited,im,hist_im,hist}.pdf` | every panel of the six selected cases as its own PDF (15 steps), same size as in the composite; `pieces/legend_key.pdf` the key |
-| `history_rewrite_paper.json` | sidecar: run, instance, block, IM point, case indices per selection with the rule and the displacements, per-case locators, every arm's Edit Index, fidelity and per-step curve, the history RMSEs, the file list |
+| `history_frames_{top3,random3}.{pdf,png}` | appendix piece: all 20 history frames of the same cases as Original frames (`obs_hist`) / Rewritten frames (`obs_cf`) / Counterfactual render (`cf_clean`); no edit-frame line (the edit frame is the frame after the last row); the first row of the rewritten column is the kept original frame 0 |
+| `prediction_quality.{pdf,png}` | stretch: half width, Ground truth (clean unedited world) against the model's free-run, no edit, on the random-3 cases; the dashed line marks where the free-run starts |
+| `pieces/case<idx>_{gt,unedited,im,hist_im,hist}.pdf` | every main-figure panel of the six selected cases as its own PDF (8 history frames + 15 steps, 1.24 x 0.97 in) |
+| `pieces/case<idx>_frames_{original,rewritten,cfrender}.pdf` | every history_frames panel (20 frames, 1.68 x 0.84 in) |
+| `pieces/legend_key.pdf`, `pieces/legend_key_positions.pdf` | the keys of the main figure and of the frames figure |
+| `history_rewrite_paper.json` | sidecar: run, instance, block, IM point, what each column draws, case indices per selection with the rule and the displacements, per-case locators, every arm's Edit Index, fidelity and per-step curve, the history RMSEs, the file list |
 
-**Columns.** Time runs downward in every panel; one dashed edit-frame line separates the 8 history frames
-(frames 12..19) from the free-run (frames 20..34); the cyan line is the edited disc's origin ray, the pink
-line its destination ray, both at the edit frame (the scorer's ghost / target zone centres).
-*Ground truth*: above the line the simulator's clean render of the counterfactual history (`cf_clean` — the
-edited disc integrated backwards at its velocity; the model never saw these frames), below it the clean
-edited-world rollout. *Unedited*: the original observed frames, then the model's free-run with no edit.
-*Single-point edit*: the original observed frames, then the canonical IM arm — one inverse-map overwrite at
-residual point 6 at the edit frame, free-run from there. *History rewrite*: the rewritten frames (`obs_cf`,
-the model's own predictions with the counterfactual state written at every step), then `hist+IM` (the
-`_histonly` variant: `hist`). Panels are drawn as `paper/figs/qualitative_edits/make_figure.py` draws them:
-`gray` on the dark panel, fixed 0-1 range, nearest, thin frame, white page.
+**Columns of the main figure.** Time runs downward in every panel. Above the dashed edit-frame line every
+column shows the same frames: the ground-truth pre-edit history, the original observed frames 12..19
+(`draw_paper.py` asserts the four context arrays of a row are identical). Below the line each column shows
+its own free-run over frames 20..34: *Ground truth* the clean edited-world rollout; *Unedited* the model's
+free-run with no edit; *Single-point edit* the canonical IM arm — one inverse-map overwrite at residual
+point 6 at the edit frame, free-run from there; *History rewrite* the free-run from the rewritten history
+(the model's own predictions with the counterfactual state written at every step) plus the same write at
+the edit frame (`hist+IM`); in the `_histonly` variant the write is dropped (`hist`). The cyan line is the
+edited disc's origin position, the pink line its destination position, both as ray centres at the edit frame
+(the scorer's ghost / target zones). Panels are drawn as `paper/figs/qualitative_edits/make_figure.py` draws
+them: `gray` on the dark panel, fixed 0-1 range, nearest, thin frame, white page.
 
 **Row selection.** `top3`: the three of the 32 bench cases with the largest teleport displacement
 |target_x − ghost_x| in rays (the sensor is a pinhole fan, no wrap): cases **4, 2, 1** with 91.5, 75.0 and
 61.0 rays (median 19.5; case 29 is excluded because its origin is not visible at the edit frame). `random3`:
 `numpy.random.default_rng(0).choice(32, 3, replace=False)`, sorted: cases **16, 19, 25** (7.5, 44.5, 39.0
-rays). The stretch figure uses the random-3 cases. An editorial rule for the main figure, stated here and in
-the sidecar.
+rays). The frames figures use the same cases; the stretch figure uses the random-3 cases. An editorial rule
+for the main figure, stated here and in the sidecar.
 
 **Caption facts** (all from `scores.json`, the scorer's own cards; ray-zone Edit Index,
 `pim.metrics.zone_editability`, on `noise_ablation/L-dw-noiseless-20m`, dw-noiseless, Cartesian block, IM at
@@ -82,11 +88,12 @@ residual point 6 = the scorer's best IM arm, n = 32 cases, one seed):
 The single-point edit lands (+0.61) and is forgotten one step later (−0.63); the rewritten history holds the
 edit through the horizon (+0.59 at step 1, +0.23 at step 14) and the write on top adds little (+0.63 vs +0.65
 without it at step 0; both decay alike). RMSE of the history frames 1..19 against the clean counterfactual
-render: original observed frames 0.264, rewritten frames 0.114 (rewritten vs original 0.255). Per-case
-standard errors of the step-0 Edit Index are 0.02 to 0.04 (in `scores.json`). One seed, 32 cases: an
-illustration of the mechanism, not a table number.
+render (the `history_frames` figures): original observed frames 0.264, rewritten frames 0.114 (rewritten vs
+original 0.255). Per-case standard errors of the step-0 Edit Index are 0.02 to 0.04 (in `scores.json`). One
+seed, 32 cases: an illustration of the mechanism, not a table number.
 
 **Caveats.** The rewritten frames are the model's own generations and are visibly blurrier than the clean
-render (row 1 of the top-3 figure shows a bright smear above the line). The locators mark the edit-frame ray
-centres only; the discs drift with their velocity along the rollout. The PDF pages are the tight crop of
-the artists plus 0.02 in, so `history_rewrite_top3.pdf` is about 5.5 in wide with 8-9 pt text.
+render (see `history_frames_top3`, where the bright disc of case 4 is wider than in the render). The locators
+mark the edit-frame ray centres only; the discs drift with their velocity along the rollout. PDFs are cropped
+to the content with no padding (`ps.save`), so the spacing around a figure is set in LaTeX; the text is
+8-9 pt at the printed size.
