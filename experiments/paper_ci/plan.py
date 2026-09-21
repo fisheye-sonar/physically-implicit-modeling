@@ -193,7 +193,11 @@ def categorical_im_jobs() -> list[dict]:
             ("catim_8ray", fam("8ray"), 2, 1.9, "the three dw-8ray members at 512k"),
             ("catim_16ray", fam("16ray"), 3, 1.9, "the three dw-16ray members at 512k"),
             ("catim_128ray", fam("128ray"), 4, 2.0, "the three dw-128ray members at 512k")]
+    # `outputs` = where a catch-up job WRITES while it works (a new map file every ~4 min): the queue's stall
+    # check reads the newest mtime there. Without it the job looked frozen for the 40 minutes of a fit and
+    # raised a false STALLED alert (2026-09-20 22:18, catim_5ray). Lab-only jobs: nothing is synced.
     return [{**base, "id": jid, "cmd": f"bash experiments/categorical_inverse/drivers/catchup_job.sh {jid}",
+             "outputs": [f"runs/*/{r}/probes" for r in runs] + [f"logs/{jid}"],
              "env": {"PIM_ADD_CAT_IM": "1", "PIM_ONLY_RUNS": ",".join(runs), **ENV_SCORE},
              "priority": prio, "est_hours": {"lab": est}, "note": f"categorical inverse map catch-up: {note}"}
             for jid, runs, prio, est, note in spec]

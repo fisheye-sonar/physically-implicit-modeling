@@ -8,7 +8,12 @@
  "deps": [],
  "host_deps": {},
  "inputs": [],
- "outputs": [],
+ "outputs": [
+  "runs/*/L-dw-16ray-20m__seed0_s512000/probes",
+  "runs/*/L-dw-16ray-20m__seed1/probes",
+  "runs/*/L-dw-16ray-20m__seed2/probes",
+  "logs/catim_16ray"
+ ],
  "progress": null,
  "mem_max": null,
  "max_attempts": 2,
