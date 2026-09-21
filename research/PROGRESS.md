@@ -21,6 +21,20 @@ symmetric-difference squares), `editability_trends/` (Edit Index by residual poi
 via `tables.collect`), `history_rewrite/` (compute split from drawing; 3-edit × 4-column paper waterfall). Pieces AND
 composites; Sevan assembles. Workers write only in their folders + `.scratch/`; the GPU is shared with the queue's
 training job (one model at a time). Results land in each folder's README; this entry is updated when they report.
+**Landed and verified on disk (11:05–11:30 PT), four of five:** `history_rewrite/` (`history_rewrite_top3` recommended: 3 largest
+teleports × GT | Unedited | Single-point edit | History rewrite, K = 15; variants hist-alone / K = 10 / random-3; `pieces/`;
+stretch `prediction_quality` = GT vs free-run, no edit; arms from the saved cards: IM +0.61 / 0.36, hist+IM +0.63 / 0.36,
+hist +0.65 / 0.48, n = 32 one seed; the PDF now embeds all 128 rays — matplotlib's default ppi had resampled to 125).
+`environments_overview/othello/` (O1 recommended: four boards after move 14 with legal-move dots, chosen move, flipped discs
+ringed; O2 before/after pairs; O3 three positions; 52 vector pieces; stretch `predictive_composite` = legal set vs model
+distribution per variant, visually identical at the canonical tint). `editability_trends/` (A2: Edit Index by residual
+point for oth-standard | dw-noiseless with hollow = outside guard + an R² / MLP-skill row — IM on Othello lands only at
+points 4–5, on Rayworld climbs to +0.59 by point 6 with g R² ≈ 0.3; B2 / B1_half: Edit Index by ray count, n = 3 pooled
+means, SD bars smaller than the markers; every value matches the ledger; categorical IM = the new categorical map).
+`qualitative_main/` (recommended composite `composite_R3_T3_typical_2row`: (a) Standard model × 3 scenarios × PI / GS / IM
+— PI / GS smear, IM renders the teleported disc; (b) 5×5 zoom on the edited tile + changed squares, Standard vs
+Adjacent NoFlip × Unedited / GT / PI / IM; `typical` = cases whose per-case index is nearest the population mean; R4 adds
+a 5-ray foil column; T1 / T2 alternatives; 401 pieces). Still running: `environments_overview/rayworld/`.
 **Paper facts noted for the text (not yet applied):** Table 2 / §Results quote the pre-guard numbers; the categorical
 IM column is now the categorical inverse map (5/8/16/128-ray parents +0.913 / +0.866 / +0.823 / +0.637) so "IM is unchanged
 by the target" is false; five Rayworld families at n = 3 and oth-standard at n = 2 for the ± values.
