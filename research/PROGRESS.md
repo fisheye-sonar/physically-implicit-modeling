@@ -3,7 +3,27 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 09:45 PT — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
+_Last updated: 2026-09-21 10:55 PT — paper-figure workers launched (see the 2026-09-21 day entry); earlier:  — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
+
+## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
+
+**Plan agreed with Sevan 10:30 PT.** Figure 1 = (a) mini teaser + (b) probe-derived editing vs inverse map, hand-drawn by
+Sevan (`paper/figs/mini_teaser.pdf`; the wrapfigure goes); the network diagram (`paper/figs/teaser.pdf`) moves to
+§Experimental Setup with its symbols aligned to the text (h / z / s; it shows only the edited reference for editability).
+Five WORKERS launched ~10:50 PT, one folder each under `paper/figs/`, briefs in each folder's `BRIEF.md`, common rules in
+`paper/figs/FIGURE_BRIEF_COMMON.md`, shared look in `paper/figs/paper_style.py` (Times New Roman, TrueType-embedded vector
+PDFs, Okabe-Ito, one colour per editor):
+`environments_overview/othello/` (rule-set boards, legal moves, flips; options O1–O3 + composite),
+`environments_overview/rayworld/` (frustum + rays + discs + velocity arrows + faded trajectory, linked waterfall, blink /
+N-ray / appearance-cell panels + composite), `qualitative_main/` (editorial main-text figure from the cached guarded
+writes: Rayworld options R1–R3 with the 128-ray model as the hero, Othello options T1–T3 incl. a zoom on the
+symmetric-difference squares), `editability_trends/` (Edit Index by residual point; Edit Index by ray count with seed SD
+via `tables.collect`), `history_rewrite/` (compute split from drawing; 3-edit × 4-column paper waterfall). Pieces AND
+composites; Sevan assembles. Workers write only in their folders + `.scratch/`; the GPU is shared with the queue's
+training job (one model at a time). Results land in each folder's README; this entry is updated when they report.
+**Paper facts noted for the text (not yet applied):** Table 2 / §Results quote the pre-guard numbers; the categorical
+IM column is now the categorical inverse map (5/8/16/128-ray parents +0.913 / +0.866 / +0.823 / +0.637) so "IM is unchanged
+by the target" is false; five Rayworld families at n = 3 and oth-standard at n = 2 for the ± values.
 
 ## 2026-09-19 (night) — follow-up to the scoring audit (Sevan): ONE change made, the rest deliberately left
 
