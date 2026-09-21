@@ -15,12 +15,12 @@
  "mem_max": null,
  "hold": false,
  "id": "ctrl_corpus_dw",
- "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 100000 --im-sizes 30000 60000",
+ "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_dw.py --run noise_ablation/L-dw-noiseless-20m --basis cartesian --sizes 30000 60000 --im-sizes 30000 60000",
  "deps": [],
  "priority": 25,
  "est_hours": {
-  "lab": 2.5
+  "lab": 0.8
  },
- "max_attempts": 2,
- "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/100k, inverse map + IM at 30k/60k"
+ "max_attempts": 1,
+ "note": "probe-corpus-size control, discworld: probes + PI/GS at 30k/60k (30k recorded), inverse map + IM at 30k/60k (recorded); ONE attempt"
 }

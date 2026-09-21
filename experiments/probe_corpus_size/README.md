@@ -70,3 +70,24 @@ parts (the inverse map's corpus sensitivity is then measured on Othello too, at 
 alias) and SKIP every part already recorded in their scores file, so a retry, or a later job adding a size, is free.
 The partial results and the fitted-probe cache of the killed run were pulled from the 4090 to the lab at 05:10.
 Smokes of both rewritten scripts reproduce the 2026-09-19 smoke numbers exactly.
+
+## 2026-09-20 20:10 — discworld control: the dense regression fit is memory-bound too; 100k and 200k dropped
+
+`ctrl_corpus_dw` (lab, unit cap 45 GB) was OOM-killed at 19:57 inside the LINEAR / MLP regression fit at 100k sequences
+(journal `oom-kill`, 46.8 GB anonymous). `arms.fit_probes`' dense path was written for 30k sequences: it memmaps the
+residual stack (72 GB on disk at 100k — left behind by the killed process and removed by hand) and then copies a point's
+training rows several times inside the fit. So 100k and 200k are out of reach on this box without a STREAMED regression
+fit (the categorical path has one; the regression path does not), which is new `pim` code and not something to add
+mid-queue. Recorded before the kill (`scores/dw_L-dw-noiseless-20m_cartesian.json`), cartesian basis, scorer's own best arm:
+
+| sequences | LIN | MLP-128 | PI | GS | IM | g R² |
+|---|---|---|---|---|---|---|
+| canonical: 30k of `probe_120k` | 0.8718 | 0.9726 | +0.197 / 1.71 | −0.056 / 1.07 | +0.590 / 0.34 | 0.741 |
+| 30k of `probe_250k` | 0.8718 | 0.9727 | +0.197 / 1.73 | −0.063 / 1.07 | +0.592 / 0.34 | 0.742 |
+| 60k of `probe_250k` | to run | to run | to run | to run | +0.604 / 0.33 | 0.755 |
+
+A different 30k sequences reproduces every canonical number to ±0.007. Doubling the inverse map's data lifts IM by 0.012
+(about two training-seed SDs) and g's R² by 0.013. The redefined job runs the probes at 60k (≈ 28 GB by the measured
+scaling; ONE attempt); `ctrl_corpus_dw_200k` is deleted. What stands in for the 200k question Sevan asked: the
+capacity sweep's STREAMED fits at 250k sequences (`findings/probe-capacity.md`: LIN 0.983 / MLP-128 0.997 on `L-dw-20m`,
+the canonical values to three decimals) for decodability, and this control's 2× point for editability.

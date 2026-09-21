@@ -1085,3 +1085,13 @@ catch it, the job just vanishes ("unit gone without an end record"). Rules: budg
 with one attempt, last; write results after every part so a kill keeps what finished. The discworld inverse map
 (`iter_inverse_maps`) memmaps its residuals but still makes the train / test / bank copies — the same factor applies
 to its rows (30k sequences = 1.2M rows).
+
+## 2026-09-20 (evening) — The DENSE regression probe fit does not scale past ~60k sequences on the lab box either
+
+Same family as the morning's entry, different component: `arms.fit_probes`' regression path memmaps the residual stack
+(9 points × n × 39 × 512 × 4 B — 72 GB of scratch at 100k, 144 GB at 200k) and then copies one point's training rows
+several times inside `fit_linear` / `fit_mlp`. Measured: **100k sequences = 46.8 GB anonymous**, OOM-killed at the lab
+unit's 45 GB cap 21 minutes in (`ctrl_corpus_dw`, 2026-09-20 19:57). 30k (canonical) is ~14 GB. A killed process does not
+run its `finally:` — the 72 GB memmap stayed in `.scratch/` until removed by hand (`fuser` first). To fit regression
+probes on the large corpus, write the streamed variant the categorical path already has (`fit_probe_stream` over
+`MemmapRows`); do not raise the cap (59 GB box, taken down by OOM before).
