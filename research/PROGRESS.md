@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 13:10 PT — oth-standard complete at n = 3 (first Othello family); adjflip s1 extension running on the lab, s2 scoring on the 4090; queue 21 of 37_
+_Last updated: 2026-09-21 13:25 PT — oth-standard n = 3, oth-adjflip n = 2 (extension path verified on Othello); MOVES.md merge fix in the dispatcher; queue 22 of 37_
 
 ## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
 
@@ -303,6 +303,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-21 13:25 — `rep_oth-adjflip_s2` done (4090, 13.74 h): the Othello EXTENSION path verified; oth-adjflip at n = 2 (512k); `rep_oth-adjacent_s1` launched on the 4090.** Seed 2 resumed 160k → 512k, the new `__seed0_s512000` member was laid out and both scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors); the 421,875 member is left out of the pool. Ledger so far (guarded): LIN 0.948 ± 0.000, IM +0.607 ± 0.002 (canonical +0.664), GS −0.064 ± 0.018; PI +0.083 ± 0.284 (members +0.284 / −0.117 — the guarded PI arm flips between a landing and a failing alpha across seeds) and ND +0.441 ± 0.155 — the wide cells are selection jumping between arms, to be read against `variance.json` when seed 1 lands (≈ 2026-09-22 05:00). **`runs/MOVES.md` erased a SECOND time** by this job's sync-back (the 4090's copy lacked the 13:06 adjflip-s1 park lines) → restored from git and the dispatcher now MERGES `runs/MOVES.md` from a remote (appends lines it lacks, never overwrites; 3365814, installed atomically between ticks — the dispatcher is a fresh process every 2 min, unlike the bash drivers). 22 of 37 done; gpu lanes: adjflip_s1 (lab, extension from 390k) and adjacent_s1 (4090).
 
 **2026-09-21 13:10 — oth-standard complete (n = 3 at 512k): the FIRST Othello family done; `rep_oth-adjflip_s1` (extension) launched on the lab.** `rep_oth-standard_s2` (lab, 16.58 h; scoring 12:47–13:05, one pass, eval_version 2026-09-12.1, 282 arms, no errors). Pooled, mine/theirs symdiff, guarded selection: LIN 0.969 ± 0.003, MLP 0.971 ± 0.002, PI +0.808 ± 0.015 (members +0.798 / +0.801 / +0.826), ND +0.732 ± 0.027, GS +0.808 ± 0.012, IM +0.778 ± 0.034 (+0.795 / +0.801 / +0.738), IM-NN +0.029 ± 0.007; guards PI 0.52 ± 0.05 (canonical 0.30 — the members' guarded PI arm sits at a milder alpha), ND 0.34, GS 0.34, IM 0.40 ± 0.04. Seed 2 is the outlier on both sides (highest PI, lowest IM) — Othello's seed spread is 3–7× discworld's on the same editors; the canonical parent (+0.818 / +0.828 / +0.806) sits at the top of every member range. Extension launch verified: the dispatcher parked seed 1's 390k `scores.json` + `variance.json` as `.s390000.json` with two `runs/MOVES.md` lines at 13:06:32 and the trainer resumed from `ckpt/latest.pt` at step 390000. `rep_oth-adjflip_s2` is in its scoring stage on the 4090 (done ≈ 13:20). 21 of 37 done.
 
@@ -2581,7 +2583,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-21 13:10 PT — oth-standard complete at n = 3 (first Othello family); adjflip s1 extension running on the lab, s2 scoring on the 4090; queue 21 of 37_
+_Last updated: 2026-09-21 13:25 PT — oth-standard n = 3, oth-adjflip n = 2 (extension path verified on Othello); MOVES.md merge fix in the dispatcher; queue 22 of 37_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
