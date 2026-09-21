@@ -103,6 +103,14 @@ Edit Index / fidelity ratio; "old" is the continuous-state map scored on the sam
 
 ## Deployment (NOT done — Sevan's call)
 
+Installed by the `experiments/paper_ci` operator session on Sevan's go (arrangement of 2026-09-20): audit → merge between
+scoring passes → clear → register the catch-up jobs in `plan.py` → pull on the 4090 during a training stage → verify the
+first pass per host. ⛔ Merge in the LIVE tree only: this clone's `runs/` is a symlink into the live tree, and
+`sweeps_and_blates` changes the tracked `runs/MOVES.md`, so a merge / rebase / pull of that branch INSIDE this clone would
+write through the symlink into the live working tree (git refuses; do not force it). Cleanliness is checked without a
+working tree: `git merge-tree --write-tree origin/sweeps_and_blates categorical_inverse` → rc 0, no file changed on both
+sides (2026-09-20 20:15).
+
 1. Merge `categorical_inverse` into `sweeps_and_blates` on the lab while no `master_eval` execution is running
    (GOTCHAS 2026-09-19); `git pull` on the 4090 during one of its training stages. No driver changes.
 2. `clear_continuous_im.py --apply` on the lab (refuses while a scoring pass runs); re-run it after any job that was
