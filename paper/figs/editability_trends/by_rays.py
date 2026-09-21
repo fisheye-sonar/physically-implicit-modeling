@@ -8,7 +8,9 @@ training budget. Plotted: the pooled mean with ± SD bars where n > 1, else the 
 reported arm outside the guard is drawn hollow. "continuous" = the ``cartesian`` block, "categorical" = the
 ``appearance-fac`` block (its IM is the categorical inverse map). Nothing is computed here.
 
-    .pim/bin/python paper/figs/editability_trends/by_rays.py
+    .pim/bin/python paper/figs/editability_trends/by_rays.py         # by_rays (two panels), by_rays_half, pieces/, values
+    .pim/bin/python paper/figs/editability_trends/by_rays.py --all   # also, under extra/: the one-panel full-width form
+                                                                     # and the two-panel form without ND
 """
 from __future__ import annotations
 
@@ -34,8 +36,7 @@ from matplotlib.lines import Line2D                                     # noqa: 
 from matplotlib.ticker import NullLocator                               # noqa: E402
 
 OUT = Path(__file__).resolve().parent
-PIECES = OUT / "pieces"
-PAD = 0.2      # ps.save's tight bbox adds 0.1 in on every side: figsize = the SAVED page size minus this
+PIECES, EXTRA_DIR = OUT / "pieces", OUT / "extra"
 RAYS = (5, 8, 16, 128)
 RUN = {r: f"L-dw-{r}ray-20m" for r in RAYS}
 BLOCK = {"continuous": "cartesian", "categorical": "appearance-fac"}
@@ -43,6 +44,7 @@ LS = {"continuous": "-", "categorical": "--"}
 EDITORS = ("PI", "GS", "IM")
 MARK = {"PI": "o", "GS": "s", "IM": "^", "ND": "D"}
 GREY, ZERO = "#7f7f7f", "#c8c8c8"
+LEGEND_GAP = 0.18           # inches of clear space between the x-axis label and the legend row beneath it
 
 T.set_basis("cartesian")
 F = T.collect([], list(RUN.values()))
@@ -122,24 +124,41 @@ def key_hollow():
 LEGEND_KW = dict(handlelength=2.4, columnspacing=1.0, handletextpad=0.5)
 
 
-def fig_b1(stem: Path, width: float, legend_below: bool) -> None:
-    fig, ax = plt.subplots(figsize=(width - PAD, (2.85 if legend_below else 2.3) - PAD), layout="constrained")
+def legend_below(fig, handles, ncol: int) -> None:
+    """A figure legend on the page's bottom edge with LEGEND_GAP inches of clear space above it: constrained
+    layout lays the axes out in the region above the legend strip (``rect``), so the gap is exact."""
+    leg = fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.0), borderaxespad=0.0,
+                     ncol=ncol, **LEGEND_KW)
+    strip = leg.get_window_extent(fig.canvas.get_renderer()).height / fig.dpi + LEGEND_GAP
+    frac = strip / fig.get_figheight()
+    fig.get_layout_engine().set(rect=(0, frac, 1, 1 - frac))
+
+
+def save_pdf(fig, stem: Path) -> None:
+    """ps.save, PDF only (the pieces ship without previews)."""
+    ps.save(fig, stem)
+    Path(stem).with_suffix(".png").unlink()
+
+
+def fig_one_panel(stem: Path, width: float, height: float, legend_below_axes: bool) -> None:
+    """Both bases in one panel: continuous solid, categorical dashed."""
+    fig, ax = plt.subplots(figsize=(width, height), layout="constrained")
     hollow = draw(ax, BLOCK, EDITORS)
     ax.set_xlabel("Rays")
     ax.set_ylabel("Edit Index")
     eds, sty, hol = [key_editor(e) for e in EDITORS], [key_style(b) for b in BLOCK], [key_hollow()] if hollow else []
-    # a legend fills column-wise: interleaved, the two rows below read "PI GS IM" / "continuous categorical"
-    h = [eds[0], sty[0], eds[1], sty[1], eds[2]] + hol if legend_below else eds + sty + hol
-    if legend_below:
-        fig.legend(handles=h, loc="outside lower center", ncol=3, **LEGEND_KW)
+    if legend_below_axes:
+        # a legend fills column-wise: interleaved, the two rows read "PI GS IM" / "continuous categorical"
+        legend_below(fig, [eds[0], sty[0], eds[1], sty[1], eds[2]] + hol, ncol=3)
     else:
-        fig.legend(handles=h, loc="outside right center", ncol=1, **LEGEND_KW)
+        fig.legend(handles=eds + sty + hol, loc="outside right center", ncol=1, **LEGEND_KW)
     ps.save(fig, stem)
     plt.close(fig)
 
 
-def fig_b2(stem: Path, with_nd: bool = True) -> None:
-    fig, axes = plt.subplots(1, 2, sharey=True, figsize=(ps.TEXT_WIDTH_IN - PAD, 2.3 - PAD), layout="constrained")
+def fig_two_panels(stem: Path, with_nd: bool = True) -> None:
+    """Continuous state | categorical state, sharing y."""
+    fig, axes = plt.subplots(1, 2, sharey=True, figsize=(ps.TEXT_WIDTH_IN, 2.3), layout="constrained")
     fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.04)
     cat = EDITORS + (("ND",) if with_nd else ())
     hollow = draw(axes[0], ["continuous"], EDITORS) | draw(axes[1], ["categorical"], cat)
@@ -149,24 +168,24 @@ def fig_b2(stem: Path, with_nd: bool = True) -> None:
     for ax in axes:
         ax.set_xlabel("Rays")
     h = [key_editor(e) for e in cat] + ([key_hollow()] if hollow else [])
-    fig.legend(handles=h, loc="outside lower center", ncol=len(h), **LEGEND_KW)
+    legend_below(fig, h, ncol=len(h))
     ps.save(fig, stem)
     plt.close(fig)
 
 
 def piece(block: str, editors, stem: Path) -> None:
-    fig, ax = plt.subplots(figsize=(ps.HALF_WIDTH_IN - PAD, 2.1), layout="constrained")
+    fig, ax = plt.subplots(figsize=(ps.HALF_WIDTH_IN, 2.2), layout="constrained")
     draw(ax, [block], editors)
     ax.set_xlabel("Rays")
     ax.set_ylabel("Edit Index")
-    ps.save(fig, stem)
+    save_pdf(fig, stem)
     plt.close(fig)
 
 
 def legend_piece(handles, stem: Path) -> None:
     fig = plt.figure(figsize=(ps.TEXT_WIDTH_IN, 0.3))
     fig.legend(handles=handles, loc="center", ncol=len(handles), **LEGEND_KW)
-    ps.save(fig, stem)
+    save_pdf(fig, stem)
     plt.close(fig)
 
 
@@ -194,15 +213,18 @@ def table() -> str:
 
 if __name__ == "__main__":
     PIECES.mkdir(exist_ok=True)
-    fig_b1(OUT / "by_rays_B1", ps.TEXT_WIDTH_IN, legend_below=False)
-    fig_b1(OUT / "by_rays_B1_half", ps.HALF_WIDTH_IN, legend_below=True)
-    fig_b2(OUT / "by_rays_B2", with_nd=True)
-    fig_b2(OUT / "by_rays_B2_noND", with_nd=False)
+    fig_two_panels(OUT / "by_rays", with_nd=True)                                       # the paper's figure
+    fig_one_panel(OUT / "by_rays_half", ps.HALF_WIDTH_IN, 2.9, legend_below_axes=True)  # for a wrap beside the table
+    if "--all" in sys.argv[1:]:                                                         # variants, kept out of the top level
+        EXTRA_DIR.mkdir(exist_ok=True)
+        fig_one_panel(EXTRA_DIR / "by_rays_one_panel", ps.TEXT_WIDTH_IN, 2.3, legend_below_axes=False)
+        fig_two_panels(EXTRA_DIR / "by_rays_noND", with_nd=False)
     piece("continuous", EDITORS, PIECES / "B_continuous")
     piece("categorical", EDITORS + ("ND",), PIECES / "B_categorical")
     piece("categorical", EDITORS, PIECES / "B_categorical_noND")
-    legend_piece([key_editor(e) for e in EDITORS] + [key_style(b) for b in BLOCK] + [key_hollow()], PIECES / "B1_legend")
-    legend_piece([key_editor(e) for e in EDITORS + ("ND",)] + [key_hollow()], PIECES / "B2_legend")
+    legend_piece([key_editor(e) for e in EDITORS + ("ND",)] + [key_hollow()], PIECES / "B_legend")          # by_rays
+    legend_piece([key_editor(e) for e in EDITORS] + [key_style(b) for b in BLOCK] + [key_hollow()],
+                 PIECES / "B_legend_half")                                                                  # by_rays_half
     md = table()
     print(md)
     (OUT / "by_rays_values.md").write_text(md + "\n")

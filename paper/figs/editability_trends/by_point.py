@@ -5,10 +5,12 @@ Every number is READ from a run's scores.json. At each residual point the editor
 ``pim.metrics.selection.best_arm`` over the arms AT that point (the tables' rule: the best Edit Index
 inside the fidelity guard, the unguarded best only when no arm passes; ``within_guard`` says which). GS
 arms carry their start layer as their point and write from it onward, so GS is plotted at its start
-point. The second row (A2) reads the inverse map's R² and the MLP probe skill per point. Nothing is
-computed here. Outputs land beside this script.
+point. The second row reads the inverse map's R² and the MLP probe skill per point. Nothing is computed
+here.
 
-    .pim/bin/python paper/figs/editability_trends/by_point.py
+    .pim/bin/python paper/figs/editability_trends/by_point.py          # by_point.pdf/.png, pieces/ (PDF), values
+    .pim/bin/python paper/figs/editability_trends/by_point.py --all    # also the variants, under extra/: the
+                                                                       # one-row form, the extra runs, all four runs
 """
 from __future__ import annotations
 
@@ -33,11 +35,11 @@ import matplotlib.pyplot as plt                                         # noqa: 
 from matplotlib.lines import Line2D                                     # noqa: E402
 
 OUT = Path(__file__).resolve().parent
-PIECES = OUT / "pieces"
-PAD = 0.2      # ps.save's tight bbox adds 0.1 in on every side: figsize = the SAVED page size minus this
+PIECES, EXTRA_DIR = OUT / "pieces", OUT / "extra"
 EDITORS = ("PI", "GS", "IM")
 MARK = {"PI": "o", "GS": "s", "IM": "^"}
 GREY, ZERO = "#7f7f7f", "#c8c8c8"
+LEGEND_GAP = 0.18           # inches of clear space between the x-axis label and the legend row beneath it
 # panel label -> run name (find_run locates the topic directory)
 RUNS = {"Othello": "L-oth-20m", "Rayworld": "L-dw-noiseless-20m",
         "Othello, adjacent-flip": "L-oth-adjacent-flip-20m", "Rayworld, 8-ray": "L-dw-8ray-20m"}
@@ -119,10 +121,26 @@ def keys(two_row: bool, hollow: bool) -> list:
 LEGEND_KW = dict(handlelength=1.6, columnspacing=1.0, handletextpad=0.4)
 
 
+def legend_below(fig, handles, ncol: int) -> None:
+    """A figure legend on the page's bottom edge with LEGEND_GAP inches of clear space above it: constrained
+    layout lays the axes out in the region above the legend strip (``rect``), so the gap is exact."""
+    leg = fig.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 0.0), borderaxespad=0.0,
+                     ncol=ncol, **LEGEND_KW)
+    strip = leg.get_window_extent(fig.canvas.get_renderer()).height / fig.dpi + LEGEND_GAP
+    frac = strip / fig.get_figheight()
+    fig.get_layout_engine().set(rect=(0, frac, 1, 1 - frac))
+
+
+def save_pdf(fig, stem: Path) -> None:
+    """ps.save, PDF only (the pieces ship without previews)."""
+    ps.save(fig, stem)
+    Path(stem).with_suffix(".png").unlink()
+
+
 def compose(labels, two_row: bool, stem: Path) -> None:
     n = len(labels)
     fig, axes = plt.subplots(2 if two_row else 1, n, squeeze=False, sharex=True, sharey="row",
-                             figsize=(ps.TEXT_WIDTH_IN - PAD, (3.2 if two_row else 2.2) - PAD), layout="constrained",
+                             figsize=(ps.TEXT_WIDTH_IN, 3.2 if two_row else 2.2), layout="constrained",
                              gridspec_kw=dict(height_ratios=[1.75, 1] if two_row else [1]))
     fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.04, hspace=0.06)
     hollow = False
@@ -136,7 +154,7 @@ def compose(labels, two_row: bool, stem: Path) -> None:
     if two_row:
         axes[1, 0].set_ylabel("Skill")
     h = keys(two_row, hollow)
-    fig.legend(handles=h, loc="outside lower center", ncol=len(h), **LEGEND_KW)
+    legend_below(fig, h, ncol=len(h))
     ps.save(fig, stem)
     plt.close(fig)
 
@@ -146,14 +164,14 @@ def piece(draw, d: dict, stem: Path, size, ylabel: str) -> None:
     draw(ax, d)
     ax.set_xlabel("Residual point")
     ax.set_ylabel(ylabel)
-    ps.save(fig, stem)
+    save_pdf(fig, stem)
     plt.close(fig)
 
 
 def legend_piece(handles, stem: Path) -> None:
     fig = plt.figure(figsize=(ps.TEXT_WIDTH_IN, 0.3))
     fig.legend(handles=handles, loc="center", ncol=len(handles), **LEGEND_KW)
-    ps.save(fig, stem)
+    save_pdf(fig, stem)
     plt.close(fig)
 
 
@@ -179,17 +197,19 @@ def table() -> str:
 
 if __name__ == "__main__":
     PIECES.mkdir(exist_ok=True)
-    compose(STANDARD, False, OUT / "by_point_A1")
-    compose(STANDARD, True, OUT / "by_point_A2")
-    compose(EXTRA, False, OUT / "by_point_A1_extra")
-    compose(EXTRA, True, OUT / "by_point_A2_extra")
-    compose(STANDARD + EXTRA, False, OUT / "by_point_A1_all")
-    compose(STANDARD + EXTRA, True, OUT / "by_point_A2_all")
+    compose(STANDARD, True, OUT / "by_point")                           # the paper's figure: two rows, standard pair
+    if "--all" in sys.argv[1:]:                                         # the variants, kept out of the top level
+        EXTRA_DIR.mkdir(exist_ok=True)
+        compose(STANDARD, False, EXTRA_DIR / "by_point_one_row")
+        compose(EXTRA, True, EXTRA_DIR / "by_point_extra")
+        compose(EXTRA, False, EXTRA_DIR / "by_point_extra_one_row")
+        compose(STANDARD + EXTRA, True, EXTRA_DIR / "by_point_all")
+        compose(STANDARD + EXTRA, False, EXTRA_DIR / "by_point_all_one_row")
     for lab, d in DATA.items():
-        piece(draw_ei, d, PIECES / f"A_ei_{SLUG[lab]}", (ps.HALF_WIDTH_IN - PAD, 1.9), "Edit Index")
-        piece(draw_skill, d, PIECES / f"A_skill_{SLUG[lab]}", (ps.HALF_WIDTH_IN - PAD, 1.25), "Skill")
-    legend_piece(keys(False, True), PIECES / "A1_legend")
-    legend_piece(keys(True, True), PIECES / "A2_legend")
+        piece(draw_ei, d, PIECES / f"A_ei_{SLUG[lab]}", (ps.HALF_WIDTH_IN, 2.0), "Edit Index")
+        piece(draw_skill, d, PIECES / f"A_skill_{SLUG[lab]}", (ps.HALF_WIDTH_IN, 1.35), "Skill")
+    legend_piece(keys(True, True), PIECES / "A_legend")                 # by_point's legend (six keys)
+    legend_piece(keys(False, True), PIECES / "A_legend_editors")        # editors + hollow key only
     md = table()
     print(md)
     (OUT / "by_point_values.md").write_text(md + "\n")

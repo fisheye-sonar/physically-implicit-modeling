@@ -1,50 +1,47 @@
-# editability_trends: Edit Index across residual points (A) and across ray count with seed spread (B)
+# editability_trends: Edit Index across residual points (`by_point`) and across ray count with seed spread (`by_rays`)
 
 Built 2026-09-21 from `runs/<topic>/<run>/scores.json` only. Every number is read through the canonical
 selection rule (`pim.metrics.selection.best_arm`) or the tables' own reader (`pim.figures.tables.collect`,
 which pools seed replicates through `pim.metrics.replicates`). The scripts compute no metric. Style:
-`paper/figs/paper_style.py` (Times New Roman embedded as TrueType, Okabe-Ito editor colours
-`ps.EDITOR_COLORS`), axes in the `pim.figures.theme.style_ax` look (grey spines and tick marks, black text,
-top and right spines hidden). Sizes are the SAVED page sizes (the scripts subtract the 0.1 in tight-bbox pad
-`ps.save` adds on each side).
+`paper/figs/paper_style.py` (Arial embedded as TrueType, Okabe-Ito editor colours `ps.EDITOR_COLORS`, zero
+outer padding), axes in the `pim.figures.theme.style_ax` look (grey spines and tick marks, black text, top and
+right spines hidden). Round 3 (Sevan): three figures at the top level, pieces under `pieces/` as PDF only, a
+0.18 in gap (`LEGEND_GAP`) between each x-axis label and the legend row beneath it.
 
 ## Regenerate
 
-    .pim/bin/python paper/figs/editability_trends/by_point.py     # Figure A, prints its table, writes by_point_values.{md,json}
-    .pim/bin/python paper/figs/editability_trends/by_rays.py      # Figure B, prints its table, writes by_rays_values.{md,json}
+    .pim/bin/python paper/figs/editability_trends/by_point.py     # by_point.pdf/.png, pieces/A_*.pdf, by_point_values.{md,json}
+    .pim/bin/python paper/figs/editability_trends/by_rays.py      # by_rays.pdf/.png, by_rays_half.pdf/.png, pieces/B_*.pdf, by_rays_values.{md,json}
+    .pim/bin/python paper/figs/editability_trends/by_point.py --all   # also the dropped variants, written under extra/ (see below)
+    .pim/bin/python paper/figs/editability_trends/by_rays.py --all
 
-CPU only, a few seconds each. `runs/` is read, never written.
+CPU only, a few seconds each. `runs/` is read, never written. Both scripts print their value table.
 
 ## Files
 
 | file | what it is | saved size |
 |---|---|---|
-| `by_point_A1.pdf/.png` | A1: one row, Othello standard (left) and Rayworld standard (right); Edit Index of each editor's reported arm at every residual point | 5.46 x 2.12 in |
-| `by_point_A2.pdf/.png` | A2: A1 plus a thin second row with the inverse map's R² (IM colour, diamonds) and the MLP probe skill (grey) per point | 5.46 x 3.12 in |
-| `by_point_A1_extra.pdf`, `by_point_A2_extra.pdf` (+ png) | the same for the extra runs: Othello adjacent-flip (left) and Rayworld 8-ray (right) | as A1 / A2 |
-| `by_point_A1_all.pdf`, `by_point_A2_all.pdf` (+ png) | all four runs in one row (standard pair, then the extras) | as A1 / A2 |
-| `by_rays_B1.pdf/.png` | B1: one panel, both bases; continuous solid, categorical dashed; six-key legend at the right | 5.40 x 2.22 in |
-| `by_rays_B1_half.pdf/.png` | B1 at half width for a wrap beside the editability table; legend below in two rows (PI GS IM / continuous categorical) | 2.59 x 2.75 in |
-| `by_rays_B2.pdf/.png` | B2: two panels sharing y, continuous state (PI, GS, IM) and categorical state (PI, GS, IM, ND); four-key legend below | 5.46 x 2.22 in |
-| `by_rays_B2_noND.pdf/.png` | B2 without ND in the categorical panel | 5.46 x 2.22 in |
-| `pieces/A_ei_<run>.pdf`, `pieces/A_skill_<run>.pdf` | each A panel alone, half width, with its axis labels (`othello`, `rayworld`, `othello_adjacent_flip`, `rayworld_8ray`) | 2.57 x 2.02 / 1.37 in |
-| `pieces/A1_legend.pdf`, `pieces/A2_legend.pdf` | the A legends alone (A1: editors + hollow key; A2: also the two skill keys) | strips |
-| `pieces/B_continuous.pdf`, `pieces/B_categorical.pdf`, `pieces/B_categorical_noND.pdf` | each B panel alone, half width | 2.57 x 2.22 in |
-| `pieces/B1_legend.pdf`, `pieces/B2_legend.pdf` | the B legends alone (both include the hollow key in case a later re-score needs it) | strips |
+| `by_point.pdf/.png` | two rows; columns Othello standard (left) and Rayworld standard (right). Top: Edit Index of each editor's reported arm at every residual point (PI, GS, IM; hollow = outside the fidelity guard). Bottom: the inverse map's R² per point (IM colour, diamonds) and the MLP probe skill (grey) | 5.46 x 3.18 in |
+| `by_rays.pdf/.png` | two panels sharing y: continuous state (PI, GS, IM) and categorical state (PI, GS, IM, ND) against ray count; mean over three seeds with +-1 SD bars | 5.46 x 2.28 in |
+| `by_rays_half.pdf/.png` | one panel at half width for a wrap beside the editability table: both bases, continuous solid and categorical dashed; legend rows read "PI GS IM" / "continuous categorical" | 2.57 x 2.86 in |
+| `pieces/A_ei_<run>.pdf`, `pieces/A_skill_<run>.pdf` | each `by_point` panel alone with its axis labels; runs `othello`, `rayworld`, `othello_adjacent_flip`, `rayworld_8ray` | 2.57 x 1.92 / 1.27 in |
+| `pieces/A_legend.pdf`, `pieces/A_legend_editors.pdf` | the `by_point` legend (six keys) and the editors-only legend (PI, GS, IM, hollow key) | strips |
+| `pieces/B_continuous.pdf`, `pieces/B_categorical.pdf`, `pieces/B_categorical_noND.pdf` | each `by_rays` panel alone | 2.57 x 2.12 in |
+| `pieces/B_legend.pdf`, `pieces/B_legend_half.pdf` | the `by_rays` legend (PI, GS, IM, ND, hollow key) and the `by_rays_half` legend (editors, line-style keys, hollow key) | strips |
 | `by_point_values.md/.json`, `by_rays_values.md/.json` | the plotted values (the tables below) with the arm behind every point | |
 
-Recommendation: A2 for the appendix section "Inverse Mapping Editability Trends Across Residual Points" (the
-second row is what makes the IM curve readable against the probe and inverse-map skill); A1 if the section
-must stay short. For B, B2 at full width (the two bases separate cleanly and ND fits), and B1_half for the
-wrap beside the editability table; B1 at full width is the weakest of the three (one stretched panel and a
-tall legend).
+Variants dropped from the top level in round 3 (regenerate with `--all`; they land under `extra/`, which is not
+kept): `by_point_one_row` (Edit Index row only), `by_point_extra` and `by_point_extra_one_row` (Othello
+adjacent-flip | Rayworld 8-ray), `by_point_all` and `by_point_all_one_row` (all four runs in one row);
+`by_rays_one_panel` (both bases in one full-width panel, legend at the right), `by_rays_noND`. The extra runs'
+values stay in `by_point_values.md`.
 
-## Figure A: `by_point.py`
+## `by_point.py`
 
 Runs: Othello standard `initial_othello_comparison/L-oth-20m`; Rayworld standard `noise_ablation/L-dw-noiseless-20m`
-(the `cartesian` block); extras `adjacent_flip_ablation/L-oth-adjacent-flip-20m` and `ray_ablation/L-dw-8ray-20m`
-(`cartesian` block). Located with `pim.figures.tables.find_run`. Edit Index key: `edit_index_symdiff`
-(`tables.OTH_EI`, the symmetric-difference construction) on Othello, `edit_index` on Rayworld.
+(the `cartesian` block); the `--all` extras `adjacent_flip_ablation/L-oth-adjacent-flip-20m` and
+`ray_ablation/L-dw-8ray-20m` (`cartesian` block). Located with `pim.figures.tables.find_run`. Edit Index key:
+`edit_index_symdiff` (`tables.OTH_EI`, the symmetric-difference construction) on Othello, `edit_index` on Rayworld.
 
 Selection rule (the only logic, and it is a call): for each editor and residual point p, the arms at that point
 (`pim.metrics.selection.arms_of`, then `a["point"] == p`) go through `pim.metrics.selection.best_arm`: the highest
@@ -52,18 +49,18 @@ Edit Index among the arms whose fidelity ratio is at most 1; if no arm at that p
 Index overall, and that point is drawn HOLLOW ("outside fidelity guard"). PI sweeps its step size alpha at every
 point (16 values on Rayworld, 12 on Othello); GS sweeps its step size (10 / 6 values) at start layers 0, 2, 4, 6,
 8, and since it writes from its start layer onward it is plotted at that start point; IM has one arm per point
-(alpha 1, the full overwrite). Every arm is scored on the run's 1000-case bench. Second row (A2): the inverse map's
+(alpha 1, the full overwrite). Every arm is scored on the run's 1000-case bench. Second row: the inverse map's
 held-out R² per point (`inverse_map.g_r2`, the fit of g from environment state to latent state) and the MLP probe
 skill per point (`probe_skill_mlp` on Rayworld; `probe_skill["mine|mlp|sequence"]` on Othello), both held out by
 sequence, both on a 0 to 1 axis labelled "Skill".
 
-Caption facts: x = residual point 0 to 8 (0 = the embedding, k = after block k); y = Edit Index of the editor's
-reported arm at that point; hollow markers = the arm shown is outside the fidelity guard (fidelity ratio above 1,
-the write degraded the prediction) because no arm at that point passed it; GS is placed at its start layer; a
-light line marks Edit Index 0. Second row: inverse map R² and MLP probe skill per point, held out by sequence. Say in the caption that the
-inverse map's R² is the held-out fit of g (how much of the residual the environment state explains), which the
-registry keeps distinct from a decodability number; it shares the 0 to 1 axis only because both are skills of a
-held-out fit.
+Caption facts: x = residual point 0 to 8 (0 = the embedding, k = the stream after block k); y = Edit Index of the
+editor's reported arm at that point; hollow markers = the arm shown is outside the fidelity guard (fidelity ratio
+above 1, the write degraded the prediction) because no arm at that point passed it; GS is placed at its start
+layer; a light line marks Edit Index 0. Second row: inverse map R² and MLP probe skill per point, held out by
+sequence. Say in the caption that the inverse map's R² is the held-out fit of g (how much of the residual the
+environment state explains), which the registry keeps distinct from a decodability number; it shares the 0 to 1
+axis only because both are skills of a held-out fit.
 
 What the plotted values show (quantities only, from the table below): on Othello standard, PI peaks at point 4
 (+0.818, fidelity 0.30), GS at point 4 (+0.828, 0.28), IM at point 5 (+0.806, 0.38); IM is outside the guard at
@@ -73,7 +70,7 @@ the inverse map's R² is 0.74 at point 0 and 0.28 to 0.34 at points 1 to 8, so t
 IM index on Rayworld. On adjacent-flip Othello every editor's arms at points 6 to 8 are outside the guard (PI
 at alpha 100 with fidelity ratios above 8). On the 8-ray model IM is between +0.55 and +0.71 at every point.
 
-### Plotted values (A)
+### Plotted values (`by_point`; the extra runs are the `--all` variants)
 
 | run | point | PI | GS | IM | inverse map R² | MLP probe skill |
 |---|---|---|---|---|---|---|
@@ -116,7 +113,7 @@ at alpha 100 with fidelity ratios above 8). On the 8-ray model IM is between +0.
 
 Cell = Edit Index of the reported arm (fidelity ratio, step size α); * = that arm is outside the fidelity guard (no arm at that point has fidelity ratio ≤ 1). Blank = no arm at that point.
 
-## Figure B: `by_rays.py`
+## `by_rays.py`
 
 Runs: `ray_ablation/L-dw-5ray-20m`, `L-dw-8ray-20m`, `L-dw-16ray-20m`, `L-dw-128ray-20m` (x = 5, 8, 16, 128 rays,
 log axis with exactly those ticks). Read with `T.set_basis("cartesian"); F = T.collect([], runs)`.
@@ -133,10 +130,10 @@ Per (run, block, editor) the parent run's reported arm is `best_arm` (the guard 
 families n = 3 at 512k steps). Plotted: the pooled mean with a +-1 SD bar where n > 1 (the parent's value would be
 used otherwise; it never is here). The hollow mark follows the PARENT's reported arm; no reported arm in this
 figure is outside the guard, so no hollow marker is drawn and the composites carry no hollow legend key (the
-legend pieces do). ND is shown in the categorical panel of B2 only (four lines there read cleanly; ND has no
-continuous-target row because one fixed direction cannot serve 1000 teleports, and adding it to B1 would make
-seven lines). SDs are 0.002 to 0.036, so most bars are hidden inside the 3.2 pt markers; the largest are
-5-ray PI (0.036), 8-ray GS (0.030) and 128-ray GS (0.027) on the continuous target.
+legend pieces do). ND is shown in the categorical panel of `by_rays` only (four lines there read cleanly; ND has
+no continuous-target row because one fixed direction cannot serve 1000 teleports, and adding it to the one-panel
+`by_rays_half` would make seven lines). SDs are 0.002 to 0.036, so most bars are hidden inside the 3.2 pt
+markers; the largest are 5-ray PI (0.036), 8-ray GS (0.030) and 128-ray GS (0.027) on the continuous target.
 
 Caption facts: y = Edit Index of each editor's reported arm (the highest Edit Index among arms with fidelity
 ratio at most 1), mean over three training seeds at 512k steps, bars +-1 SD (mostly smaller than the marker);
@@ -146,7 +143,7 @@ categorical inverse map; every plotted arm is inside the fidelity guard.
 Ledger check: every mean and SD below equals the "mean +- SD" column of `experiments/paper_ci/dashboard/ledger.md`
 (2026-09-21 10:32) for the same (run, block, editor); the "parent" column equals its "canonical" column.
 
-### Plotted values (B)
+### Plotted values (`by_rays`, `by_rays_half`)
 
 | rays | basis | editor | plotted (mean) | SD | n | budget | members | parent | parent fid | parent arm | inside guard | member fids |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -187,7 +184,10 @@ plotted = pooled mean over the seed replicates (n > 1) else the parent's value; 
   `ps.apply()` after importing it, so the paper style wins.
 - `style_ax` colours tick labels grey and sets them to 9 pt; the scripts keep its spines and tick marks and set
   the labels back to black 8 pt (the paper's rule is black text).
-- Legends hang below (or, for B1, beside) the axes through constrained layout, so nothing overlaps at the saved
-  size; text inside the figures is 8 to 9 pt.
-- Not done: nothing in the brief was skipped. The A2 second row puts two quantities (R² and probe skill) on one
-  0 to 1 axis as the brief asked; they are both skills of a held-out fit, not a dual-axis chart.
+- The legend row sits on the page's bottom edge; constrained layout lays the axes out in the region above it
+  (`legend_below`: the layout `rect` starts `LEGEND_GAP` = 0.18 in above the legend), so the gap between the
+  x-axis label and the legend is exact and nothing overlaps at the saved size. Text inside the figures is 8 to 9 pt.
+- Pieces are written through `ps.save` and their PNG preview is removed, so their PDF options always match the
+  composites'.
+- The `by_point` second row puts two quantities (R² and probe skill) on one 0 to 1 axis as the brief asked; they
+  are both skills of a held-out fit, not a dual-axis chart.
