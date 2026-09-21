@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 11:45 PT — all five paper-figure folders landed and verified (see the 2026-09-21 day entry); earlier:  — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
+_Last updated: 2026-09-21 13:10 PT — oth-standard complete at n = 3 (first Othello family); adjflip s1 extension running on the lab, s2 scoring on the 4090; queue 21 of 37_
 
 ## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
 
@@ -303,6 +303,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-21 13:10 — oth-standard complete (n = 3 at 512k): the FIRST Othello family done; `rep_oth-adjflip_s1` (extension) launched on the lab.** `rep_oth-standard_s2` (lab, 16.58 h; scoring 12:47–13:05, one pass, eval_version 2026-09-12.1, 282 arms, no errors). Pooled, mine/theirs symdiff, guarded selection: LIN 0.969 ± 0.003, MLP 0.971 ± 0.002, PI +0.808 ± 0.015 (members +0.798 / +0.801 / +0.826), ND +0.732 ± 0.027, GS +0.808 ± 0.012, IM +0.778 ± 0.034 (+0.795 / +0.801 / +0.738), IM-NN +0.029 ± 0.007; guards PI 0.52 ± 0.05 (canonical 0.30 — the members' guarded PI arm sits at a milder alpha), ND 0.34, GS 0.34, IM 0.40 ± 0.04. Seed 2 is the outlier on both sides (highest PI, lowest IM) — Othello's seed spread is 3–7× discworld's on the same editors; the canonical parent (+0.818 / +0.828 / +0.806) sits at the top of every member range. Extension launch verified: the dispatcher parked seed 1's 390k `scores.json` + `variance.json` as `.s390000.json` with two `runs/MOVES.md` lines at 13:06:32 and the trainer resumed from `ckpt/latest.pt` at step 390000. `rep_oth-adjflip_s2` is in its scoring stage on the 4090 (done ≈ 13:20). 21 of 37 done.
 
 **2026-09-21 09:45 — MONITORING RESUMED by this session at Sevan's word ("you should be the only active monitoring agent now"); overnight verified.** Events since the hand-back: the five `catim_*` catch-up jobs all done (21:32 → 05:01, ~1.9 h each; every 46-min `stall` line beside them was a false alarm — a fit in progress writes nothing the stall check sees); `rep_oth-standard_s1` done on the 4090 (18.33 h) → oth-standard at n = 2 (PI +0.800 ± 0.002, GS +0.815 ± 0.002, IM +0.798 ± 0.004, LIN 0.970 ± 0.003); `rep_oth-adjflip_s2` launched on the 4090 at 23:22 as an EXTENSION (seed 2 resumed from its 160k checkpoint, config rewritten to 512000, `batch_order_exact` absent = default; at 440k at 09:34, scoring done ≈ 13:00); `rep_oth-standard_s2` on the lab at 400k (≈ 14:30). **Categorical IM landed on all 16 ray-family members** (appearance-fac block, IM only): 5-ray +0.909 / +0.913 / +0.913 / +0.915, 8-ray +0.866 / +0.869 / +0.874 / +0.879, 16-ray +0.819 / +0.821 / +0.823 / +0.823, 128-ray +0.634 / +0.637 / +0.638 / +0.640 (parent first), guards 0.25–0.29. **One regression fixed:** `runs/MOVES.md` in the lab tree had LOST the two noiseless parking lines (a 0/2 diff) — the sync-back of `rep_oth-standard_s1` pulled the 4090's OLDER copy (its checkout predates 3a7d266) over the lab's, because `runs/MOVES.md` is in every replicate job's outputs. Restored from HEAD and the HEAD copy scp'd to the 4090 (its `replicate.sh` only ever appends), so the next sync-back carries it forward; a proper fix (pull on the 4090, or drop MOVES.md from remote outputs in favour of a per-job snippet) waits for a training stage / the drain. Digest last sent 08:23; dashboard ETA 09-23 16:19. Still owed from the 21:35 entry (not started): REGISTRY run rows, `findings/ray-ablation.md` / `inverse-probe.md` numbers, the four waterfalls.
 
@@ -2579,7 +2581,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-21 09:45 PT — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
+_Last updated: 2026-09-21 13:10 PT — oth-standard complete at n = 3 (first Othello family); adjflip s1 extension running on the lab, s2 scoring on the 4090; queue 21 of 37_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
