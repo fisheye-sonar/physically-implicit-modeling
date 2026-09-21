@@ -14,7 +14,9 @@ Arms (all scored on the canonical bench, first 32 selected cases):
   hist     (rewritten history, no write at EF−1 — does the history alone carry the edit?)
 Also reported: RMSE of the rewritten history against the SIM'S clean counterfactual render.
 Outputs land beside this script; everything canonical comes from pim.* — nothing under experiments/
-(moved here 2026-09-19 from experiments/history_rewrite/, so the paper does not depend on that tree)."""
+(moved here 2026-09-19 from experiments/history_rewrite/, so the paper does not depend on that tree).
+Also saves every array behind the paper figure to .scratch/history_rewrite_arrays.npz, which
+draw_paper.py (beside this script) turns into the paper panels without touching a model."""
 from __future__ import annotations
 import json, sys
 from pathlib import Path
@@ -99,7 +101,12 @@ json.dump({"run": RUN, "block": BLOCK, "point": PT, "n": b.n, "cards": cards, "h
 
 def _cx(m):
     i = np.where(m)[0]; return i.mean() if i.size else np.nan
-tx = np.array([_cx(b.zones.target[i]) for i in range(N_ROWS)]); gx = np.array([_cx(b.zones.ghost[i]) for i in range(N_ROWS)])
+tx = np.array([_cx(b.zones.target[i]) for i in range(b.n)]); gx = np.array([_cx(b.zones.ghost[i]) for i in range(b.n)])
+# the arrays behind the paper figure (2026-09-21): draw_paper.py reads this and touches no model or metric
+np.savez_compressed(REPO / ".scratch" / "history_rewrite_arrays.npz", obs_cf=obs_cf, cf_clean=cf_clean,
+                    obs_hist=b.obs[:, :EF], gt_roll=b.gt_roll, gt_unedited_roll=b.zones.gt_unedited_traj,
+                    target_x=tx, ghost_x=gx, edit_object=b.edit_object, s_post=s_post,
+                    scores_json=(OUT / "scores.json").read_text(), **{f"roll_{k}": v for k, v in rolls.items()})
 R = range(N_ROWS)
 lab = {k: f"{k} (EI {cards[k]['edit_index']:+.2f}, fid {cards[k]['fidelity_ratio']:.2f})" for k in rolls}
 fig = waterfall_grid(columns={lab[k]: rolls[k][:N_ROWS] for k in ("unsteered", "IM")},

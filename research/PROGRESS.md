@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 10:55 PT — paper-figure workers launched (see the 2026-09-21 day entry); earlier:  — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
+_Last updated: 2026-09-21 11:45 PT — all five paper-figure folders landed and verified (see the 2026-09-21 day entry); earlier:  — monitoring resumed by one session; catim catch-up landed on all 16 members; MOVES.md sync-back regression fixed; queue 20 of 37 (+5 catim), Othello replicates running on both hosts_
 
 ## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
 
@@ -35,6 +35,17 @@ means, SD bars smaller than the markers; every value matches the ledger; categor
 — PI / GS smear, IM renders the teleported disc; (b) 5×5 zoom on the edited tile + changed squares, Standard vs
 Adjacent NoFlip × Unedited / GT / PI / IM; `typical` = cases whose per-case index is nearest the population mean; R4 adds
 a 5-ray foil column; T1 / T2 alternatives; 401 pieces). Still running: `environments_overview/rayworld/`.
+**Fifth landed 11:40 PT — `environments_overview/rayworld/`** (composite recommended: (a) frustum with observer, 128 rays — hits
+dark and stopping at the disc, misses light — discs filled with their reflectivity grey, velocity arrows, seven fading ghosts,
+the frame-t* strip laid along the far plane, beside the 40 × 128 waterfall with a t axis and a t* pointer; (b) blink waterfall
+with the hidden span bracketed and the 0.5 edge markers; (c) 8-ray frustum + the SAME world through 16 / 8 / 5 rays via
+`render_scene` under each sibling's config; (d) the 30-cell appearance partition on dw-8ray with the discs' cells filled;
+21 vector pieces, light and dark variants; sequences by a stated `default_rng(0)` rule in `selection.json`).
+**ALL FIVE DONE in ~50 min wall clock; GPU freed (only the queue's training job remains).** Committed with the scripts, READMEs,
+sidecars, top-level PDFs / PNGs and piece PDFs; piece PNG previews are gitignored (`paper/figs/.gitignore`, regenerable).
+**Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
+Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
+captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.
 **Paper facts noted for the text (not yet applied):** Table 2 / §Results quote the pre-guard numbers; the categorical
 IM column is now the categorical inverse map (5/8/16/128-ray parents +0.913 / +0.866 / +0.823 / +0.637) so "IM is unchanged
 by the target" is false; five Rayworld families at n = 3 and oth-standard at n = 2 for the ± values.

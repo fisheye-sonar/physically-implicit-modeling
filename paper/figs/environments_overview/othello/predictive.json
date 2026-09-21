@@ -1,0 +1,63 @@
+{
+ "seed": 0,
+ "cache": ".scratch/othello_edits_guarded_cache.pkl",
+ "tint": {
+  "gamma": 0.6,
+  "full_at_probability": 0.02
+ },
+ "selection_rule": "one case per variant, rng.integers over the 1000 cached bench cases",
+ "variants": {
+  "standard": {
+   "cache_column": "Standard",
+   "run": "initial_othello_comparison/L-oth-20m",
+   "instance": "oth-uniform",
+   "bench_case_id": 850,
+   "board_after_move": 20,
+   "n_legal": 18,
+   "pieces": {
+    "legal": "pieces/predictive_standard_legal.pdf",
+    "model": "pieces/predictive_standard_model.pdf",
+    "pair": "pieces/predictive_standard_pair.pdf"
+   }
+  },
+  "adjacent_flip": {
+   "cache_column": "Adjacent Flip",
+   "run": "adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+   "instance": "oth-adjacent-flip",
+   "bench_case_id": 636,
+   "board_after_move": 20,
+   "n_legal": 24,
+   "pieces": {
+    "legal": "pieces/predictive_adjacent_flip_legal.pdf",
+    "model": "pieces/predictive_adjacent_flip_model.pdf",
+    "pair": "pieces/predictive_adjacent_flip_pair.pdf"
+   }
+  },
+  "adjacent_noflip": {
+   "cache_column": "Adjacent NoFlip",
+   "run": "adjacency_ablation/L-oth-adjacent-20m",
+   "instance": "oth-adjacent",
+   "bench_case_id": 511,
+   "board_after_move": 20,
+   "n_legal": 19,
+   "pieces": {
+    "legal": "pieces/predictive_adjacent_noflip_legal.pdf",
+    "model": "pieces/predictive_adjacent_noflip_model.pdf",
+    "pair": "pieces/predictive_adjacent_noflip_pair.pdf"
+   }
+  },
+  "standard_noflip": {
+   "cache_column": "Standard NoFlip",
+   "run": "flip_ablation/L-oth-noflip-20m",
+   "instance": "oth-noflip",
+   "bench_case_id": 269,
+   "board_after_move": 20,
+   "n_legal": 8,
+   "pieces": {
+    "legal": "pieces/predictive_standard_noflip_legal.pdf",
+    "model": "pieces/predictive_standard_noflip_model.pdf",
+    "pair": "pieces/predictive_standard_noflip_pair.pdf"
+   }
+  }
+ }
+}
