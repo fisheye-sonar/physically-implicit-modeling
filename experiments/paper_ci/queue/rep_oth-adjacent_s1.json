@@ -17,10 +17,10 @@
  "host_deps": {},
  "priority": 50,
  "est_hours": {
-  "lab": 13.9,
-  "remote": 17.99
+  "lab": 16.0,
+  "remote": 18.13
  },
- "train_h_lab": 12.7,
+ "train_h_lab": 14.8,
  "score_h": 0.6,
  "n_scored": 2,
  "inputs": [

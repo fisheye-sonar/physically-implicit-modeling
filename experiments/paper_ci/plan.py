@@ -46,7 +46,10 @@ FAMILIES = {
     # discworld train hours at 512k on the LAB 5090 UNDER ITS 450 W CAP (measured 2026-09-18 21:50:
     # 23.3 steps/s on 5-ray, 15% below the uncapped 27.5): 128-input 6.2, 8/5-ray 6.1, 16-ray 8.6.
     # The 4090 runs discworld at the uncapped 5090's rate (19.9 steps/s on 16-ray: the loader bounds
-    # it), so its discworld factor is 0.85/1.0 relative to the capped lab; Othello stays 0.77.
+    # it), so its discworld factor is 0.85/1.0 relative to the capped lab.
+    # OTHELLO, MEASURED 2026-09-20 on the first two 512k replicates: the capped lab trains at 9.6 steps/s
+    # (14.8 h for 512k, not the uncapped 11.2 → 12.7 h this table carried) and the 4090 at 8.54 (16.65 h),
+    # so train_h = 14.8 and remote_rate = 0.89 — the dashboard ETA had been ~2 h short per queued lab Othello job.
     "dw-8ray":     dict(parent="ray_ablation/L-dw-8ray-20m", steps=STEPS_DW, train_h=6.1, score_h=1.0, remote_rate=1.18, remote_score=0.6,
                         targets=["appearance-fac"], hosts=["remote", "lab"],
                         host_deps={"remote": ["xfer_dw-8ray_train"]}, prio=20),
@@ -62,17 +65,18 @@ FAMILIES = {
                          # EXTENSIONS of the existing 390k members (1.25 h each); the parent's 512k
                          # checkpoint becomes the seed-0 member, the 421,875 one is left outside the pool
                          seed_train_h={1: 1.5, 2: 1.5}),
-    "oth-standard": dict(parent="initial_othello_comparison/L-oth-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
+    "oth-standard": dict(parent="initial_othello_comparison/L-oth-20m", steps=STEPS_OTH, train_h=14.8, score_h=0.6, remote_rate=0.89,
                          targets=[], hosts=["lab", "remote"], prio=30),
-    "oth-adjflip": dict(parent="adjacent_flip_ablation/L-oth-adjacent-flip-20m", steps=STEPS_OTH, score_h=0.6,
+    "oth-adjflip": dict(parent="adjacent_flip_ablation/L-oth-adjacent-flip-20m", steps=STEPS_OTH, score_h=0.6, remote_rate=0.89,
                         targets=[], hosts=["remote", "lab"], prio=31,
                         # EXTENSIONS of the existing 390k members: seed 2 sits at 160k, seed 1 at 390k
-                        seed_train_h={2: 8.7, 1: 3.0}),
+                        # (352k and 122k steps at the capped lab's measured 9.6 steps/s)
+                        seed_train_h={2: 10.2, 1: 3.5}),
     "dw-blink":    dict(parent="blink_ablation/L-dw-blink-20m", steps=STEPS_DW, train_h=6.2, score_h=1.0,
                         targets=["appearance-fac"], hosts=["lab"], prio=40),
-    "oth-adjacent": dict(parent="adjacency_ablation/L-oth-adjacent-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
+    "oth-adjacent": dict(parent="adjacency_ablation/L-oth-adjacent-20m", steps=STEPS_OTH, train_h=14.8, score_h=0.6, remote_rate=0.89,
                          targets=[], hosts=["remote", "lab"], prio=50),
-    "oth-noflip":  dict(parent="flip_ablation/L-oth-noflip-20m", steps=STEPS_OTH, train_h=12.7, score_h=0.6,
+    "oth-noflip":  dict(parent="flip_ablation/L-oth-noflip-20m", steps=STEPS_OTH, train_h=14.8, score_h=0.6, remote_rate=0.89,
                         targets=[], hosts=["lab", "remote"], prio=51),
 }
 # the two corpora worth pushing to the remote (49 / 40 GB, ~8 min each at 100 MB/s) so the 4090 can
@@ -170,6 +174,31 @@ def control_jobs() -> list[dict]:
     ]
 
 
+def categorical_im_jobs() -> list[dict]:
+    """The categorical inverse map's CATCH-UP (Sevan 2026-09-20 21:15, option A; branch categorical_inverse
+    merged 637ea41): every in-scope run scored before the merge gets the new IM arm on its `appearance-fac`
+    block (`PIM_ADD_CAT_IM=1`; the old continuous-state arms were cleared from all 57 categorical blocks first —
+    the driver adds the arm only where no IM arm exists). ~37 min per run (a 200k-sequence streamed fit at nine
+    residual points); the four parents + the token model cost seconds (their maps were fitted by the staging
+    previews and copied into their probes/). ⚠ CPU LANE ON PURPOSE: these SHARE the lab GPU with whatever the gpu
+    lane trains (Sevan chose tonight over waiting for the lane) — `gpu_share` tells the ETA model how much that
+    slows the training job. score_pending.sh holds no lock, so the wrapper waits while another master_eval
+    execution runs on the host or the gpu-lane job is within 2.5 h of its scoring stage. Lab only."""
+    base = {"group": "categorical-IM", "kind": "score", "hosts": ["lab"], "lane": "cpu", "deps": [], "host_deps": {},
+            "inputs": [], "outputs": [], "progress": None, "mem_max": None, "max_attempts": 2, "hold": False, "gpu_share": 0.2}
+    fam = lambda f: [f"L-dw-{f}-20m__seed0_s512000", f"L-dw-{f}-20m__seed1", f"L-dw-{f}-20m__seed2"]   # noqa: E731
+    spec = [("catim_parents", ["L-dw-8ray-20m", "L-dw-16ray-20m", "L-dw-128ray-20m", "L-dw-8ray-tok-20m"], 0, 0.1,
+             "the parents + the token model (maps cached: arms only; the 5-ray parent was the 21:25 smoke, +0.913 / 0.25)"),
+            ("catim_5ray", fam("5ray"), 1, 1.9, "the three dw-5ray members at 512k"),
+            ("catim_8ray", fam("8ray"), 2, 1.9, "the three dw-8ray members at 512k"),
+            ("catim_16ray", fam("16ray"), 3, 1.9, "the three dw-16ray members at 512k"),
+            ("catim_128ray", fam("128ray"), 4, 2.0, "the three dw-128ray members at 512k")]
+    return [{**base, "id": jid, "cmd": f"bash experiments/categorical_inverse/drivers/catchup_job.sh {jid}",
+             "env": {"PIM_ADD_CAT_IM": "1", "PIM_ONLY_RUNS": ",".join(runs), **ENV_SCORE},
+             "priority": prio, "est_hours": {"lab": est}, "note": f"categorical inverse map catch-up: {note}"}
+            for jid, runs, prio, est, note in spec]
+
+
 def build() -> list[dict]:
     jobs = [transfer_job(i, p) for i, p in TRANSFERS.items()]
     for fam, F in FAMILIES.items():
@@ -177,6 +206,7 @@ def build() -> list[dict]:
             jobs.append(replicate_job(fam, F, seed))
     jobs += probe_seed_jobs()
     jobs += control_jobs()
+    jobs += categorical_im_jobs()
     # final_tables waits for EVERYTHING else (2026-09-19): it and the appendix job after it rewrite
     # scores.json files on the lab, and a remote job finishing meanwhile would pull its parent run dir
     # back over them. Nothing runs on either host while these two do.

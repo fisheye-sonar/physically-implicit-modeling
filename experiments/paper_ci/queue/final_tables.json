@@ -36,7 +36,12 @@
   "pseed_dw-8ray",
   "pseed_oth-adjflip_s1",
   "pseed_oth-adjflip_s2",
-  "pseed_oth-adjflip_s0"
+  "pseed_oth-adjflip_s0",
+  "catim_parents",
+  "catim_5ray",
+  "catim_8ray",
+  "catim_16ray",
+  "catim_128ray"
  ],
  "host_deps": {},
  "priority": 90,

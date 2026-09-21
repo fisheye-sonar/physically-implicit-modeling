@@ -232,7 +232,15 @@ def progress_of(job: dict, hp: dict | None, st: dict) -> dict:
         rate = step / el if el > 0 else None
         # the first steps of a RESUMED run reuse the parent's elapsed clock, so the rate is honest
         rem_h = ((total - step) / rate / 3600) if rate else None
+        # the CURRENT rate, off the last two log lines (2026-09-20): the since-start average cannot see a
+        # slowdown that began an hour ago (a cpu-lane job sharing the GPU). Used only when sane.
+        rate_now = None
+        if len(tail) >= 2:
+            ds, de = step - int(tail[-2].get("step", 0)), el - float(tail[-2].get("elapsed_s", 0) or 0)
+            if ds > 0 and de > 0 and rate and 0.4 * rate <= ds / de <= 1.6 * rate:
+                rate_now = ds / de
         out.update({"step": step, "total": total, "frac": step / total if total else None, "rate": rate,
+                    "rate_now": rate_now,
                     "train_left_h": rem_h, "val_loss": m.get("val_loss"), "train_loss": m.get("train_loss")})
         if rem_h is not None:
             out["eta_h"] = rem_h + (job.get("n_scored", 1) * job.get("score_h", 0.5))
@@ -469,6 +477,34 @@ def ledger_lines(group: dict) -> str:
     return "\n".join(out)
 
 
+def gpu_share_extra(jobs: dict, states: dict, host: str, p: dict) -> float:
+    """Hours to ADD to a running gpu-lane training job's forecast because cpu-lane jobs flagged ``gpu_share``
+    (the fraction by which they slow that training — the categorical-IM catch-up, 2026-09-20) are running or
+    queued on the same host. ``p`` is the job's live progress. The plain forecast is steps_left / since-start
+    rate; here the rest of the training is split into the C hours that overlap the sharing jobs (speed
+    r_free·(1−s)) and what follows (r_free), with r_free read off the CURRENT rate. 0 when nothing shares."""
+    share = [(jid, j) for jid, j in jobs.items()
+             if j.get("gpu_share") and j.get("lane") == "cpu" and host in j.get("hosts", [])
+             and states[jid].get("status") in ("queued", "running")]
+    if not share or not p.get("rate") or p.get("train_left_h") is None or not p.get("total"):
+        return 0.0
+    s = max(j["gpu_share"] for _, j in share)
+    C, sharing_now = 0.0, False
+    for jid, j in share:
+        est = float(j.get("est_hours", {}).get(host, 1.0))
+        if states[jid].get("status") == "running":
+            sharing_now = True
+            est = max(0.05, est - (NOW - states[jid].get("started_ts", NOW)) / 3600)
+        C += est
+    r_now = p.get("rate_now") or p["rate"]
+    r_free = r_now / (1 - s) if sharing_now and p.get("rate_now") else r_now
+    steps_left = p["total"] - p["step"]
+    shared_steps = C * 3600 * r_free * (1 - s)
+    t = (steps_left / (r_free * (1 - s)) / 3600 if shared_steps >= steps_left
+         else C + (steps_left - shared_steps) / r_free / 3600)
+    return max(-2.0, min(6.0, t - p["train_left_h"]))     # a bounded correction of the plain forecast
+
+
 def eta_block(jobs: dict, states: dict, hostinfo: dict) -> dict:
     fixed, free_at = {}, {}
     for host in HOSTS:
@@ -480,7 +516,7 @@ def eta_block(jobs: dict, states: dict, hostinfo: dict) -> dict:
             p = st.get("progress") or {}
             job = jobs[jid]
             if p.get("eta_h") is not None:
-                left = p["eta_h"]
+                left = p["eta_h"] + gpu_share_extra(jobs, states, st.get("host"), p)
             else:
                 est = job.get("est_hours", {}).get(st.get("host"), 1.0)
                 elapsed = (NOW - st.get("started_ts", NOW)) / 3600

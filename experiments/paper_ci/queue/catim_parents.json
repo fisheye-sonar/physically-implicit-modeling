@@ -1,0 +1,31 @@
+{
+ "group": "categorical-IM",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "cpu",
+ "deps": [],
+ "host_deps": {},
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "gpu_share": 0.2,
+ "id": "catim_parents",
+ "cmd": "bash experiments/categorical_inverse/drivers/catchup_job.sh catim_parents",
+ "env": {
+  "PIM_ADD_CAT_IM": "1",
+  "PIM_ONLY_RUNS": "L-dw-8ray-20m,L-dw-16ray-20m,L-dw-128ray-20m,L-dw-8ray-tok-20m",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "priority": 0,
+ "est_hours": {
+  "lab": 0.1
+ },
+ "note": "categorical inverse map catch-up: the parents + the token model (maps cached: arms only; the 5-ray parent was the 21:25 smoke, +0.913 / 0.25)"
+}

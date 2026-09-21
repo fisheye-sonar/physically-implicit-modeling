@@ -140,7 +140,7 @@ def main():
                 job = json.loads(qf.read_text())
                 prog = job.get("progress") or {}
                 if prog.get("metrics"):
-                    j["metrics_tail"] = tail_metrics(prog["metrics"], 1)
+                    j["metrics_tail"] = tail_metrics(prog["metrics"], 3)   # 3 lines: the dispatcher reads the CURRENT rate off the last two
                     mp = ROOT / prog["metrics"]
                     j["metrics_mtime"] = mp.stat().st_mtime if mp.exists() else None
                 # "progress" = the newest write among the wrapper's logs AND everything the job
