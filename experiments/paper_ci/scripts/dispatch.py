@@ -141,6 +141,26 @@ def push_inputs(host: str, job: dict) -> bool:
     return True
 
 
+def park_stale_snippet(job: dict) -> str | None:
+    """Shell for the launching host: park an EXTEND job's stale scores / variance BEFORE training starts.
+
+    An extension re-trains a finished replicate to a larger budget. The trainer rewrites config.json's
+    budget when it STARTS, while ``replicate.sh`` parks the old ``scores.json`` only after training ENDS —
+    so for hours the run is labelled with the new budget while carrying the old budget's scores, and the
+    tables pool it as a member of the new set (seen 2026-09-20 on dw-noiseless seed 2). The driver cannot be
+    edited while bash executes it; parking here first makes its own step a no-op (it checks the file exists).
+    Moves only, recorded in runs/MOVES.md; nothing is deleted."""
+    prog = job.get("progress") or {}
+    if job.get("kind") != "extend" or not prog.get("metrics"):
+        return None
+    run_dir, steps = prog["metrics"].rsplit("/", 1)[0], int(prog["steps"])
+    return (f'R={shlex.quote(run_dir)}; S=$(tail -n 1 "$R/metrics.jsonl" 2>/dev/null | sed -nE \'s/.*"step": ([0-9]+).*/\\1/p\'); '
+            f'if [ -n "$S" ] && [ "$S" -lt {steps} ]; then for F in scores.json variance.json; do '
+            f'if [ -f "$R/$F" ] && [ ! -f "$R/${{F%.json}}.s$S.json" ]; then mv "$R/$F" "$R/${{F%.json}}.s$S.json" && '
+            f'echo "- $(date +%F) $R/$F -> ${{F%.json}}.s$S.json (parked by the dispatcher at the START of the extension $S -> {steps}; '
+            f'rescored at the new budget when training ends)" >> runs/MOVES.md; fi; done; fi')
+
+
 def pull_outputs(host: str, job: dict) -> bool:
     H = HOSTS[host]
     ok = True
@@ -360,6 +380,11 @@ def tick(dry: bool = False) -> None:
                     save_state(jid, st)
                     continue
                 (LOGDIR / jid).mkdir(parents=True, exist_ok=True)
+                park = park_stale_snippet(job)
+                if park:
+                    cp = host_cmd(host, park, 60)
+                    if cp.returncode != 0:
+                        log(f"park stale scores for {jid} on {host}: rc {cp.returncode} {cp.stderr[-200:]}")
                 mem = job.get("mem_max") or H["mem_max"]
                 unit = unit_name(jid)
                 launch = (f"mkdir -p logs/paper_ci/{jid} && systemctl --user reset-failed {unit}.service 2>/dev/null; "
