@@ -280,32 +280,47 @@ def token_encoder(vocab: FrameVocab):
 
 @torch.no_grad()
 def inverse_arms(model, tbenches: dict, arrays: dict, vocab: FrameVocab, *, basis_name: str,
-                 uns: dict | None = None, **fit_kw) -> tuple[dict, dict]:
+                 target: str = "full", uns: dict | None = None, **fit_kw) -> tuple[dict, dict]:
     """IM and IM-NN on the frames-as-tokens model (2026-09-15): ``arms.inverse_arms`` with the
     token write (``_write_hook`` at the last position) and the frame-set scorecard.
     ``arrays`` ({key: bench_arrays(...) of the SAME target}) supplies the world positions a
-    TokenBench does not carry; ``uns`` ({key: unsteered probs}) attaches the guard."""
-    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
-    from pim.environments.discworld.arms import iter_inverse_maps
+    TokenBench does not carry; ``uns`` ({key: unsteered probs}) attaches the guard.
 
+    ``target`` (2026-09-20) as in ``arms.inverse_arms``: a categorical target writes through that
+    target's OWN state — the bench's post-edit labels (``arrays[key]["y"]``), one-hot, plus the discs'
+    Cartesian velocity — IM only; never a categorical bench through the continuous map."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.discworld.arms import N_OBJ, categorical_target, iter_inverse_maps
+    from pim.probes.inverse import encode_categorical_state
+
+    cat = categorical_target(target) is not None
     enc, tag = token_encoder(vocab)
-    S = {}
+    S, LAB = {}, {}
     for key, tb in tbenches.items():
         a = arrays[key]
-        _, s_post = dwb.full_state_pair(a["pos"], a["vel"], a["edit_object"], a["sim"], basis_name)
+        if cat != (a["kind"] == "classification"):
+            raise ValueError(f"{key}: a {a['kind']} bench cannot be written through the inverse map of target "
+                             f"{target!r} — the map must invert the state the block's own probes read")
+        _, s_post = dwb.full_state_pair(a["pos"], a["vel"], a["edit_object"], a["sim"],
+                                        "cartesian" if cat else basis_name)
         assert len(s_post) == tb.n, f"{key}: bench_arrays and TokenBench disagree on n"
         S[key] = torch.from_numpy(s_post).to(DEV)
+        if cat:
+            LAB[key] = torch.from_numpy(np.asarray(a["y"])).long().to(DEV)
     H0 = {key: residuals_last(model, tb) for key, tb in tbenches.items()}
     arms = {key: [] for key in tbenches}
-    stats = {"g_r2": [], "g_rmse": [], "nn_r2": []}
-    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, encoder=enc,
+    stats = {"g_r2": [], "g_rmse": [], "nn_r2": [], "g_r2_insample": []}
+    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, target=target, encoder=enc,
                                               encoder_tag=tag, **fit_kw):
         stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
         stats["nn_r2"].append(float(st["nn_r2"]))
+        stats["g_r2_insample"].append(float(st.get("r2_insample", float("nan"))))
         for key, tb in tbenches.items():
             h0 = H0[key][ell]
-            for editor, h_new in (("IM", inverse_overwrite(g, S[key])),
-                                  ("IM-NN", retrieval_overwrite(bank, S[key]))):
+            s_post = (encode_categorical_state(LAB[key], S[key][:, 2 * N_OBJ:], st["n_classes"]) if cat else S[key])
+            for editor, h_new in ((("IM", inverse_overwrite(g, s_post)),) if bank is None else
+                                  (("IM", inverse_overwrite(g, s_post)),
+                                   ("IM-NN", retrieval_overwrite(bank, s_post)))):
                 probs = probs_at_edit(model, tb, hook=_write_hook(ell, h_new))          # THE write
                 rec = {"editor": editor, "point": ell, "alpha": 1.0, "dims": "all",
                        "write_ratio": float((h_new - h0).norm(dim=1).div(h0.norm(dim=1)).mean()),

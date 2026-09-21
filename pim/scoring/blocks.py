@@ -92,6 +92,15 @@ def dw_block_setup(target, s):
 EDITORS_SCORED = ("PI", "ND", "GS", "IM", "IM-NN")
 IM_VERSION = "2026-09-15.1"
 
+def cat_inverse_in_scope(instance: str, target: str, s) -> bool:
+    """Does this categorical discworld block get an inverse-map arm? Only where SETTINGS ``dw_cat_im``
+    says so — ``{"instances": (...), "targets": (...)}`` (2026-09-20: the ray family and
+    ``appearance-fac``; each map is a 200k-sequence streamed fit, ~30 min a block). Everywhere else a
+    categorical block carries NO IM arm, and its table cell is blank — never the continuous map."""
+    c = s.get("dw_cat_im") or {}
+    return instance in c.get("instances", ()) and target in c.get("targets", ())
+
+
 def attach_inverse(blocks: dict, arms_by_key: dict, stats: dict, ei_key: str = "edit_index") -> None:
     """Append a run's IM / IM-NN arms to each block (scalars only), set best['IM'] / best['IM-NN']
     (and per dim set), and record the inverse map's fit."""

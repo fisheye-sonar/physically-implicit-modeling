@@ -32,7 +32,8 @@ from pim.environments.othello import arms as oa
 from pim.environments.othello import corpus as oc
 from pim.environments.othello import load_benchmark
 from pim.models import load_checkpoint, n_points
-from pim.scoring.blocks import IM_VERSION, best_arm, discworld_blocks, othello_blocks
+from pim.scoring.blocks import (IM_VERSION, best_arm, cat_inverse_in_scope, discworld_blocks,
+                                othello_blocks)
 from pim.scoring.discworld import inverse_discworld, score_discworld, score_discworld_tokens
 from pim.scoring.othello import _probe_games, score_othello
 from pim.scoring.runs import DEV, REPO, _sha
@@ -63,10 +64,21 @@ def _write_scores(sp: Path, scores: dict, version: str) -> None:
 def _has_im(arms) -> bool:
     return any(a.get("editor") == "IM" for a in (arms or []))
 
-def missing_inverse(r, prev) -> list:
+def missing_inverse(r, prev, s=None) -> list:
     """Blocks of a scored run whose arms lack the IM editor (2026-09-15) — the Othello canonical
-    block is the top level ("mine/theirs"), every other block sits under `bases`."""
-    keys = [k for k, blk in prev.get("bases", {}).items() if not _has_im(blk.get("arms"))]
+    block is the top level ("mine/theirs"), every other block sits under `bases`.
+
+    A CATEGORICAL discworld block (2026-09-20) is owed an IM arm only where SETTINGS `dw_cat_im` puts it
+    in scope (`blocks.cat_inverse_in_scope`) — everywhere else it has none by design and is never
+    "missing". And even in scope it is ADDED to an already-scored run only under `PIM_ADD_CAT_IM=1`:
+    each is a ~30-minute streamed fit, so the catch-up over the scored runs is one deliberate job, not
+    a surprise inside whichever replicate happens to score next (a run scored FRESH always gets it)."""
+    def owed(blk) -> bool:
+        if r["env"] != "discworld" or blk.get("kind") != "classification":
+            return True
+        return (s is not None and os.environ.get("PIM_ADD_CAT_IM") == "1"
+                and cat_inverse_in_scope(r.get("instance"), blk.get("target"), s))
+    keys = [k for k, blk in prev.get("bases", {}).items() if not _has_im(blk.get("arms")) and owed(blk)]
     if r["env"] == "othello" and "arms" in prev and not _has_im(prev["arms"]):
         keys = ["mine/theirs"] + keys
     return keys
@@ -129,13 +141,13 @@ def score_all(runs, s, eval_version, dry_run=False) -> list:
             prev = json.loads(sp.read_text())
             if prev.get("eval_version") == eval_version(r):
                 missing = missing_blocks(r, prev, s)
-                if not missing and not missing_inverse(r, prev):
+                if not missing and not missing_inverse(r, prev, s):
                     print(f"skip  {r['topic']}/{r['run']}  (scored at {eval_version(r)})")
                     continue
                 if dry_run:
-                    print(f"WOULD add to {r['topic']}/{r['run']}: blocks {missing}  IM on {missing_inverse(r, prev)}")
+                    print(f"WOULD add to {r['topic']}/{r['run']}: blocks {missing}  IM on {missing_inverse(r, prev, s)}")
                     todo_all.append({"run": f"{r['topic']}/{r['run']}", "action": "add", "blocks": missing,
-                                     "inverse": missing_inverse(r, prev)})
+                                     "inverse": missing_inverse(r, prev, s)})
                     continue
                 t0 = time.time()
                 scorer, label = scorer_for(r)
@@ -155,7 +167,7 @@ def score_all(runs, s, eval_version, dry_run=False) -> list:
                         _write_scores(sp, prev, eval_version(r))
                         print(f"    wrote {sp.relative_to(REPO)}  +{sorted(add['bases'])}  "
                               f"[{round((time.time() - t0) / 60, 1)} min]", flush=True)
-                missing_im = missing_inverse(r, prev)
+                missing_im = missing_inverse(r, prev, s)
                 if missing_im:
                     t1 = time.time()
                     print(f"\n=== adding IM / IM-NN to {missing_im} of {r['topic']}/{r['run']} ===", flush=True)

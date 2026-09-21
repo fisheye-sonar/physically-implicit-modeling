@@ -675,7 +675,7 @@ def grad_steer_arm(model, b: Bench, probes: dict, start_layers, alphas,
 #   the write is a state write, the bench only selects cases), so the fit runs once per run.
 
 
-def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str = "test",
+def iter_inverse_maps(model, *, basis_name: str, target: str = "full", n_seq: int = 30_000, split: str = "test",
                       probe: dict | tuple | None = None, data_dir: Path | None = None,
                       cache_dir: Path | None = None, seed: int = SEED, k: int | None = None,
                       points=None, encoder=None, encoder_tag: str | None = None,
@@ -683,7 +683,17 @@ def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str
     """Yield ``(point, g, bank, stats)`` for every residual point: g from the cache or fitted
     (kind ``inverse_map``; key = model fingerprint, target, n_seq, split, basis, seed, data,
     hidden, epochs, point), the retrieval bank built from the same training rows (never
-    cached — it IS the residuals), ``stats`` = g's held-out fit (``r2``, ``rmse``)."""
+    cached — it IS the residuals), ``stats`` = g's held-out fit (``r2``, ``rmse``).
+
+    ``target`` (2026-09-20): ``"full"`` = the continuous full state in ``basis_name`` (this body,
+    unchanged); a CATEGORICAL target = that target's own labels + Cartesian velocity, fitted with the
+    target's forward-probe recipe, streamed (``_iter_categorical_inverse_maps``; no retrieval bank)."""
+    if categorical_target(target) is not None:
+        yield from _iter_categorical_inverse_maps(
+            model, target=target, basis_name=basis_name, n_seq=n_seq, split=split, probe=probe,
+            data_dir=data_dir, cache_dir=cache_dir, seed=seed, points=points, encoder=encoder,
+            encoder_tag=encoder_tag, epochs=epochs, log=log)
+        return
     from pim.probes.inverse import (INVERSE_EPOCHS, INVERSE_HIDDEN, RETRIEVAL_K, RetrievalBank,
                                     fit_inverse_map)
 
@@ -750,34 +760,121 @@ def iter_inverse_maps(model, *, basis_name: str, n_seq: int = 30_000, split: str
         torch.cuda.empty_cache()
 
 
+def _iter_categorical_inverse_maps(model, *, target: str, basis_name: str, n_seq: int, split: str,
+                                   probe, data_dir, cache_dir, seed: int, points, encoder,
+                                   encoder_tag, epochs, log):
+    """The categorical inverse map, one per residual point (2026-09-20, Sevan): g maps the target's OWN
+    state — the labels its forward probes read, one-hot per tile — plus the discs' continuous CARTESIAN
+    velocity to the residual (``pim.probes.inverse``: why the velocity rides along though the forward
+    probes do not read it). Recipe = the forward probe's for this target (``probe_recipe(target)``: the
+    large corpus, its ``n_seq`` and ``epochs``), the same seeded 80/20 split by sequence, and the same
+    delivery: the residual stack of ONE point at a time on disk, streamed (``fit_inverse_map_stream``).
+    Cached like every probe (kind ``inverse_map``; the key carries ``target`` and ``state``). Yields
+    ``(point, g, None, stats)`` — no retrieval bank: IM-NN is not computed on a categorical state.
+    A cache HIT needs no residuals at all, so a rescoring costs only the arms."""
+    from pim.probes.baselines import MemmapRows
+    from pim.probes.inverse import (CATEGORICAL_STATE, INVERSE_HIDDEN, CategoricalState,
+                                    fit_inverse_map_stream)
+
+    epochs = FIT_EPOCHS if epochs is None else int(epochs)
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    h5_path, manifest, keyf = _probe_corpus(data_dir, probe, split)
+    with h5py.File(h5_path, "r") as f:
+        obs = f["obs_intensity"][:n_seq].astype(np.float32)
+        pos = f["positions"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+        vel = f["velocities"][:n_seq, :, :N_OBJ, :].astype(np.float32)
+    sim = json.load(open(manifest))["sim"]
+    labels, n_classes = _targets(target, pos, vel, sim, basis_name)            # (N, T, n_tiles) long
+    velc = _targets("full", pos, vel, sim, "cartesian")[0][..., 2 * N_OBJ:]     # (N, T, 2·N_OBJ) Cartesian velocity
+    span = getattr(model, "state_span", obs.shape[1])
+    obs = obs[:, : min(obs.shape[1], span)]
+    labels, velc = labels[:, : obs.shape[1]], velc[:, : obs.shape[1]]
+    if encoder is not None:
+        obs = encoder(obs)
+    perm = np.random.default_rng(int(seed)).permutation(n_seq)
+    tr_seq, te_seq = perm[: int(0.8 * n_seq)], perm[int(0.8 * n_seq):]
+    state = CategoricalState(labels, n_classes, extra=velc, device=DEV)
+    extra = {} if encoder is None else {"encoder": encoder_tag or "custom"}
+    _sdir = Path(__file__).resolve().parents[3] / ".scratch"
+    _sdir.mkdir(exist_ok=True)
+    for ell in (points if points is not None else range(model.n_layers + 1)):
+        fname, prov = store.key(model, kind="inverse_map", target=target, state=CATEGORICAL_STATE,
+                                n_seq=int(n_seq), split=keyf["split"], basis=basis_name, seed=int(seed),
+                                data=keyf["data"], hidden=INVERSE_HIDDEN, epochs=epochs,
+                                point=int(ell), **extra)
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            g, st = hit["g"].to(DEV), hit["stats"]
+            if log:
+                log(f"    categorical inverse map cache HIT  {fname}  (point {ell}, R² {st['r2']:+.3f})")
+        else:
+            _tmp = tempfile.NamedTemporaryFile(suffix=".npy", delete=False, dir=_sdir)
+            _tmp.close()
+            try:
+                R = collect_residuals(model, obs, batch=64, memmap=_tmp.name, points=[ell])
+                try:
+                    g, st = fit_inverse_map_stream(state, MemmapRows(R[0], device=DEV), tr_seq, te_seq,
+                                                   epochs=epochs, seed=int(seed), log=None)
+                except ValueError as e:         # a residual constant across frames: no conditional mean to learn
+                    if log:
+                        log(f"    categorical inverse map point {ell}: {e} — skipped")
+                    continue
+                finally:
+                    del R
+            finally:
+                os.unlink(_tmp.name)
+            store.store(fname, prov, {"g": g, "stats": st})
+            if log:
+                log(f"    categorical inverse map point {ell}: held-out R² {st['r2']:+.3f} "
+                    f"(in-sample {st['r2_insample']:+.3f})  rmse {st['rmse']:.4f}  WROTE {fname}")
+        yield int(ell), g, None, {**st, "nn_r2": float("nan"), "n_classes": int(n_classes)}
+        torch.cuda.empty_cache()
+
+
 @torch.no_grad()
-def inverse_arms(model, benches: dict, *, basis_name: str, unsteered_cards: dict | None = None,
-                 **fit_kw) -> tuple[dict, dict]:
+def inverse_arms(model, benches: dict, *, basis_name: str, target: str = "full",
+                 unsteered_cards: dict | None = None, **fit_kw) -> tuple[dict, dict]:
     """IM and IM-NN arms for every bench in ``benches`` ({block key: Bench}), all in one pass
     over the residual points. Returns ``({key: [arm records]}, {"g_r2": [...], "g_rmse": [...]})``.
-    ``unsteered_cards`` ({key: unsteered card}) attaches the fidelity guard as ``score`` does."""
+    ``unsteered_cards`` ({key: unsteered card}) attaches the fidelity guard as ``score`` does.
+
+    ``target="full"``: the continuous full-state map of ``basis_name`` — for REGRESSION benches. A
+    categorical ``target`` (2026-09-20): every bench must be that target's own categorical bench; the
+    write is g(one-hot of the bench's post-edit labels ``Bench.tgt``, the discs' Cartesian velocity
+    at the edit), IM only. ⛔ Never pass a categorical bench with ``target="full"``: that is the
+    continuous map scored on the categorical case selection, which is what every categorical block's
+    "IM" silently was until 2026-09-20."""
     from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
     from pim.environments.discworld.bench import full_state_pair
+    from pim.probes.inverse import encode_categorical_state
 
+    cat = categorical_target(target) is not None
     S = {}
     for key, b in benches.items():
-        s_pre, s_post = full_state_pair(b.pos, b.vel, b.edit_object, b.sim, basis_name)
+        if cat != (b.kind == "classification"):
+            raise ValueError(f"{key}: a {b.kind} bench cannot be written through the inverse map of target "
+                             f"{target!r} — the map must invert the state the block's own probes read")
+        s_pre, s_post = full_state_pair(b.pos, b.vel, b.edit_object, b.sim, "cartesian" if cat else basis_name)
         if b.kind == "regression" and b.tgt.shape[1] == s_post.shape[1]:
             # the regression `full` bench: the pre-dynamics target IS the bench's own target
             assert np.allclose(s_post, b.tgt.cpu().numpy(), atol=1e-4), f"{key}: s_post ≠ Bench.tgt"
         S[key] = (torch.from_numpy(s_pre).to(DEV), torch.from_numpy(s_post).to(DEV))
     arms = {key: [] for key in benches}
-    stats = {"g_r2": [], "g_rmse": [], "nn_r2": []}
-    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, **fit_kw):
+    stats = {"g_r2": [], "g_rmse": [], "nn_r2": [], "g_r2_insample": []}
+    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, target=target, **fit_kw):
         stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
         stats["nn_r2"].append(float(st["nn_r2"]))
+        stats["g_r2_insample"].append(float(st.get("r2_insample", float("nan"))))
         for key, b in benches.items():
             _, s_post = S[key]
+            if cat:    # the block's own state: its post-edit labels, one-hot, + the Cartesian velocity (unchanged by a teleport)
+                s_post = encode_categorical_state(b.tgt, s_post[:, 2 * N_OBJ:], st["n_classes"])
             as_activations(model, ell)
             h0 = model.flat_state(b.state)
             u = None if unsteered_cards is None else unsteered_cards.get(key)
-            for editor, h_new in (("IM", inverse_overwrite(g, s_post)),
-                                  ("IM-NN", retrieval_overwrite(bank, s_post))):
+            for editor, h_new in ((("IM", inverse_overwrite(g, s_post)),) if bank is None else
+                                  (("IM", inverse_overwrite(g, s_post)),
+                                   ("IM-NN", retrieval_overwrite(bank, s_post)))):
                 roll = model.rollout_with_edit(b.state, ell, h_new, K_ROLL).cpu().numpy()  # THE write
                 rec = {"editor": editor, "point": ell, "alpha": 1.0, "dims": "all",
                        "write_ratio": float((h_new - h0).norm(dim=1).div(h0.norm(dim=1)).mean()),
