@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-20 20:35 PT — both corpus-size controls done and recorded (findings/probe-capacity.md); queue 15 of 32, Othello replicates running on both hosts_
+_Last updated: 2026-09-20 20:50 PT — HAND-BACK: one queue operator from here (the session Sevan types into); the launching session stood down — see the 20:50 entry in the queue section. Queue 15 of 32, Othello replicates running on both hosts_
 
 ## 2026-09-19 (night) — follow-up to the scoring audit (Sevan): ONE change made, the rest deliberately left
 
@@ -258,6 +258,36 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-20 20:50 — HAND-BACK: the launching session (PID 4145414, local VSCode window) STANDS DOWN from `experiments/paper_ci`; the session Sevan types into
+(`physically-implicit-modeling-8f`, Remote-SSH) is the ONE operator (Sevan 20:43, relayed by that session).** The two were the same conversation in two processes;
+nothing Sevan typed after 2026-09-19 23:14 reached the launching one, and nothing it wrote reached him. Everything below is what is NOT visible in git.
+- **Nothing is held, nothing is half-done.** No `PAUSED` flag, no `hold` on any job, no job file or state file edited by hand since `aab7874`. `plan.py` is exactly as
+  committed (controls redefined, `ctrl_corpus_dw_200k` deleted) and `queue/*.json` was regenerated from it. No pending edit to `plan.py`, `dispatch.py`, `run_job.sh`,
+  `replicate.sh` or `score_pending.sh`. Last commit of that session: `a30cee2` (the corpus-size control's record), pushed.
+- **Uncommitted in the lab tree:** only `notebooks/master_eval.ipynb` — NOT that session's edit (it is the `dw_bases` default change of 2026-09-19 night plus
+  in-place execution outputs). It never ran `git checkout` on it after 2026-09-19 12:25.
+- **Nothing depends on that session's process:** dispatcher + watchdog timers, the running units and the dashboard (`pimci-dashboard.service`, `tailscale serve /ci`)
+  are systemd user units. Its only background waiter was a 30-min `tail -F logs/paper_ci/dispatch.log | grep` Monitor — stopped at hand-back.
+- **The 4090 vs a plain pull:** checkout `84c2e78`. Dirty there: `experiments/paper_ci/scripts/ledger.py` (the dispatcher's `push_inputs` rsync of `scripts/` — the
+  lab's version, not a hand edit), `notebooks/master_eval.ipynb` (execution outputs), and UNTRACKED `experiments/probe_corpus_size/scores/` (left by the 05:00 killed
+  attempt; its content was pulled to the lab at 05:10 and is committed). A plain `git pull` there will REFUSE (the untracked scores file is now tracked upstream;
+  `ledger.py` differs): first move that `scores/` directory aside and `git checkout -- experiments/paper_ci/scripts/ledger.py`, and only during a TRAINING stage (the
+  notebook is mid-write during a scoring stage). No pull is needed to keep the queue correct: among files a remote job executes, HEAD differs from `84c2e78` only in
+  `dispatch.py` (lab-only) and `ledger.py` (already pushed). No stray `.scratch/*.npy` on either host (checked 20:45); the gitignored probe cache of the killed control
+  is still under `experiments/probe_corpus_size/probes/` on the 4090 (harmless, a few GB).
+- **Intentions that session carried, none started:** (1) categorical-IM install — waits for Sevan's go; the 14:20 notes above stand, plus one sentence: MERGE IN THE
+  LIVE TREE ONLY, never inside the staging clone (`runs/` is a symlink there and `runs/MOVES.md` is tracked). (2) `nn_r2` stays on hold (Sevan). (3) `rep_oth-adjflip_s1/s2`
+  are EXTENSIONS: the dispatcher parks the stale 390k `scores.json` / `variance.json` at launch (a78f386) — verify the park line in `runs/MOVES.md`, that a new
+  `__seed0_s512000` member is laid out, that the ledger pools the 512k set, and read `batch_order_exact` in the resumed `config.json` (False on discworld; never
+  checked on Othello); seed 2 resumes from ~160k, so it is nearly a full run. (4) On `appendix_prediction` done: the accept list in
+  `experiments/bayes_floor/QUEUE_HANDOFF.md`, then `findings/predictive-quality.md`, then tell Sevan Table A1 is ready. (5) When the queue drains: ledger → Table 5
+  (SD + CI panels) → `findings/seed-variance.md` (one entry per family: n, budget, SD, guard k/n; extension members are not bit-identical to uninterrupted runs on
+  discworld; 5-ray factorised GS canonical +0.598 at 780k sits ~3 SD above its 512k members — a budget mismatch to state) → REGISTRY run rows → brief `done`; archive
+  the smoke artefacts (`state/smoke_*.json`); move `replicate.sh`'s parking step to BEFORE training and point it at `scripts/layout_checkpoint_replicate.py`.
+  (6) Deprioritised by Sevan: the Othello ceiling bootstrap.
+- **Shared memory directory:** that session appended a 20:40 state paragraph to `paper-ci-queue-in-flight.md` and, at hand-back, replaced its own 19:45
+  "working arrangement" paragraph with the decision above. It touches nothing further — repo, queue, hosts or memory — unless Sevan types to it.
 _(Build record follows.)_
 
 **Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
@@ -2501,7 +2531,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-20 20:35 PT — both corpus-size controls done and recorded (findings/probe-capacity.md); queue 15 of 32, Othello replicates running on both hosts_
+_Last updated: 2026-09-20 20:50 PT — HAND-BACK: one queue operator from here (the session Sevan types into); the launching session stood down — see the 20:50 entry in the queue section. Queue 15 of 32, Othello replicates running on both hosts_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
