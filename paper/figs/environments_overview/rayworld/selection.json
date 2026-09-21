@@ -12,6 +12,8 @@
   14,
   17
  ],
+ "rays_drawn_every": 3,
+ "disc_alpha_on_cells": 0.65,
  "panels": {
   "dw-noiseless": {
    "instance": "dw-noiseless",
@@ -219,5 +221,16 @@
   "blink": "Blink rule (README): exactly one blackout in the sequence, of disc 1 (its marker ray is the rightmost, so marker and bracket share a side), 5-10 frames long, starting at frame >= 6 and ending by frame 33 (both markers present, context on both sides); the other disc lit in every frame, the blinking disc lit whenever visible and travelling >= 0.2 R rays.",
   "max_hidden_frames": 3,
   "draw": "numpy default_rng(SEED).choice over the survivors, in the order standard, blink, 16-ray, 8-ray, 5-ray"
+ },
+ "composites": {
+  "composite_v2_rows": "(a) frustum + waterfall on top; (b) | (c) | (d) below; 5.5 x 3.0 in",
+  "composite_v2_split": "(a) frustum + waterfall and (b) on top; (c) | (d) below; 5.5 x 3.0 in (recommended)",
+  "composite_v1(_dark)": "round-1 attempt, Times New Roman, kept for reference, not regenerated"
+ },
+ "recommended": {
+  "rays_drawn_every": 3,
+  "composite": "composite_v2_split",
+  "nray_strips": "matched",
+  "frustum_page": "light"
  }
 }

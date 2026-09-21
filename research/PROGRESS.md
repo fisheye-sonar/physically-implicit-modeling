@@ -59,6 +59,10 @@ Blink — the cached old-map frames matched no scored arm); history figure: orig
 column, "origin / destination position". Trends re-rendered (done, 12:00). History round 2 DONE 12:10 (context rows asserted
 identical across columns; `history_frames_*` = original | rewritten | counterfactual render as a separate appendix piece).
 Othello / Rayworld / qualitative round-2 workers running (brief `qualitative_main/BRIEF_ROUND2.md`).
+⚠ 14:10 PT all three round-2 workers were KILLED by the account's API session limit (reset 14:30); resumed 14:35 with their
+transcripts intact (partial script edits were on disk). **Rayworld round 2 DONE 14:45:** `composite_v2_split` recommended
+(5.46 × 2.96 in; every-3rd ray drawn = 43 of 128, strips and waterfall at full 128; N-ray strips 1.25 in wide; "(signaled)";
+(c) strips only; (d) `categorical_frustum_8ray_crop` with discs at alpha 0.65); round-1 composites kept as `composite_v1*`.
 **Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
 Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
 captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.

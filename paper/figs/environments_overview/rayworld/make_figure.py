@@ -6,7 +6,7 @@ tangent of the viewing angle, wall rays dropped when the instance says so), hits
 from the stored ``obs_id`` / ``obs_depth``, appearance cells from
 ``grid_target.categorical_target("appearance")``, the matched N-ray strips from
 ``renderer.render_scene`` under each sibling instance's own ``SimConfig``. No metric, no
-re-implemented rendering. CPU only. Outputs land beside this script.
+re-implemented rendering. CPU only. Outputs land beside this script (round 2, 2026-09-21).
 
     .pim/bin/python paper/figs/environments_overview/rayworld/make_figure.py
 """
@@ -43,6 +43,8 @@ T_STAR = 20            # the frame the frustum views show: the bench's edit fram
 ARROW_FRAMES = 15      # a velocity arrow spans this many frames of motion, from the disc's edge
 N_GHOSTS = 7           # earlier frames drawn as fading discs behind the current one
 MAX_HIDDEN = 3         # frames in which one disc may be fully occluded (crossing streaks need >= 1)
+EVERY = 3              # the 128-ray frustum draws every EVERY-th ray (43 of 128): visual clarity only
+DISC_ALPHA_CELLS = 0.65  # discs on the partition panel let the cells show through
 SEED = 0
 
 # muted tones for the appearance cells: Okabe-Ito hues blended toward white (no meaning, only contrast)
@@ -157,34 +159,49 @@ def kept_rays(sim: dict) -> np.ndarray:
     return s[1:-1] if sim.get("drop_edge_rays") else s
 
 
-def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows=True,
-                 strip=False, cells=None, rays=True):
+def frustum_extent(sim: dict, *, strip: bool = False, crop: bool = False) -> tuple[tuple, tuple]:
+    """Data limits of a frustum view: the frustum plus a margin, room for the far-plane strip above it,
+    and (``crop``) cut just below the near plane, observer and lower fan left out."""
+    xf, yn, yf = (float(sim[k]) for k in ("x_far", "y_near", "y_far"))
+    return (-xf - 0.45, xf + 0.45), (yn - 0.35 if crop else -0.6, yf + (1.55 if strip else 0.45))
+
+
+def frustum_width(h: float, sim: dict, **kw) -> float:
+    """Width (inches) a frustum view of height ``h`` inches needs at equal aspect."""
+    (x0, x1), (y0, y1) = frustum_extent(sim, **kw)
+    return h * (x1 - x0) / (y1 - y0)
+
+
+def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows=True, strip=False,
+                 cells=None, rays=True, crop=False, disc_alpha=1.0):
     sim = q["sim"]
     xn, yn, xf, yf = (float(sim[k]) for k in ("x_near", "y_near", "x_far", "y_far"))
     scale = xf / yf
     ink = "white" if dark else "black"
+    (x0, x1), (y0, y1) = frustum_extent(sim, strip=strip, crop=crop)
     ax.set_aspect("equal")
     ax.axis("off")
-    top = yf + (1.55 if strip else 0.45)
-    ax.set_xlim(-xf - 0.45, xf + 0.45)
-    ax.set_ylim(-0.6, top)
+    ax.set_xlim(x0, x1)
+    ax.set_ylim(y0, y1)
     if dark:
-        ax.add_patch(Rectangle((-xf - 0.45, -0.6), 2 * xf + 0.9, top + 0.6, facecolor=DARK_BG,
-                               edgecolor=ps.FRAME, lw=0.5, zorder=0))
+        ax.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, facecolor=DARK_BG, edgecolor=ps.FRAME, lw=0.5, zorder=0))
     if cells is not None:
         draw_cells(ax, q, t, cells)
     s = kept_rays(sim)
     ids, dep = q["obs_id"][t], q["depth"][t]
+    ys = yn if crop else 0.0                    # rays start at the observer, or at the near plane when cropped
     if rays:
         for k in range(0, len(s), every):
             if ids[k] >= 0:          # a hit: the ray stops at the disc surface (obs_depth = its y)
-                ax.plot([0, s[k] * scale * dep[k]], [0, dep[k]], color=ink, lw=0.5,
+                ax.plot([s[k] * scale * ys, s[k] * scale * dep[k]], [ys, dep[k]], color=ink, lw=0.5,
                         alpha=0.85 if dark else 0.7, zorder=3, solid_capstyle="butt")
             else:                    # a miss: through to the far plane
-                ax.plot([0, s[k] * xf], [0, yf], color=ink, lw=0.3, alpha=0.3 if dark else 0.22, zorder=1)
+                ax.plot([s[k] * scale * ys, s[k] * xf], [ys, yf], color=ink, lw=0.3,
+                        alpha=0.3 if dark else 0.22, zorder=1)
     ax.add_patch(Polygon([(-xn, yn), (-xf, yf), (xf, yf), (xn, yn)], closed=True, fill=False,
                          edgecolor=ink, lw=0.8, zorder=4))
-    ax.add_patch(Circle((0, 0), 0.22, facecolor=ink, edgecolor=ink, zorder=6))       # the observer
+    if not crop:
+        ax.add_patch(Circle((0, 0), 0.22, facecolor=ink, edgecolor=ink, zorder=6))   # the observer
     for j in (0, 1):
         p, v, r, g = q["pos"][:, j], q["vel"][t, j], float(q["radii"][j]), float(q["refl"][j])
         if trail:                    # earlier frames as fading discs, up to the current one
@@ -192,7 +209,7 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
             for n, tau in enumerate(past):
                 ax.add_patch(Circle(p[tau], r, facecolor=ink, edgecolor="none",
                                     alpha=0.05 + 0.30 * (n + 1) / len(past), zorder=2))
-        ax.add_patch(Circle(p[t], r, facecolor=str(g), edgecolor=ink, lw=0.6, zorder=5))
+        ax.add_patch(Circle(p[t], r, facecolor=str(g), edgecolor=ink, lw=0.6, alpha=disc_alpha, zorder=5))
         if arrows:
             u = v / np.linalg.norm(v)
             ax.annotate("", xy=p[t] + r * u + ARROW_FRAMES * v, xytext=p[t] + r * u, zorder=7,
@@ -200,11 +217,11 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
                                         shrinkA=0, shrinkB=0))
     if strip:                        # frame t laid along the far plane: pixel k under ray k's far crossing
         ds = (s[1] - s[0]) * xf
-        x0, x1, y0, h = s[0] * xf - ds / 2, s[-1] * xf + ds / 2, yf + 0.5, 0.75
+        sx0, sx1, sy0, h = s[0] * xf - ds / 2, s[-1] * xf + ds / 2, yf + 0.5, 0.75
         ax.imshow(q["obs"][t][None], cmap="gray", vmin=0.0, vmax=1.0, interpolation="nearest",
-                  extent=(x0, x1, y0, y0 + h), zorder=8)
-        ax.add_patch(Rectangle((x0, y0), x1 - x0, h, fill=False, edgecolor=ps.FRAME, lw=0.5, zorder=9))
-        ax.text(xf + 0.7, y0 + h / 2, "$t^*$", ha="left", va="center", color="black")   # on the page, both modes
+                  extent=(sx0, sx1, sy0, sy0 + h), zorder=8)
+        ax.add_patch(Rectangle((sx0, sy0), sx1 - sx0, h, fill=False, edgecolor=ps.FRAME, lw=0.5, zorder=9))
+        ax.text(xf + 0.7, sy0 + h / 2, "$t^*$", ha="left", va="center", color="black")   # on the page, both modes
 
 
 def draw_cells(ax, q: dict, t: int, target, n: int = 500):
@@ -271,8 +288,8 @@ def draw_waterfall(ax, obs: np.ndarray, *, t_star=None, hidden=None, ticks=True,
         ax.plot([x, x], [y0, y1], color="black", lw=0.7, transform=ax.transAxes, clip_on=False)
         for y in (y0, y1):
             ax.plot([x, x - 0.02], [y, y], color="black", lw=0.7, transform=ax.transAxes, clip_on=False)
-        ax.text(x + 0.04, (y0 + y1) / 2, "hidden", rotation=90, transform=ax.transAxes,
-                ha="left", va="center", fontsize=7.5)
+        ax.text(x + 0.04, (y0 + y1) / 2, "hidden\n(signaled)", rotation=90, transform=ax.transAxes,
+                ha="left", va="center", fontsize=7.5, linespacing=1.1)
 
 
 def draw_strip(ax, frame: np.ndarray):
@@ -285,14 +302,10 @@ def draw_strip(ax, frame: np.ndarray):
         sp.set_edgecolor(ps.FRAME)
 
 
-def letter(ax, s: str, dx=0.0):
-    ax.text(dx, 1.0, s, transform=ax.transAxes, ha="left", va="bottom", fontweight="bold")
-
-
 def piece(name: str, w: float, h: float, draw) -> None:
     """One exported element: a figure at its printed size (300 dpi rasters), drawn, saved beside this script."""
     f = plt.figure(figsize=(w, h), dpi=300)
-    draw(f.add_subplot())
+    draw(f.add_axes([0, 0, 1, 1]))          # the axes fill the figure: a strip piece IS its nominal size
     ps.save(f, HERE / name)
     plt.close(f)
 
@@ -315,32 +328,67 @@ def draw_key(ax):
         ax.text(2.0, 5.5 - n, lab, va="center", ha="left", fontsize=8)
 
 
-def composite(std, blk, span, eight, matched, app, *, dark: bool) -> None:
-    """(a) standard frustum with frame t* along the far plane + its waterfall; (b) blink; (c) N-ray; (d) categorical."""
-    f = plt.figure(figsize=(5.5, 4.3), dpi=300)
-    gs = f.add_gridspec(2, 1, height_ratios=[2.5, 1.6], hspace=0.3, left=0.02, right=0.985, top=0.97, bottom=0.06)
-    top = gs[0].subgridspec(1, 2, width_ratios=[0.86, 1.0], wspace=0.12)
-    ax = f.add_subplot(top[0])
-    draw_frustum(ax, std, T_STAR, dark=dark, strip=True)
-    ax.set_anchor("W")
-    letter(ax, "(a)", 0.02)
-    draw_waterfall(f.add_subplot(top[1]), std["obs"], t_star=T_STAR)
-    bot = gs[1].subgridspec(1, 4, width_ratios=[1.0, 1.25, 1.15, 1.25], wspace=0.42)
-    ax = f.add_subplot(bot[0])
-    draw_waterfall(ax, blk["obs"], hidden=(span["first_hidden"], span["last_hidden"]))
-    letter(ax, "(b)", -0.2)
-    ax = f.add_subplot(bot[1])
-    draw_frustum(ax, eight, T_STAR, dark=dark)
-    letter(ax, "(c)", 0.0)
-    sub = bot[2].subgridspec(1, 3, wspace=0.3)
+# ── composites: axes placed in inches from the page's bottom-left, letters in their own margin ──
+def _ax(f, x: float, y: float, w: float, h: float):
+    W, H = f.get_size_inches()
+    return f.add_axes([x / W, y / H, w / W, h / H])
+
+
+def _letter(f, x: float, y: float, s: str) -> None:
+    W, H = f.get_size_inches()
+    f.text(x / W, y / H, s, fontweight="bold", ha="left", va="bottom")
+
+
+def _strips(f, x: float, y: float, w: float, gap: float, h: float, matched: dict) -> None:
     for k, inst in enumerate(NRAY):
-        ax = f.add_subplot(sub[k])
+        ax = _ax(f, x + k * (w + gap), y, w, h)
         draw_waterfall(ax, matched[inst], ticks=False, arrow=False)
         ax.set_title(f"{inst.split('-')[1][:-3]} rays", fontsize=7.5, pad=2)
-    ax = f.add_subplot(bot[3])
-    draw_frustum(ax, eight, T_STAR, cells=app, trail=False, arrows=False, dark=dark)
-    letter(ax, "(d)", 0.0)
-    ps.save(f, HERE / ("composite_dark" if dark else "composite"))
+
+
+def composite_rows(std, blk, span, eight, matched, app) -> None:
+    """5.5 x 3.0 in: (a) frustum + waterfall across the top; (b) blink | (c) 16/8/5 rays | (d) cells below."""
+    f = plt.figure(figsize=(5.5, 3.0), dpi=300)
+    top, bot = 2.77, 1.30                                  # the top band's panels; letters at 2.84
+    wf = frustum_width(top - bot, std["sim"], strip=True)
+    draw_frustum(_ax(f, 0.02, bot, wf, top - bot), std, T_STAR, every=EVERY, strip=True)
+    _letter(f, 0.02, 2.84, "(a)")
+    draw_waterfall(_ax(f, 0.02 + wf + 0.64, bot + 0.30, 3.0, top - bot - 0.30), std["obs"], t_star=T_STAR)
+    hb = 1.08                                              # the bottom band's panels; letters at 1.15
+    draw_waterfall(_ax(f, 0.24, 0.0, 0.90, hb), blk["obs"], hidden=(span["first_hidden"], span["last_hidden"]),
+                   ticks=False)
+    _letter(f, 0.02, 1.15, "(b)")
+    _letter(f, 1.58, 1.15, "(c)")
+    _strips(f, 1.82, 0.0, 0.62, 0.08, hb, matched)
+    wd = frustum_width(hb, eight["sim"], crop=True)
+    draw_frustum(_ax(f, 5.48 - wd, 0.0, wd, hb), eight, T_STAR, cells=app, trail=False, arrows=False,
+                 crop=True, disc_alpha=DISC_ALPHA_CELLS)
+    _letter(f, 5.48 - wd, 1.15, "(d)")
+    ps.save(f, HERE / "composite_v2_rows")
+    plt.close(f)
+
+
+def composite_split(std, blk, span, eight, matched, app) -> None:
+    """5.5 x 3.0 in: (a) frustum + waterfall and (b) blink across the top; (c) 16/8/5 rays | (d) cells below."""
+    f = plt.figure(figsize=(5.5, 3.0), dpi=300)
+    top, bot = 2.77, 1.36                                  # letters at 2.84
+    wf = frustum_width(top - bot, std["sim"], strip=True)
+    draw_frustum(_ax(f, 0.02, bot, wf, top - bot), std, T_STAR, every=EVERY, strip=True)
+    _letter(f, 0.02, 2.84, "(a)")
+    x = 0.02 + wf + 0.51                                   # past the strip's t* label and the waterfall's t labels
+    draw_waterfall(_ax(f, x, bot + 0.30, 1.65, top - bot - 0.30), std["obs"], t_star=T_STAR)
+    x += 1.65 + 0.48 + 0.22                                # room for the t* pointer, then (b)'s own labels
+    draw_waterfall(_ax(f, x, bot + 0.30, 0.90, top - bot - 0.30), blk["obs"],
+                   hidden=(span["first_hidden"], span["last_hidden"]))
+    _letter(f, x - 0.22, 2.84, "(b)")
+    hb = 1.10                                              # bottom band; letters at 1.17
+    _letter(f, 0.02, 1.17, "(c)")
+    _strips(f, 0.26, 0.0, 0.95, 0.10, hb, matched)
+    wd = frustum_width(hb, eight["sim"], crop=True)
+    draw_frustum(_ax(f, 5.48 - wd, 0.0, wd, hb), eight, T_STAR, cells=app, trail=False, arrows=False,
+                 crop=True, disc_alpha=DISC_ALPHA_CELLS)
+    _letter(f, 5.48 - wd, 1.17, "(d)")
+    ps.save(f, HERE / "composite_v2_split")
     plt.close(f)
 
 
@@ -350,7 +398,7 @@ def main():
     out = HERE
     rec = {"seed": SEED, "t_star": T_STAR, "arrow_frames": ARROW_FRAMES, "ghost_frames": N_GHOSTS,
            "ghost_frame_indices": np.linspace(0, T_STAR, N_GHOSTS, endpoint=False).round().astype(int).tolist(),
-           "panels": {}}
+           "rays_drawn_every": EVERY, "disc_alpha_on_cells": DISC_ALPHA_CELLS, "panels": {}}
 
     def record(name, q, n_ok, **extra):
         rec["panels"][name] = {"instance": name, "sequence_index": q["index"], "sequence_seed": q["seed"],
@@ -365,11 +413,16 @@ def main():
     std = seq(d, i)
     record(STD, std, n_ok)
     print(f"standard  {STD}  seq {i} (seed {std['seed']}), {n_ok} sequences satisfy the rule")
-    for dark in (False, True):
-        tag = "dark" if dark else "light"
-        piece(f"standard_frustum_{tag}", 2.7, 2.75, lambda ax: draw_frustum(ax, std, T_STAR, dark=dark))
-        piece(f"standard_frustum_{tag}_strip", 2.7, 3.0, lambda ax: draw_frustum(ax, std, T_STAR, dark=dark, strip=True))
-    piece("standard_frustum_light_every4", 2.7, 2.75, lambda ax: draw_frustum(ax, std, T_STAR, every=4))
+    for every in (1, 2, 3, 4):
+        tag = "" if every == 1 else f"_every{every}"
+        piece(f"standard_frustum_light{tag}", 2.7, 2.75, lambda ax: draw_frustum(ax, std, T_STAR, every=every))
+        piece(f"standard_frustum_light{tag}_strip", 2.7, 3.0,
+              lambda ax: draw_frustum(ax, std, T_STAR, every=every, strip=True))
+    for every in (1, EVERY):
+        tag = "" if every == 1 else f"_every{every}"
+        piece(f"standard_frustum_dark{tag}", 2.7, 2.75, lambda ax: draw_frustum(ax, std, T_STAR, every=every, dark=True))
+        piece(f"standard_frustum_dark{tag}_strip", 2.7, 3.0,
+              lambda ax: draw_frustum(ax, std, T_STAR, every=every, dark=True, strip=True))
     piece("standard_waterfall", 2.7, 2.75, lambda ax: draw_waterfall(ax, std["obs"], t_star=T_STAR))
     piece("standard_frame_tstar", 2.7, 0.22, lambda ax: draw_strip(ax, std["obs"][T_STAR]))
     del d
@@ -406,8 +459,8 @@ def main():
     piece("nray_frustum_8ray_strip", 1.6, 1.9, lambda ax: draw_frustum(ax, eight, T_STAR, strip=True))
     for inst in NRAY:
         n = inst.split("-")[1]
-        piece(f"nray_waterfall_{n}_matched", 0.75, 1.7, lambda ax: draw_waterfall(ax, matched[inst], ticks=False, arrow=False))
-        piece(f"nray_waterfall_{n}_own", 0.75, 1.7, lambda ax: draw_waterfall(ax, own[inst]["obs"], ticks=False, arrow=False))
+        piece(f"nray_waterfall_{n}_matched", 1.25, 1.6, lambda ax: draw_waterfall(ax, matched[inst], ticks=False, arrow=False))
+        piece(f"nray_waterfall_{n}_own", 1.25, 1.6, lambda ax: draw_waterfall(ax, own[inst]["obs"], ticks=False, arrow=False))
 
     # (d) categorical: the appearance partition on dw-8ray, the same sequence
     app = categorical_target("appearance")
@@ -416,18 +469,25 @@ def main():
                           "n_cells": int(app.n_cells(sims["dw-8ray"])),
                           "cells_at_t_star": app.cell_of(eight["pos"][T_STAR], sims["dw-8ray"]).tolist()}
     print(f"categorical  dw-8ray  {rec['categorical']['n_cells']} cells; discs at t* in cells {rec['categorical']['cells_at_t_star']}")
-    piece("categorical_frustum_8ray", 1.6, 1.7,
-          lambda ax: draw_frustum(ax, eight, T_STAR, cells=app, trail=False, arrows=False))
-    piece("categorical_frustum_8ray_norays", 1.6, 1.7,
-          lambda ax: draw_frustum(ax, eight, T_STAR, cells=app, trail=False, arrows=False, rays=False))
+    cat = dict(cells=app, trail=False, arrows=False, disc_alpha=DISC_ALPHA_CELLS)
+    piece("categorical_frustum_8ray", 2.2, 2.3, lambda ax: draw_frustum(ax, eight, T_STAR, **cat))
+    piece("categorical_frustum_8ray_norays", 2.2, 2.3, lambda ax: draw_frustum(ax, eight, T_STAR, rays=False, **cat))
+    piece("categorical_frustum_8ray_crop", 2.4, 2.4 / frustum_width(1.0, sims["dw-8ray"], crop=True),
+          lambda ax: draw_frustum(ax, eight, T_STAR, crop=True, **cat))
 
     piece("key_frustum", 1.5, 0.9, draw_key)
-    for dark in (False, True):
-        composite(std, blk, span, eight, matched, app, dark=dark)
+    composite_rows(std, blk, span, eight, matched, app)
+    composite_split(std, blk, span, eight, matched, app)
 
     rec["rules"] = {"standard_and_nray": " ".join(pick.__doc__.split()), "blink": " ".join(pick_blink.__doc__.split()),
                     "max_hidden_frames": MAX_HIDDEN, "draw": "numpy default_rng(SEED).choice over the survivors, in the order "
                     "standard, blink, 16-ray, 8-ray, 5-ray"}
+    rec["composites"] = {"composite_v2_rows": "(a) frustum + waterfall on top; (b) | (c) | (d) below; 5.5 x 3.0 in",
+                         "composite_v2_split": "(a) frustum + waterfall and (b) on top; (c) | (d) below; 5.5 x 3.0 in "
+                                               "(recommended)",
+                         "composite_v1(_dark)": "round-1 attempt, Times New Roman, kept for reference, not regenerated"}
+    rec["recommended"] = {"rays_drawn_every": EVERY, "composite": "composite_v2_split",
+                          "nray_strips": "matched", "frustum_page": "light"}
     json.dump(rec, open(out / "selection.json", "w"), indent=1)
     print("->", out / "selection.json")
 
