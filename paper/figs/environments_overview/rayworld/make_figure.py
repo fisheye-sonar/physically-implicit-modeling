@@ -552,7 +552,7 @@ def main(all_: bool = False):
                                    "across the top, (c) 16/8/5-ray matched strips and (d) the cells below; "
                                    "5.5 x 3.3 in (two bands)",
                       "composite_onerow": "composite_onerow.pdf/.png: the same four panels in ONE band, "
-                                          "5.5 x 1.58 in; pieces at those sizes in pieces_onerow/",
+                                          "5.5 x 1.55 in; pieces at those sizes in pieces_onerow/",
                       "pieces": sorted(p.stem for p in PIECES.glob("*.pdf")),
                       "pieces_onerow": sorted(p.stem for p in PIECES_ONEROW.glob("*.pdf")),
                       "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays "

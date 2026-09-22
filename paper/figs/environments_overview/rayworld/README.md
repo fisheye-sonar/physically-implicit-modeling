@@ -27,8 +27,8 @@ Regenerate (deterministic):
 
 ### How the one-row variant differs (layout only; same data, same sequences, same conventions)
 
-The band is 1.31 in tall, so every panel shrinks: the frustum is 1.09 in wide (its size follows the band
-height at equal aspect), the two waterfalls are squashed vertically (all 40 frames, shorter rows) at 0.62
+The panels are about 1.2 in tall, so every one of them shrinks: the frustum is 1.09 in wide (its size follows
+the band height at equal aspect), the two waterfalls are squashed vertically (all 40 frames, shorter rows) at 0.62
 and 0.56 in wide, the three N-ray strips are 0.33 in each with their ray counts **below** them (7 pt) so the
 letter row stays free, and (d) is the hard crop at 1.11 x 0.84 in, centred in the band. The (b) blink panel
 keeps its own time labels and bracket. Nothing else changes: same seeds, same t*, same drawing rules.
