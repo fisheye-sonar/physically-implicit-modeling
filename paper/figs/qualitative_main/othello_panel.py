@@ -106,8 +106,8 @@ def panel(F, cols, picks, names, conds, *, zoom=False, tint="all", titles=True, 
             ax = F.add_axes([x0[c] / W, y0[r] / H, b / W, b / H])
             board(ax, cols[name], picks[name], cond, tint=tint, lw=lw, window=win.get(name))
             if r == 0 and titles:
-                ax.set_title(wrap(cname) if b < 0.9 else DISPLAY.get(cname, cname), pad=3, fontsize=title_size,
-                             color=ps.TEXT, linespacing=0.95,
+                ax.set_title(wrap(cname) if b < 0.9 else DISPLAY.get(cname, cname), pad=5, fontsize=title_size,
+                             color=ps.TEXT, linespacing=1.25,
                              fontweight="bold" if cname in oth.BOLD else "normal")
             if c == 0:
                 ax.annotate(WRAPPED.get(rname, wrap(rname)), xy=(0, 0.5), xycoords="axes fraction",

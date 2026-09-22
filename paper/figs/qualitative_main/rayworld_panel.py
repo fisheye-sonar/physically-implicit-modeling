@@ -45,7 +45,7 @@ FINAL = ("A3", "A4")
 N_CONT = {"A3": 2, "A4": 1}      # continuous Standard examples the cut draws (A4: the single-example side-by-side)
 CAT_SLOT = 1     # which of the three passing seeds the two categorical columns share (Sevan, round 5: the second,
                  # whose teleport crosses the frame; the other two are the continuous examples, in seed order)
-LABELS = {"context": "Context", "unedited": "Unedited GT", "gt": "Edited GT"}
+LABELS = {"context": "History", "unedited": "Unedited GT", "gt": "Edited GT"}
 WRAPPED = {"unedited": "Unedited\nGT", "gt": "Edited\nGT"}          # the final cut's narrow gutter
 
 
@@ -67,8 +67,10 @@ def left_in(option):
     return C.GUTTER_IN if option in FINAL else 0.8
 
 
-def right_in(option):
-    return RIGHT_F if option in FINAL else RIGHT_IN
+def right_in(option, key=True):
+    """``key`` False: the marks key is drawn outside the panel (the side-by-side puts it in the gap between
+    (a) and (b)), so the wider gutter it needs is not reserved."""
+    return RIGHT_F if option in FINAL and key else RIGHT_IN
 
 
 def top_in(option, narrow=False):
@@ -204,6 +206,19 @@ def cell(ax, kind, spec, col, blk_col=None, diff_scale=1.0):
                 ax.axvline(x, color=colr, lw=0.8, alpha=0.95)
 
 
+def time_label(ax, kind, n_ctx):
+    """Time down the RIGHT of the three reference rows (Sevan, round 7): the history strip runs 0 to t-1, the two
+    ground-truth strips are the single frame t. ⚠ The strip draws the LAST ``n_ctx`` observed frames of a longer
+    warm-up, so "0" names the first row DRAWN, not sequence frame 0."""
+    put = lambda y, s: ax.annotate(s, xy=(1, y), xycoords="axes fraction", xytext=(3, 0),  # noqa: E731
+                                   textcoords="offset points", ha="left", va="center", fontsize=7, color=ps.TEXT)
+    if kind == "context":
+        put(1 - 0.5 / n_ctx, "0")
+        put(0.5 / n_ctx, "t-1")
+    else:
+        put(0.5, "t")
+
+
 def row_label(ax, kind, spec, wrap=False):
     text = spec[3] if kind == "pred" else (WRAPPED.get(kind, LABELS[kind]) if wrap else LABELS[kind])
     y = 0.5 if kind != "pred" else (1 - DIFF / STRIP) / 2            # centred on prediction + error pair
@@ -213,7 +228,7 @@ def row_label(ax, kind, spec, wrap=False):
 
 
 def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scale=1.0, letter_size=10, narrow=False,
-          spacer=None, title_size=None):
+          spacer=None, title_size=None, key_gutter=True):
     """Draw option ``option`` into Figure / SubFigure ``F`` (already sized: width x height_in(option, unit, narrow)).
     ``spacer``: empty column between model groups, in column widths (default ``SPACER[narrow]``)."""
     cols, data, lay = geometry(option)
@@ -221,7 +236,7 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
     final = option in FINAL
     gcol, widths = grid_columns(cols, (SPACER[narrow] if spacer is None else spacer) if final else 0)
     gs = GridSpec(len(lay), len(widths), figure=F, height_ratios=[h for *_, h in lay], width_ratios=widths,
-                  left=left_in(option) / W, right=1 - right_in(option) / W, top=1 - top_in(option, narrow) / H,
+                  left=left_in(option) / W, right=1 - right_in(option, key_gutter) / W, top=1 - top_in(option, narrow) / H,
                   bottom=BOT_IN / H, wspace=0.13 if narrow else 0.06, hspace=0.0)
     for c, (title, v, s, src, blk, _) in enumerate(cols):
         col = data[(src, v, s)]
@@ -230,8 +245,12 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
                 continue
             ax = F.add_subplot(gs[r, gcol[c]])
             cell(ax, kind, spec, col, blk, diff_scale)
+            if c == len(cols) - 1 and kind in ("context", "unedited", "gt"):
+                time_label(ax, kind, next(h for k, _, h in lay if k == "context") / CTX)
             if r == 0 and titles:
-                ax.set_title(title, pad=3, fontsize=title_size or ((7 if narrow else 8) if final else 9), color=ps.TEXT)
+                # the narrow cut's column pitch is about 0.45 in: "Example 1" at 7 pt is 0.44 in and the titles touch
+                shown = title.replace("Example ", "Ex. ") if narrow else title
+                ax.set_title(shown, pad=3, fontsize=title_size or ((7 if narrow else 8) if final else 9), color=ps.TEXT)
             if c == 0 and kind != "diff":
                 row_label(ax, kind, spec, wrap=final)
     if final and titles:                                # one group title over each model's run of columns
@@ -241,10 +260,10 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
         if narrow:
             # Two lines: the model over its own columns; the block qualifier once over the neighbouring groups that share
             # it ("(categorical)" at 7 pt is 0.54 in, wider than a narrow column, so it cannot sit over each single).
-            for name, c0, c1 in runs(cols, model_of):
-                text(xc(c0, c1), y + 0.135 / H, name, 8)      # clear of the qualifier line below it
             for blk, c0, c1 in runs(cols, block_of):
-                text(xc(c0, c1), y, blk, 8)
+                text(xc(c0, c1), y + 0.135 / H, blk.strip("()"), 8)   # the qualifier band, over the groups sharing it
+            for name, c0, c1 in runs(cols, model_of):
+                text(xc(c0, c1), y, name, 8)
         else:
             for label, c0, c1 in runs(cols):
                 text(xc(c0, c1), y, label, 9)
@@ -264,7 +283,7 @@ def error_key(cax, diff_scale=1.0):
     cb.ax.tick_params(labelsize=7, length=1.5, pad=1.5, width=0.5, colors=ps.TEXT)
     cb.outline.set_edgecolor(ps.FRAME)
     cb.outline.set_linewidth(0.5)
-    cb.set_label("prediction − truth", fontsize=8, labelpad=2, color=ps.TEXT)
+    cb.set_label(r"prediction$_t$ − truth$_t$", fontsize=8, labelpad=2, color=ps.TEXT)
 
 
 def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
@@ -291,7 +310,7 @@ def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
     plt.close(fig)
     fig = plt.figure(figsize=(1.6, 0.4))
     fig.legend(handles=[Line2D([], [], color=ps.ORIGIN_C, lw=1.2), Line2D([], [], color=ps.DEST_C, lw=1.2)],
-               labels=["pre-edit gt", "post-edit gt"], loc="center", ncol=1, fontsize=8, handlelength=1.5)
+               labels=["pre-edit", "post-edit"], loc="center", ncol=1, fontsize=8, handlelength=1.5)
     ps.save(fig, out_dir / "key_locators")
     plt.close(fig)
 

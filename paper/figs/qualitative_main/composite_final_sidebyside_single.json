@@ -3,8 +3,9 @@
  "geometry": {
   "width_in": 5.5,
   "height_in": 2.93,
-  "rayworld_width_in": 2.83,
+  "rayworld_width_in": 2.21,
   "othello_width_in": 2.67,
+  "key_gap_in": 0.62,
   "board_in": 0.6,
   "column_gap_in": 0.16,
   "othello_title_pt": 8,
@@ -17,7 +18,7 @@
  "rayworld": {
   "option": "A4",
   "rows": [
-   "Context",
+   "History",
    "Unedited GT",
    "Edited GT",
    "PI [column block]",

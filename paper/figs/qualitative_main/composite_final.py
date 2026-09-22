@@ -46,12 +46,19 @@ SIDE_WIDTH = {"A3": 6.10, "A4": ps.TEXT_WIDTH_IN}    # the wider cut buys (a) fo
 SIDE_SPACER = {"A3": 0.0, "A4": 0.18}                # group spacers only where the columns are wide enough
 SIDE_EXAMPLE = {"A3": 7, "A4": 8}                    # (a)'s example titles, pt
 GAP_IN = 0.16            # between (a) and (b) when stacked
+KEY_GAP_IN = 0.62        # side-by-side: the empty column between (a) and (b) that carries the marks key
+                         # (Sevan, round 7: out of (a)'s header and into the whitespace between the panels)
 
 
 def key(sf):
-    """The marks key at the top right of the Rayworld subfigure, above its colour bar."""
+    """The marks key at the top right of the Rayworld subfigure, above its colour bar (the stacked cut)."""
     W, H = sf.bbox.width / sf.dpi, sf.bbox.height / sf.dpi
     oth.mark_key(sf, fontsize=7.5, markersize=4.5, loc="upper right", bbox_to_anchor=(1 - 0.02 / W, 1 - 0.02 / H), ncol=1)
+
+
+def key_between(sf):
+    """The marks key centred in the empty column between (a) and (b) (the side-by-side cut)."""
+    oth.mark_key(sf, fontsize=7.5, markersize=4.5, loc="center", ncol=1)
 
 
 def stacked(version, cols, picks, out):
@@ -77,18 +84,19 @@ def side_by_side(version, cols, picks, out):
     width = SIDE_WIDTH[version]
     wb, hb = T.size_in(names, conds, SIDE_BOARD_IN, top_in=SIDE_TOP_IN, col_gap_in=SIDE_COL_GAP_IN)
     unit = R.unit_for_height(version, hb, narrow=True)
-    wa = width - wb
+    wa = width - wb - KEY_GAP_IN
     fig = plt.figure(figsize=(width, hb))
-    sa, sb = fig.subfigures(1, 2, width_ratios=[wa, wb], wspace=0.0)
+    sa, sk, sb = fig.subfigures(1, 3, width_ratios=[wa, KEY_GAP_IN, wb], wspace=0.0)
     R.panel(sa, version, unit=unit, letter="(a)", letter_size=LETTER, narrow=True,
-            spacer=SIDE_SPACER[version], title_size=SIDE_EXAMPLE[version])
-    key(sa)
+            spacer=SIDE_SPACER[version], title_size=SIDE_EXAMPLE[version], key_gutter=False)
+    key_between(sk)
     T.panel(sb, cols, picks, names, conds, zoom=True, letter="(b)", letter_size=LETTER, lw=SIDE_LW,
             top_in=SIDE_TOP_IN, col_gap_in=SIDE_COL_GAP_IN, title_size=SIDE_TITLE)
     ps.save(fig, out)
     plt.close(fig)
     return {"width_in": width, "height_in": round(hb, 3), "rayworld_width_in": round(wa, 3),
-            "othello_width_in": round(wb, 3), "board_in": SIDE_BOARD_IN, "column_gap_in": SIDE_COL_GAP_IN,
+            "othello_width_in": round(wb, 3), "key_gap_in": KEY_GAP_IN, "board_in": SIDE_BOARD_IN,
+            "column_gap_in": SIDE_COL_GAP_IN,
             "othello_title_pt": SIDE_TITLE, "example_title_pt": SIDE_EXAMPLE[version],
             "strip_unit_in": round(unit, 4), "mark_lw": SIDE_LW, "rayworld_option": version,
             "rayworld_columns": len(R.columns(version))}

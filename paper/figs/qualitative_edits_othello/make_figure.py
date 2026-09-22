@@ -172,10 +172,10 @@ def mark(ax, squares, color: str, lw: float = MARK_LW) -> None:
 
 
 def mark_key(owner, *, fontsize: float = 8, markersize: float = 5, **kw):
-    """The key, once per figure: a cyan DOT "pre-edit gt", a pink DOT "post-edit gt" (Sevan, round 3; the labels
-    name the ground truth since round 6). ``owner`` is a Figure, SubFigure or Axes; ``kw`` goes to its ``legend``."""
+    """The key, once per figure: a cyan DOT "pre-edit", a pink DOT "post-edit" (Sevan, round 3; the "gt"
+    suffix was dropped in round 7). ``owner`` is a Figure, SubFigure or Axes; ``kw`` goes to its ``legend``."""
     handles = [Line2D([], [], marker="o", linestyle="none", color=c, markersize=markersize) for c in (ps.ORIGIN_C, ps.DEST_C)]
-    return owner.legend(handles=handles, labels=["pre-edit gt", "post-edit gt"], fontsize=fontsize, handlelength=0.8,
+    return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=0.8,
                         handletextpad=0.4, columnspacing=1.0, borderaxespad=0.0, **kw)
 
 
