@@ -38,6 +38,7 @@ from matplotlib.colors import TwoSlopeNorm
 from pim.metrics.decodability import insample_gap_from_stats
 from pim.metrics.replicates import ci95_halfwidth, t975  # noqa: F401  (re-exported: tests and the CI ledger import them here)
 from pim.metrics.replicates import pool_replicates as _pool_replicates
+from pim.metrics.edit_index import FIDELITY_GUARD, fidelity
 from pim.metrics.selection import GUARD, best_arm, best_arm_by_fidelity, best_point
 
 REPO = Path(__file__).resolve().parents[2]
@@ -140,7 +141,7 @@ def find_run(name: str, root: Path = REPO / "runs") -> Path | None:
 ARM_GUARD: "float | None" = GUARD
 
 
-ARM_SELECT = "index"          # "index" (the rule above) | "fidelity" (lowest fidelity ratio) — set per collect() call
+ARM_SELECT = "index"          # "index" (the rule above) | "fidelity" (highest fidelity = lowest stored ratio) — set per collect() call
 
 
 def _best_by(arms: list[dict], editor: str, key: str) -> dict | None:
@@ -180,7 +181,7 @@ def _block_row(base: dict, key: str, T: dict, ei_key: str, kind: str, canonical:
         if ed == "ND" and base["env"] == "discworld" and kind == "regression":
             b = None                     # one fixed direction cannot serve 1000 teleports (registry)
         row[f"{ed} EI"] = b.get(ei_key, np.nan) if b else np.nan
-        row[f"{ed} fid"] = b["fidelity_ratio"] if b else np.nan
+        row[f"{ed} fid"] = fidelity(b["fidelity_ratio"]) if b else np.nan     # REPORTED fidelity = 1 - the stored ratio (2026-09-22)
         row[f"{ed} arm"] = _arm_str(b)
         row[f"{ed} guarded"] = bool(b.get("within_guard", True)) if b else False   # False = no arm inside the guard
     return row
@@ -227,7 +228,7 @@ def collect(runs_oth: list[str], runs_dw: list[str], label: str = "tables", *,
     """Every listed run's rows + its seed replicates' spread (see ``pool_replicates`` for
     the budget guard and its override). ``select`` = which arm an editor is reported at
     (``pim.metrics.selection``): ``"index"`` — the best Edit Index inside the fidelity guard (the
-    tables' rule); ``"fidelity"`` — the lowest fidelity ratio (the appendix's alternative reading).
+    tables' rule); ``"fidelity"`` — the highest fidelity, i.e. the lowest stored ratio (the appendix's alternative reading).
     The replicates are read by the same rule, so the ± follows it."""
     global ARM_SELECT
     if select not in ("index", "fidelity"):
@@ -602,7 +603,7 @@ def tables_components(F: Frames, above_floor: bool = False):
 
 
 def table_editability(F: Frames, tag: str = "2", note: str = ""):
-    """(a) Edit Index with the unedited floor, (b) fidelity ratio — each editor at the arm ``collect`` selected
+    """(a) Edit Index with the unedited floor, (b) fidelity = 1 − the RMSE ratio — each editor at the arm ``collect`` selected
     (``note`` names a non-default selection in the title)."""
     C = F.canonical
     if not len(C):
@@ -613,14 +614,14 @@ def table_editability(F: Frames, tag: str = "2", note: str = ""):
     rh = 0.7 if F.rep_sd else 0.52
     fig, axes = plt.subplots(1, 2, figsize=(12.6, rh * len(C) + 2.0), gridspec_kw=dict(width_ratios=[5, 4], wspace=0.35))
     A = np.stack([_annot(F, C, c, "+.3f") for c in ei_cols], 1) if F.rep_sd else None
-    Af = np.stack([_annot(F, C, c, ".2f") for c in fid_cols], 1) if F.rep_sd else None
+    Af = np.stack([_annot(F, C, c, "+.2f") for c in fid_cols], 1) if F.rep_sd else None
     heat(axes[0], C[ei_cols].values, ["unedited"] + list(EDITORS), list(C["basis"]), fmt="+.3f", cmap="RdYlGn",
          vmin=-1.0, vmax=1.0, cbar_label="Edit Index", annot_text=A, title="(a) Edit Index")
     group_rows(axes[0], groups, x=-0.22, env_break=eb)
     axes[0].axvline(1, color=RULE, lw=2)
-    heat(axes[1], C[fid_cols].values, list(EDITORS), [""] * len(C), fmt=".2f", cmap="RdYlGn_r",
-         norm=TwoSlopeNorm(vmin=0.0, vcenter=1.0, vmax=3.0), cbar_label="fidelity ratio", annot_text=Af,
-         title="(b) fidelity ratio  (1 = unedited; >1 degraded)")
+    heat(axes[1], C[fid_cols].values, list(EDITORS), [""] * len(C), fmt="+.2f", cmap="RdYlGn",
+         norm=TwoSlopeNorm(vmin=-2.0, vcenter=FIDELITY_GUARD, vmax=1.0), cbar_label="fidelity", annot_text=Af,
+         title="(b) fidelity  (1 = perfect; 0 = unedited; <0 degraded)")
     side_rules(axes[1], groups, eb)
     _suptitle(fig, f"Table {tag} — editability" + (f" · {note}" if note else "")
               + ("   ± = SD over seed replicates" if F.rep_sd else ""), fontsize=12, y=1.0)
@@ -665,8 +666,8 @@ def table_gridified(F: Frames, tag: str = "2c"):
     heat(axes[1], T[["unedited"] + [f"{e} EI" for e in EDITORS]].values, ["unedited"] + list(EDITORS), [""] * len(T),
          fmt="+.3f", cmap="RdYlGn", vmin=-1.0, vmax=1.0, cbar_label="Edit Index", title="(b) Edit Index")
     axes[1].axvline(1, color=RULE, lw=2)
-    heat(axes[2], T[[f"{e} fid" for e in EDITORS]].values, list(EDITORS), [""] * len(T), fmt=".2f", cmap="RdYlGn_r",
-         norm=TwoSlopeNorm(vmin=0.0, vcenter=1.0, vmax=3.0), cbar_label="fidelity ratio", title="(c) fidelity ratio")
+    heat(axes[2], T[[f"{e} fid" for e in EDITORS]].values, list(EDITORS), [""] * len(T), fmt="+.2f", cmap="RdYlGn",
+         norm=TwoSlopeNorm(vmin=-2.0, vcenter=FIDELITY_GUARD, vmax=1.0), cbar_label="fidelity", title="(c) fidelity")
     for ax in axes[1:]:
         side_rules(ax, groups)
     _suptitle(fig, f"Table {tag} — gridified discworld targets (label · cells), coarse → fine", fontsize=12, y=1.0)
@@ -931,9 +932,9 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
                 t = by.get(key_of(fb))
                 o = _best_by(r["_arms"], ed, k)
                 tracked_ei.append(t[k] if t else np.nan)
-                tracked_fid.append(t["fidelity_ratio"] if t else np.nan)
+                tracked_fid.append(fidelity(t["fidelity_ratio"]) if t else np.nan)
                 own_ei.append(o[k] if o else np.nan)
-                own_fid.append(o["fidelity_ratio"] if o else np.nan)
+                own_fid.append(fidelity(o["fidelity_ratio"]) if o else np.nan)
                 differs.append(bool(o) and bool(t) and key_of(o) != key_of(t))
             cc, m = ENT[ed]
             lab = f"{ed} · {_arm_str(fb)}"
@@ -947,8 +948,9 @@ def fig_training_curve(sources: list[str], tag: str = "1"):
         b_.set_ylim(-1, 1)
         b_.axhline(0, color="#c3c2b7", lw=0.8)
         dress(b_, steps, f"(b) {src} — Edit Index, tracked arm", "Edit Index", extra=[HOLLOW] if any_h else [])
-        c.set_ylim(0, 3.0)
-        dress(c, steps, f"(c) {src} — fidelity ratio, tracked arm", "fidelity ratio", extra=[HOLLOW] if any_h else [], loc="upper left")
+        c.set_ylim(-2.0, 1.0)
+        c.axhline(FIDELITY_GUARD, color="#c3c2b7", lw=0.8)
+        dress(c, steps, f"(c) {src} — fidelity, tracked arm", "fidelity (1 − ratio)", extra=[HOLLOW] if any_h else [], loc="lower left")
     _suptitle(fig, f"Fig {tag} — training curve: decodability, editability, guard (the final checkpoint's arm, read at every step)",
                  fontsize=11.5, y=1.02)
     return fig

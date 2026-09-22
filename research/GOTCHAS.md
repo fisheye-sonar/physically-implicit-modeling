@@ -10,6 +10,17 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-22 — `fidelity_ratio` in scores.json is the RATIO; the tables show `fidelity = 1 − ratio`
+
+Since 2026-09-22 every table, ledger and dashboard "fid" cell is the REPORTED fidelity (`pim.metrics.fidelity`:
+1 perfect, 0 = the guard, < 0 degraded — higher is better, like the Edit Index). The stored key `fidelity_ratio`
+in every `scores.json` / `variance.json` / the corpus-size and ceiling scripts is STILL the RMSE ratio (1 = doing
+nothing, > 1 degraded); nothing was rescored and no stored value was rewritten. So: a `fidelity_ratio` of 0.30 in a
+scores file and a fidelity of +0.70 in Table 2 are the SAME arm; a findings entry dated before 2026-09-22 quotes
+ratios; never apply `1 −` twice; the guard is `ratio ≤ 1` (`selection.GUARD`) ⇔ `fidelity ≥ 0` (`FIDELITY_GUARD`).
+The flip lives in ONE place, `pim/figures/tables.py::_block_row` (+ the training-curve tracker in the same file); a
+new consumer of `scores.json` that wants the reported number calls `fidelity(arm["fidelity_ratio"])`.
+
 ### 2026-09-13 — Three position samplers, not one: adding a spatial rule must reach all of them
 
 `sim.sample_position` (initial conditions; "THE draw order every generator uses") is NOT the only

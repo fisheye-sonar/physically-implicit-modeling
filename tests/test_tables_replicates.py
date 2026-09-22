@@ -1,6 +1,7 @@
 """Seed replicates in the tables (2026-09-14): pooled per (parent, basis) at a MATCHED
 training budget by default; the override pools every budget."""
 import numpy as np
+import pytest
 
 from pim.figures.tables import pool_replicates
 
@@ -77,7 +78,7 @@ def test_block_row_carries_every_editor_and_shows_pi_gs_im():
            "best": {}, "arms": arms}
     row = T._block_row({"env": "discworld", "run": "r", "instance": "i", "arch": "transformer_l", "val": 0.0},
                        "frustum", blk, "edit_index", "regression")
-    assert row["IM EI"] == 0.7 and row["IM fid"] == 0.3 and row["IM arm"] == "pt4·α1"
+    assert row["IM EI"] == 0.7 and row["IM fid"] == pytest.approx(0.7) and row["IM arm"] == "pt4·α1"   # fid = 1 - the stored ratio 0.3 (2026-09-22)
     assert row["IM-NN EI"] == 0.4                      # on hand, not shown
     assert np.isnan(row["ND EI"])                       # inapplicable on a regression target
     assert row["PI EI"] == 0.2 and row["GS EI"] == -0.1

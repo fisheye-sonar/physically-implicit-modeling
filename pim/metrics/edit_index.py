@@ -58,6 +58,20 @@ def fidelity_ratio_from(rmse_edited: float, rmse_unsteered: float, eps: float = 
     return float(rmse_edited) / max(float(rmse_unsteered), eps)
 
 
+FIDELITY_GUARD = 0.0     # fidelity below this = the edit degraded the prediction (ratio > 1)
+
+
+def fidelity(ratio):
+    """THE REPORTED fidelity (2026-09-22, Sevan): ``1 - fidelity_ratio``, so that every
+    editability column reads higher-is-better on one axis with the Edit Index — **1 = the
+    edit reproduced the edited world exactly, 0 = no better than doing nothing (THE GUARD),
+    < 0 = degraded.** Scores files keep the RATIO under ``fidelity_ratio`` (five scorers on
+    two hosts write it; a stored key's meaning never changes); every table, ledger and
+    dashboard cell goes through this one function. Works on floats, arrays and NaN. A
+    ratio's 95% interval ``[lo, hi]`` becomes ``[1 - hi, 1 - lo]``."""
+    return 1.0 - ratio
+
+
 # ── case-level spread (2026-09-18) ────────────────────────────────────────────
 #
 # Every arm's Edit Index is a mean over bench cases and its guard a ratio of two
