@@ -38,6 +38,7 @@ from common import plt, ps, rw
 CTX, STRIP, DIFF, GAP, BIG = 0.42, 1.0, 0.7, 0.3, 0.75        # row heights, in strip units
 GAP_U, BIG_F = 0.65, 0.9        # the final cut: room for the two-line "Unedited / Pred" and "Ground / truth" labels
 RIGHT_IN, RIGHT_F, BOT_IN = 0.5, 0.72, 0.03                   # gutters, inches; RIGHT_F leaves room for the marks key
+RIGHT_CB = 0.40           # the gutter when only the colour bar lives there (measured: 0.07 gap + 0.05 bar + ticks + label)
 SPACER = {False: 0.18, True: 0.0}    # the final cut: an empty column between model groups, in column widths (none in the
                                      # narrow side-by-side, whose 7 pt "Example k" titles need every bit of column width)
 UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A3": 0.155, "A4": 0.155}   # inches per strip unit
@@ -70,7 +71,9 @@ def left_in(option):
 def right_in(option, key=True):
     """``key`` False: the marks key is drawn outside the panel (the side-by-side puts it in the gap between
     (a) and (b)), so the wider gutter it needs is not reserved."""
-    return RIGHT_F if option in FINAL and key else RIGHT_IN
+    if option not in FINAL:
+        return RIGHT_IN
+    return RIGHT_F if key else RIGHT_CB
 
 
 def top_in(option, narrow=False):

@@ -46,7 +46,7 @@ SIDE_WIDTH = {"A3": 6.10, "A4": ps.TEXT_WIDTH_IN}    # the wider cut buys (a) fo
 SIDE_SPACER = {"A3": 0.0, "A4": 0.18}                # group spacers only where the columns are wide enough
 SIDE_EXAMPLE = {"A3": 7, "A4": 8}                    # (a)'s example titles, pt
 GAP_IN = 0.16            # between (a) and (b) when stacked
-KEY_GAP_IN = 0.62        # side-by-side: the empty column between (a) and (b) that carries the marks key
+KEY_GAP_IN = 0.56        # side-by-side: the empty column between (a) and (b) that carries the marks key
                          # (Sevan, round 7: out of (a)'s header and into the whitespace between the panels)
 
 

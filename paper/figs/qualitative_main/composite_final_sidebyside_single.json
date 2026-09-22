@@ -3,9 +3,9 @@
  "geometry": {
   "width_in": 5.5,
   "height_in": 2.93,
-  "rayworld_width_in": 2.21,
+  "rayworld_width_in": 2.27,
   "othello_width_in": 2.67,
-  "key_gap_in": 0.62,
+  "key_gap_in": 0.56,
   "board_in": 0.6,
   "column_gap_in": 0.16,
   "othello_title_pt": 8,

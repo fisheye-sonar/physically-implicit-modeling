@@ -176,7 +176,7 @@ def mark_key(owner, *, fontsize: float = 8, markersize: float = 5, **kw):
     suffix was dropped in round 7). ``owner`` is a Figure, SubFigure or Axes; ``kw`` goes to its ``legend``."""
     handles = [Line2D([], [], marker="o", linestyle="none", color=c, markersize=markersize) for c in (ps.ORIGIN_C, ps.DEST_C)]
     return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=0.8,
-                        handletextpad=0.4, columnspacing=1.0, borderaxespad=0.0, **kw)
+                        handletextpad=0.4, columnspacing=1.0, borderaxespad=0.0, borderpad=0.0, **kw)
 
 
 def draw_board(ax, board: np.ndarray, probs: np.ndarray, edited: int | None, *, gamma: float = 0.6,
