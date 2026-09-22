@@ -1,10 +1,13 @@
 # Othello and its three rule variants (fig:othello_and_variants)
 
-Two candidate main figures for the paper's Othello section (round 3, 2026-09-21): before / after boards under
-the four rule sets, one move per panel, the discs it flips ringed. Panels (a) standard, (b) adjacent-flip and
-(c) adjacent-noflip show ONE shared board, a real standard position that is provably reachable under the other
-two rule sets, so the panels differ only in the legal squares and in what a move flips; (d) standard-noflip is
-on its own game. Text is Arial (bold panel letters), every PDF is cropped to its content with no padding.
+Two candidate main figures for the paper's Othello section (round 4, 2026-09-22). Each panel is two boards: the
+top row, **Legal Moves**, fills every square the mover may play solid in the board tint; the bottom row, **Board
+Update**, shows the position after the chosen move, that disc ringed cyan and every disc it flips ringed pink.
+Panels (a) standard, (b) adjacent-flip and (c) adjacent-noflip show ONE shared board, a real standard position
+that is provably reachable under the other two rule sets, so the panels differ only in the legal squares and in
+what a move flips; (d) standard-noflip is on its own game. Row names are rotated down the left side, the key is
+a column on the right, panel letters are bold. Text is Arial, every PDF is cropped to its content with no
+padding; the composites are drawn 6.0 in wide (5.92 in after the crop).
 
 Everything canonical is imported: rules from `pim.environments.othello.corpus.rules_of`, board replay and
 legality from the vendored `OthelloBoardState` (`umpire`, `get_valid_moves`, `tentative_move`), games from
@@ -20,9 +23,9 @@ Regenerate (CPU, ~15 s):
 
 | file | what it is |
 |---|---|
-| `composite_O2.pdf` / `.png` | 5.5 x 3.5 in. (a) d1 flips d2, d3, d4; (b) c4 flips d4; **(c) c4**, the same board and move as (b), flips nothing; (d) own game, g2 flips nothing. Key strip beneath. |
+| `composite_O2.pdf` / `.png` | 5.92 x 2.67 in. (a) d1 flips d2, d3, d4; (b) c4 flips d4; **(c) c4**, the same board and move as (b), flips nothing; (d) own game, g2 flips nothing. Key column on the right. |
 | `composite_O2_altmove.pdf` / `.png` | Same, except **(c) f5**: a move that would flip e5 under the flip rules (it is legal under all three rule sets) and flips nothing here. |
-| `legend_key.pdf` / `.png` | The key alone (3.4 x 0.3 in): legal move, chosen move, flipped disc. |
+| `legend_key.pdf` / `.png` | The key alone (0.99 x 0.9 in), the same vertical column the composites carry: legal move, chosen move, flipped disc. |
 | `boards.json` | Sidecar: the shared board (case, move, board array, standard moves, the placement orders that prove reachability, both legal sets, the search record), every panel's move and flips for both composites, the own-game rule and its picks. |
 | `make_figure.py` | The one script (search, drawing, composites). |
 | `pieces/<variant>_before.pdf`, `_after.pdf`, `_O2_pair.pdf` | Each panel's two boards at 2.0 in and the pair with an arrow (`standard`, `adjacent_flip`, `adjacent_noflip`, `standard_noflip`); `adjacent_noflip_*_altmove.pdf` are panel (c) of the altmove composite. PNG previews beside them are gitignored. |
@@ -33,11 +36,15 @@ O3, the terminal boards and the round-2 pieces were pruned on 2026-09-21; the ro
 
 ## Markers (defined once in `make_figure.py`, colours from `paper_style`)
 
-- Legal move: small yellow dot (`ps.BOARD_TINT`, #ffe600) on each square the mover may play.
-- Chosen move: cyan ring (`ps.ORIGIN_C`, #00bcd4); before the move around a half-transparent disc of the mover's
-  colour (alpha 0.5), after the move around the placed disc.
-- Flipped disc: pink ring (`ps.DEST_C`, #ff4fa3), the pink the qualitative figures use for a tile whose colour
-  changed.
+- Legal move, top row only: the whole square filled in the board tint (`ps.BOARD_TINT`, #ffe600) at full
+  strength, through `draw_board`'s own tint path, so a legal square looks exactly like a fully tinted square in
+  the prediction and qualitative figures. Discs are drawn on top.
+- Chosen move, bottom row only: cyan ring (`ps.ORIGIN_C`, #00bcd4) around the placed disc. The top row carries
+  no chosen-move marker: the ring is redundant with the row below, and a half-transparent ghost disc over a
+  filled square reads as a third disc colour. To restore the ghost, pass
+  `ghost=(Q["placed"], Q["board"][Q["placed"]])` in `pair`'s before spec (`board` still supports it).
+- Flipped disc, bottom row only: pink ring (`ps.DEST_C`, #ff4fa3), the pink the qualitative figures use for a
+  tile whose colour changed.
 - Boards: `draw_board`'s geometry and colours. Rows a to h run top to bottom, columns 1 to 8 left to right, as in
   the vendored code ("c4" = row c, column 4).
 
@@ -105,8 +112,8 @@ is drawn: case 943, board after move 14 (18 discs), black to move, the game's re
 ## Caption facts
 
 - (a) to (c): one real position (a standard game after six moves, black to move) that can also arise under the
-  adjacency rule sets, so only the rules differ. Yellow dots: the squares black may play; the enclosure rule
-  allows 8, adjacency 14. Cyan ring: the move (a ghost disc before, the placed disc after). Pink rings: the discs
+  adjacency rule sets, so only the rules differ. Yellow squares (top row): the squares black may play; the
+  enclosure rule allows 8, adjacency 14. Cyan ring (bottom row): the placed disc. Pink rings: the discs
   it flips. (a) d1 flips the three white discs in row d; (b) c4 flips d4; (c) the same placement (or f5 in the
   altmove version) flips nothing under adjacent-noflip.
 - (d): a standard-noflip game after 14 moves; the enclosure rule allows 7 squares, g2 flips nothing, and the discs

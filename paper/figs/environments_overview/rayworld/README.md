@@ -1,4 +1,4 @@
-# Rayworld and its variants: `fig:rayworld_and_variants` (round 3, 2026-09-21)
+# Rayworld and its variants: `fig:rayworld_and_variants` (round 4, 2026-09-22)
 
 Everything here is drawn from REAL held-out sequences (`datasets/discworld/<inst>/eval/test.h5`) with the
 canonical geometry, by `make_figure.py` in this folder. No metric is computed and nothing is re-implemented:
@@ -12,17 +12,26 @@ bounding box; rasters only for observation strips, nearest interpolation on `DAR
 
 Regenerate (deterministic):
 
-    .pim/bin/python paper/figs/environments_overview/rayworld/make_figure.py          # composite + pieces/
+    .pim/bin/python paper/figs/environments_overview/rayworld/make_figure.py          # both composites + pieces
     .pim/bin/python paper/figs/environments_overview/rayworld/make_figure.py --all    # also the pruned variants
 
 ## Top level
 
 | file | what it is |
 |---|---|
-| `composite.pdf` / `.png` | the figure, 5.5 in wide: top band (a) frustum view with frame t* along the far plane and its waterfall, (b) blink waterfall; bottom band (c) the same world through 16 / 8 / 5 rays, (d) the appearance cells. Panel letters only. |
+| `composite.pdf` / `.png` | **the figure**, 5.5 x 3.26 in, two bands: top (a) frustum view with frame t* along the far plane and its waterfall, (b) blink waterfall; bottom (c) the same world through 16 / 8 / 5 rays, (d) the appearance cells. Panel letters only. |
+| `composite_onerow.pdf` / `.png` | the **alternative**: the same four panels in ONE band, 5.5 x 1.55 in. Everything is smaller (see the layout note below); use it where the figure must be short. |
 | `make_figure.py` | the script |
-| `selection.json` | sidecar: seed, t*, every sequence index and generator seed, rule survivors, radii, reflectivities, positions and velocities at t*, the blackout span, the matched-render note, the cells at t*, the rule text, the drawing constants, the piece list |
+| `selection.json` | sidecar: seed, t*, every sequence index and generator seed, rule survivors, radii, reflectivities, positions and velocities at t*, the blackout span, the matched-render note, the cells at t*, the cell-colour seed, the rule text, the drawing constants, both piece lists |
 | `README.md` | this file |
+
+### How the one-row variant differs (layout only; same data, same sequences, same conventions)
+
+The band is 1.31 in tall, so every panel shrinks: the frustum is 1.09 in wide (its size follows the band
+height at equal aspect), the two waterfalls are squashed vertically (all 40 frames, shorter rows) at 0.62
+and 0.56 in wide, the three N-ray strips are 0.33 in each with their ray counts **below** them (7 pt) so the
+letter row stays free, and (d) is the hard crop at 1.11 x 0.84 in, centred in the band. The (b) blink panel
+keeps its own time labels and bracket. Nothing else changes: same seeds, same t*, same drawing rules.
 
 ## pieces/ (PDF; the PNG previews beside them are gitignored)
 
@@ -36,9 +45,16 @@ Regenerate (deterministic):
 | `blink_waterfall` | (b) dw-blink sequence 6837: disc 1 (0.8) hidden in frames 16 to 22 (bracket "hidden" on the right), its 0.5 markers on ray 127 at rows 15 and 22 |
 | `nray_frustum_8ray`, `nray_frustum_8ray_strip` | frustum view of dw-8ray sequence 2770 at t* = 20 (8 kept rays of 10 cast, radius 1.0); not in the composite |
 | `nray_waterfall_16ray_matched`, `_8ray_matched`, `_5ray_matched` | (c) the SAME world (dw-8ray sequence 2770) through 16 / 8 / 5 rays: its positions rendered by `render_scene` under each instance's `SimConfig` (radius 1.0 on all three; the 8-ray re-render equals the stored frames exactly, asserted); 1.25 x 1.6 in |
-| `categorical_frustum_8ray` | (d) the 30-cell appearance partition on dw-8ray over the reachable region, the two discs of sequence 2770 at t* at alpha 0.65 with a dot at each centre, their own cells filled stronger and outlined; whole frustum with the observer |
+| `categorical_frustum_8ray` | (d) the 30-cell appearance partition on dw-8ray over the reachable region, one colour per cell, the two discs of sequence 2770 at t* at alpha 0.65 with a dot at each centre, their own cells filled stronger and outlined; whole frustum with the observer |
 | `categorical_frustum_8ray_crop` | the same cut just below the near plane (no observer, rays drawn from the near plane), the composite's (d) |
 | `key_frustum` | key for the frustum views: disc 0.8 / disc 0.4 / velocity / earlier frames / ray that hits / ray that misses |
+
+## pieces_onerow/ (PDF; PNGs gitignored by this folder's own `.gitignore`)
+
+The same elements at the sizes `composite_onerow` uses: `standard_frustum_light_every3_strip` (1.09 x 1.20
+in), `standard_waterfall` (0.62 x 1.16), `blink_waterfall` (0.56 x 1.16), `nray_waterfall_{16,8,5}ray_matched`
+(0.33 x 1.16 each) and `categorical_frustum_8ray_crop` (1.18 x 0.90). `key_frustum` is size independent and
+lives in `pieces/` only. The strips here carry no ray-count label; the composite adds it below them.
 
 Pruned in round 3 (regenerate with `--all`; git history keeps the committed copies): every-2nd / every-4th
 ray frustums, the dark-panel frustums, the `_own` N-ray strips (one sequence per instance), the no-rays
@@ -91,11 +107,16 @@ other disc lit in every frame, the blinking disc lit whenever visible and travel
   on its last hidden frame; the bracket spans the hidden frames only, the word "hidden" centred on it.
 - Appearance cells (panel d): two positions share a cell when a lone disc there lights the same rays; the
   partition is drawn over the reachable region (disc centre at least one radius from every wall,
-  `sim.fully_in_frustum`), 30 cells on dw-8ray with run lengths 1 (far edge) to 5 (near edge). Tones are
-  Okabe-Ito hues blended toward white with no meaning beyond making neighbours differ; the two discs' cells
-  are filled stronger and outlined in black; the discs are drawn at alpha 0.65 with a dot at the true centre.
-  The factorised target the paper reports (`appearance-fac`) reads the same partition as run centre
-  (15 classes) times run length (5 classes). The composite cuts the view just below the near plane.
+  `sim.fully_in_frustum`), 30 cells on dw-8ray with run lengths 1 (far edge) to 5 (near edge). **Each cell
+  has its own colour** (`cell_palette`, seed 7): the 30 evenly spaced hues of the colour circle, rotated by
+  a random offset, randomly permuted and jittered, each with a random saturation (0.17 to 0.30) and value
+  (0.95 to 1.0). The colours carry no meaning; they exist so the reader sees many distinct cells rather than
+  a repeating tiling. All 30 are light (relative luminance 0.73 to 0.96), so the rays, the discs and the
+  centre dots read on top; the closest adjacent pair differs by 0.056 in RGB distance (median 0.29) and every
+  boundary also carries a thin grey line. The two discs' cells are the same hue further saturated and are
+  outlined in black; the discs are drawn at alpha 0.65 with a dot at the true centre. The factorised target
+  the paper reports (`appearance-fac`) reads the same partition as run centre (15 classes) times run length
+  (5 classes). Both composites cut the view just below the near plane.
 - At t* in the dw-8ray sequence the far disc (0.4) sits in the lone-disc cell for rays 2 to 3, but the near
   disc (0.8, rays 3 to 6) occludes ray 3, so the frame shows the far disc on ray 2 only. The cell is what the
   probe target labels; the rays are what the frame shows. Worth one caption sentence if panel (d) is used.
@@ -116,3 +137,7 @@ discs' cells are runs 2 to 3 (disc 0, far, y 9.9) and 3 to 6 (disc 1, near, y 5.
 - The composite is 5.5 x about 3.3 in: the frustum's size is tied to the top band's height by the equal
   aspect, so the bigger frustum asked for in round 3 made the figure about 0.3 in taller than round 2's.
   `hf` in `composite()` is the one number to change.
+- In `composite_onerow` the frustum's discs are about 0.09 in across and the partition's cells about 0.1 in
+  wide: legible in print, but the two-band `composite` is the one to use where there is room. A single band
+  cannot hold five annotated groups at 5.5 in without that shrink, since the frustum's width grows with the
+  band's height.

@@ -2,10 +2,23 @@
  "seed": 0,
  "move": 14,
  "min_flips": 1,
+ "rows": {
+  "top": "Legal Moves",
+  "bottom": "Board Update"
+ },
  "markers": {
-  "legal move": "#ffe600",
-  "chosen move / placed disc": "#00bcd4",
-  "flipped disc": "#ff4fa3"
+  "legal move": {
+   "colour": "#ffe600",
+   "drawn": "the whole square filled, top row only"
+  },
+  "chosen move": {
+   "colour": "#00bcd4",
+   "drawn": "a ring on the placed disc, bottom row only"
+  },
+  "flipped disc": {
+   "colour": "#ff4fa3",
+   "drawn": "a ring on each disc the move flips, bottom row only"
+  }
  },
  "shared_board": {
   "bench_instance": "oth-uniform",

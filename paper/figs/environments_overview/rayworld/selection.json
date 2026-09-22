@@ -223,7 +223,8 @@
   "draw": "numpy default_rng(SEED).choice over the survivors, in the order standard, blink, 16-ray, 8-ray, 5-ray"
  },
  "outputs": {
-  "composite": "composite.pdf/.png at the top level: (a) frustum with the t* strip + waterfall and (b) blink across the top, (c) 16/8/5-ray matched strips and (d) the cells below; 5.5 in wide (round 3 of the split layout)",
+  "composite": "composite.pdf/.png: (a) frustum with the t* strip + waterfall and (b) blink across the top, (c) 16/8/5-ray matched strips and (d) the cells below; 5.5 x 3.3 in (two bands)",
+  "composite_onerow": "composite_onerow.pdf/.png: the same four panels in ONE band, 5.5 x 1.58 in; pieces at those sizes in pieces_onerow/",
   "pieces": [
    "blink_waterfall",
    "categorical_frustum_8ray",
@@ -241,7 +242,21 @@
    "standard_frustum_light_strip",
    "standard_waterfall"
   ],
+  "pieces_onerow": [
+   "blink_waterfall",
+   "categorical_frustum_8ray_crop",
+   "nray_waterfall_16ray_matched",
+   "nray_waterfall_5ray_matched",
+   "nray_waterfall_8ray_matched",
+   "standard_frustum_light_every3_strip",
+   "standard_waterfall"
+  ],
   "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays partition, composite_v1(_dark), composite_v2_rows: regenerate with --all (git history keeps the committed ones)"
+ },
+ "cell_colours": {
+  "seed": 7,
+  "n_cells": 30,
+  "construction": "One colour per appearance cell, so the reader sees MANY cells rather than a repeating tiling. Hues are the ``n`` evenly spaced points of the colour circle, rotated by a random offset, randomly permuted and jittered, each with its own random saturation and value (seeded: the same figure every run). Even spacing plus a random assignment keeps neighbouring cells apart without a colouring pass; the low saturation and high value keep every cell light enough for the rays, the discs and the centre dots to read on top."
  },
  "recommended": {
   "rays_drawn_every": 3,

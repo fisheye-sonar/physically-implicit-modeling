@@ -22,9 +22,14 @@ nothing flips, and in ``composite_O2_altmove`` the move legal under all three ru
 uses its own bench game: the seeded rule (``--seed``, ``--move`` K, ``--min-flips``) is applied to every instance
 in order and only standard-noflip is drawn.
 
-Outputs: ``composite_O2`` and ``composite_O2_altmove`` (5.5 in wide, bold panel letters, key strip beneath),
-``legend_key``, the before / after / pair boards under ``pieces/`` (2.0 in boards), ``boards.json``. Colours and
-geometry come from ``paper_style`` and the qualitative Othello figure's ``draw_board``.
+Each panel is two boards: the top row ("Legal Moves") fills every legal square solid in the board tint and marks
+nothing else, the bottom row ("Board Update") shows the position after the move with the placed disc ringed cyan
+and every disc it flips ringed pink. Row names are rotated down the left side, the key is a column on the right,
+panel letters are bold.
+
+Outputs: ``composite_O2`` and ``composite_O2_altmove`` (6.0 in wide), ``legend_key``, the before / after / pair
+boards under ``pieces/`` (2.0 in boards), ``boards.json``. Colours and geometry come from ``paper_style`` and
+the qualitative Othello figure's ``draw_board``.
 
     .pim/bin/python paper/figs/environments_overview/othello/make_figure.py
 """
@@ -191,11 +196,15 @@ def xy(sq: int) -> tuple[float, float]:
     return c + 0.5, 7.5 - r
 
 
-def board(ax, X: dict, *, probs=None, dots: bool = False, ghost=None, placed=None, flipped=(), lw: float = 1.4,
-          dot_r: float = DOT_R) -> None:
-    """draw_board's board (squares tinted by ``probs`` if given, as the qualitative figure tints them), then
-    the rule markers: a dot on each legal square, a half-transparent disc where the chosen move would land,
-    a ring on the placed disc and on every disc the move flips."""
+def board(ax, X: dict, *, probs=None, fill: bool = False, dots: bool = False, ghost=None, placed=None, flipped=(),
+          lw: float = 1.4, dot_r: float = DOT_R) -> None:
+    """draw_board's board, then the rule markers. ``fill`` paints every legal square solid in the board tint
+    through draw_board's own tint path (full strength, the way the prediction and qualitative figures tint a
+    square); ``probs`` tints by a distribution instead; ``dots`` marks legal squares with a dot. Then a
+    half-transparent disc where the chosen move would land, a ring on the placed disc and on every disc it flips."""
+    if fill:
+        probs = np.zeros(64)
+        probs[list(X["legal"])] = 1.0                    # >= draw_board's tint_scale, so the square is solid
     draw_board(ax, X["board"], np.zeros(64) if probs is None else probs, None)
     for sq in X["legal"] if dots else ():
         if ghost is None or sq != ghost[0]:              # the ghost disc stands in for its own dot
@@ -210,9 +219,11 @@ def board(ax, X: dict, *, probs=None, dots: bool = False, ghost=None, placed=Non
 
 
 def pair(P: dict, Q: dict) -> dict:
-    """The O2 boards: before = the position with legal dots and the move as a ghost disc; after = the position
-    after the move, the placed disc and the flipped discs ringed."""
-    return {"before": dict(X=P, dots=True, ghost=(Q["placed"], Q["board"][Q["placed"]]), placed=Q["placed"]),
+    """The two boards of a panel: before = the position with every legal square filled, nothing else (the
+    chosen move is marked in the row below, so neither its ring nor a ghost disc is drawn here: a ghost over a
+    filled square reads as a third disc colour; restore it with ``ghost=(Q["placed"], Q["board"][Q["placed"]])``);
+    after = the position after the move, the placed disc ringed and every disc it flips ringed."""
+    return {"before": dict(X=P, fill=True),
             "after": dict(X=Q, placed=Q["placed"], flipped=Q["flipped"])}
 
 
@@ -235,23 +246,24 @@ def row(specs: list[dict], stem: Path, *, size: float = BOARD_IN, gap: float = 0
     plt.close(fig)
 
 
-KEY_W, KEY_H = 3.4, 0.3          # the legend key strip, inches
+FIG_W = 6.0                      # the composite's drawn width, inches (the key column sits beside the boards)
+KEY_TILE, KEY_GAP, KEY_ROW = 0.26, 0.07, 0.30            # the key's marker tile, tile-to-label gap, row pitch
+KEY_W, KEY_H = 0.95, 3 * KEY_ROW                         # the key column, inches
+ROW_LABELS = ("Legal Moves", "Board Update")
 
 
-def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, labels: list[str] | None = None,
+def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, labels=ROW_LABELS,
               key: bool = True) -> None:
-    """The four rule sets across (bold panel letters only), one row per key (a short label each if ``labels``),
-    the legend key strip beneath if ``key``, at the text width."""
-    W, cg, top = ps.TEXT_WIDTH_IN, 0.12, 0.2
-    left = 0.62 if labels else 0.0
+    """The four rule sets across (bold panel letters only), one row per key, each row named by a rotated label
+    down the left side, the legend key as a column on the right."""
+    W, cg, top = FIG_W, 0.12, 0.2
+    left = 0.24 if labels else 0.0
+    right = KEY_W + 0.10 if key else 0.0
     rg = 0.34 if arrows else 0.12
-    s = (W - left - 3 * cg) / 4
+    s = (W - left - right - 3 * cg) / 4
     n = len(keys)
-    bottom = KEY_H + 0.1 if key else 0.0
-    H = top + n * s + (n - 1) * rg + bottom
+    H = top + n * s + (n - 1) * rg
     fig = plt.figure(figsize=(W, H))
-    if key:
-        key_entries(fig.add_axes([(W - KEY_W) / 2 / W, 0, KEY_W / W, KEY_H / H]))
     rows_y = [H - top - (r + 1) * s - r * rg for r in range(n)]
     for c, (name, _) in enumerate(VARIANTS):
         x0 = left + c * (s + cg)
@@ -262,27 +274,29 @@ def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, lab
             if arrows and r:
                 arrow(fig, ((x0 + s / 2) / W, (y0 + s + rg - 0.05) / H), ((x0 + s / 2) / W, (y0 + s + 0.05) / H))
     for y0, label in zip(rows_y, labels or []):
-        fig.text((left - 0.08) / W, (y0 + s / 2) / H, label, ha="right", va="center", fontsize=8)
+        fig.text((left - 0.07) / W, (y0 + s / 2) / H, label, ha="center", va="center", rotation=90, fontsize=8)
+    if key:
+        y_mid = (H - top) / 2                            # centred on the block of boards
+        key_entries(fig.add_axes([(W - KEY_W) / W, (y_mid - KEY_H / 2) / H, KEY_W / W, KEY_H / H]))
     ps.save(fig, stem)
     plt.close(fig)
 
 
 def key_entries(ax) -> None:
-    """Three entries, each marker on its own board tile: legal move, chosen move, flipped disc. ``ax`` spans
-    KEY_W x KEY_H inches; data units are tile heights."""
-    ax.set_xlim(0, KEY_W / KEY_H), ax.set_ylim(0, 1), ax.set_axis_off()
-    t = 0.8
-    for x, label in zip((0.15, 3.75, 7.55), ("legal move", "chosen move", "flipped disc")):
-        cx, cy = x + t / 2, 0.5
-        ax.add_patch(Rectangle((x, cy - t / 2), t, t, facecolor=ps.BOARD_GREEN, edgecolor=ps.BOARD_LINE, linewidth=0.4))
-        if label == "legal move":
-            ax.add_patch(Circle((cx, cy), DOT_R * t, facecolor=LEGAL_C, edgecolor="none"))
-        else:
-            ax.add_patch(Circle((cx, cy), DISC_R * t, facecolor="black", edgecolor="#333333", linewidth=0.5,
-                                alpha=GHOST_A if label == "chosen move" else 1.0))
-            ax.add_patch(Circle((cx, cy), RING_R * t, facecolor="none", linewidth=1.4,
+    """The key as a vertical column: three board tiles with their markers, labels to the right, a legal square
+    solid in the board tint, the placed disc ringed cyan, a flipped disc ringed pink, each drawn exactly as the
+    figure draws it. ``ax`` spans KEY_W x KEY_H inches and its data units are inches."""
+    ax.set_xlim(0, KEY_W), ax.set_ylim(0, KEY_H), ax.set_axis_off()
+    t = KEY_TILE
+    for j, label in enumerate(("legal move", "chosen move", "flipped disc")):
+        cy = KEY_H - (j + 0.5) * KEY_ROW
+        ax.add_patch(Rectangle((0, cy - t / 2), t, t, edgecolor=ps.BOARD_LINE, linewidth=0.4,
+                               facecolor=LEGAL_C if label == "legal move" else ps.BOARD_GREEN))
+        if label != "legal move":
+            ax.add_patch(Circle((t / 2, cy), DISC_R * t, facecolor="black", edgecolor="#333333", linewidth=0.5))
+            ax.add_patch(Circle((t / 2, cy), RING_R * t, facecolor="none", linewidth=1.2,
                                 edgecolor=PLACED_C if label == "chosen move" else FLIP_C))
-        ax.text(x + t + 0.25, cy, label, ha="left", va="center", fontsize=8)
+        ax.text(t + KEY_GAP, cy, label, ha="left", va="center", fontsize=8)
 
 
 def legend_key(stem: Path) -> None:
@@ -356,7 +370,10 @@ if __name__ == "__main__":
         composite(V[comp], ["before", "after"], HERE / comp, arrows=True)
     json.dump({
         "seed": a.seed, "move": k, "min_flips": a.min_flips,
-        "markers": {"legal move": LEGAL_C, "chosen move / placed disc": PLACED_C, "flipped disc": FLIP_C},
+        "rows": {"top": ROW_LABELS[0], "bottom": ROW_LABELS[1]},
+        "markers": {"legal move": {"colour": LEGAL_C, "drawn": "the whole square filled, top row only"},
+                    "chosen move": {"colour": PLACED_C, "drawn": "a ring on the placed disc, bottom row only"},
+                    "flipped disc": {"colour": FLIP_C, "drawn": "a ring on each disc the move flips, bottom row only"}},
         "shared_board": {
             "bench_instance": STD, "bench_case_id": S["case"], "board_after_move": S["m"], "mover": P_std["mover"],
             "board_white0_blank1_black2": [int(x) for x in P_std["board"]], "standard_moves": names(S["moves"]),

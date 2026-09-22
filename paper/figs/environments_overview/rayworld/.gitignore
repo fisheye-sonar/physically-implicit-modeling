@@ -1,0 +1,3 @@
+# The one-row variant's PNG previews, like those under pieces/ (paper/figs/.gitignore covers that name
+# only): regenerable from make_figure.py, the PDFs are the deliverable.
+pieces_onerow/*.png

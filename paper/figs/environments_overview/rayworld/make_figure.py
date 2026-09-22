@@ -6,8 +6,9 @@ tangent of the viewing angle, wall rays dropped when the instance says so), hits
 from the stored ``obs_id`` / ``obs_depth``, appearance cells from
 ``grid_target.categorical_target("appearance")``, the matched N-ray strips from
 ``renderer.render_scene`` under each sibling instance's own ``SimConfig``. No metric, no
-re-implemented rendering. CPU only. The composite lands beside this script, every per-element export
-in ``pieces/`` (round 3, 2026-09-21); ``--all`` also regenerates the variants pruned in round 3.
+re-implemented rendering. CPU only. Two composites land beside this script — ``composite`` (two bands)
+and ``composite_onerow`` (one band) — with their per-element exports in ``pieces/`` and ``pieces_onerow/``
+(round 4, 2026-09-22); ``--all`` also regenerates the variants pruned in round 3.
 
     .pim/bin/python paper/figs/environments_overview/rayworld/make_figure.py [--all]
 """
@@ -30,7 +31,7 @@ import paper_style as ps  # noqa: E402
 
 ps.apply()
 import matplotlib.pyplot as plt  # noqa: E402
-from matplotlib.colors import to_rgb  # noqa: E402
+from matplotlib.colors import hsv_to_rgb  # noqa: E402
 from matplotlib.patches import Circle, Polygon, Rectangle  # noqa: E402
 
 from pim.environments import layout  # noqa: E402
@@ -40,7 +41,7 @@ from pim.environments.discworld.renderer import render_scene  # noqa: E402
 from pim.environments.discworld.sim import Scene  # noqa: E402
 from pim.figures.waterfall import DARK_BG, EDIT_LINE  # noqa: E402
 
-PIECES = HERE / "pieces"
+PIECES, PIECES_ONEROW = HERE / "pieces", HERE / "pieces_onerow"
 STD, BLINK, NRAY = "dw-noiseless", "dw-blink", ("dw-16ray", "dw-8ray", "dw-5ray")
 T_STAR = 20            # the frame the frustum views show: the bench's edit frame, midway through the 40
 ARROW_FRAMES = 15      # a velocity arrow spans this many frames of motion, from the disc's edge
@@ -49,18 +50,27 @@ MAX_HIDDEN = 3         # frames in which one disc may be fully occluded (crossin
 EVERY = 3              # the 128-ray frustum draws every EVERY-th ray (43 of 128): visual clarity only
 DISC_ALPHA_CELLS = 0.65  # discs on the partition panel let the cells show through
 SEED = 0
-
-# muted tones for the appearance cells: Okabe-Ito hues blended toward white (no meaning, only contrast)
-_OI = ("#56B4E9", "#E69F00", "#009E73", "#CC79A7", "#F0E442", "#0072B2")
-
-
-def _tone(c: str, w: float) -> tuple:
-    return tuple(w + (1 - w) * np.array(to_rgb(c)))
-
-
-TONES = [_tone(c, 0.80) for c in _OI]
-TONES_OWN = [_tone(c, 0.45) for c in _OI]                                 # the discs' own cells
+CELL_SEED = 7          # the appearance cells' colours (below) — one draw, so the figure is reproducible
 CELL_EDGE = "#9c9c9c"
+
+
+def cell_palette(n: int, seed: int = CELL_SEED) -> tuple[np.ndarray, np.ndarray]:
+    """One colour per appearance cell, so the reader sees MANY cells rather than a repeating tiling.
+
+    Hues are the ``n`` evenly spaced points of the colour circle, rotated by a random offset, randomly
+    permuted and jittered, each with its own random saturation and value (seeded: the same figure every
+    run). Even spacing plus a random assignment keeps neighbouring cells apart without a colouring pass;
+    the low saturation and high value keep every cell light enough for the rays, the discs and the
+    centre dots to read on top. Returns (light, strong): the strong tone is the same hue, further
+    saturated, for the two cells the discs are in.
+    """
+    rng = np.random.default_rng(seed)
+    h = (np.arange(n) / n + rng.uniform()) % 1.0
+    rng.shuffle(h)
+    h = (h + rng.normal(0.0, 0.4 / n, n)) % 1.0
+    s, v = rng.uniform(0.17, 0.30, n), rng.uniform(0.95, 1.0, n)
+    return (hsv_to_rgb(np.stack([h, s, v], -1)),
+            hsv_to_rgb(np.stack([h, np.clip(s * 2.6, 0.0, 0.72), v * 0.94], -1)))
 
 
 # ── data ────────────────────────────────────────────────────────────────────────────────
@@ -231,7 +241,8 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
 
 def draw_cells(ax, q: dict, t: int, target, n: int = 500):
     """The appearance partition over the REACHABLE region (centre one radius clear of every wall,
-    sim.fully_in_frustum), coloured so that neighbouring cells differ; the discs' cells stronger."""
+    sim.fully_in_frustum), one ``cell_palette`` colour per cell; the two discs' own cells stronger
+    and outlined in black."""
     sim = q["sim"]
     r, yn, yf, xf = (float(sim[k]) for k in ("radius", "y_near", "y_far", "x_far"))
     scale = xf / yf
@@ -240,20 +251,11 @@ def draw_cells(ax, q: dict, t: int, target, n: int = 500):
     lab = np.full(X.shape, -1)
     lab[reach] = target.cell_of(np.stack([X[reach], Y[reach]], -1), sim)
     G = int(lab.max()) + 1
-    adj = [set() for _ in range(G)]
-    for a, b in ((lab[:, 1:], lab[:, :-1]), (lab[1:, :], lab[:-1, :])):
-        m = (a != b) & (a >= 0) & (b >= 0)
-        for u, w in set(zip(a[m].tolist(), b[m].tolist())):
-            adj[u].add(w)
-            adj[w].add(u)
-    tone = np.full(G, -1)
-    for c in range(G):
-        tone[c] = next(k for k in range(len(TONES)) if k not in {tone[w] for w in adj[c]})
+    light, strong = cell_palette(G)
     own = set(target.cell_of(q["pos"][t], sim).tolist())
     for c in range(G):
         m = (lab == c).astype(float)
-        ax.contourf(X, Y, m, levels=[0.5, 1.5], colors=[TONES_OWN[tone[c]] if c in own else TONES[tone[c]]],
-                    zorder=0.5)
+        ax.contourf(X, Y, m, levels=[0.5, 1.5], colors=[strong[c] if c in own else light[c]], zorder=0.5)
         ax.contour(X, Y, m, levels=[0.5], colors=[CELL_EDGE], linewidths=0.3, zorder=0.6)
     for c in own:
         ax.contour(X, Y, (lab == c).astype(float), levels=[0.5], colors=["black"], linewidths=0.9, zorder=3.5)
@@ -308,11 +310,11 @@ def draw_strip(ax, frame: np.ndarray):
         sp.set_edgecolor(ps.FRAME)
 
 
-def piece(name: str, w: float, h: float, draw) -> None:
-    """One exported element: a figure at its printed size (300 dpi rasters), drawn, saved into pieces/."""
+def piece(name: str, w: float, h: float, draw, into: Path = PIECES) -> None:
+    """One exported element: a figure at its printed size (300 dpi rasters), drawn, saved into ``into``."""
     f = plt.figure(figsize=(w, h), dpi=300)
     draw(f.add_axes([0, 0, 1, 1]))          # the axes fill the figure: a strip piece IS its nominal size
-    ps.save(f, PIECES / name)
+    ps.save(f, into / name)
     plt.close(f)
 
 
@@ -345,11 +347,15 @@ def _letter(f, x: float, y: float, s: str) -> None:
     f.text(x / W, y / H, s, fontweight="bold", ha="left", va="bottom")
 
 
-def _strips(f, x: float, y: float, w: float, gap: float, h: float, matched: dict) -> None:
+def _strips(f, x: float, y: float, w: float, gap: float, h: float, matched: dict, size: float = 7.5,
+            below: bool = False) -> None:
+    """The three matched N-ray strips side by side, labelled above (or BELOW, where the band's letter
+    row is needed for the panel letter)."""
     for k, inst in enumerate(NRAY):
         ax = _ax(f, x + k * (w + gap), y, w, h)
         draw_waterfall(ax, matched[inst], ticks=False, arrow=False)
-        ax.set_title(f"{inst.split('-')[1][:-3]} rays", fontsize=7.5, pad=2)
+        lab = f"{inst.split('-')[1][:-3]} rays"
+        ax.set_xlabel(lab, fontsize=size, labelpad=3) if below else ax.set_title(lab, fontsize=size, pad=2)
 
 
 def composite(std, blk, span, eight, matched, app) -> None:
@@ -375,6 +381,38 @@ def composite(std, blk, span, eight, matched, app) -> None:
                  crop=True, disc_alpha=DISC_ALPHA_CELLS)
     _letter(f, 5.48 - wd, hb + 0.04, "(d)")
     ps.save(f, HERE / "composite")
+    plt.close(f)
+
+
+def composite_onerow(std, blk, span, eight, matched, app) -> None:
+    """The ONE-ROW alternative (5.5 in wide, about 1.6 in tall): (a) frustum with the t* strip and its
+    waterfall, (b) blink, (c) the 16/8/5-ray strips, (d) the cells — a single band, letters in a strip
+    above the artwork. Everything is smaller than in the two-band composite: the frustum is set by the
+    band height (equal aspect), the waterfalls are squashed vertically (all 40 frames, shorter rows),
+    the N-ray strips are tightened to 0.33 in with 7 pt labels, and (d) is the hard crop, its height
+    following its width and centred in the band."""
+    hw, xlab, hf = 1.16, 0.24, 1.20        # waterfall panel height; its ray ticks and label; frustum height
+    top = xlab + hw                        # the band's top edge
+    f = plt.figure(figsize=(5.5, top + 0.18), dpi=300)
+    ytxt = top + 0.02
+    wf = frustum_width(hf, std["sim"], strip=True)
+    draw_frustum(_ax(f, 0.02, top - hf, wf, hf), std, T_STAR, every=EVERY, strip=True)
+    _letter(f, 0.02, ytxt, "(a)")
+    x = 0.02 + wf + 0.33                   # past the strip's t* label and the waterfall's own t labels
+    draw_waterfall(_ax(f, x, xlab, 0.62, hw), std["obs"], t_star=T_STAR)
+    x += 0.62 + 0.32                       # the t* pointer, then (b)'s t labels
+    draw_waterfall(_ax(f, x, xlab, 0.56, hw), blk["obs"], hidden=(span["first_hidden"], span["last_hidden"]))
+    _letter(f, x - 0.16, ytxt, "(b)")
+    x += 0.56 + 0.26                       # the hidden bracket and its label
+    _letter(f, x - 0.02, ytxt, "(c)")      # the ray counts go BELOW these strips, so the letter row is free
+    _strips(f, x, xlab, 0.33, 0.04, hw, matched, size=7.0, below=True)
+    x += 3 * 0.33 + 2 * 0.04 + 0.10
+    wd = 5.48 - x
+    hd = wd / frustum_width(1.0, eight["sim"], crop=True)
+    draw_frustum(_ax(f, x, xlab + (hw - hd) / 2, wd, hd), eight, T_STAR, cells=app, trail=False,
+                 arrows=False, crop=True, disc_alpha=DISC_ALPHA_CELLS)
+    _letter(f, x, ytxt, "(d)")
+    ps.save(f, HERE / "composite_onerow")
     plt.close(f)
 
 
@@ -490,19 +528,38 @@ def main(all_: bool = False):
 
     piece("key_frustum", 1.5, 0.9, draw_key)
     composite(std, blk, span, eight, matched, app)
+
+    # the one-row alternative and ITS pieces, at the sizes that layout uses (pieces_onerow/)
+    one = dict(into=PIECES_ONEROW)
+    piece("standard_frustum_light_every3_strip", frustum_width(1.20, std["sim"], strip=True), 1.20,
+          lambda ax: draw_frustum(ax, std, T_STAR, every=EVERY, strip=True), **one)
+    piece("standard_waterfall", 0.62, 1.16, lambda ax: draw_waterfall(ax, std["obs"], t_star=T_STAR), **one)
+    piece("blink_waterfall", 0.56, 1.16,
+          lambda ax: draw_waterfall(ax, blk["obs"], hidden=(span["first_hidden"], span["last_hidden"])), **one)
+    for inst in NRAY:
+        piece(f"nray_waterfall_{inst.split('-')[1]}_matched", 0.33, 1.16,
+              lambda ax: draw_waterfall(ax, matched[inst], ticks=False, arrow=False), **one)
+    piece("categorical_frustum_8ray_crop", 1.18, 1.18 / frustum_width(1.0, sims["dw-8ray"], crop=True),
+          lambda ax: draw_frustum(ax, eight, T_STAR, crop=True, **cat), **one)
+    composite_onerow(std, blk, span, eight, matched, app)
     if all_:
         composite_rows(std, blk, span, eight, matched, app)
 
     rec["rules"] = {"standard_and_nray": " ".join(pick.__doc__.split()), "blink": " ".join(pick_blink.__doc__.split()),
                     "max_hidden_frames": MAX_HIDDEN, "draw": "numpy default_rng(SEED).choice over the survivors, in the order "
                     "standard, blink, 16-ray, 8-ray, 5-ray"}
-    rec["outputs"] = {"composite": "composite.pdf/.png at the top level: (a) frustum with the t* strip + waterfall and "
-                                   "(b) blink across the top, (c) 16/8/5-ray matched strips and (d) the cells below; "
-                                   "5.5 in wide (round 3 of the split layout)",
+    rec["outputs"] = {"composite": "composite.pdf/.png: (a) frustum with the t* strip + waterfall and (b) blink "
+                                   "across the top, (c) 16/8/5-ray matched strips and (d) the cells below; "
+                                   "5.5 x 3.3 in (two bands)",
+                      "composite_onerow": "composite_onerow.pdf/.png: the same four panels in ONE band, "
+                                          "5.5 x 1.58 in; pieces at those sizes in pieces_onerow/",
                       "pieces": sorted(p.stem for p in PIECES.glob("*.pdf")),
+                      "pieces_onerow": sorted(p.stem for p in PIECES_ONEROW.glob("*.pdf")),
                       "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays "
                                            "partition, composite_v1(_dark), composite_v2_rows: regenerate with --all "
                                            "(git history keeps the committed ones)"}
+    rec["cell_colours"] = {"seed": CELL_SEED, "n_cells": rec["categorical"]["n_cells"],
+                           "construction": " ".join(cell_palette.__doc__.split()).split("Returns")[0].strip()}
     rec["recommended"] = {"rays_drawn_every": EVERY, "nray_strips": "matched", "frustum_page": "light"}
     json.dump(rec, open(out / "selection.json", "w"), indent=1)
     print("->", out / "selection.json")
