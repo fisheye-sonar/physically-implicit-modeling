@@ -5,59 +5,180 @@
   "gamma": 0.6,
   "full_at_probability": 0.02
  },
- "selection_rule": "one case per variant, rng.integers over the 1000 cached bench cases",
+ "selection_rule": "one numpy.random.default_rng(seed) shared across the variants in column order; per variant rng.choice(n_cached, 3, replace=False), sorted",
+ "rows_per_example": {
+  "legal moves": "uniform_over_legal(legal_pre)",
+  "model": "cached probs[\"Unedited\"]"
+ },
  "variants": {
   "standard": {
    "cache_column": "Standard",
    "run": "initial_othello_comparison/L-oth-20m",
    "instance": "oth-uniform",
-   "bench_case_id": 850,
-   "board_after_move": 20,
-   "n_legal": 18,
-   "pieces": {
-    "legal": "pieces/predictive_standard_legal.pdf",
-    "model": "pieces/predictive_standard_model.pdf",
-    "pair": "pieces/predictive_standard_pair.pdf"
-   }
+   "n_cached": 1000,
+   "cases": [
+    {
+     "bench_case_id": 511,
+     "board_after_move": 20,
+     "n_legal": 12,
+     "pieces": {
+      "legal": "pieces/othello_standard_511_legal.pdf",
+      "model": "pieces/othello_standard_511_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 636,
+     "board_after_move": 20,
+     "n_legal": 10,
+     "pieces": {
+      "legal": "pieces/othello_standard_636_legal.pdf",
+      "model": "pieces/othello_standard_636_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 848,
+     "board_after_move": 20,
+     "n_legal": 13,
+     "pieces": {
+      "legal": "pieces/othello_standard_848_legal.pdf",
+      "model": "pieces/othello_standard_848_model.pdf"
+     }
+    }
+   ]
   },
   "adjacent_flip": {
    "cache_column": "Adjacent Flip",
    "run": "adjacent_flip_ablation/L-oth-adjacent-flip-20m",
    "instance": "oth-adjacent-flip",
-   "bench_case_id": 636,
-   "board_after_move": 20,
-   "n_legal": 24,
-   "pieces": {
-    "legal": "pieces/predictive_adjacent_flip_legal.pdf",
-    "model": "pieces/predictive_adjacent_flip_model.pdf",
-    "pair": "pieces/predictive_adjacent_flip_pair.pdf"
-   }
+   "n_cached": 1000,
+   "cases": [
+    {
+     "bench_case_id": 16,
+     "board_after_move": 20,
+     "n_legal": 24,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_flip_16_legal.pdf",
+      "model": "pieces/othello_adjacent_flip_16_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 40,
+     "board_after_move": 20,
+     "n_legal": 17,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_flip_40_legal.pdf",
+      "model": "pieces/othello_adjacent_flip_40_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 75,
+     "board_after_move": 20,
+     "n_legal": 24,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_flip_75_legal.pdf",
+      "model": "pieces/othello_adjacent_flip_75_model.pdf"
+     }
+    }
+   ]
   },
   "adjacent_noflip": {
    "cache_column": "Adjacent NoFlip",
    "run": "adjacency_ablation/L-oth-adjacent-20m",
    "instance": "oth-adjacent",
-   "bench_case_id": 511,
-   "board_after_move": 20,
-   "n_legal": 19,
-   "pieces": {
-    "legal": "pieces/predictive_adjacent_noflip_legal.pdf",
-    "model": "pieces/predictive_adjacent_noflip_model.pdf",
-    "pair": "pieces/predictive_adjacent_noflip_pair.pdf"
-   }
+   "n_cached": 1000,
+   "cases": [
+    {
+     "bench_case_id": 503,
+     "board_after_move": 20,
+     "n_legal": 22,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_noflip_503_legal.pdf",
+      "model": "pieces/othello_adjacent_noflip_503_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 648,
+     "board_after_move": 20,
+     "n_legal": 22,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_noflip_648_legal.pdf",
+      "model": "pieces/othello_adjacent_noflip_648_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 911,
+     "board_after_move": 20,
+     "n_legal": 19,
+     "pieces": {
+      "legal": "pieces/othello_adjacent_noflip_911_legal.pdf",
+      "model": "pieces/othello_adjacent_noflip_911_model.pdf"
+     }
+    }
+   ]
   },
   "standard_noflip": {
    "cache_column": "Standard NoFlip",
    "run": "flip_ablation/L-oth-noflip-20m",
    "instance": "oth-noflip",
-   "bench_case_id": 269,
-   "board_after_move": 20,
-   "n_legal": 8,
-   "pieces": {
-    "legal": "pieces/predictive_standard_noflip_legal.pdf",
-    "model": "pieces/predictive_standard_noflip_model.pdf",
-    "pair": "pieces/predictive_standard_noflip_pair.pdf"
-   }
+   "n_cached": 1000,
+   "cases": [
+    {
+     "bench_case_id": 543,
+     "board_after_move": 20,
+     "n_legal": 7,
+     "pieces": {
+      "legal": "pieces/othello_standard_noflip_543_legal.pdf",
+      "model": "pieces/othello_standard_noflip_543_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 631,
+     "board_after_move": 20,
+     "n_legal": 5,
+     "pieces": {
+      "legal": "pieces/othello_standard_noflip_631_legal.pdf",
+      "model": "pieces/othello_standard_noflip_631_model.pdf"
+     }
+    },
+    {
+     "bench_case_id": 728,
+     "board_after_move": 20,
+     "n_legal": 6,
+     "pieces": {
+      "legal": "pieces/othello_standard_noflip_728_legal.pdf",
+      "model": "pieces/othello_standard_noflip_728_model.pdf"
+     }
+    }
+   ]
   }
+ },
+ "files": {
+  "figure": "othello",
+  "pieces": [
+   "othello_standard_511_legal.pdf",
+   "othello_standard_511_model.pdf",
+   "othello_standard_636_legal.pdf",
+   "othello_standard_636_model.pdf",
+   "othello_standard_848_legal.pdf",
+   "othello_standard_848_model.pdf",
+   "othello_adjacent_flip_16_legal.pdf",
+   "othello_adjacent_flip_16_model.pdf",
+   "othello_adjacent_flip_40_legal.pdf",
+   "othello_adjacent_flip_40_model.pdf",
+   "othello_adjacent_flip_75_legal.pdf",
+   "othello_adjacent_flip_75_model.pdf",
+   "othello_adjacent_noflip_503_legal.pdf",
+   "othello_adjacent_noflip_503_model.pdf",
+   "othello_adjacent_noflip_648_legal.pdf",
+   "othello_adjacent_noflip_648_model.pdf",
+   "othello_adjacent_noflip_911_legal.pdf",
+   "othello_adjacent_noflip_911_model.pdf",
+   "othello_standard_noflip_543_legal.pdf",
+   "othello_standard_noflip_543_model.pdf",
+   "othello_standard_noflip_631_legal.pdf",
+   "othello_standard_noflip_631_model.pdf",
+   "othello_standard_noflip_728_legal.pdf",
+   "othello_standard_noflip_728_model.pdf"
+  ]
  }
 }

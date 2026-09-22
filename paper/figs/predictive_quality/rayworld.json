@@ -3,30 +3,47 @@
  "instance": "dw-noiseless",
  "arrays": ".scratch/history_rewrite_arrays.npz",
  "rows": {
-  "Ground truth": "gt_unedited_roll",
-  "Prediction": "roll_unsteered"
+  "Ground truth": "gt_unedited_roll (the simulator's clean unedited continuation)",
+  "Prediction": "roll_unsteered (the model's free-run, no edit)",
+  "Difference": "prediction - truth per ray, the prediction clipped to [0, 1] first (paper/figs/qualitative_edits/make_figure.error, raw=False), on pim.figures.waterfall.DIFF_CMAP with a fixed +-1 scale; empty above the line"
  },
  "context": "obs_hist frames 12..19 above the line",
  "k_roll": 15,
  "selection": {
-  "rule": "numpy.random.default_rng(0).choice(32, 3, replace=False), sorted; no edit, so no displacement filter",
+  "rule": "numpy.random.default_rng(0).choice(32, 6, replace=False), sorted; no edit, so no displacement filter",
   "seed": 0,
   "cases": [
-   16,
-   19,
-   25
+   1,
+   8,
+   9,
+   14,
+   17,
+   22
   ]
  },
  "files": {
   "figure": "rayworld",
   "pieces": [
-   "rayworld_case16_gt.pdf",
-   "rayworld_case16_pred.pdf",
-   "rayworld_case19_gt.pdf",
-   "rayworld_case19_pred.pdf",
-   "rayworld_case25_gt.pdf",
-   "rayworld_case25_pred.pdf",
-   "rayworld_key.pdf"
+   "rayworld_case01_gt.pdf",
+   "rayworld_case01_pred.pdf",
+   "rayworld_case01_diff.pdf",
+   "rayworld_case08_gt.pdf",
+   "rayworld_case08_pred.pdf",
+   "rayworld_case08_diff.pdf",
+   "rayworld_case09_gt.pdf",
+   "rayworld_case09_pred.pdf",
+   "rayworld_case09_diff.pdf",
+   "rayworld_case14_gt.pdf",
+   "rayworld_case14_pred.pdf",
+   "rayworld_case14_diff.pdf",
+   "rayworld_case17_gt.pdf",
+   "rayworld_case17_pred.pdf",
+   "rayworld_case17_diff.pdf",
+   "rayworld_case22_gt.pdf",
+   "rayworld_case22_pred.pdf",
+   "rayworld_case22_diff.pdf",
+   "rayworld_key.pdf",
+   "rayworld_colorbar.pdf"
   ]
  }
 }
