@@ -5,10 +5,11 @@
     T3  zoom: every board of a variant cropped to the same S x S window around {flipped tile} + changed squares
         (one-square margin)
 
-Marking (Sevan, 2026-09-21, the appendix's ``mark``): on the Unedited board the flipped tile and every square
+Marking (Sevan, 2026-09-21, the appendix's ``mark``): on the Unedited GT board the flipped tile and every square
 whose legality the flip switches are outlined in cyan; on every other board the same squares in pink. Nothing
-else is outlined. Rows / columns: variants and conditions (Unedited, Ground truth, PI, [GS,] IM); the gap
-before the PI condition is a touch wider than the others. Cases: one per variant by ``common.select`` (at
+else is outlined. Rows / columns: variants and conditions (Unedited GT, Edited GT, PI, [GS,] IM); the gap
+before the PI condition is a touch wider than the others. Since round 6 the first two conditions are both TRUE
+legal sets (uniform over ``legal_pre`` / ``legal_post``), not model distributions. Cases: one per variant by ``common.select`` (at
 least 3 changed squares, window fits 5 x 5, then random with --seed; ``--rule typical --rank k`` takes the
 k-th eligible case nearest the population means). Output beside this script: ``othello_<opt>_<cut><tag>.{pdf,png}``,
 ``othello_cases_<rule>[_r<rank>].json``, one PDF per board under ``pieces/othello_<opt>_<cut><tag>/``.
@@ -33,33 +34,34 @@ GAP_IN, PI_GAP_IN, TOP_IN, PAD_IN, KEY_IN = 0.05, 0.10, 0.18, 0.03, 0.17      # 
 S_MIN = 5                                    # the zoom is 5 x 5 (T3; the eligibility cap) even when a case needs less
 LEFT_IN = C.GUTTER_IN
 OPTIONS = {"T1": dict(zoom=False, tint="all"), "T2": dict(zoom=False, tint="symdiff"), "T3": dict(zoom=True, tint="all")}
-DISPLAY = {"Unedited": "Unedited Pred"}                                        # condition key -> label
-WRAPPED = {"Unedited": "Unedited\nPred", "Ground truth": "Ground\ntruth"}      # row labels in the narrow gutter
+DISPLAY = oth.DISPLAY                                                          # condition key -> label (round 6)
+WRAPPED = {"Unedited": "Unedited\nGT", "Ground truth": "Edited\nGT"}           # row labels in the narrow gutter
 
 
 def variants(cut):
     return list(oth.VARIANTS) if cut == "4col" else [(n, C.OTH_RUNS[n]) for n in TWO]
 
 
-def gaps(items, along_conds):
-    """The gap after each item but the last; the Ground truth -> PI step is a touch wider than the rest."""
-    return [PI_GAP_IN if along_conds and items[k + 1] == "PI" else GAP_IN for k in range(len(items) - 1)]
+def gaps(items, along_conds, gap_in=GAP_IN):
+    """The gap after each item but the last; the Edited GT -> PI step is a touch wider than the rest."""
+    return [PI_GAP_IN if along_conds and items[k + 1] == "PI" else gap_in for k in range(len(items) - 1)]
 
 
-def axes_of(names, conds, transpose):
-    """(columns, rows, column gaps, row gaps) of a layout: variants across (default) or down (``transpose``)."""
+def axes_of(names, conds, transpose, col_gap_in=None):
+    """(columns, rows, column gaps, row gaps) of a layout: variants across (default) or down (``transpose``).
+    ``col_gap_in`` widens the COLUMN gaps only, so the headers can breathe without changing the height."""
     columns, rows = (conds, names) if transpose else (names, conds)
-    return columns, rows, gaps(columns, transpose), gaps(rows, not transpose)
+    return columns, rows, gaps(columns, transpose, col_gap_in or GAP_IN), gaps(rows, not transpose)
 
 
-def size_in(names, conds, board_in, *, transpose=False, key=False, top_in=TOP_IN):
-    columns, rows, gx, gy = axes_of(names, conds, transpose)
+def size_in(names, conds, board_in, *, transpose=False, key=False, top_in=TOP_IN, col_gap_in=None):
+    columns, rows, gx, gy = axes_of(names, conds, transpose, col_gap_in)
     return (LEFT_IN + len(columns) * board_in + sum(gx) + PAD_IN,
             top_in + len(rows) * board_in + sum(gy) + PAD_IN + (KEY_IN if key else 0.0))
 
 
-def board_for_width(width_in, names, conds, *, transpose=False):
-    columns, _, gx, _ = axes_of(names, conds, transpose)
+def board_for_width(width_in, names, conds, *, transpose=False, col_gap_in=None):
+    columns, _, gx, _ = axes_of(names, conds, transpose, col_gap_in)
     return (width_in - LEFT_IN - PAD_IN - sum(gx)) / len(columns)
 
 
@@ -72,7 +74,7 @@ def windows(cols, picks, names):
 def board(ax, col, i, cond, *, tint="all", marks=True, lw=oth.MARK_LW, window=None):
     """One board as ``draw_board`` draws it, the cyan / pink marks, and the crop."""
     b = col["board_pre"] if cond == "Unedited" else col["board_post"]
-    p = np.asarray(col["probs"][cond][i], float)
+    p = oth.cond_probs(col, i, cond)       # Unedited = uniform over legal_pre (the TRUE pre-edit legal set)
     if tint == "symdiff":
         m = np.zeros(64)
         m[C.symdiff(col, i)] = 1.0
@@ -87,12 +89,12 @@ def board(ax, col, i, cond, *, tint="all", marks=True, lw=oth.MARK_LW, window=No
 
 
 def panel(F, cols, picks, names, conds, *, zoom=False, tint="all", titles=True, letter=None, transpose=False,
-          lw=oth.MARK_LW, key=False, letter_size=10, top_in=TOP_IN):
+          lw=oth.MARK_LW, key=False, letter_size=10, top_in=TOP_IN, col_gap_in=None, title_size=9):
     """Draw into Figure / SubFigure ``F`` (sized by ``size_in`` with the same arguments). Default: variants
     across, conditions down; ``transpose``: variants down, conditions across. ``key``: the marks key in the
     bottom-right corner (the composites draw it at the top right of the figure instead)."""
     W, H = F.bbox.width / F.dpi, F.bbox.height / F.dpi
-    columns, rows, gx, gy = axes_of(names, conds, transpose)
+    columns, rows, gx, gy = axes_of(names, conds, transpose, col_gap_in)
     b = (W - LEFT_IN - PAD_IN - sum(gx)) / len(columns)                      # board side, inches
     x0 = [LEFT_IN + k * b + sum(gx[:k]) for k in range(len(columns))]
     y0 = [H - top_in - (k + 1) * b - sum(gy[:k]) for k in range(len(rows))]
@@ -104,12 +106,13 @@ def panel(F, cols, picks, names, conds, *, zoom=False, tint="all", titles=True, 
             ax = F.add_axes([x0[c] / W, y0[r] / H, b / W, b / H])
             board(ax, cols[name], picks[name], cond, tint=tint, lw=lw, window=win.get(name))
             if r == 0 and titles:
-                ax.set_title(wrap(cname) if b < 0.9 else DISPLAY.get(cname, cname), pad=3, fontsize=9, color=ps.TEXT,
-                             linespacing=0.95, fontweight="bold" if cname == "Ground truth" else "normal")
+                ax.set_title(wrap(cname) if b < 0.9 else DISPLAY.get(cname, cname), pad=3, fontsize=title_size,
+                             color=ps.TEXT, linespacing=0.95,
+                             fontweight="bold" if cname in oth.BOLD else "normal")
             if c == 0:
                 ax.annotate(WRAPPED.get(rname, wrap(rname)), xy=(0, 0.5), xycoords="axes fraction",
                             xytext=(-4, 0), textcoords="offset points", ha="right", va="center", fontsize=8, color=ps.TEXT,
-                            linespacing=0.95, fontweight="bold" if rname == "Ground truth" else "normal")
+                            linespacing=0.95, fontweight="bold" if rname in oth.BOLD else "normal")
     if key:
         oth.mark_key(F, fontsize=7.5, markersize=4.5, loc="lower right", bbox_to_anchor=(1 - PAD_IN / W, 0.0), ncol=2)
     if letter:
@@ -133,7 +136,8 @@ def pieces(cols, picks, names, conds, out_dir, *, zoom, tint, lw=oth.MARK_LW, bo
             fig = plt.figure(figsize=(board_in, board_in))
             board(fig.add_axes([0, 0, 1, 1]), cols[name], picks[name], cond, tint=tint, lw=lw * board_in / 0.95,
                   window=win.get(name))
-            ps.save(fig, out_dir / f"{name.replace(' ', '')}_case{picks[name]}_{cond.replace(' ', '_').lower()}")
+            ps.save(fig, out_dir / f"{name.replace(' ', '')}_case{picks[name]}_"
+                                   f"{DISPLAY.get(cond, cond).replace(' ', '_').lower()}")
             plt.close(fig)
         if zoom:
             fig = plt.figure(figsize=(0.7, 0.7))
@@ -153,11 +157,21 @@ def pieces(cols, picks, names, conds, out_dir, *, zoom, tint, lw=oth.MARK_LW, bo
 
 def sidecar(cols, picks, rule, seed, rank=1, names=None):
     out = {"rule": rule, "seed": seed, "rank": rank,
+           "conditions": {
+               "Unedited GT": "the TRUE pre-edit legal set (uniform over legal_pre) on the pre-edit board, cyan marks "
+                              "(round 6; until then this column was the model's unedited next-move distribution)",
+               "Edited GT": "the TRUE post-edit legal set (uniform over legal_post) on the post-edit board, pink marks "
+                            "- the reference the Edit Index scores against",
+               "PI / GS / IM": "the model's next-move distribution on the post-edit board after each write at the "
+                               "guarded best arm"},
            "eligibility": "at least 3 squares change legality; window (flipped tile + changed squares + 1 margin) fits 5 x 5",
            "tint": "yellow = predicted next-move probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (draw_board defaults)",
            "marks": "outlined squares = the flipped tile + every square whose legality the flip switches (legal_pre XOR legal_post, "
                     "the squares the symmetric-difference Edit Index scores): cyan on the pre-edit (Unedited) board, pink on every "
                     "post-edit board; nothing else is outlined",
+           "note": "per_case_edit_index_symdiff below keeps the cache's own keys: its 'Unedited' entry is the UNEDITED "
+                   "MODEL's index (the scored arm), which is no longer drawn; its 'Ground truth' entry is the Edited GT "
+                   "column's (+1 by construction)",
            "cases": {}}
     for name, run in oth.VARIANTS:
         if names is not None and name not in names:

@@ -1,20 +1,25 @@
 {
  "version": "A3",
  "geometry": {
-  "width_in": 5.72,
+  "width_in": 6.1,
   "height_in": 2.93,
-  "rayworld_width_in": 3.27,
-  "othello_width_in": 2.45,
+  "rayworld_width_in": 3.43,
+  "othello_width_in": 2.67,
   "board_in": 0.6,
+  "column_gap_in": 0.16,
+  "othello_title_pt": 8,
+  "example_title_pt": 7,
   "strip_unit_in": 0.189,
-  "mark_lw": 1.0
+  "mark_lw": 1.0,
+  "rayworld_option": "A3",
+  "rayworld_columns": 4
  },
  "rayworld": {
   "option": "A3",
   "rows": [
    "Context",
-   "Unedited Pred",
-   "Ground truth",
+   "Unedited GT",
+   "Edited GT",
    "PI [column block]",
    "GS [column block]",
    "IM [column block]"
@@ -774,15 +779,22 @@
   "blank_cells": [],
   "selection": "Scenario filter (2026-09-21, tightened in round 5): a seed is drawn only if its teleport changes at least 2 rays of the clean dw-5ray frame at the edit frame, at least 2 of them by at least 0.2 in intensity (the scorer's differing-ray zone and the gap between its two clean reference renders under the 5-ray renderer). A3's three scenarios are the first three passing seeds; the two categorical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the other two are the continuous Examples 1 and 2 in seed order. R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1, unfiltered). Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.",
   "matching": "One scenario = one world (positions, velocities, teleport) generated under the tightest geometry (radius 1.0) and rendered under each instance's own renderer (radius 0.5 / 128 rays for dw-noiseless, radius 1.0 / N rays for the ray family); positions are identical across columns, only the rendering differs. changed_rays = the rays on which the clean edited and unedited frames at the edit frame differ, per renderer.",
-  "error_strip": "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale \u00b11"
+  "rows_drawn": "Context = the last 8 observed frames. Unedited GT = the clean observation of the world in which the teleport never happened, at the edit frame: the scorer's own counterfactual reference (zones.gt_unedited, step 0 of zones.gt_unedited_traj), the unedited pole arms.score compares a prediction against. Edited GT = the clean observation of the edited world at the same frame, the other pole. NEITHER is a model prediction (round 6: the second row used to be the model's unedited next frame); PI / GS / IM are. The two GT rows differ exactly on the scorer's differing-ray zone, the support of the Edit Index.",
+  "error_strip": "prediction (clipped to [0, 1]) minus Edited GT at the edit frame, drawn on the canonical signed-error map, fixed scale \u00b11"
  },
  "othello": {
   "rule": "typical",
   "seed": 0,
   "rank": 2,
+  "conditions": {
+   "Unedited GT": "the TRUE pre-edit legal set (uniform over legal_pre) on the pre-edit board, cyan marks (round 6; until then this column was the model's unedited next-move distribution)",
+   "Edited GT": "the TRUE post-edit legal set (uniform over legal_post) on the post-edit board, pink marks - the reference the Edit Index scores against",
+   "PI / GS / IM": "the model's next-move distribution on the post-edit board after each write at the guarded best arm"
+  },
   "eligibility": "at least 3 squares change legality; window (flipped tile + changed squares + 1 margin) fits 5 x 5",
   "tint": "yellow = predicted next-move probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (draw_board defaults)",
   "marks": "outlined squares = the flipped tile + every square whose legality the flip switches (legal_pre XOR legal_post, the squares the symmetric-difference Edit Index scores): cyan on the pre-edit (Unedited) board, pink on every post-edit board; nothing else is outlined",
+  "note": "per_case_edit_index_symdiff below keeps the cache's own keys: its 'Unedited' entry is the UNEDITED MODEL's index (the scored arm), which is no longer drawn; its 'Ground truth' entry is the Edited GT column's (+1 by construction)",
   "cases": {
    "Standard": {
     "run": "initial_othello_comparison/L-oth-20m",

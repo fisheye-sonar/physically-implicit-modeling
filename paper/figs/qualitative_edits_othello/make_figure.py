@@ -57,6 +57,33 @@ CONDITIONS = ("Unedited", "Ground truth", "PI", "GS", "IM")
 DEV = oa.DEV
 
 
+# ── the two ground-truth conditions (Sevan, round 6, 2026-09-22) ─────────────────────────────────
+# The second condition used to be the model's unedited prediction; it is now the TRUE pre-edit legal set, so the
+# figure shows both reference worlds (the two the Edit Index compares against) and then the three edited writes.
+UNEDITED_GT, EDITED_GT = "Unedited GT", "Edited GT"
+DISPLAY = {"Unedited": UNEDITED_GT, "Ground truth": EDITED_GT}      # cache key -> drawn label
+BOLD = ("Ground truth",)                                            # the Edited GT condition stays bold
+
+
+def legal_uniform(legal, n_sq: int = 64) -> np.ndarray:
+    """Uniform over one legal set: THE construction behind the Edited GT column (``compute`` builds
+    ``probs["Ground truth"]`` from ``bench.legal_post`` with it), applied to either legal set."""
+    p = np.zeros(n_sq, np.float32)
+    if len(legal):
+        p[list(legal)] = 1.0 / len(legal)
+    return p
+
+
+def cond_probs(col: dict, i: int, cond: str) -> np.ndarray:
+    """The distribution drawn for one condition of one case. ``Unedited`` is the TRUE pre-edit legal set
+    (uniform over ``legal_pre``, on the pre-edit board), not the model's unedited prediction, which the cache
+    still carries under the same key for the sidecars' per-case index. Every other condition is the cached
+    distribution: ``Ground truth`` the post-edit legal set, PI / GS / IM the model's after each write."""
+    if cond == "Unedited":
+        return legal_uniform(col["legal_pre"][i])
+    return np.asarray(col["probs"][cond][i], float)
+
+
 def best_arm(scores: dict, editor: str) -> dict:
     """The arm the TABLES report (``pim.metrics.selection.best_arm``: best Edit Index inside the fidelity
     guard, the unguarded best only if there is none). Until 2026-09-19: the unguarded argmax."""
@@ -108,11 +135,7 @@ def compute(run: str) -> dict:
     _, _, pb = oa.inverse_arms(model, bench, data, rules=rules, cache_dir=run_dir / "probes", n_games=n_games,
                                points=[im["point"]], uns_probs=uns, log=None, return_probs=True)
     probs["IM"] = pb[("IM", im["point"])]
-    gt = np.zeros((n, 64), np.float32)
-    for i, lp in enumerate(bench.legal_post):
-        if len(lp):
-            gt[i, list(lp)] = 1.0 / len(lp)
-    probs["Ground truth"] = gt
+    probs["Ground truth"] = np.stack([legal_uniform(lp) for lp in bench.legal_post])
     lengths = np.array([len(h) for h in hist])
     return {"run": run, "instance": inst, "board_pre": board_pre, "board_post": board_post, "pos": bench.pos_int.copy(),
             "legal_pre": [list(x) for x in bench.legal_pre], "legal_post": [list(x) for x in bench.legal_post],
@@ -149,10 +172,10 @@ def mark(ax, squares, color: str, lw: float = MARK_LW) -> None:
 
 
 def mark_key(owner, *, fontsize: float = 8, markersize: float = 5, **kw):
-    """The key, once per figure: a cyan DOT "pre-edit", a pink DOT "post-edit" (Sevan, round 3). ``owner`` is a
-    Figure, SubFigure or Axes; ``kw`` goes to its ``legend`` (loc, bbox_to_anchor, ncol)."""
+    """The key, once per figure: a cyan DOT "pre-edit gt", a pink DOT "post-edit gt" (Sevan, round 3; the labels
+    name the ground truth since round 6). ``owner`` is a Figure, SubFigure or Axes; ``kw`` goes to its ``legend``."""
     handles = [Line2D([], [], marker="o", linestyle="none", color=c, markersize=markersize) for c in (ps.ORIGIN_C, ps.DEST_C)]
-    return owner.legend(handles=handles, labels=["pre-edit", "post-edit"], fontsize=fontsize, handlelength=0.8,
+    return owner.legend(handles=handles, labels=["pre-edit gt", "post-edit gt"], fontsize=fontsize, handlelength=0.8,
                         handletextpad=0.4, columnspacing=1.0, borderaxespad=0.0, **kw)
 
 
@@ -205,16 +228,16 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
                 r_, c_ = cell(v, k, c)
                 ax = fig.add_subplot(gs[r_, c_])
                 board = col["board_pre"] if cond == "Unedited" else col["board_post"]
-                draw_board(ax, board[i], col["probs"][cond][i], col["pos"][i], gamma=gamma, tint_scale=tint_scale,
+                draw_board(ax, board[i], cond_probs(col, i, cond), col["pos"][i], gamma=gamma, tint_scale=tint_scale,
                            locator=False)
                 if locator:
                     mark(ax, marked_squares(col["pos"][i], col["legal_pre"][i], col["legal_post"][i]), mark_color(cond),
                          lw=MARK_LW * 1.6)                        # the appendix page is drawn large and scaled down
                 axes[(r_, c_)] = ax
-    shown = lambda t: {"Unedited": "Unedited Pred"}.get(t, t)   # noqa: E731
+    shown = lambda t: DISPLAY.get(t, t)   # noqa: E731
     for c_, text in col_titles:
         axes[(0, c_)].set_title(shown(text), fontsize=title_size, pad=6, color="black",
-                                fontweight="bold" if text == "Ground truth" else "normal")
+                                fontweight="bold" if text in BOLD else "normal")
     if layout == "rows" and n_games > 1:     # a game label above each group of five
         for k in range(n_games):
             a0, a1 = axes[(0, k * len(conds))], axes[(0, (k + 1) * len(conds) - 1)]
@@ -224,7 +247,7 @@ def draw(cols: dict, picks: dict, out: Path, *, layout: str = "rows", gamma: flo
         ax = axes[(r_, 0)]
         y = (ax.get_position().y0 + ax.get_position().y1) / 2
         fig.text(ax.get_position().x0 - 0.008, y, shown(text), ha="right", va="center", fontsize=label_size, color="black",
-                 fontweight="bold" if text == "Ground truth" else "normal")
+                 fontweight="bold" if text in BOLD else "normal")
     if locator:                                   # the key, in the free corner above the row labels
         mark_key(fig, markersize=9, fontsize=label_size - 1, loc="upper left", bbox_to_anchor=(0.005, 0.995))
     fig.savefig(out.with_suffix(".pdf"), bbox_inches="tight", pad_inches=0, facecolor="white")

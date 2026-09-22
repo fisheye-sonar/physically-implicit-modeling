@@ -4,17 +4,20 @@
     R2  Standard, 8-ray, 5-ray x PI, GS, GS (categorical), IM                                   seed 0
     R3  Standard only, three scenarios (seeds 0, 1, 2) x PI, GS, IM                            continuous
     R4  R3 plus a 5-ray column on scenario 1, with the GS (categorical) row (the coarse foil)
-    A3  the final cut (rounds 4-5, Sevan's spec), four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless,
+    A3  the final cut (rounds 4-6, Sevan's spec), four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless,
         Cartesian block), 128-ray (categorical) on Example 3 (dw-128ray, appearance-fac block, IM = the categorical
         inverse map) and 5-ray (categorical) on the SAME Example 3 (dw-5ray); rows Context, Unedited Pred, Ground
-        truth, PI, GS, IM. The three scenarios are the first three seeds passing the 5-ray visibility filter
+        truth, PI, GS, IM (rows 2-3 are both ground truth since round 6). The three scenarios are the first three
+        seeds passing the 5-ray visibility filter
         (``common.passing_seeds``); the categorical pair takes the second of them (``CAT_SLOT``), the continuous
         columns the other two. Rounds 2-3's A1 / A2 cuts (two scenarios x continuous | categorical, one model) were
         retired in round 4.
+    A4  A3 with a SINGLE Standard (continuous) example, for composite_final_sidebyside_single.
 
-Every column: the last 8 observed frames (time downward), then single next-step frames: Unedited, Ground
-truth, and each editor's write at the run's guarded best arm, with the signed error (prediction minus
-truth, clipped prediction) directly beneath. Cyan / pink lines mark the edited disc's rays before / after
+Every column: the last 8 observed frames (time downward), then the two clean reference frames at the edit step
+(Unedited GT: the world in which the teleport never happened, the scorer's own ``zones.gt_unedited``; Edited GT:
+the world in which it did) and each editor's next-step write at the run's guarded best arm, with the signed error
+(prediction minus Edited GT, clipped prediction) directly beneath. Neither GT row is a model output. Cyan / pink lines mark the edited disc's rays before / after
 the edit. Output beside this script: ``rayworld_<opt>.{pdf,png,json}`` and one PDF per strip under
 ``pieces/rayworld_<opt>/``.
 
@@ -37,12 +40,13 @@ GAP_U, BIG_F = 0.65, 0.9        # the final cut: room for the two-line "Unedited
 RIGHT_IN, RIGHT_F, BOT_IN = 0.5, 0.72, 0.03                   # gutters, inches; RIGHT_F leaves room for the marks key
 SPACER = {False: 0.18, True: 0.0}    # the final cut: an empty column between model groups, in column widths (none in the
                                      # narrow side-by-side, whose 7 pt "Example k" titles need every bit of column width)
-UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A3": 0.155}   # inches per strip unit
-FINAL = ("A3",)
+UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A3": 0.155, "A4": 0.155}   # inches per strip unit
+FINAL = ("A3", "A4")
+N_CONT = {"A3": 2, "A4": 1}      # continuous Standard examples the cut draws (A4: the single-example side-by-side)
 CAT_SLOT = 1     # which of the three passing seeds the two categorical columns share (Sevan, round 5: the second,
                  # whose teleport crosses the frame; the other two are the continuous examples, in seed order)
-LABELS = {"context": "Context", "unedited": "Unedited Pred", "gt": "Ground truth"}
-WRAPPED = {"unedited": "Unedited\nPred", "gt": "Ground\ntruth"}      # the final cut's narrow gutter
+LABELS = {"context": "Context", "unedited": "Unedited GT", "gt": "Edited GT"}
+WRAPPED = {"unedited": "Unedited\nGT", "gt": "Edited\nGT"}          # the final cut's narrow gutter
 
 
 def edit(blk, ed, label=None):
@@ -56,6 +60,7 @@ ROWS = {
     "R4": [("context",), ("unedited",), ("gt",), edit("cont", "PI"), edit("cont", "GS"), edit("cat", "GS", "GS (categorical)"), edit("cont", "IM")],
     "A3": [("context",), ("unedited",), ("gt",), edit(None, "PI"), edit(None, "GS"), edit(None, "IM")],
 }
+ROWS["A4"] = ROWS["A3"]
 
 
 def left_in(option):
@@ -86,10 +91,10 @@ def columns(option):
     if option == "R4":
         return ([(f"Standard\nscenario {k + 1}", "Standard", s, "appendix", None, None) for k, s in enumerate(C.HERO_SEEDS)]
                 + [("5-ray\nscenario 1", "5-ray", C.HERO_SEEDS[0], "appendix", None, None)])
-    if option == "A3":
+    if option in FINAL:
         seeds = C.passing_seeds(C.rw.N_MAIN)         # the first three seeds that pass the 5-ray visibility filter
         cat = seeds[CAT_SLOT]                        # the scenario the two categorical columns share
-        cont = [s for k, s in enumerate(seeds) if k != CAT_SLOT]
+        cont = [s for k, s in enumerate(seeds) if k != CAT_SLOT][:N_CONT[option]]
         last = f"Example {len(cont) + 1}"
         return ([(f"Example {k + 1}", "Standard", s, "appendix", "cont", "Standard (continuous)")
                  for k, s in enumerate(cont)]
@@ -180,7 +185,7 @@ def cell(ax, kind, spec, col, blk_col=None, diff_scale=1.0):
     if kind == "context":
         rw._panel(ax, col["context"])
     elif kind == "unedited":
-        rw._panel(ax, col["cont"]["unedited"])
+        rw._panel(ax, col["cont"]["unedited_gt"])      # the clean UNEDITED world at the edit frame (zones.gt_unedited)
     elif kind == "gt":
         rw._panel(ax, col["gt"])
     else:
@@ -207,12 +212,14 @@ def row_label(ax, kind, spec, wrap=False):
                 fontweight="bold" if kind == "gt" else "normal")
 
 
-def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scale=1.0, letter_size=10, narrow=False):
-    """Draw option ``option`` into Figure / SubFigure ``F`` (already sized: width x height_in(option, unit, narrow))."""
+def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scale=1.0, letter_size=10, narrow=False,
+          spacer=None, title_size=None):
+    """Draw option ``option`` into Figure / SubFigure ``F`` (already sized: width x height_in(option, unit, narrow)).
+    ``spacer``: empty column between model groups, in column widths (default ``SPACER[narrow]``)."""
     cols, data, lay = geometry(option)
     W, H = F.bbox.width / F.dpi, F.bbox.height / F.dpi
     final = option in FINAL
-    gcol, widths = grid_columns(cols, SPACER[narrow] if final else 0)
+    gcol, widths = grid_columns(cols, (SPACER[narrow] if spacer is None else spacer) if final else 0)
     gs = GridSpec(len(lay), len(widths), figure=F, height_ratios=[h for *_, h in lay], width_ratios=widths,
                   left=left_in(option) / W, right=1 - right_in(option) / W, top=1 - top_in(option, narrow) / H,
                   bottom=BOT_IN / H, wspace=0.13 if narrow else 0.06, hspace=0.0)
@@ -224,7 +231,7 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
             ax = F.add_subplot(gs[r, gcol[c]])
             cell(ax, kind, spec, col, blk, diff_scale)
             if r == 0 and titles:
-                ax.set_title(title, pad=3, fontsize=(7 if narrow else 8) if final else 9, color=ps.TEXT)
+                ax.set_title(title, pad=3, fontsize=title_size or ((7 if narrow else 8) if final else 9), color=ps.TEXT)
             if c == 0 and kind != "diff":
                 row_label(ax, kind, spec, wrap=final)
     if final and titles:                                # one group title over each model's run of columns
@@ -235,7 +242,7 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
             # Two lines: the model over its own columns; the block qualifier once over the neighbouring groups that share
             # it ("(categorical)" at 7 pt is 0.54 in, wider than a narrow column, so it cannot sit over each single).
             for name, c0, c1 in runs(cols, model_of):
-                text(xc(c0, c1), y + 0.1 / H, name, 8)
+                text(xc(c0, c1), y + 0.135 / H, name, 8)      # clear of the qualifier line below it
             for blk, c0, c1 in runs(cols, block_of):
                 text(xc(c0, c1), y, blk, 8)
         else:
@@ -262,7 +269,7 @@ def error_key(cax, diff_scale=1.0):
 
 def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
     """Every strip of the option as its own PDF (+ PNG), plus the two keys. A blank cell (no arm) exports nothing.
-    Names: ``col<k>_<instance>_seed<s>_<row>`` (rows ``context``, ``unedited``, ``ground_truth``,
+    Names: ``col<k>_<instance>_seed<s>_<row>`` (rows ``context``, ``unedited_gt``, ``edited_gt``,
     ``<block>_<editor>_{prediction,error}``)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     cols, data, lay = geometry(option)
@@ -274,7 +281,7 @@ def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
                 continue
             fig = plt.figure(figsize=(w_in, unit * h))
             cell(fig.add_axes([0, 0, 1, 1]), kind, spec, col, blk)
-            name = {"context": "context", "unedited": "unedited", "gt": "ground_truth"}.get(kind) \
+            name = {"context": "context", "unedited": "unedited_gt", "gt": "edited_gt"}.get(kind) \
                 or f"{spec[1] or blk}_{spec[2]}_{'error' if kind == 'diff' else 'prediction'}"
             ps.save(fig, out_dir / f"{tag}_{name}")
             plt.close(fig)
@@ -284,7 +291,7 @@ def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
     plt.close(fig)
     fig = plt.figure(figsize=(1.6, 0.4))
     fig.legend(handles=[Line2D([], [], color=ps.ORIGIN_C, lw=1.2), Line2D([], [], color=ps.DEST_C, lw=1.2)],
-               labels=["disc before edit", "disc after edit"], loc="center", ncol=1, fontsize=8, handlelength=1.5)
+               labels=["pre-edit gt", "post-edit gt"], loc="center", ncol=1, fontsize=8, handlelength=1.5)
     ps.save(fig, out_dir / "key_locators")
     plt.close(fig)
 
@@ -324,7 +331,14 @@ def sidecar(option):
         "and rendered under each instance's own renderer (radius 0.5 / 128 rays for dw-noiseless, radius 1.0 / N rays "
         "for the ray family); positions are identical across columns, only the rendering differs. changed_rays = the "
         "rays on which the clean edited and unedited frames at the edit frame differ, per renderer.")
-    out["error_strip"] = "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale ±1"
+    out["rows_drawn"] = (
+        "Context = the last 8 observed frames. Unedited GT = the clean observation of the world in which the teleport "
+        "never happened, at the edit frame: the scorer's own counterfactual reference (zones.gt_unedited, step 0 of "
+        "zones.gt_unedited_traj), the unedited pole arms.score compares a prediction against. Edited GT = the clean "
+        "observation of the edited world at the same frame, the other pole. NEITHER is a model prediction (round 6: the "
+        "second row used to be the model's unedited next frame); PI / GS / IM are. The two GT rows differ exactly on the "
+        "scorer's differing-ray zone, the support of the Edit Index.")
+    out["error_strip"] = "prediction (clipped to [0, 1]) minus Edited GT at the edit frame, drawn on the canonical signed-error map, fixed scale ±1"
     return out
 
 

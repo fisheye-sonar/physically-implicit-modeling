@@ -4,10 +4,11 @@ One trajectory (two discs, a teleport of one of them at the edit frame) is gener
 ``--seed`` under the most restrictive geometry (disc radius 1.0, the coarse-ray family's) and
 rendered under EVERY listed variant's own renderer, so the columns show the same world seen
 through 128 / 16 / 8 / 5 rays (and with blackouts on the blink variant). Each column: the last
-``--context`` observed frames above the edit (a waterfall, time downward), then single-frame
-NEXT-STEP predictions — unedited, the clean ground truth, and each editor's write at the run's
-scored best arm on the continuous (full-state, Cartesian) and the categorical (factorised
-appearance, frustum) targets. The write targets the PRE-dynamics state, as in the scorer.
+``--context`` observed frames above the edit (a waterfall, time downward), then the two ground-truth
+references at the edit frame (Unedited GT: the world in which the teleport never happened; Edited GT:
+the world in which it did) and each editor's NEXT-STEP write at the run's scored best arm on the
+continuous (full-state, Cartesian) and the categorical (factorised appearance, frustum) targets.
+The write targets the PRE-dynamics state, as in the scorer.
 
 Everything canonical comes from ``pim``: the scenario from the edit-set generator, the bench
 from ``bench.bench_from_arrays`` (the scorer's own construction), probes / inverse maps from
@@ -230,7 +231,13 @@ def predictions(model, run_dir: Path, inst: str, sc: dict, obs, clean, vis, sim:
     recipe = dwa.probe_recipe(target, inst, n_seq=30_000)
     cache = run_dir / "probes"
     cx = lambda m: float(np.where(np.asarray(m))[0].mean()) if np.asarray(m).any() else float("nan")  # noqa: E731
+    # ``unedited_gt`` (Sevan, round 6): the clean observation of the UNEDITED world at the edit frame — the
+    # counterfactual in which the teleport never happened, rendered inside ``build_edit_zones`` and used by
+    # ``arms.score`` -> ``edit_scorecard`` -> ``edit_index`` as the unedited pole the prediction is compared
+    # against (``zones.gt_unedited``, identical to step 0 of ``zones.gt_unedited_traj``). Never re-rendered here.
+    # ``unedited`` is still the model's own unedited prediction: no longer drawn, kept for the record.
     out = {"unedited": dwa.unsteered_rollout(model, b)[0, 0], "changes_tile": bool(a["change_mask"].any()),
+           "unedited_gt": a["zones"].gt_unedited[0],
            "ghost_x": cx(a["zones"].ghost[0]), "target_x": cx(a["zones"].target[0]),   # ray centres at the edit frame
            "differing_rays": np.flatnonzero(a["zones"].differing[0])}                  # the Edit Index support
     arm = {ed: best_arm(scores, target if target != "full" else basis, ed) for ed in EDITORS}
@@ -386,7 +393,7 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
                 out.append((f"{blk}:{ed}:diff", PAIR_DIFF))
             out.append(("gap", GAP))
         return out[:-1]
-    rows = ([("waterfall", context * CTX_ROW)] + [("gap", GAP), ("Unedited", STRIP), ("gap", GAP), ("Ground truth", STRIP), ("gap", BIGGAP)]
+    rows = ([("waterfall", context * CTX_ROW)] + [("gap", GAP), ("Unedited GT", STRIP), ("gap", GAP), ("Edited GT", STRIP), ("gap", BIGGAP)]
             + edit_rows("cont") + [("gap", BIGGAP)] + edit_rows("cat"))
     heights = [h for _, h in rows]
     ncol = len(names)
@@ -405,9 +412,9 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
             if kind == "waterfall":
                 _panel(ax, col["context"])
                 ax.set_title(name, fontsize=title_size, pad=8, color=TEXT)
-            elif kind == "Unedited":
-                _panel(ax, col["cont"]["unedited"])
-            elif kind == "Ground truth":
+            elif kind == "Unedited GT":
+                _panel(ax, col["cont"]["unedited_gt"])            # the clean UNEDITED world at the edit frame
+            elif kind == "Edited GT":
                 _panel(ax, col["gt"])                             # the reference every row below is judged against
             else:
                 blk, ed, *sub = kind.split(":")
@@ -440,11 +447,11 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
         elif ":" in kind:
             lab = kind.split(":")[1]
         else:
-            lab = {"Unedited": "Unedited Pred"}.get(kind, kind)
+            lab = kind                                              # "Unedited GT" / "Edited GT"
         lo = first.get(kind + ":diff", ax)                          # paired: centre on both strips
         y = (lo.get_position().y0 + ax.get_position().y1) / 2
         fig.text(x_lab, y, lab, ha="right", va="center", fontsize=label_size, color=TEXT,
-                 fontweight="bold" if kind == "Ground truth" else "normal")
+                 fontweight="bold" if kind == "Edited GT" else "normal")
     x_line = x_lab - 0.040
     for blk, text in (("cont", "Continuous\npositions"), ("cat", "Categorical\npositions")):
         axes = [first[f"{blk}:{ed}"] for ed in EDITORS]

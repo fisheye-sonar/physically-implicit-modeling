@@ -1,6 +1,7 @@
 # qualitative_main — the main-text editability figure: (a) Rayworld, (b) Othello
 
-Two deliverables (round 5, 2026-09-21): **`composite_final`** and **`composite_final_sidebyside`**, Sevan's spec
+Three deliverables (round 6, 2026-09-22): **`composite_final`**, **`composite_final_sidebyside`** and
+**`composite_final_sidebyside_single`**, Sevan's spec
 (`paper/figs/briefs/qualitative_main_round4.md` plus round 5's three fixes, on top of rounds 2-3). Panel (a) has **four columns
 from three models**: Standard (continuous) on Examples 1 and 2 (dw-noiseless, `noise_ablation/L-dw-noiseless-20m`, Cartesian
 block), 128-ray (categorical) on Example 3 (dw-128ray, `ray_ablation/L-dw-128ray-20m`, appearance-fac block) and 5-ray
@@ -15,6 +16,26 @@ script's `build()`: probes and inverse maps from each run's `probes/` cache, nev
 categorical inverse map deployed 2026-09-20 (`_catim` caches). The Othello cache is the appendix's
 `.scratch/othello_edits_guarded_cache.pkl` (2026-09-19 guarded arms).
 
+## Rows two and three are both ground truth (round 6)
+
+The second row used to be **Unedited Pred**, the model's unedited next frame. It is now **Unedited GT**: the clean
+observation of the world in which the teleport never happened, at the edit step. In Rayworld that is the scorer's own
+counterfactual reference, `zones.gt_unedited` (step 0 of `zones.gt_unedited_traj`) built by
+`pim.metrics.zone_editability.build_edit_zones` inside `bench.bench_from_arrays` - the unedited pole that
+`arms.score` -> `edit_scorecard` -> `edit_index` compares every prediction against. It is never re-rendered here. In
+Othello it is the true pre-edit legal set, uniform over `bench.legal_pre`, built by the same one-line construction
+(`qualitative_edits_othello.make_figure.legal_uniform`) that builds the Edited GT column from `legal_post`. The third
+row, formerly **Ground truth**, is now **Edited GT** and stays bold. So the figure reads: context, the two worlds the
+Edit Index sits between, then the three edited predictions. The locator key names them too: cyan **pre-edit gt**,
+pink **post-edit gt**.
+
+The two GT rows differ **exactly on the scorer's differing-ray zone** (Rayworld) or on the symmetric difference of
+the legal sets (Othello) - by construction, since that zone is defined as the rays on which they differ. Checked per
+column: 28 / 44 / 26 / 2 rays for the four columns of `composite_final`, and 3 / 6 / 3 changed squares for the three
+Othello cases. On the Othello boards both GT columns are uniform over sets of 13 to 26 moves, i.e. 0.038 to 0.077 per
+square, all above the 0.02 tint scale, so both are fully tinted and the only visible difference is the symmetric
+difference itself.
+
 ## How scenarios are matched across columns
 
 One scenario = one world (positions, velocities, teleport) generated under the tightest geometry (radius 1.0) and rendered under
@@ -25,7 +46,7 @@ Positions are identical across columns; only the rendering differs.
 
     .pim/bin/python paper/figs/qualitative_edits/make_figure.py --set             # the appendix caches and figures (GPU; --redraw reuses the caches)
     .pim/bin/python paper/figs/qualitative_main/common.py --build-128ray 1         # the 128-ray cache of Example 3's seed (GPU, one model)
-    .pim/bin/python paper/figs/qualitative_main/composite_final.py                 # both figures + pieces + sidecars (CPU)
+    .pim/bin/python paper/figs/qualitative_main/composite_final.py                 # all three figures + pieces + sidecars (CPU)
     # options kept in the scripts, not delivered: rayworld_panel.py --options R1 R2 R3 R4 (round 1, seeds 0 / 0-2 unfiltered);
     # othello_panel.py [--rule typical --rank k] [--gs]; composite.py (round 1's composites). Rounds 2-3's A1 / A2 cuts were retired.
 
@@ -33,12 +54,13 @@ Positions are identical across columns; only the rendering differs.
 
 | file | what |
 |---|---|
-| `composite_final.{pdf,png}` | **the main-text figure.** (a) four columns: Standard (continuous) x Examples 1, 2; 128-ray (categorical) x Example 3; 5-ray (categorical) x Example 3; rows Context, Unedited Pred, Ground truth, PI, GS, IM, a signed-error strip under each edit row; a group title over each model's columns, an empty 0.18-column spacer between models; the pre-edit / post-edit key (dots) top right above the colour bar. (b) Othello Standard / Adjacent NoFlip (rows) x Unedited Pred, Ground truth, PI, GS, IM (columns), 5 x 5 zoom, typical cases of rank 2, cyan / pink marks. **5.72 x 4.62 in** ((a) 2.23 in, (b) 2.23 in, gap 0.16 in; strips 0.98 in wide, strip unit 0.142 in; boards 0.98 in). Include at `\linewidth`: LaTeX scales 5.72 to 5.5 in (x 0.96), 8 pt text prints at 7.7 pt, the 7.5 pt key at 7.2 pt |
-| `composite_final_sidebyside.{pdf,png}` | (a) left (3.27 in), (b) right (2.45 in): variants Standard / Adjacent Flip / Adjacent NoFlip as columns, Unedited Pred / Ground truth / PI / IM as rows (no GS), boards 0.60 in, rims 1.0 pt. **5.72 x 2.93 in**; (a)'s strips are 0.46 x 0.19 in with 7 pt example titles and no spacers; its group titles are two lines: the model over its own columns ("Standard", "128-ray", "5-ray"), the block qualifier once over the neighbouring columns that share it ("(continuous)" over Examples 1-2, "(categorical)" over the two Example 3 columns), because a 7 pt "(categorical)" is 0.54 in wide, wider than a 0.46 in column |
-| `pieces/composite_final/` | every element as its own PDF (+ PNG preview): the 36 strips of (a), named `col<k>_<instance>_seed<s>_<row>` with rows `context`, `unedited`, `ground_truth`, `<block>_<editor>_{prediction,error}` (block `cont` / `cat`; e.g. `col3_dw-128ray_seed2_cat_IM_prediction`), `key_error_scale` (the ±1 bar), `key_locators` (cyan / pink lines); the ten boards of (b) at 1.4 in (`<Variant>_case<i>_<condition>`), a faded full-board `_thumbnail` per variant with the 5 x 5 window, `key_marks` (the dots), `key_tint` |
-| `pieces/composite_final_sidebyside/` | the twelve boards of the side-by-side (b) (rims 1.0 pt), thumbnails, keys; its strips are `pieces/composite_final/`'s |
-| `composite_final.json`, `composite_final_sidebyside.json` | sidecars: geometry (inches); the Rayworld columns (title, group, variant, instance, run, seed, cache, block, edit object, locator ray centres, `n_changed_rays_5ray`, `changed_rays` per renderer (dw-5ray, the column's own, dw-noiseless, dw-128ray), `delta_intensity_5ray`, arms drawn for both blocks, the guarded Table 2 cells), the selection and matching rules; the Othello cases (run, case id, rank, flipped tile, marked squares, legal sets, window, per-case Edit Index of every condition, population means, arms drawn, Table 2 cells) |
-| `common.py`, `rayworld_panel.py`, `othello_panel.py`, `composite_final.py`, `composite.py` | the scripts (caches, the filter and selection; panel (a), option `A3` = the final cut, `CAT_SLOT` = which scenario the categorical pair takes; panel (b); the two composites; round 1's composites, kept only as a script) |
+| `composite_final.{pdf,png}` | **the main-text figure.** (a) four columns: Standard (continuous) x Examples 1, 2; 128-ray (categorical) x Example 3; 5-ray (categorical) x Example 3; rows Context, Unedited GT, Edited GT, PI, GS, IM, a signed-error strip under each edit row; a group title over each model's columns, an empty 0.18-column spacer between models; the pre-edit gt / post-edit gt key (dots) top right above the colour bar. (b) Othello Standard / Adjacent NoFlip (rows) x Unedited GT, Edited GT, PI, GS, IM (columns), 5 x 5 zoom, typical cases of rank 2, cyan / pink marks. **5.72 x 4.62 in** ((a) 2.23 in, (b) 2.23 in, gap 0.16 in; strips 0.98 in wide, strip unit 0.142 in; boards 0.98 in). Include at `\linewidth`: LaTeX scales 5.72 to 5.5 in (x 0.96), 8 pt text prints at 7.7 pt, the 7.5 pt key at 7.2 pt |
+| `composite_final_sidebyside.{pdf,png}` | (a) left (3.43 in), (b) right (2.67 in): variants Standard / Adjacent Flip / Adjacent NoFlip as columns, Unedited GT / Edited GT / PI / IM as rows (no GS), boards 0.60 in, rims 1.0 pt. **6.10 x 2.93 in** (round 6 widened it from 5.72: (b)'s variant headers were colliding). The fix is three-part: the gap between (b)'s columns went 0.05 -> **0.16 in**, its headers 9 -> **8 pt** (still wrapped onto two lines), and the extra 0.38 in of page width went to (a), whose four strips are now 0.51 in wide. Headers clear by 0.32 in. (a)'s group titles are two lines: the model over its own columns (Standard, 128-ray, 5-ray), the block qualifier once over the columns that share it, since a 7 pt "(categorical)" is wider than one column. Scaled to 5.5 in by LaTeX (x 0.90): 8 pt prints at 7.2 pt, the 7 pt example titles at 6.3 pt |
+| `composite_final_sidebyside_single.{pdf,png}` | the same side-by-side with a **single** Standard (continuous) example in (a) (Rayworld option `A4`): columns Example 1 (Standard continuous, seed 0), Example 2 (128-ray categorical) and Example 2 (5-ray categorical, the same world), so (a) needs three columns instead of four. **5.50 x 2.93 in**: it fits the ICLR text width exactly, so nothing is scaled at include time and its 8 pt text prints at 8 pt - the only one of the three that does. (a) 2.83 in with 0.72 in strips and a 0.18-column group spacer; (b) identical to the wide side-by-side's. Note the example numbering is per figure: with two distinct scenarios drawn, the categorical pair is Example 2 here and Example 3 in the other two figures (same seed 1 either way) |
+| `pieces/composite_final/` | every element as its own PDF (+ PNG preview): the 36 strips of (a), named `col<k>_<instance>_seed<s>_<row>` with rows `context`, `unedited_gt`, `edited_gt`, `<block>_<editor>_{prediction,error}` (block `cont` / `cat`; e.g. `col3_dw-128ray_seed1_cat_IM_prediction`), `key_error_scale` (the ±1 bar), `key_locators` (the cyan / pink lines, labelled pre-edit gt / post-edit gt); the ten boards of (b) at 1.4 in (`<Variant>_case<i>_<condition>`, conditions `unedited_gt` / `edited_gt` / `pi` / `gs` / `im`), a faded full-board `_thumbnail` per variant with the 5 x 5 window, `key_marks` (the dots), `key_tint` |
+| `pieces/composite_final_sidebyside/` | the twelve boards of the side-by-side (b) (rims 1.0 pt), thumbnails, keys; shared by both side-by-side variants, and its strips are `pieces/composite_final/`'s |
+| `composite_final.json`, `composite_final_sidebyside.json`, `composite_final_sidebyside_single.json` | sidecars: geometry (inches); the Rayworld columns (title, group, variant, instance, run, seed, cache, block, edit object, locator ray centres, `n_changed_rays_5ray`, `changed_rays` per renderer (dw-5ray, the column's own, dw-noiseless, dw-128ray), `delta_intensity_5ray`, arms drawn for both blocks, the guarded Table 2 cells), the selection and matching rules, `rows_drawn` (what each row is and that rows 2-3 are both ground truth); the Othello cases (run, case id, rank, flipped tile, marked squares, legal sets, window, per-case Edit Index of every condition, population means, arms drawn, Table 2 cells, a `conditions` block naming each drawn column) |
+| `common.py`, `rayworld_panel.py`, `othello_panel.py`, `composite_final.py`, `composite.py` | the scripts (caches, the filter and selection; panel (a), options `A3` = the four-column cut and `A4` = its single-example variant, `CAT_SLOT` = which scenario the categorical pair takes; panel (b); the two composites; round 1's composites, kept only as a script) |
 
 ## Selection rules
 
@@ -66,7 +88,7 @@ Positions are identical across columns; only the rendering differs.
 
   Locator ray centres (cyan origin / pink destination) in each column's own renderer: Example 1 on dw-noiseless 107.5 / 28.5;
   Example 2 on dw-noiseless 109.5 / 61.5; Example 3 on dw-128ray 21.5 / 88.0 and on dw-5ray ray 0 / ray 3. As drawn, the
-  5-ray column's Ground truth and Unedited Pred differ on exactly those two rays (ray 0: 0.39 to 0.00, ray 3: 0.07 to 0.40).
+  5-ray column's Unedited GT and Edited GT differ on exactly those two rays (ray 0: 0.40 to 0.00, ray 3: 0.00 to 0.40).
 - **Othello eligibility.** Among the 1000 bench cases of a variant (all at move 20): at least 3 squares change legality
   (|legal_pre XOR legal_post| ≥ 3) and the window {flipped tile} ∪ changed squares + one-square margin fits 5 x 5. Eligible:
   65 / 396 / 379 on Standard / Adjacent Flip / Adjacent NoFlip.
@@ -80,9 +102,11 @@ Positions are identical across columns; only the rendering differs.
 ## What is drawn (caption facts)
 
 - **(a)** Context = the last 8 observed frames fed to the model, time downward, the `gray` map on the dark panel as in
-  every waterfall, fixed 0..1. Unedited Pred = the model's next frame with no edit; Ground truth = the clean render of the
-  edited world at the edit frame (the reference the Edit Index scores against). PI / GS / IM = the next frame after each write
-  at the guarded arm, each with a strip beneath showing prediction minus truth on the canonical signed-error map (red =
+  every waterfall, fixed 0..1. Unedited GT = the clean render of the world in which the teleport never happened, at the edit
+  frame (`zones.gt_unedited`, the Edit Index's unedited pole); Edited GT = the clean render of the edited world at the same
+  frame (its edited pole, the reference the strips below are scored against). Neither is a model output. PI / GS / IM = the
+  next frame after each write at the guarded arm, each with a strip beneath showing prediction minus Edited GT on the
+  canonical signed-error map (red =
   under-prediction, green = over, black = correct), fixed ±1, the prediction clipped to 0..1 before differencing (the scorer
   does not clip). Cyan line = ray centre of the edited disc before the edit, pink = after, in each column's own renderer.
   Single next-step frames, not rollouts; the write targets the pre-dynamics state; edit at frame 20. **Columns 1-2** edit the
@@ -92,14 +116,15 @@ Positions are identical across columns; only the rendering differs.
   model (dw-5ray, appearance-fac block: PI pt 1 a 20, GS pt 0 a 0.35, IM pt 5) on that SAME scenario, seen through 5 rays. Categorical IM = the categorical
   inverse map (one-hot labels + Cartesian velocity; `pim.probes.inverse.encode_categorical_state`). Discs have radius 0.5 in
   columns 1-2 and 1.0 in columns 3-4 (each instance's own geometry).
-- **(b)** Unedited Pred = the pre-edit board with the model's next-move distribution; every other column = the post-edit
-  board (the flipped tile has changed colour). Ground truth = uniform over the post-edit legal moves. Yellow tint = predicted
-  probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (`draw_board` defaults). **Marks:** on the Unedited Pred
+- **(b)** Unedited GT = the pre-edit board with the TRUE pre-edit legal set (uniform over `legal_pre`); every other column
+  = the post-edit board (the flipped tile has changed colour). Edited GT = uniform over the post-edit legal moves. The
+  model's own unedited distribution is no longer drawn (round 6); its per-case index stays in the sidecar. Yellow tint = predicted
+  probability, fully tinted at 0.02 and above, (p / 0.02)^0.6 below (`draw_board` defaults). **Marks:** on the Unedited GT
   board the flipped tile and every square whose legality the flip switches (legal_pre XOR legal_post, exactly the squares the
   symmetric-difference Edit Index scores) are outlined cyan; on every other board the same squares pink; nothing else is
-  outlined (key: cyan dot pre-edit, pink dot post-edit). Windows are 5 x 5 around those squares, one zoom per figure (the
+  outlined (key: cyan dot pre-edit gt, pink dot post-edit gt). Windows are 5 x 5 around those squares, one zoom per figure (the
   `_thumbnail` pieces show the window on the full board). The gap between Ground truth and PI is wider than the other gaps,
-  as between (a)'s Ground truth and edit rows. Boards are absolute colours replayed under the instance's own rules. Arms:
+  as between (a)'s Edited GT and edit rows. Boards are absolute colours replayed under the instance's own rules. Arms:
   Standard PI pt 4 a 3, GS pt 4 a 0.2, IM pt 5; Adjacent Flip PI pt 2 a 5, GS pt 0 a 0.2, IM pt 5; Adjacent NoFlip PI pt 1
   a 10, GS pt 2 a 1.5 (unguarded), IM pt 1.
 
@@ -149,9 +174,11 @@ figure is still seed 0, so its Standard column is the same world as Example 1 he
   family only, so the categorical IM cell of the Standard model is blank in the table and is not drawn here (round 3 drew the
   128-ray model as "Standard" for that reason; round 4 puts the Standard model back and shows the categorical block on the
   ray family instead).
-- The figure is 5.72 in wide (0.22 in for the key) and is scaled by LaTeX to the 5.5 in column: 8 pt text prints at 7.7 pt,
-  the 7.5 pt key at 7.2 pt. The side-by-side's 7 pt example titles print at 6.7 pt, the one place under the 7 pt floor, and
-  its group titles share the block qualifier across the two categorical columns (see Files).
+- `composite_final` is 5.72 in wide (0.22 in for the key) and is scaled by LaTeX to the 5.5 in column: 8 pt text prints at
+  7.7 pt, the 7.5 pt key at 7.2 pt. The wide side-by-side is 6.10 in and scales by 0.90, so its 7 pt example titles print at
+  6.3 pt - the one place under the 7 pt floor, and the reason `composite_final_sidebyside_single` exists: at 5.50 in it is
+  not scaled at all and every label prints at its design size. Both side-by-sides share the block qualifier across the two
+  categorical columns (see Files).
 - The Othello writes are the 2026-09-19 guarded cache (unchanged by the categorical deployment, which touched discworld only).
 - Nothing in `runs/`, `datasets/`, `logs/`, `pim/`, or the paper `.tex` was touched; the GPU built the Rayworld caches (one
   model at a time, freed after) and fitted nothing.
