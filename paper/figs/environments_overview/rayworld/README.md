@@ -1,4 +1,4 @@
-# Rayworld and its variants: `fig:rayworld_and_variants` (round 4, 2026-09-22)
+# Rayworld and its variants: `fig:rayworld_and_variants` (round 5, 2026-09-22)
 
 Everything here is drawn from REAL held-out sequences (`datasets/discworld/<inst>/eval/test.h5`) with the
 canonical geometry, by `make_figure.py` in this folder. No metric is computed and nothing is re-implemented:
@@ -20,18 +20,21 @@ Regenerate (deterministic):
 | file | what it is |
 |---|---|
 | `composite.pdf` / `.png` | **the figure**, 5.5 x 3.26 in, two bands: top (a) frustum view with frame t* along the far plane and its waterfall, (b) blink waterfall; bottom (c) the same world through 16 / 8 / 5 rays, (d) the appearance cells. Panel letters only. |
-| `composite_onerow.pdf` / `.png` | the **alternative**: the same four panels in ONE band, 5.5 x 1.55 in. Everything is smaller (see the layout note below); use it where the figure must be short. |
+| `composite_onerow.pdf` / `.png` | the **alternative**: the same four panels in ONE band, 5.5 x 1.69 in. Everything is smaller (see the layout note below); use it where the figure must be short. |
 | `make_figure.py` | the script |
 | `selection.json` | sidecar: seed, t*, every sequence index and generator seed, rule survivors, radii, reflectivities, positions and velocities at t*, the blackout span, the matched-render note, the cells at t*, the cell-colour seed, the rule text, the drawing constants, both piece lists |
 | `README.md` | this file |
 
 ### How the one-row variant differs (layout only; same data, same sequences, same conventions)
 
-The panels are about 1.2 in tall, so every one of them shrinks: the frustum is 1.09 in wide (its size follows
-the band height at equal aspect), the two waterfalls are squashed vertically (all 40 frames, shorter rows) at 0.62
-and 0.56 in wide, the three N-ray strips are 0.33 in each with their ray counts **below** them (7 pt) so the
-letter row stays free, and (d) is the hard crop at 1.11 x 0.84 in, centred in the band. The (b) blink panel
-keeps its own time labels and bracket. Nothing else changes: same seeds, same t*, same drawing rules.
+The panels are 1.34 in tall. The waterfalls put their range and their axis name on ONE row under the panel
+("0   ray   127", `ticks="compact"`) instead of a tick row plus a label row, and that reclaimed height goes
+to (a), whose width follows the band height at equal aspect: the frustum is 1.22 x 1.34 in, and it draws
+**every 5th ray (26 of 128) at heavier weights** (hit rays lw 0.62 / alpha 0.95, misses 0.42 / 0.52) because
+the two-band composite's 43 thin pale rays disappear at this size. The rest: waterfalls 0.56 and 0.50 in
+wide (all 40 frames, shorter rows), the three N-ray strips 0.32 in each with their ray counts **below** them
+(7 pt) so the letter row stays free, (d) the hard crop at 1.18 x 0.90 in centred in the band, and the panel
+letters 0.10 in above the artwork. Same sequences, same t*, same drawing rules as the two-band composite.
 
 ## pieces/ (PDF; the PNG previews beside them are gitignored)
 
@@ -51,10 +54,13 @@ keeps its own time labels and bracket. Nothing else changes: same seeds, same t*
 
 ## pieces_onerow/ (PDF; PNGs gitignored by this folder's own `.gitignore`)
 
-The same elements at the sizes `composite_onerow` uses: `standard_frustum_light_every3_strip` (1.09 x 1.20
-in), `standard_waterfall` (0.62 x 1.16), `blink_waterfall` (0.56 x 1.16), `nray_waterfall_{16,8,5}ray_matched`
-(0.33 x 1.16 each) and `categorical_frustum_8ray_crop` (1.18 x 0.90). `key_frustum` is size independent and
-lives in `pieces/` only. The strips here carry no ray-count label; the composite adds it below them.
+The same elements at the sizes `composite_onerow` uses, all 1.34 in tall: `standard_frustum_light_every5_strip`
+and `standard_frustum_light_every6_strip` (1.22 in wide, the two ray densities tried — **every 5th is the one
+in the composite**: 26 rays still read as a fan while every individual ray resolves, where every 6th at 21
+rays starts to look sparse; `ONEROW_EVERY` switches it), `standard_waterfall` (0.56), `blink_waterfall`
+(0.50), `nray_waterfall_{16,8,5}ray_matched` (0.32 each) and `categorical_frustum_8ray_crop` (1.18 x 0.90).
+`key_frustum` is size independent and lives in `pieces/` only. The strips here carry no ray-count label; the
+composite adds it below them.
 
 Pruned in round 3 (regenerate with `--all`; git history keeps the committed copies): every-2nd / every-4th
 ray frustums, the dark-panel frustums, the `_own` N-ray strips (one sequence per instance), the no-rays
@@ -102,21 +108,26 @@ other disc lit in every frame, the blinking disc lit whenever visible and travel
 - Observation strips: `gray` colormap, fixed 0 to 1, nearest interpolation, on `DARK_BG`, thin `ps.FRAME`
   border; time runs downward (row 0 at the top). In the standard waterfall, row t* carries a thin light
   outline (the canonical neutral marker colour `pim.figures.waterfall.EDIT_LINE`) and a pointer; the strip
-  along the far plane is that row, its pixel k centred on ray k's crossing of the far plane.
+  along the far plane is that row, its pixel k centred on ray k's crossing of the far plane. The ray axis is
+  stated under every waterfall: as ticks plus a "ray" label in `composite`, and as one compact row
+  ("0   ray   127") in `composite_onerow`; in (c) the ray count is the label under each strip.
 - Blink markers are the 0.5-grey pixels on the edge ray (ray 127 for disc 1) the frame before the blackout and
   on its last hidden frame; the bracket spans the hidden frames only, the word "hidden" centred on it.
 - Appearance cells (panel d): two positions share a cell when a lone disc there lights the same rays; the
   partition is drawn over the reachable region (disc centre at least one radius from every wall,
   `sim.fully_in_frustum`), 30 cells on dw-8ray with run lengths 1 (far edge) to 5 (near edge). **Each cell
-  has its own colour** (`cell_palette`, seed 7): the 30 evenly spaced hues of the colour circle, rotated by
-  a random offset, randomly permuted and jittered, each with a random saturation (0.17 to 0.30) and value
-  (0.95 to 1.0). The colours carry no meaning; they exist so the reader sees many distinct cells rather than
-  a repeating tiling. All 30 are light (relative luminance 0.73 to 0.96), so the rays, the discs and the
-  centre dots read on top; the closest adjacent pair differs by 0.056 in RGB distance (median 0.29) and every
-  boundary also carries a thin grey line. The two discs' cells are the same hue further saturated and are
-  outlined in black; the discs are drawn at alpha 0.65 with a dot at the true centre. The factorised target
-  the paper reports (`appearance-fac`) reads the same partition as run centre (15 classes) times run length
-  (5 classes). Both composites cut the view just below the near plane.
+  has its own colour** (`cell_colours`), placed deterministically — no seed, no sampling: the hues are the
+  30 evenly spaced points of the colour circle, and the cells take them greedily, most constrained cell
+  first and ties by cell index, each taking the free hue whose circular distance to its already coloured
+  neighbours **on the page** is largest; saturation (4 levels, 0.18 to 0.31) and value (3 levels, 0.93 to
+  1.0) then cycle to separate ties. The colours carry no meaning; they exist so the reader sees many
+  distinct cells rather than a repeating tiling. Measured over the partition's 59 page-adjacent cell pairs:
+  minimum RGB distance **0.166**, median **0.286** (the earlier random-seed palette gave 0.056 and 0.291, so
+  the worst pair is three times better separated). All 30 stay light, so the rays, the discs and the centre
+  dots read on top, and every boundary also carries a thin grey line. The two discs' cells are the same hue
+  further saturated and are outlined in black; the discs are drawn at alpha 0.65 with a dot at the true
+  centre. The factorised target the paper reports (`appearance-fac`) reads the same partition as run centre
+  (15 classes) times run length (5 classes). Both composites cut the view just below the near plane.
 - At t* in the dw-8ray sequence the far disc (0.4) sits in the lone-disc cell for rays 2 to 3, but the near
   disc (0.8, rays 3 to 6) occludes ray 3, so the frame shows the far disc on ray 2 only. The cell is what the
   probe target labels; the rays are what the frame shows. Worth one caption sentence if panel (d) is used.
@@ -137,7 +148,8 @@ discs' cells are runs 2 to 3 (disc 0, far, y 9.9) and 3 to 6 (disc 1, near, y 5.
 - The composite is 5.5 x about 3.3 in: the frustum's size is tied to the top band's height by the equal
   aspect, so the bigger frustum asked for in round 3 made the figure about 0.3 in taller than round 2's.
   `hf` in `composite()` is the one number to change.
-- In `composite_onerow` the frustum's discs are about 0.09 in across and the partition's cells about 0.1 in
+- In `composite_onerow` the frustum's discs are about 0.10 in across and the partition's cells about 0.1 in
   wide: legible in print, but the two-band `composite` is the one to use where there is room. A single band
   cannot hold five annotated groups at 5.5 in without that shrink, since the frustum's width grows with the
-  band's height.
+  band's height — which is also why making (a) bigger in round 5 took the one-row figure from 1.55 to
+  1.69 in tall even after the compact axis row gave back a tick row's worth of height.
