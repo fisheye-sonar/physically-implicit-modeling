@@ -5,13 +5,14 @@ selection rule (`pim.metrics.selection.best_arm`) or the tables' own reader (`pi
 which pools seed replicates through `pim.metrics.replicates`). The scripts compute no metric. Style:
 `paper/figs/paper_style.py` (Arial embedded as TrueType, Okabe-Ito editor colours `ps.EDITOR_COLORS`, zero
 outer padding), axes in the `pim.figures.theme.style_ax` look (grey spines and tick marks, black text, top and
-right spines hidden). Round 3 (Sevan): three figures at the top level, pieces under `pieces/` as PDF only, a
-0.18 in gap (`LEGEND_GAP`) between each x-axis label and the legend row beneath it.
+right spines hidden). Rounds 3 and 4 (Sevan): two figures at the top level, pieces under `pieces/` as PDF only,
+a 0.18 in gap (`LEGEND_GAP`) between each x-axis label and the legend row beneath it, `by_rays` as one
+full-width panel with PI, GS and IM only.
 
 ## Regenerate
 
     .pim/bin/python paper/figs/editability_trends/by_point.py     # by_point.pdf/.png, pieces/A_*.pdf, by_point_values.{md,json}
-    .pim/bin/python paper/figs/editability_trends/by_rays.py      # by_rays.pdf/.png, by_rays_half.pdf/.png, pieces/B_*.pdf, by_rays_values.{md,json}
+    .pim/bin/python paper/figs/editability_trends/by_rays.py      # by_rays.pdf/.png, pieces/B_*.pdf, by_rays_values.{md,json}
     .pim/bin/python paper/figs/editability_trends/by_point.py --all   # also the dropped variants, written under extra/ (see below)
     .pim/bin/python paper/figs/editability_trends/by_rays.py --all
 
@@ -22,19 +23,19 @@ CPU only, a few seconds each. `runs/` is read, never written. Both scripts print
 | file | what it is | saved size |
 |---|---|---|
 | `by_point.pdf/.png` | two rows; columns Othello standard (left) and Rayworld standard (right). Top: Edit Index of each editor's reported arm at every residual point (PI, GS, IM; hollow = outside the fidelity guard). Bottom: the inverse map's R² per point (IM colour, diamonds) and the MLP probe skill (grey) | 5.46 x 3.18 in |
-| `by_rays.pdf/.png` | two panels sharing y: continuous state (PI, GS, IM) and categorical state (PI, GS, IM, ND) against ray count; mean over three seeds with +-1 SD bars | 5.46 x 2.28 in |
-| `by_rays_half.pdf/.png` | one panel at half width for a wrap beside the editability table: both bases, continuous solid and categorical dashed; legend rows read "PI GS IM" / "continuous categorical" | 2.57 x 2.86 in |
+| `by_rays.pdf/.png` | one full-width panel: Edit Index against ray count (5, 8, 16, 128; log axis), continuous state solid and categorical state dashed, PI, GS, IM; mean over three seeds with +-1 SD bars; legend of three colour keys and two style keys one row below the x-axis label | 5.42 x 2.56 in |
 | `pieces/A_ei_<run>.pdf`, `pieces/A_skill_<run>.pdf` | each `by_point` panel alone with its axis labels; runs `othello`, `rayworld`, `othello_adjacent_flip`, `rayworld_8ray` | 2.57 x 1.92 / 1.27 in |
 | `pieces/A_legend.pdf`, `pieces/A_legend_editors.pdf` | the `by_point` legend (six keys) and the editors-only legend (PI, GS, IM, hollow key) | strips |
-| `pieces/B_continuous.pdf`, `pieces/B_categorical.pdf`, `pieces/B_categorical_noND.pdf` | each `by_rays` panel alone | 2.57 x 2.12 in |
-| `pieces/B_legend.pdf`, `pieces/B_legend_half.pdf` | the `by_rays` legend (PI, GS, IM, ND, hollow key) and the `by_rays_half` legend (editors, line-style keys, hollow key) | strips |
+| `pieces/B_continuous.pdf`, `pieces/B_categorical.pdf` | each basis alone (PI, GS, IM) at half width | 2.57 x 2.12 in |
+| `pieces/B_legend.pdf` | the `by_rays` legend (PI, GS, IM, continuous, categorical, hollow key) | strip |
 | `by_point_values.md/.json`, `by_rays_values.md/.json` | the plotted values (the tables below) with the arm behind every point | |
 
-Variants dropped from the top level in round 3 (regenerate with `--all`; they land under `extra/`, which is not
-kept): `by_point_one_row` (Edit Index row only), `by_point_extra` and `by_point_extra_one_row` (Othello
-adjacent-flip | Rayworld 8-ray), `by_point_all` and `by_point_all_one_row` (all four runs in one row);
-`by_rays_one_panel` (both bases in one full-width panel, legend at the right), `by_rays_noND`. The extra runs'
-values stay in `by_point_values.md`.
+Variants dropped from the top level (regenerate with `--all`; they land under `extra/`, which is not kept):
+`by_point_one_row` (Edit Index row only), `by_point_extra` and `by_point_extra_one_row` (Othello adjacent-flip |
+Rayworld 8-ray), `by_point_all` and `by_point_all_one_row` (all four runs in one row); `by_rays_two_panels`
+(continuous | categorical side by side, the round-3 form) and `by_rays_half` (the one panel at half width with a
+two-row legend). The extra runs' values stay in `by_point_values.md`. ND was dropped from `by_rays` in round 4
+(figure, pieces and value table); its categorical-target numbers remain in `experiments/paper_ci/dashboard/ledger.md`.
 
 ## `by_point.py`
 
@@ -122,18 +123,20 @@ log axis with exactly those ticks). Read with `T.set_basis("cartesian"); F = T.c
 for the centre of its ray run and one for its length). The categorical block's IM is the CATEGORICAL inverse map
 (deployed 2026-09-20; per `research/REGISTRY.md` its input is the target's own one-hot labels plus the discs'
 Cartesian velocity, fitted with the target's forward-probe recipe on 200k sequences; IM only, no retrieval
-form), not the continuous full-state map that these blocks carried before that date.
+form), not the continuous full-state map that these blocks carried before that date. Editors: PI, GS, IM
+(ND dropped in round 4).
 
 Per (run, block, editor) the parent run's reported arm is `best_arm` (the guard rule above; `<ed> guarded` in
 `F.df`), and the seed spread is `F.rep_sd[(run, block)]`: the pooled mean (`<ed> EI_mean`) and SD with n - 1
 (`<ed> EI`) over the run's seed replicates at a matched budget (`__seed0_s512000`, `__seed1`, `__seed2`; all four
 families n = 3 at 512k steps). Plotted: the pooled mean with a +-1 SD bar where n > 1 (the parent's value would be
 used otherwise; it never is here). The hollow mark follows the PARENT's reported arm; no reported arm in this
-figure is outside the guard, so no hollow marker is drawn and the composites carry no hollow legend key (the
-legend pieces do). ND is shown in the categorical panel of `by_rays` only (four lines there read cleanly; ND has
-no continuous-target row because one fixed direction cannot serve 1000 teleports, and adding it to the one-panel
-`by_rays_half` would make seven lines). SDs are 0.002 to 0.036, so most bars are hidden inside the 3.2 pt
-markers; the largest are 5-ray PI (0.036), 8-ray GS (0.030) and 128-ray GS (0.027) on the continuous target.
+figure is outside the guard, so no hollow marker is drawn and the figure carries no hollow legend key (the
+legend piece does). Legend: three colour keys (PI, GS, IM) plus two line-style keys (continuous, categorical) in
+one row, chosen over six per-line keys because five short entries read cleaner at 5.5 in. SDs are 0.002 to
+0.036, so most bars are hidden inside the 3.2 pt markers; the largest are 5-ray PI (0.036), 8-ray GS (0.030) and
+128-ray GS (0.027) on the continuous target. Where continuous and categorical values coincide (5 rays: PI
+categorical +0.538 and GS categorical +0.559) the markers overlap; the table below separates them.
 
 Caption facts: y = Edit Index of each editor's reported arm (the highest Edit Index among arms with fidelity
 ratio at most 1), mean over three training seeds at 512k steps, bars +-1 SD (mostly smaller than the marker);
@@ -143,7 +146,7 @@ categorical inverse map; every plotted arm is inside the fidelity guard.
 Ledger check: every mean and SD below equals the "mean +- SD" column of `experiments/paper_ci/dashboard/ledger.md`
 (2026-09-21 10:32) for the same (run, block, editor); the "parent" column equals its "canonical" column.
 
-### Plotted values (`by_rays`, `by_rays_half`)
+### Plotted values (`by_rays`)
 
 | rays | basis | editor | plotted (mean) | SD | n | budget | members | parent | parent fid | parent arm | inside guard | member fids |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -171,10 +174,6 @@ Ledger check: every mean and SD below equals the "mean +- SD" column of `experim
 | 8 | categorical | IM | +0.874 | 0.005 | 3 | 512k | +0.869 +0.874 +0.879 | +0.866 | 0.27 | all·pt6·α1 | yes | 0.27 0.27 0.27 |
 | 16 | categorical | IM | +0.821 | 0.002 | 3 | 512k | +0.821 +0.823 +0.819 | +0.823 | 0.29 | all·pt6·α1 | yes | 0.29 0.28 0.29 |
 | 128 | categorical | IM | +0.637 | 0.003 | 3 | 512k | +0.638 +0.640 +0.634 | +0.637 | 0.29 | all·pt6·α1 | yes | 0.28 0.28 0.29 |
-| 5 | categorical | ND | +0.553 | 0.010 | 3 | 512k | +0.562 +0.555 +0.543 | +0.553 | 0.58 | all·pt2·α1.5 | yes | 0.69 0.91 0.70 |
-| 8 | categorical | ND | +0.491 | 0.002 | 3 | 512k | +0.490 +0.492 +0.493 | +0.488 | 0.98 | all·pt0·α12 | yes | 0.81 0.79 0.80 |
-| 16 | categorical | ND | +0.414 | 0.010 | 3 | 512k | +0.419 +0.403 +0.419 | +0.423 | 0.90 | all·pt2·α8 | yes | 0.91 0.94 0.88 |
-| 128 | categorical | ND | +0.528 | 0.016 | 3 | 512k | +0.542 +0.532 +0.511 | +0.541 | 0.96 | all·pt3·α4 | yes | 0.96 0.92 0.93 |
 
 plotted = pooled mean over the seed replicates (n > 1) else the parent's value; SD with n − 1; parent = the parent run's reported arm (best Edit Index inside the fidelity guard) with its fidelity ratio and arm (point · step size); inside guard = that arm's fidelity ratio ≤ 1; member fids = the replicates' fidelity ratios at their own reported arms.
 

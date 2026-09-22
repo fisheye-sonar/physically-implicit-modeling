@@ -6,11 +6,12 @@ the fidelity guard; ``guarded`` False when no arm passes) and, through ``F.rep_s
 (``pim.metrics.replicates.pool_replicates``), the seed replicates' pooled mean and SD (n − 1) at a matched
 training budget. Plotted: the pooled mean with ± SD bars where n > 1, else the parent's value; the parent's
 reported arm outside the guard is drawn hollow. "continuous" = the ``cartesian`` block, "categorical" = the
-``appearance-fac`` block (its IM is the categorical inverse map). Nothing is computed here.
+``appearance-fac`` block (its IM is the categorical inverse map). PI, GS and IM only (round 4, Sevan: ND dropped).
+Nothing is computed here.
 
-    .pim/bin/python paper/figs/editability_trends/by_rays.py         # by_rays (two panels), by_rays_half, pieces/, values
-    .pim/bin/python paper/figs/editability_trends/by_rays.py --all   # also, under extra/: the one-panel full-width form
-                                                                     # and the two-panel form without ND
+    .pim/bin/python paper/figs/editability_trends/by_rays.py         # by_rays.pdf/.png (one panel), pieces/B_*.pdf, values
+    .pim/bin/python paper/figs/editability_trends/by_rays.py --all   # also, under extra/: the two-panel form
+                                                                     # (continuous | categorical) and the half-width panel
 """
 from __future__ import annotations
 
@@ -42,7 +43,7 @@ RUN = {r: f"L-dw-{r}ray-20m" for r in RAYS}
 BLOCK = {"continuous": "cartesian", "categorical": "appearance-fac"}
 LS = {"continuous": "-", "categorical": "--"}
 EDITORS = ("PI", "GS", "IM")
-MARK = {"PI": "o", "GS": "s", "IM": "^", "ND": "D"}
+MARK = {"PI": "o", "GS": "s", "IM": "^"}
 GREY, ZERO = "#7f7f7f", "#c8c8c8"
 LEGEND_GAP = 0.18           # inches of clear space between the x-axis label and the legend row beneath it
 
@@ -64,7 +65,7 @@ def cell(r: int, block: str, ed: str) -> dict:
                 values=rep.get(f"{ed} EI_values"), fid_values=rep.get(f"{ed} fid_values"))
 
 
-CELLS = [cell(r, block, ed) for block in BLOCK for ed in EDITORS + ("ND",) for r in RAYS]
+CELLS = [cell(r, block, ed) for block in BLOCK for ed in EDITORS for r in RAYS]
 
 
 def series(block: str, ed: str) -> list[dict]:
@@ -140,34 +141,33 @@ def save_pdf(fig, stem: Path) -> None:
     Path(stem).with_suffix(".png").unlink()
 
 
-def fig_one_panel(stem: Path, width: float, height: float, legend_below_axes: bool) -> None:
-    """Both bases in one panel: continuous solid, categorical dashed."""
+def fig_one_panel(stem: Path, width: float, height: float, two_row_legend: bool = False) -> None:
+    """Both bases in one panel: continuous solid, categorical dashed; three colour keys + two style keys below."""
     fig, ax = plt.subplots(figsize=(width, height), layout="constrained")
     hollow = draw(ax, BLOCK, EDITORS)
     ax.set_xlabel("Rays")
     ax.set_ylabel("Edit Index")
     eds, sty, hol = [key_editor(e) for e in EDITORS], [key_style(b) for b in BLOCK], [key_hollow()] if hollow else []
-    if legend_below_axes:
-        # a legend fills column-wise: interleaved, the two rows read "PI GS IM" / "continuous categorical"
+    if two_row_legend:      # half width: a legend fills column-wise, so interleaved the rows read "PI GS IM" / "continuous categorical"
         legend_below(fig, [eds[0], sty[0], eds[1], sty[1], eds[2]] + hol, ncol=3)
-    else:
-        fig.legend(handles=eds + sty + hol, loc="outside right center", ncol=1, **LEGEND_KW)
+    else:                   # full width: one row
+        h = eds + sty + hol
+        legend_below(fig, h, ncol=len(h))
     ps.save(fig, stem)
     plt.close(fig)
 
 
-def fig_two_panels(stem: Path, with_nd: bool = True) -> None:
-    """Continuous state | categorical state, sharing y."""
+def fig_two_panels(stem: Path) -> None:
+    """Continuous state | categorical state, sharing y (the round-3 form, kept as an --all variant)."""
     fig, axes = plt.subplots(1, 2, sharey=True, figsize=(ps.TEXT_WIDTH_IN, 2.3), layout="constrained")
     fig.get_layout_engine().set(w_pad=0.02, h_pad=0.02, wspace=0.04)
-    cat = EDITORS + (("ND",) if with_nd else ())
-    hollow = draw(axes[0], ["continuous"], EDITORS) | draw(axes[1], ["categorical"], cat)
+    hollow = draw(axes[0], ["continuous"], EDITORS) | draw(axes[1], ["categorical"], EDITORS)
     axes[0].set_title("Continuous state", pad=3)
     axes[1].set_title("Categorical state", pad=3)
     axes[0].set_ylabel("Edit Index")
     for ax in axes:
         ax.set_xlabel("Rays")
-    h = [key_editor(e) for e in cat] + ([key_hollow()] if hollow else [])
+    h = [key_editor(e) for e in EDITORS] + ([key_hollow()] if hollow else [])
     legend_below(fig, h, ncol=len(h))
     ps.save(fig, stem)
     plt.close(fig)
@@ -213,18 +213,14 @@ def table() -> str:
 
 if __name__ == "__main__":
     PIECES.mkdir(exist_ok=True)
-    fig_two_panels(OUT / "by_rays", with_nd=True)                                       # the paper's figure
-    fig_one_panel(OUT / "by_rays_half", ps.HALF_WIDTH_IN, 2.9, legend_below_axes=True)  # for a wrap beside the table
-    if "--all" in sys.argv[1:]:                                                         # variants, kept out of the top level
+    fig_one_panel(OUT / "by_rays", ps.TEXT_WIDTH_IN, 2.6)                     # the paper's figure: one full-width panel
+    if "--all" in sys.argv[1:]:                                               # variants, kept out of the top level
         EXTRA_DIR.mkdir(exist_ok=True)
-        fig_one_panel(EXTRA_DIR / "by_rays_one_panel", ps.TEXT_WIDTH_IN, 2.3, legend_below_axes=False)
-        fig_two_panels(EXTRA_DIR / "by_rays_noND", with_nd=False)
+        fig_two_panels(EXTRA_DIR / "by_rays_two_panels")
+        fig_one_panel(EXTRA_DIR / "by_rays_half", ps.HALF_WIDTH_IN, 2.9, two_row_legend=True)
     piece("continuous", EDITORS, PIECES / "B_continuous")
-    piece("categorical", EDITORS + ("ND",), PIECES / "B_categorical")
-    piece("categorical", EDITORS, PIECES / "B_categorical_noND")
-    legend_piece([key_editor(e) for e in EDITORS + ("ND",)] + [key_hollow()], PIECES / "B_legend")          # by_rays
-    legend_piece([key_editor(e) for e in EDITORS] + [key_style(b) for b in BLOCK] + [key_hollow()],
-                 PIECES / "B_legend_half")                                                                  # by_rays_half
+    piece("categorical", EDITORS, PIECES / "B_categorical")
+    legend_piece([key_editor(e) for e in EDITORS] + [key_style(b) for b in BLOCK] + [key_hollow()], PIECES / "B_legend")
     md = table()
     print(md)
     (OUT / "by_rays_values.md").write_text(md + "\n")

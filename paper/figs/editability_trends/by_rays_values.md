@@ -24,9 +24,5 @@
 | 8 | categorical | IM | +0.874 | 0.005 | 3 | 512k | +0.869 +0.874 +0.879 | +0.866 | 0.27 | all·pt6·α1 | yes | 0.27 0.27 0.27 |
 | 16 | categorical | IM | +0.821 | 0.002 | 3 | 512k | +0.821 +0.823 +0.819 | +0.823 | 0.29 | all·pt6·α1 | yes | 0.29 0.28 0.29 |
 | 128 | categorical | IM | +0.637 | 0.003 | 3 | 512k | +0.638 +0.640 +0.634 | +0.637 | 0.29 | all·pt6·α1 | yes | 0.28 0.28 0.29 |
-| 5 | categorical | ND | +0.553 | 0.010 | 3 | 512k | +0.562 +0.555 +0.543 | +0.553 | 0.58 | all·pt2·α1.5 | yes | 0.69 0.91 0.70 |
-| 8 | categorical | ND | +0.491 | 0.002 | 3 | 512k | +0.490 +0.492 +0.493 | +0.488 | 0.98 | all·pt0·α12 | yes | 0.81 0.79 0.80 |
-| 16 | categorical | ND | +0.414 | 0.010 | 3 | 512k | +0.419 +0.403 +0.419 | +0.423 | 0.90 | all·pt2·α8 | yes | 0.91 0.94 0.88 |
-| 128 | categorical | ND | +0.528 | 0.016 | 3 | 512k | +0.542 +0.532 +0.511 | +0.541 | 0.96 | all·pt3·α4 | yes | 0.96 0.92 0.93 |
 
 plotted = pooled mean over the seed replicates (n > 1) else the parent's value; SD with n − 1; parent = the parent run's reported arm (best Edit Index inside the fidelity guard) with its fidelity ratio and arm (point · step size); inside guard = that arm's fidelity ratio ≤ 1; member fids = the replicates' fidelity ratios at their own reported arms.
