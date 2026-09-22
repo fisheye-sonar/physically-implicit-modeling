@@ -1,47 +1,77 @@
 {
- "run": "noise_ablation/L-dw-noiseless-20m",
- "instance": "dw-noiseless",
- "arrays": ".scratch/history_rewrite_arrays.npz",
+ "panels": [
+  {
+   "panel": "a",
+   "name": "Standard",
+   "run": "noise_ablation/L-dw-noiseless-20m",
+   "instance": "dw-noiseless",
+   "arrays": ".scratch/history_rewrite_arrays.npz",
+   "n_bench": 32,
+   "rays": 128,
+   "cases": [
+    20,
+    26
+   ]
+  },
+  {
+   "panel": "b",
+   "name": "Blink",
+   "run": "blink_ablation/L-dw-blink-20m",
+   "instance": "dw-blink",
+   "arrays": ".scratch/predictive_quality_dw-blink.npz",
+   "n_bench": 32,
+   "rays": 128,
+   "cases": [
+    20,
+    26
+   ]
+  },
+  {
+   "panel": "c",
+   "name": "5-ray",
+   "run": "ray_ablation/L-dw-5ray-20m",
+   "instance": "dw-5ray",
+   "arrays": ".scratch/predictive_quality_dw-5ray.npz",
+   "n_bench": 32,
+   "rays": 5,
+   "cases": [
+    20,
+    26
+   ]
+  }
+ ],
  "rows": {
-  "Ground truth": "gt_unedited_roll (the simulator's clean unedited continuation)",
-  "Prediction": "roll_unsteered (the model's free-run, no edit)",
+  "Ground truth": "gt_unedited_roll (the simulator's clean render of the unedited world continuing, b.zones.gt_unedited_traj; on dw-blink under the same blackout schedule as the observations)",
+  "Prediction": "roll_unsteered (dwa.unsteered_rollout: the model's free-run from the observed frames, no edit)",
   "Difference": "prediction - truth per ray, the prediction clipped to [0, 1] first (paper/figs/qualitative_edits/make_figure.error, raw=False), on pim.figures.waterfall.DIFF_CMAP with a fixed +-1 scale; empty above the line"
  },
- "context": "obs_hist frames 12..19 above the line",
+ "context": "b.obs frames 12..19 above the line, as the model saw them (blackouts and markers included on dw-blink)",
  "k_roll": 15,
  "selection": {
-  "rule": "numpy.random.default_rng(0).choice(32, 6, replace=False), sorted; no edit, so no displacement filter",
-  "seed": 0,
-  "cases": [
-   1,
-   8,
-   9,
-   14,
-   17,
-   22
-  ]
+  "rule": "numpy.random.default_rng(0).choice(n_bench, 2, replace=False) per instance, sorted; no edit, so no displacement filter",
+  "seed": 0
  },
  "files": {
   "figure": "rayworld",
   "pieces": [
-   "rayworld_case01_gt.pdf",
-   "rayworld_case01_pred.pdf",
-   "rayworld_case01_diff.pdf",
-   "rayworld_case08_gt.pdf",
-   "rayworld_case08_pred.pdf",
-   "rayworld_case08_diff.pdf",
-   "rayworld_case09_gt.pdf",
-   "rayworld_case09_pred.pdf",
-   "rayworld_case09_diff.pdf",
-   "rayworld_case14_gt.pdf",
-   "rayworld_case14_pred.pdf",
-   "rayworld_case14_diff.pdf",
-   "rayworld_case17_gt.pdf",
-   "rayworld_case17_pred.pdf",
-   "rayworld_case17_diff.pdf",
-   "rayworld_case22_gt.pdf",
-   "rayworld_case22_pred.pdf",
-   "rayworld_case22_diff.pdf",
+   "rayworld_dw-noiseless_case20_gt.pdf",
+   "rayworld_dw-noiseless_case20_pred.pdf",
+   "rayworld_dw-noiseless_case20_diff.pdf",
+   "rayworld_dw-noiseless_case26_gt.pdf",
+   "rayworld_dw-noiseless_case26_pred.pdf",
+   "rayworld_dw-noiseless_case26_diff.pdf",
+   "rayworld_dw-blink_case20_gt.pdf",
+   "rayworld_dw-blink_case20_pred.pdf",
+   "rayworld_dw-blink_case20_diff.pdf",
+   "rayworld_dw-blink_case26_gt.pdf",
+   "rayworld_dw-blink_case26_pred.pdf",
+   "rayworld_dw-blink_case26_diff.pdf",
+   "rayworld_dw-5ray_case20_gt.pdf",
+   "rayworld_dw-5ray_case20_pred.pdf",
+   "rayworld_dw-5ray_case20_diff.pdf",
+   "rayworld_dw-5ray_case26_gt.pdf",
+   "rayworld_dw-5ray_case26_pred.pdf",
+   "rayworld_dw-5ray_case26_diff.pdf",
    "rayworld_key.pdf",
    "rayworld_colorbar.pdf"
   ]
