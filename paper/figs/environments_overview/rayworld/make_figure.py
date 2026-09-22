@@ -33,6 +33,7 @@ ps.apply()
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.colors import hsv_to_rgb  # noqa: E402
 from matplotlib.patches import Circle, Polygon, Rectangle  # noqa: E402
+from matplotlib.transforms import offset_copy  # noqa: E402
 
 from pim.environments import layout  # noqa: E402
 from pim.environments.discworld.config import SimConfig  # noqa: E402
@@ -49,6 +50,11 @@ N_GHOSTS = 7           # earlier frames drawn as fading discs behind the current
 MAX_HIDDEN = 3         # frames in which one disc may be fully occluded (crossing streaks need >= 1)
 EVERY = 3              # the 128-ray frustum draws every EVERY-th ray (43 of 128): visual clarity only
 ONEROW_EVERY = 5       # the one-row variant's frustum is small: fewer rays (26 of 128), drawn stronger
+# The one-row band, in inches: panel sizes and the gaps between them (``onerow_geometry`` lays them out).
+# Its labels are placed in POINTS off the panel edge, not in axes fractions, so they keep their clearance
+# on panels this narrow.
+ONEROW = {"band": 1.32, "wf_a": 0.56, "wf_b": 0.50, "strip": 0.30, "strip_gap": 0.105, "axis": 0.27,
+          "gaps": (0.34, 0.46, 0.28, 0.11)}   # frustum→(a), (a)→(b), (b)→(c), (c)→(d)
 DISC_ALPHA_CELLS = 0.65  # discs on the partition panel let the cells show through
 SEED = 0
 CELL_EDGE = "#9c9c9c"
@@ -224,7 +230,7 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
     ys = yn if crop else 0.0                    # rays start at the observer, or at the near plane when cropped
     # (lw, alpha) for a ray that hits and one that misses; ``strong`` is the small one-row panel, where
     # the default weights disappear at print size
-    hit_w, miss_w = ((0.62, 0.95), (0.42, 0.52)) if strong else ((0.5, 0.85 if dark else 0.7),
+    hit_w, miss_w = ((0.55, 0.85), (0.36, 0.42)) if strong else ((0.5, 0.85 if dark else 0.7),
                                                                  (0.3, 0.3 if dark else 0.22))
     if rays:
         for k in range(0, len(s), every):
@@ -260,6 +266,11 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
                   extent=(sx0, sx1, sy0, sy0 + h), zorder=8)
         ax.add_patch(Rectangle((sx0, sy0), sx1 - sx0, h, fill=False, edgecolor=ps.FRAME, lw=0.5, zorder=9))
         ax.text(xf + 0.7, sy0 + h / 2, "$t^*$", ha="left", va="center", color="black")   # on the page, both modes
+
+
+def _off(ax, dx: float = 0.0, dy: float = 0.0):
+    """``ax.transAxes`` shifted by (dx, dy) POINTS: spacing that does not shrink with the panel."""
+    return offset_copy(ax.transAxes, fig=ax.figure, x=dx, y=dy, units="points")
 
 
 def draw_cells(ax, q: dict, t: int, target, n: int = 500):
@@ -299,9 +310,10 @@ def draw_waterfall(ax, obs: np.ndarray, *, t_star=None, hidden=None, ticks=True,
         sp.set_edgecolor(ps.FRAME)
     ax.set_yticks([])
     ax.set_xticks([])
-    if ticks == "compact":     # the range and the axis name on ONE row, so the panel keeps the height
-        for xx, lab, ha in ((0.0, "0", "left"), (0.5, "ray", "center"), (1.0, str(R - 1), "right")):
-            ax.text(xx, -0.025, lab, transform=ax.transAxes, ha=ha, va="top", fontsize=7)
+    if ticks == "compact":     # the range just under the panel, the axis name centred on its own baseline
+        for xx, lab, ha in ((0.0, "0", "left"), (1.0, str(R - 1), "right")):
+            ax.text(xx, 0.0, lab, transform=_off(ax, 0, -2), ha=ha, va="top", fontsize=7)
+        ax.text(0.5, 0.0, "ray", transform=_off(ax, 0, -11), ha="center", va="top", fontsize=8)
     elif ticks:
         ax.set_xticks([0, R - 1])
         ax.set_xticklabels(["0", str(R - 1)], fontsize=7)
@@ -315,19 +327,25 @@ def draw_waterfall(ax, obs: np.ndarray, *, t_star=None, hidden=None, ticks=True,
         ax.text(-0.10, 1.0 - 0.5 / F, "0", transform=ax.transAxes, ha="right", va="center", fontsize=7)
         ax.text(-0.10, 0.5 / F, str(F - 1), transform=ax.transAxes, ha="right", va="center", fontsize=7)
     row = lambda t: 1.0 - (t + 0.5) / F        # noqa: E731  axes-fraction y of a row's centre
+    # On the compact (one-row) panels the caret, the bracket and their labels are offset in POINTS, so
+    # they keep their clearance from the panel edge and from each other; the wide panels keep fractions.
+    comp = ticks == "compact"
     if t_star is not None:                     # the pointer, and a thin light outline around the row itself
-        ax.plot([1.035], [row(t_star)], marker="<", ms=3.2, color="black", transform=ax.transAxes, clip_on=False)
-        ax.text(1.075, row(t_star), "$t^*$", transform=ax.transAxes, ha="left", va="center")
+        ax.plot([1.0 if comp else 1.035], [row(t_star)], marker="<", ms=3.2, color="black", clip_on=False,
+                transform=_off(ax, 5) if comp else ax.transAxes)
+        ax.text(1.0 if comp else 1.075, row(t_star), "$t^*$", ha="left", va="center",
+                transform=_off(ax, 11) if comp else ax.transAxes)
         ax.add_patch(Rectangle((-0.5, t_star - 0.5), R, 1.0, fill=False, edgecolor=EDIT_LINE, lw=0.6, zorder=3))
     if hidden is not None:                     # the frames a disc is blacked out, bracketed on the right
         a, b = hidden
         y0, y1 = row(b) - 0.5 / F, row(a) + 0.5 / F
-        x = 1.035
-        ax.plot([x, x], [y0, y1], color="black", lw=0.7, transform=ax.transAxes, clip_on=False)
+        tr = _off(ax, 4) if comp else ax.transAxes
+        x, d = (1.0, 0.05) if comp else (1.035, 0.02)
+        ax.plot([x, x], [y0, y1], color="black", lw=0.7, transform=tr, clip_on=False)
         for y in (y0, y1):
-            ax.plot([x, x - 0.02], [y, y], color="black", lw=0.7, transform=ax.transAxes, clip_on=False)
-        ax.text(x + 0.04, (y0 + y1) / 2, "hidden", rotation=90, transform=ax.transAxes,
-                ha="left", va="center", fontsize=7.5)   # centred on the bracket's midpoint
+            ax.plot([x, x - d], [y, y], color="black", lw=0.7, transform=tr, clip_on=False)
+        ax.text(1.0 if comp else 1.075, (y0 + y1) / 2, "hidden", rotation=90, ha="left", va="center",
+                fontsize=7.5, transform=_off(ax, 9) if comp else ax.transAxes)  # centred on the bracket
 
 
 def draw_strip(ax, frame: np.ndarray):
@@ -385,7 +403,10 @@ def _strips(f, x: float, y: float, w: float, gap: float, h: float, matched: dict
         ax = _ax(f, x + k * (w + gap), y, w, h)
         draw_waterfall(ax, matched[inst], ticks=False, arrow=False)
         lab = f"{inst.split('-')[1][:-3]} rays"
-        ax.set_xlabel(lab, fontsize=size, labelpad=3) if below else ax.set_title(lab, fontsize=size, pad=2)
+        if below:   # on the one-row band's lower baseline, level with the waterfalls' "ray"
+            ax.text(0.5, 0.0, lab, transform=_off(ax, 0, -11), ha="center", va="top", fontsize=size)
+        else:
+            ax.set_title(lab, fontsize=size, pad=2)
 
 
 def composite(std, blk, span, eight, matched, app) -> None:
@@ -414,36 +435,48 @@ def composite(std, blk, span, eight, matched, app) -> None:
     plt.close(f)
 
 
+def onerow_geometry(std_sim: dict, eight_sim: dict) -> dict:
+    """The one-row band's panel sizes and x positions, in inches — ONE place, so the composite and the
+    pieces_onerow exports cannot drift apart. (d) takes what is left after the gaps the labels need."""
+    g1, g2, g3, g4 = ONEROW["gaps"]
+    g = {"band": ONEROW["band"], "axis": ONEROW["axis"],
+         "wf": frustum_width(ONEROW["band"], std_sim, strip=True)}
+    x = 0.02 + g["wf"] + g1                                  # past the strip's t* label
+    g["x_wa"] = x
+    x += ONEROW["wf_a"] + g2                                 # past (a)'s t* caret and label, then (b)'s t labels
+    g["x_wb"] = x
+    x += ONEROW["wf_b"] + g3                                 # past the hidden bracket and its label
+    g["x_strips"] = x
+    x += 3 * ONEROW["strip"] + 2 * ONEROW["strip_gap"] + g4
+    g["x_d"] = x
+    g["wd"] = 5.48 - x
+    g["hd"] = g["wd"] / frustum_width(1.0, eight_sim, crop=True)
+    return g
+
+
 def composite_onerow(std, blk, span, eight, matched, app) -> None:
-    """The ONE-ROW alternative (5.5 in wide, about 1.75 in tall): (a) frustum with the t* strip and its
+    """The ONE-ROW alternative (5.5 in wide, about 1.85 in tall): (a) frustum with the t* strip and its
     waterfall, (b) blink, (c) the 16/8/5-ray strips, (d) the cells — a single band, the letters in a
-    strip above it. The waterfalls put their range and their axis name on ONE row (``ticks="compact"``)
-    instead of a tick row plus a label row, and the height that saves goes to (a): the frustum's size
-    follows the band height at equal aspect, so a taller band is a bigger frustum. (a) draws
-    ``ONEROW_EVERY``-th ray, stronger than the two-band composite does, because thin pale rays vanish at
-    this size."""
-    hw, xlab, hf = 1.34, 0.15, 1.34        # panel height; the compact axis row; the frustum (= the band)
-    top = xlab + hf                        # the band's top edge
+    strip above it. Sizes and gaps come from ``onerow_geometry``; the waterfalls carry a compact two
+    baseline axis (the range under the panel, "ray" centred below it), the markers are spaced in points
+    rather than axes fractions, and (a) draws ``ONEROW_EVERY``-th ray at heavier weights, because the
+    two-band composite's thin pale rays vanish at this size."""
+    g = onerow_geometry(std["sim"], eight["sim"])
+    hb, xlab = g["band"], g["axis"]
+    top = xlab + hb                        # the band's top edge
     f = plt.figure(figsize=(5.5, top + 0.26), dpi=300)
     ytxt = top + 0.10                      # the letters sit clear of the artwork
-    wf = frustum_width(hf, std["sim"], strip=True)
-    draw_frustum(_ax(f, 0.02, xlab, wf, hf), std, T_STAR, every=ONEROW_EVERY, strip=True, strong=True)
+    draw_frustum(_ax(f, 0.02, xlab, g["wf"], hb), std, T_STAR, every=ONEROW_EVERY, strip=True, strong=True)
     _letter(f, 0.02, ytxt, "(a)")
-    x = 0.02 + wf + 0.30                   # past the strip's t* label and the waterfall's own t labels
-    draw_waterfall(_ax(f, x, xlab, 0.56, hw), std["obs"], t_star=T_STAR, ticks="compact")
-    x += 0.56 + 0.30                       # the t* pointer, then (b)'s t labels
-    draw_waterfall(_ax(f, x, xlab, 0.50, hw), blk["obs"], hidden=(span["first_hidden"], span["last_hidden"]),
-                   ticks="compact")
-    _letter(f, x - 0.16, ytxt, "(b)")
-    x += 0.50 + 0.26                       # the hidden bracket and its label
-    _letter(f, x - 0.02, ytxt, "(c)")      # the ray counts go BELOW these strips, so the letter row is free
-    _strips(f, x, xlab, 0.32, 0.04, hw, matched, size=7.0, below=True)
-    x += 3 * 0.32 + 2 * 0.04 + 0.10
-    wd = 5.48 - x
-    hd = wd / frustum_width(1.0, eight["sim"], crop=True)
-    draw_frustum(_ax(f, x, xlab + (hw - hd) / 2, wd, hd), eight, T_STAR, cells=app, trail=False,
-                 arrows=False, crop=True, disc_alpha=DISC_ALPHA_CELLS)
-    _letter(f, x, ytxt, "(d)")
+    draw_waterfall(_ax(f, g["x_wa"], xlab, ONEROW["wf_a"], hb), std["obs"], t_star=T_STAR, ticks="compact")
+    draw_waterfall(_ax(f, g["x_wb"], xlab, ONEROW["wf_b"], hb), blk["obs"], ticks="compact",
+                   hidden=(span["first_hidden"], span["last_hidden"]))
+    _letter(f, g["x_wb"] - 0.16, ytxt, "(b)")
+    _letter(f, g["x_strips"] - 0.02, ytxt, "(c)")   # the ray counts go BELOW the strips, so this row is free
+    _strips(f, g["x_strips"], xlab, ONEROW["strip"], ONEROW["strip_gap"], hb, matched, size=7.0, below=True)
+    draw_frustum(_ax(f, g["x_d"], xlab + (hb - g["hd"]) / 2, g["wd"], g["hd"]), eight, T_STAR, cells=app,
+                 trail=False, arrows=False, crop=True, disc_alpha=DISC_ALPHA_CELLS)
+    _letter(f, g["x_d"], ytxt, "(d)")
     ps.save(f, HERE / "composite_onerow")
     plt.close(f)
 
@@ -562,19 +595,21 @@ def main(all_: bool = False):
     composite(std, blk, span, eight, matched, app)
 
     # the one-row alternative and ITS pieces, at the sizes that layout uses (pieces_onerow/)
-    one, hb = dict(into=PIECES_ONEROW), 1.34          # the band height every one-row piece is drawn at
-    for every in (ONEROW_EVERY, 6):                   # the two ray densities asked for: 26 and 21 of 128
-        piece(f"standard_frustum_light_every{every}_strip", frustum_width(hb, std["sim"], strip=True), hb,
+    one = dict(into=PIECES_ONEROW)
+    g = onerow_geometry(std["sim"], sims["dw-8ray"])   # the sizes the one-row composite places
+    hb = g["band"]
+    for every in (ONEROW_EVERY, 6):                    # the two ray densities asked for: 26 and 21 of 128
+        piece(f"standard_frustum_light_every{every}_strip", g["wf"], hb,
               lambda ax: draw_frustum(ax, std, T_STAR, every=every, strip=True, strong=True), **one)
-    piece("standard_waterfall", 0.56, hb,
+    piece("standard_waterfall", ONEROW["wf_a"], hb,
           lambda ax: draw_waterfall(ax, std["obs"], t_star=T_STAR, ticks="compact"), **one)
-    piece("blink_waterfall", 0.50, hb,
+    piece("blink_waterfall", ONEROW["wf_b"], hb,
           lambda ax: draw_waterfall(ax, blk["obs"], hidden=(span["first_hidden"], span["last_hidden"]),
                                     ticks="compact"), **one)
     for inst in NRAY:
-        piece(f"nray_waterfall_{inst.split('-')[1]}_matched", 0.32, hb,
+        piece(f"nray_waterfall_{inst.split('-')[1]}_matched", ONEROW["strip"], hb,
               lambda ax: draw_waterfall(ax, matched[inst], ticks=False, arrow=False), **one)
-    piece("categorical_frustum_8ray_crop", 1.18, 1.18 / frustum_width(1.0, sims["dw-8ray"], crop=True),
+    piece("categorical_frustum_8ray_crop", g["wd"], g["hd"],
           lambda ax: draw_frustum(ax, eight, T_STAR, crop=True, **cat), **one)
     composite_onerow(std, blk, span, eight, matched, app)
     if all_:
@@ -587,9 +622,14 @@ def main(all_: bool = False):
                                    "across the top, (c) 16/8/5-ray matched strips and (d) the cells below; "
                                    "5.5 x 3.3 in (two bands)",
                       "composite_onerow": f"composite_onerow.pdf/.png: the same four panels in ONE band, "
-                                          f"5.5 x 1.75 in, its frustum drawing every {ONEROW_EVERY}-th ray "
-                                          f"(stronger weights) and its waterfalls carrying a compact one-row "
-                                          f"axis; pieces at those sizes in pieces_onerow/",
+                                          f"5.5 x 1.79 in, its frustum drawing every {ONEROW_EVERY}-th ray "
+                                          f"(heavier weights) and its waterfalls carrying a two baseline "
+                                          f"compact axis; sizes and gaps in ONEROW / onerow_geometry, "
+                                          f"pieces at those sizes in pieces_onerow/",
+                      "onerow_panels_in": {"frustum": 1.20, "waterfall_a": ONEROW["wf_a"],
+                                           "waterfall_b": ONEROW["wf_b"], "nray_strip": ONEROW["strip"],
+                                           "nray_strip_gap": ONEROW["strip_gap"], "cells": 0.90,
+                                           "band_height": ONEROW["band"]},
                       "pieces": sorted(p.stem for p in PIECES.glob("*.pdf")),
                       "pieces_onerow": sorted(p.stem for p in PIECES_ONEROW.glob("*.pdf")),
                       "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays "

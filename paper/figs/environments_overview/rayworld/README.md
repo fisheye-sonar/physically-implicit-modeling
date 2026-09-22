@@ -20,21 +20,25 @@ Regenerate (deterministic):
 | file | what it is |
 |---|---|
 | `composite.pdf` / `.png` | **the figure**, 5.5 x 3.26 in, two bands: top (a) frustum view with frame t* along the far plane and its waterfall, (b) blink waterfall; bottom (c) the same world through 16 / 8 / 5 rays, (d) the appearance cells. Panel letters only. |
-| `composite_onerow.pdf` / `.png` | the **alternative**: the same four panels in ONE band, 5.5 x 1.69 in. Everything is smaller (see the layout note below); use it where the figure must be short. |
+| `composite_onerow.pdf` / `.png` | the **alternative**: the same four panels in ONE band, 5.5 x 1.79 in. Everything is smaller (see the layout note below); use it where the figure must be short. |
 | `make_figure.py` | the script |
 | `selection.json` | sidecar: seed, t*, every sequence index and generator seed, rule survivors, radii, reflectivities, positions and velocities at t*, the blackout span, the matched-render note, the cells at t*, the cell-colour seed, the rule text, the drawing constants, both piece lists |
 | `README.md` | this file |
 
 ### How the one-row variant differs (layout only; same data, same sequences, same conventions)
 
-The panels are 1.34 in tall. The waterfalls put their range and their axis name on ONE row under the panel
-("0   ray   127", `ticks="compact"`) instead of a tick row plus a label row, and that reclaimed height goes
-to (a), whose width follows the band height at equal aspect: the frustum is 1.22 x 1.34 in, and it draws
-**every 5th ray (26 of 128) at heavier weights** (hit rays lw 0.62 / alpha 0.95, misses 0.42 / 0.52) because
-the two-band composite's 43 thin pale rays disappear at this size. The rest: waterfalls 0.56 and 0.50 in
-wide (all 40 frames, shorter rows), the three N-ray strips 0.32 in each with their ray counts **below** them
-(7 pt) so the letter row stays free, (d) the hard crop at 1.18 x 0.90 in centred in the band, and the panel
-letters 0.10 in above the artwork. Same sequences, same t*, same drawing rules as the two-band composite.
+All the sizes and gaps live in `ONEROW` / `onerow_geometry` (one place, so the composite and the
+`pieces_onerow/` exports cannot drift). The band is 1.32 in tall and the panels are, left to right:
+frustum **1.20**, (a) waterfall **0.56**, (b) blink **0.50**, (c) three strips of **0.30** with 0.105 in
+between them, (d) the hard crop at **0.90 x 0.68**, centred in the band. The frustum draws **every 5th ray
+(26 of 128) at heavier weights** (hit rays lw 0.55 / alpha 0.85, misses 0.36 / 0.42 — clearly stronger than
+the two-band composite's 0.5 / 0.7 and 0.3 / 0.22, which disappear at this size). Each waterfall carries a
+compact two baseline axis: the range ("0", "127") 2 pt under the panel and "ray" centred 11 pt under it at
+8 pt, with the (c) strips' ray counts on that same lower baseline. **Every label beside a panel is offset in
+points, not in axes fractions**, so a 0.5-in-wide panel keeps the same clearance a 3-in one gets: the t\*
+caret sits 5 pt off the panel edge with its label at 11 pt, and the blink bracket 4 pt with "hidden" at
+9 pt. Panel letters are 0.10 in above the artwork. Same sequences, same t\*, same drawing rules as the
+two-band composite.
 
 ## pieces/ (PDF; the PNG previews beside them are gitignored)
 
@@ -54,11 +58,11 @@ letters 0.10 in above the artwork. Same sequences, same t*, same drawing rules a
 
 ## pieces_onerow/ (PDF; PNGs gitignored by this folder's own `.gitignore`)
 
-The same elements at the sizes `composite_onerow` uses, all 1.34 in tall: `standard_frustum_light_every5_strip`
-and `standard_frustum_light_every6_strip` (1.22 in wide, the two ray densities tried — **every 5th is the one
+The same elements at the sizes `composite_onerow` uses, all 1.32 in tall: `standard_frustum_light_every5_strip`
+and `standard_frustum_light_every6_strip` (1.20 in wide, the two ray densities tried — **every 5th is the one
 in the composite**: 26 rays still read as a fan while every individual ray resolves, where every 6th at 21
 rays starts to look sparse; `ONEROW_EVERY` switches it), `standard_waterfall` (0.56), `blink_waterfall`
-(0.50), `nray_waterfall_{16,8,5}ray_matched` (0.32 each) and `categorical_frustum_8ray_crop` (1.18 x 0.90).
+(0.50), `nray_waterfall_{16,8,5}ray_matched` (0.30 each) and `categorical_frustum_8ray_crop` (0.90 x 0.68).
 `key_frustum` is size independent and lives in `pieces/` only. The strips here carry no ray-count label; the
 composite adds it below them.
 
@@ -109,8 +113,9 @@ other disc lit in every frame, the blinking disc lit whenever visible and travel
   border; time runs downward (row 0 at the top). In the standard waterfall, row t* carries a thin light
   outline (the canonical neutral marker colour `pim.figures.waterfall.EDIT_LINE`) and a pointer; the strip
   along the far plane is that row, its pixel k centred on ray k's crossing of the far plane. The ray axis is
-  stated under every waterfall: as ticks plus a "ray" label in `composite`, and as one compact row
-  ("0   ray   127") in `composite_onerow`; in (c) the ray count is the label under each strip.
+  stated under every waterfall: as ticks plus a "ray" label in `composite`, and as a compact two baseline
+  axis (the range, then "ray" centred below it) in `composite_onerow`; in (c) the ray count is the label
+  under each strip.
 - Blink markers are the 0.5-grey pixels on the edge ray (ray 127 for disc 1) the frame before the blackout and
   on its last hidden frame; the bracket spans the hidden frames only, the word "hidden" centred on it.
 - Appearance cells (panel d): two positions share a cell when a lone disc there lights the same rays; the
@@ -148,8 +153,10 @@ discs' cells are runs 2 to 3 (disc 0, far, y 9.9) and 3 to 6 (disc 1, near, y 5.
 - The composite is 5.5 x about 3.3 in: the frustum's size is tied to the top band's height by the equal
   aspect, so the bigger frustum asked for in round 3 made the figure about 0.3 in taller than round 2's.
   `hf` in `composite()` is the one number to change.
-- In `composite_onerow` the frustum's discs are about 0.10 in across and the partition's cells about 0.1 in
+- In `composite_onerow` the frustum's discs are about 0.10 in across and the partition's cells about 0.08 in
   wide: legible in print, but the two-band `composite` is the one to use where there is room. A single band
   cannot hold five annotated groups at 5.5 in without that shrink, since the frustum's width grows with the
-  band's height — which is also why making (a) bigger in round 5 took the one-row figure from 1.55 to
-  1.69 in tall even after the compact axis row gave back a tick row's worth of height.
+  band's height — which is also why making (a) bigger in round 5, and giving every label its clearance in
+  round 6, took the one-row figure from 1.55 to 1.79 in tall. The label clearances came out of (d), the
+  panel that carries the least detail: it went 1.18 → 0.90 in wide over round 6. If (d) needs to be bigger
+  again, the room has to come from the gaps in `ONEROW["gaps"]` or from the band height.
