@@ -1,6 +1,85 @@
 {
  "seed": 1,
  "edit_object": 0,
+ "filter": {
+  "instance": "dw-5ray",
+  "changed_rays": [
+   0,
+   3
+  ],
+  "rule": "drawn only if the teleport changes at least one ray of the clean 5-ray frame at the edit frame"
+ },
+ "differing_rays": {
+  "Standard": [
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   76,
+   77,
+   78,
+   79,
+   80,
+   81,
+   82,
+   83,
+   84,
+   85,
+   86,
+   87
+  ],
+  "Blink": [
+   25,
+   26,
+   27,
+   28,
+   29,
+   30,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   76,
+   77,
+   78,
+   79,
+   80,
+   81,
+   82,
+   83,
+   84,
+   85,
+   86,
+   87
+  ],
+  "16-ray": [
+   2,
+   10,
+   11
+  ],
+  "8-ray": [
+   1,
+   5
+  ],
+  "5-ray": [
+   0,
+   3
+  ]
+ },
  "arms": {
   "Standard": {
    "cont": {

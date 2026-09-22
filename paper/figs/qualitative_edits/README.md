@@ -1,6 +1,7 @@
 # qualitative_edits — one matched scenario, every ray-world variant, next-step edits
 
-`make_figure.py --seed <k>` → `qualitative_edits_seed<k>.{pdf,png,json}` beside it.
+`make_figure.py --seed <k>` → `qualitative_edits_seed<k>.{pdf,png,json}` beside it; `make_figure.py --passing 6` regenerates
+the whole set (the first passing seed beside the script, the next five under `more_seeds/seed<k>/`).
 
 **Columns** are the variants in `VARIANTS` (display name, instance, run): Standard, Blink, 16-ray,
 8-ray, 5-ray by default. **The scenario is the same world in every column**: one two-disc
@@ -11,15 +12,41 @@ Standard and Blink columns show the same positions at their radius 0.5, the ray 
 The Blink column carries the blackout schedule the seed implies for that instance, forced visible
 from frame EF−1 on so the edit is observable.
 
+**How scenarios are matched across columns.** One scenario = one world (positions, velocities, teleport) generated under the
+tightest geometry (radius 1.0) and rendered under EACH instance's own renderer (radius 0.5 / 128 rays for dw-noiseless and
+dw-blink; radius 1.0 / N rays for the ray family). Positions are identical across columns; only the rendering differs.
+
 **Rows** per column: the last `--context` (8) observed frames above the edit, time downward, as
 fed to the model; then single NEXT-STEP frames (not rollouts): unedited, the clean ground truth,
 and PI / GS / IM at each run's scored best arm (`scores.json`) on the continuous target (full
 state, Cartesian block) and on the categorical target (factorised appearance, frustum block).
 As everywhere in the project the write targets the PRE-dynamics state (`bench.full_state_pair`),
 and the bench is built by `bench.bench_from_arrays`, the scorer's own construction, so what is
-drawn is what is scored. `--find` advances the seed until the teleport changes a factorised tile
-on every variant (otherwise a categorical row asks for no change there; the sidecar JSON records
-which arms were used and whether each variant's tile changed).
+drawn is what is scored.
+
+## 2026-09-21, round 4: the scenario filter and the re-seeded set
+
+- **Filter (Sevan: "only show examples which change for all of them").** A seed is drawn only if its teleport VISIBLY changes
+  the 5-ray observation: the scenario is rendered under the dw-5ray config and the clean post-edit frame at the edit frame must
+  differ from the clean unedited frame on at least one ray. The quantity is the scorer's own differing-ray zone
+  (`pim.metrics.zone_editability.build_edit_zones` inside `bench.bench_from_arrays`, the support of the Edit Index) under the
+  dw-5ray renderer: `visible_change(seed)` (CPU, no model; `differing_rays` for any instance, `passing_seeds(n)` for the first
+  `n` passing seeds, `FILTER_INST = "dw-5ray"`). `--find` now advances the seed until it passes this filter (until this date it
+  advanced until the teleport changed a categorical tile on every variant; that condition is still checked and printed as a
+  warning, and every drawn seed satisfies it too). Of seeds 0-39, 27 pass; the 13 that fail (3, 4, 6, 11, 13, 14, 15, 26, 28,
+  30, 31, 32, 33) are teleports that stay inside the disc's own 5-ray ray(s).
+- **The set is the first six passing seeds: 0, 1, 2, 5, 7, 8.** Slot → generator seed: beside the script (the paper's
+  `qualitative_edits_seed0_paired.pdf`) → seed 0 (unchanged); `more_seeds/` slots 1-5 → seeds 1, 2, 5, 7, 8 (folders are named
+  by the generator seed). Until this date the slots held seeds 0-5; seeds 3 and 4 fail the filter (their disc stays inside
+  one 5-ray ray) and their folders were removed, seeds 7 and 8 take their places. Rays on which the clean edited and unedited
+  frames differ, per seed: seed 0: 5-ray 2 (rays 0, 4), 128-ray Standard 28; seed 1: 2 (0, 3), 26; seed 2: 4 (1, 2, 3, 4), 44;
+  seed 5: 3 (0, 3, 4), 28; seed 7: 3 (0, 1, 3), 53; seed 8: 1 (ray 1), 7. All six change a categorical tile on every variant.
+  The main-text figure (`paper/figs/qualitative_main/`) draws seeds 0, 1, 2 of this set.
+- **Caches and sidecars.** All six `_catim` caches were rebuilt (identical predictions; each column now also carries
+  `cont["differing_rays"]`, its own renderer's changed rays). The sidecar JSON gained `filter` (instance, changed 5-ray rays,
+  the rule) and `differing_rays` per variant. `bench_arrays_for` is the model-free half of `bench_for`, so the filter builds the
+  scorer's bench without loading a model. `build(seed, context, variants=None)` still accepts another variant list (the
+  main-text figure's 128-ray member) and always generates the scenario under the appendix's base geometry (`base_config`).
 
 Drawing follows the canonical waterfall (`pim/figures/waterfall.py`): `gray` on the dark panel
 background, fixed 0–1 range, nearest interpolation; the page is white, the text black; no gridlines;
@@ -53,10 +80,8 @@ re-renders without reloading the five models. Nothing on the figure names the en
 - **Blank cells.** A block with no arm for an editor (`best_arm` None) leaves its spot fully empty — no panel, no
   frame, no strip; the row label stays (Sevan, round 3): today the categorical IM on Standard (dw-noiseless) and Blink
   (dw-blink), whose table cells are blank; the ray family (16 / 8 / 5-ray) carries the categorical arm (points 6 / 6 / 5).
-- Caches are `.scratch/qualitative_edits_catim_seed<k>_ctx8.pkl` (seeds 0..5, 2026-09-21); the `_guarded` caches
-  hold the old categorical IM frames and are not read any more. `build(seed, context, variants=None)` accepts
-  another variant list (the main-text figure uses it for the 128-ray Standard); the scenario is always generated
-  under the appendix's base geometry, so an extra variant sees the same world as the appendix columns.
+- Caches are `.scratch/qualitative_edits_catim_seed<k>_ctx8.pkl` (seeds 0, 1, 2, 5, 7, 8 since round 4; 3 and 4 remain on
+  disk but are not read); the `_guarded` caches hold the old categorical IM frames and are not read any more.
 
 ## Which arm is drawn (2026-09-19)
 
@@ -68,6 +93,6 @@ variants is a different (more destructive) write than the one whose numbers the 
 
 ## more_seeds/
 
-`more_seeds/seed<k>/` holds the same figure for other seeds (k = 1…5: `--seed <k> --out-dir more_seeds/seed<k>`,
-file names `qualitative_edits_seed<k>`), to see how much the picture depends on the drawn scenario. Same arms, same models — only the
-scenario (discworld) or the sampled bench cases (Othello) change.
+`more_seeds/seed<k>/` holds the same figure for the other passing seeds (k = 1, 2, 5, 7, 8: written by `--passing 6`, or one
+at a time by `--seed <k> --out-dir more_seeds/seed<k>`; file names `qualitative_edits_seed<k>`), to see how much the picture
+depends on the drawn scenario. Same arms, same models; only the scenario changes.

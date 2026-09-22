@@ -90,6 +90,19 @@ othello (moved from environments_overview/othello). **PRUNED per Sevan** ("drop 
 = the chosen figure(s) + at most one alternative + script(s) + README + sidecars; per-element PDFs under pieces/ (PNG previews
 gitignored); dropped variants regenerable via script flags (git history keeps them). Worker briefs moved to `paper/figs/briefs/`.
 **Open for Sevan:** categorical IM for dw-noiseless / dw-blink would need two ~40-min map fits (a scoring job, not started).
+**ROUND 4 (17:15 → 19:40 PT) COMPLETE, committed.** Main qualitative figure `composite_final`: columns Standard (continuous) Examples
+1–2 (dw-noiseless), 128-ray (categorical) Example 3 (dw-128ray, categorical IM), 5-ray (categorical) the SAME Example 3 (dw-5ray);
+every drawn scenario passes the 5-ray visibility filter (the scorer's differing-ray zone under the dw-5ray renderer non-empty;
+27 of seeds 0–39 pass; Examples = seeds 0 / 1 / 2). Appendix Rayworld figure re-seeded to the first six passing seeds
+(0, 1, 2, 5, 7, 8 → seed0 + more_seeds/1,2,5,7,8; seeds 3 / 4 dropped); both READMEs carry the matching explanation (one world,
+rendered under each instance's own radius / ray count). Trends: `by_rays` = one full-width overlaid panel, no ND. Predictive
+quality: rayworld = (a) Standard (b) Blink (c) 5-ray × 2 sequences × GT / Prediction / Difference (canonical signed-error map;
+Blink and 5-ray free-runs via the canonical bench calls, cached `.scratch/predictive_quality_<inst>.npz`, `compute_rayworld.py`)
+— ⚠ the random 5-ray pair (cases 20, 26) shows large free-run misses (the disc never moves to its new ray); flagged to Sevan,
+seed is the knob; othello = three examples per variant stacked (full page).
+**Figure work is DONE pending Sevan's two hand-drawn figures. NEXT: the paper text** — Table 2 + §Results to the guarded arms and the
+categorical map (+0.637 / +0.823 / +0.866 / +0.913), seed ± from the families, "one seed / 780k steps" wording, captions from the
+folder READMEs (selection rules, arms, guard, which model each panel uses), the empty appendix sections the figures now fill.
 **Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
 Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
 captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.

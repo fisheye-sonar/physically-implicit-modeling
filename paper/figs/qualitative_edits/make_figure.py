@@ -16,9 +16,14 @@ On a categorical block the IM write goes through the block's OWN inverse map (on
 Cartesian velocity, 2026-09-20); a block with no IM arm (Standard, Blink) draws a blank cell.
 Output: ``qualitative_edits_seed<seed>.{pdf,png}`` beside this script.
 
+The scenario filter (2026-09-21): a seed is drawn only if its teleport changes at least one ray of the clean
+5-ray frame at the edit frame (``visible_change``: the scorer's differing-ray zone under the dw-5ray renderer
+is non-empty), so every column of every figure shows an edit that is visible even on the coarsest sensor.
+
     python paper/figs/qualitative_edits/make_figure.py --seed 7
-    python paper/figs/qualitative_edits/make_figure.py --seed 7 --find   # advance the seed until the
-                                                         # teleport changes a categorical tile everywhere
+    python paper/figs/qualitative_edits/make_figure.py --seed 7 --find   # advance the seed until it passes the filter
+    python paper/figs/qualitative_edits/make_figure.py --passing 6       # the first six passing seeds: the first beside
+                                                         # this script, the rest under more_seeds/seed<k>/
 """
 from __future__ import annotations
 
@@ -26,6 +31,7 @@ import argparse
 import contextlib
 import dataclasses
 import json
+import pickle
 import sys
 from pathlib import Path
 
@@ -100,12 +106,56 @@ def render_under(sc: dict, cfg: SimConfig, seed: int) -> tuple[np.ndarray, np.nd
     return obs.astype(np.float32), clean.astype(np.float32), vis
 
 
-def bench_for(model, sc: dict, obs, clean, vis, sim: dict, target: str, basis: str):
+def bench_arrays_for(sc: dict, obs, clean, vis, sim: dict, target: str, basis: str) -> dict:
+    """The scorer's bench construction (``bench_from_arrays``: targets, change mask, ray zones) for the one
+    scenario; no model involved."""
     n1 = lambda x: np.asarray(x)[None]  # noqa: E731
-    a = dwb.bench_from_arrays(n1(obs), n1(sc["pos"]).astype(np.float32), n1(sc["vel"]).astype(np.float32),
-                              np.array([sc["edit_object"]]), n1(clean), sim,
-                              None if vis is None else n1(vis), target=target, basis_name=basis)
+    return dwb.bench_from_arrays(n1(obs), n1(sc["pos"]).astype(np.float32), n1(sc["vel"]).astype(np.float32),
+                                 np.array([sc["edit_object"]]), n1(clean), sim,
+                                 None if vis is None else n1(vis), target=target, basis_name=basis)
+
+
+def bench_for(model, sc: dict, obs, clean, vis, sim: dict, target: str, basis: str):
+    a = bench_arrays_for(sc, obs, clean, vis, sim, target, basis)
     return dwb.bench_of(model, a), a
+
+
+def sim_dict(cfg: SimConfig, seed: int) -> dict:
+    return dataclasses.asdict(dataclasses.replace(cfg, seed=int(seed), n_objects=N_OBJ))
+
+
+def base_config(cfgs: dict | None = None) -> SimConfig:
+    """The geometry every scenario is generated under: the tightest among ``VARIANTS`` (radius 1.0, the
+    coarse-ray family's), so the world is valid under every variant."""
+    cfgs = cfgs or {inst: sim_config(inst) for _, inst, _ in VARIANTS}
+    return max((cfgs[inst] for _, inst, _ in VARIANTS), key=lambda c: c.radius)
+
+
+# ── the scenario filter (Sevan, 2026-09-21: "only show examples which change for all of them") ──
+FILTER_INST = "dw-5ray"      # the coarsest renderer: a scenario is drawn only if its teleport changes THIS frame
+
+
+def differing_rays(sc: dict, cfg: SimConfig, seed: int) -> np.ndarray:
+    """The rays on which the clean post-edit frame at EF differs from the clean unedited frame, under
+    ``cfg``'s renderer: the scorer's own ``differing`` zone (``build_edit_zones`` inside
+    ``bench_from_arrays``), the support the Edit Index is scored over. Empty: the teleport is invisible."""
+    obs, clean, vis = render_under(sc, cfg, seed)
+    a = bench_arrays_for(sc, obs, clean, vis, sim_dict(cfg, seed), *CONT)
+    return np.flatnonzero(a["zones"].differing[0])
+
+
+def visible_change(seed: int, inst: str = FILTER_INST) -> np.ndarray:
+    """``differing_rays`` of the seed's scenario under ``inst``'s renderer (CPU, no model)."""
+    return differing_rays(scenario(seed, base_config()), sim_config(inst), seed)
+
+
+def passing_seeds(n: int, start: int = 0, inst: str = FILTER_INST, max_tries: int = 500) -> list[int]:
+    """The first ``n`` seeds from ``start`` whose teleport changes at least one ray of the clean frame under
+    ``inst`` (default: the 5-ray renderer). The selection rule of every drawn scenario since 2026-09-21."""
+    out = [s for s in range(start, start + max_tries) if len(visible_change(s, inst))][:n]
+    if len(out) < n:
+        raise SystemExit(f"only {len(out)} of {n} seeds in [{start}, {start + max_tries}) change the {inst} frame")
+    return out
 
 
 def best_arm(scores: dict, block: str, editor: str) -> dict | None:
@@ -142,7 +192,8 @@ def predictions(model, run_dir: Path, inst: str, sc: dict, obs, clean, vis, sim:
     cache = run_dir / "probes"
     cx = lambda m: float(np.where(np.asarray(m))[0].mean()) if np.asarray(m).any() else float("nan")  # noqa: E731
     out = {"unedited": dwa.unsteered_rollout(model, b)[0, 0], "changes_tile": bool(a["change_mask"].any()),
-           "ghost_x": cx(a["zones"].ghost[0]), "target_x": cx(a["zones"].target[0])}   # ray centres at the edit frame
+           "ghost_x": cx(a["zones"].ghost[0]), "target_x": cx(a["zones"].target[0]),   # ray centres at the edit frame
+           "differing_rays": np.flatnonzero(a["zones"].differing[0])}                  # the Edit Index support
     arm = {ed: best_arm(scores, target if target != "full" else basis, ed) for ed in EDITORS}
     lin = dwa.fit_probes(model, target=target, family="linear", basis_name=basis, cache_dir=cache,
                          log=None, require_cached=True, **recipe)
@@ -189,19 +240,19 @@ def build(seed: int, context: int, variants=None) -> dict:
     variant — the main text's 128-ray Standard — sees the same world as the appendix columns of that seed."""
     variants = list(VARIANTS if variants is None else variants)
     cfgs = {inst: sim_config(inst) for _, inst, _ in VARIANTS + variants}
-    base = max((cfgs[inst] for _, inst, _ in VARIANTS), key=lambda c: c.radius)   # the tightest geometry hosts the scenario
-    sc = scenario(seed, base)
+    sc = scenario(seed, base_config(cfgs))
     cols = {}
     for name, inst, run in variants:
         run_dir = REPO / "runs" / run
         model, _ = load_checkpoint(run_dir / "best_model.pt", device=DEV)
         model.eval()
         obs, clean, vis = render_under(sc, cfgs[inst], seed)
-        sim = dataclasses.asdict(dataclasses.replace(cfgs[inst], seed=int(seed), n_objects=N_OBJ))
+        sim = sim_dict(cfgs[inst], seed)
         cols[name] = {"context": obs[EF - context:EF], "gt": clean[EF],
                       "cont": predictions(model, run_dir, inst, sc, obs, clean, vis, sim, CONT),
                       "cat": predictions(model, run_dir, inst, sc, obs, clean, vis, sim, CAT)}
-        print(f"  {name:<9} rays {obs.shape[1]:>3}  fac tile changes: {cols[name]['cat']['changes_tile']}  "
+        print(f"  {name:<9} rays {obs.shape[1]:>3}  changed rays {len(cols[name]['cont']['differing_rays']):>3}  "
+              f"fac tile changes: {cols[name]['cat']['changes_tile']}  "
               f"arms cont {cols[name]['cont']['arms']}  cat {cols[name]['cat']['arms']}", flush=True)
         del model
         torch.cuda.empty_cache()
@@ -377,15 +428,49 @@ def draw(fig_data: dict, context: int, out: Path, *, mode: str = "obs", diff_sca
     plt.close(fig)
 
 
+def cached(seed: int, context: int, redraw: bool) -> dict:
+    """One seed's predictions: the ``.scratch/`` cache when ``redraw`` and it exists, else built (GPU, one model at
+    a time) and cached. ``_catim`` (2026-09-21): the categorical blocks' IM through the categorical map."""
+    cache = REPO / ".scratch" / f"qualitative_edits_catim_seed{seed}_ctx{context}.pkl"
+    if redraw and cache.exists():
+        return pickle.load(open(cache, "rb"))
+    data = build(seed, context)
+    cache.parent.mkdir(exist_ok=True)
+    pickle.dump(data, open(cache, "wb"))
+    return data
+
+
+def render(data: dict, context: int, out_dir: Path, **kw) -> Path:
+    """All five modes of one seed's figure and its sidecar, into ``out_dir``."""
+    seed = data["seed"]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out = out_dir / f"qualitative_edits_seed{seed}"
+    draw(data, context, out, **kw)
+    for mode in ("diff", "overlay", "abs", "paired"):
+        draw(data, context, out.with_name(f"{out.name}_{mode}"), mode=mode, **kw)
+    if not all(c["cat"]["changes_tile"] for c in data["cols"].values()):
+        print("⚠ on some variant the teleport does not change a factorised tile: the categorical rows there ask for no change")
+    json.dump({"seed": seed, "edit_object": data["edit_object"],
+               "filter": {"instance": FILTER_INST, "changed_rays": visible_change(seed).tolist(),
+                          "rule": "drawn only if the teleport changes at least one ray of the clean 5-ray frame at the edit frame"},
+               "differing_rays": {n: c["cont"]["differing_rays"].tolist() for n, c in data["cols"].items()},
+               "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
+               "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
+              open(out.with_suffix(".json"), "w"), indent=1)
+    print("→", out.with_suffix(".pdf"), "(+ _diff, _overlay, _abs, _paired) and .png / .json", flush=True)
+    return out
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--context", type=int, default=8, help="frames of context above the edit")
     ap.add_argument("--find", action="store_true",
-                    help="advance the seed until the teleport changes a categorical tile on every variant")
-    ap.add_argument("--max-tries", type=int, default=50)
+                    help="advance the seed until it passes the scenario filter (the teleport changes the 5-ray frame)")
+    ap.add_argument("--passing", type=int, default=0, metavar="N",
+                    help="draw the first N seeds that pass the filter: the first beside this script, the rest under more_seeds/seed<k>/")
     ap.add_argument("--out-dir", default=None, help="write the outputs here instead of beside this script")
-    ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions for this seed (.scratch/)")
+    ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions (.scratch/) where they exist")
     ap.add_argument("--diff-scale", type=float, default=1.0, help="± range of the error map in the _diff variant")
     ap.add_argument("--tint-gamma", type=float, default=1.0, help="exponent on |error|/scale for the overlay tints")
     ap.add_argument("--no-locators", action="store_true", help="drop the cyan (origin) / pink (destination) lines")
@@ -393,36 +478,13 @@ if __name__ == "__main__":
                     help="tint by the RAW prediction − truth (the scorer's quantity; predictions below 0 or above 1 "
                          "count) instead of the clipped, visible one")
     a = ap.parse_args()
-    import pickle
-    seed = a.seed
-    for attempt in range(a.max_tries if a.find else 1):
-        print(f"seed {seed}", flush=True)
-        # per seed (--find advances it); `_catim` (2026-09-21): the categorical blocks' IM through the categorical map
-        cache = REPO / ".scratch" / f"qualitative_edits_catim_seed{seed}_ctx{a.context}.pkl"
-        if a.redraw and cache.exists():
-            data = pickle.load(open(cache, "rb"))
-        else:
-            data = build(seed, a.context)
-            cache.parent.mkdir(exist_ok=True)
-            pickle.dump(data, open(cache, "wb"))
-        ok = all(c["cat"]["changes_tile"] for c in data["cols"].values())
-        if ok or not a.find:
-            break
-        seed += 1
-    else:
-        raise SystemExit("no seed in range changes a categorical tile on every variant")
-    if not ok:
-        print("⚠ on some variant the teleport does not change a factorised tile — the categorical rows there "
-              "ask for no change (use --find)")
-    out_dir = Path(a.out_dir) if a.out_dir else HERE
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out = out_dir / f"qualitative_edits_seed{seed}"
     kw = dict(diff_scale=a.diff_scale, tint_gamma=a.tint_gamma, locators=not a.no_locators, raw_error=a.raw_error)
-    draw(data, a.context, out, **kw)
-    for mode in ("diff", "overlay", "abs", "paired"):
-        draw(data, a.context, out.with_name(f"{out.name}_{mode}"), mode=mode, **kw)
-    json.dump({"seed": seed, "edit_object": data["edit_object"],
-               "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
-               "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
-              open(out.with_suffix(".json"), "w"), indent=1)
-    print("→", out.with_suffix(".pdf"), "(+ _diff, _overlay, _abs, _paired) and .png / .json")
+    if a.passing:                                  # the appendix set: slot k = the k-th passing seed
+        seeds = passing_seeds(a.passing)
+        dirs = [HERE] + [HERE / "more_seeds" / f"seed{s}" for s in seeds[1:]]
+    else:
+        seeds = passing_seeds(1, start=a.seed) if a.find else [a.seed]
+        dirs = [Path(a.out_dir) if a.out_dir else HERE]
+    for seed, out_dir in zip(seeds, dirs):
+        print(f"seed {seed}  changed 5-ray rays {visible_change(seed).tolist()}", flush=True)
+        render(cached(seed, a.context, a.redraw), a.context, out_dir, **kw)

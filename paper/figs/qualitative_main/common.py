@@ -3,13 +3,16 @@
 The two appendix scripts are loaded as modules so their drawing helpers (``_panel``, ``error``,
 ``_blank``, ``draw_board``, ``mark``) draw every strip and board here too; nothing is re-implemented.
 Predictions are read from the appendix caches in ``.scratch/`` (``_catim``: the categorical blocks'
-IM through the categorical inverse map, 2026-09-21). The only metric touched is the canonical per-case
-Othello Edit Index (``pim.metrics.set_editability.edit_index_legal``), used by the "typical case" rule.
+IM through the categorical inverse map, 2026-09-21). Scenarios are chosen by the appendix's filter
+(``passing_seeds``: the teleport changes at least one ray of the clean 5-ray frame). The only metric touched
+is the canonical per-case Othello Edit Index (``pim.metrics.set_editability.edit_index_legal``), used by the
+"typical case" rule.
 
-    .pim/bin/python paper/figs/qualitative_main/common.py --build-128ray 0 1 2 3 4 5   # the A2 caches (GPU)
+    .pim/bin/python paper/figs/qualitative_main/common.py --build-128ray 2   # the 128-ray cache of a seed (GPU)
 """
 from __future__ import annotations
 
+import functools
 import importlib.util
 import json
 import pickle
@@ -45,26 +48,40 @@ OTH_RUNS = dict(oth.VARIANTS)                                              # dis
 HERO_SEEDS = (0, 1, 2)      # R3: the first three cached seeds whose edited disc is visible before the edit
 EDITORS = ("PI", "GS", "IM")
 GUTTER_IN = 0.52            # the row-label gutter both panels share (widest label: "Adjacent" / "Unedited" at 8 pt, 0.44 in)
-# The main text's A2 Rayworld model: the 128-ray member of the ray family (radius 1.0), the one model whose
-# categorical block carries every editor's arm, the categorical inverse map included.
-A2_VARIANT = ("Standard", "dw-128ray", "ray_ablation/L-dw-128ray-20m")
-SOURCES = {"appendix": "qualitative_edits_catim_seed{seed}_ctx{context}.pkl",          # rw.VARIANTS (dw-noiseless Standard)
-           "128ray": "qualitative_edits_catim_128ray_seed{seed}_ctx{context}.pkl"}     # A2_VARIANT only
+# The 128-ray member of the ray family (radius 1.0): the main text's categorical Standard, the one 128-ray model whose
+# categorical block carries every editor's arm, the categorical inverse map included. Not an appendix column.
+RAY128 = ("128-ray", "dw-128ray", "ray_ablation/L-dw-128ray-20m")
+SOURCES = {"appendix": "qualitative_edits_catim_seed{seed}_ctx{context}.pkl",          # rw.VARIANTS (Standard = dw-noiseless, ..., 5-ray)
+           "128ray": "qualitative_edits_catim_128ray_seed{seed}_ctx{context}.pkl"}     # RAY128 only
 
 
 # ── caches ─────────────────────────────────────────────────────────────────────────────
 def rayworld(seed: int, context: int = 8, source: str = "appendix") -> dict:
     """The dict ``build()`` of the appendix script returns for one seed: all five appendix variants
-    (``appendix``) or the 128-ray Standard alone (``128ray``, built by ``build_128ray``)."""
+    (``appendix``) or the 128-ray member alone (``128ray``, built by ``build_128ray``)."""
     return pickle.load(open(REPO / ".scratch" / SOURCES[source].format(seed=seed, context=context), "rb"))
 
 
 def build_128ray(seed: int, context: int = 8) -> dict:
-    """The A2 cache: the appendix machinery (``rw.build`` with one extra variant) on the same scenario."""
-    data = rw.build(seed, context, variants=[A2_VARIANT])
+    """The 128-ray cache: the appendix machinery (``rw.build`` with one extra variant) on the same scenario."""
+    data = rw.build(seed, context, variants=[RAY128])
     path = REPO / ".scratch" / SOURCES["128ray"].format(seed=seed, context=context)
     pickle.dump(data, open(path, "wb"))
     return data
+
+
+# ── the scenario filter (the appendix's, ``rw.passing_seeds``) ──────────────────────────
+@functools.lru_cache(maxsize=None)
+def passing_seeds(n: int) -> tuple[int, ...]:
+    """The first ``n`` seeds whose teleport changes at least one ray of the clean 5-ray frame at the edit frame
+    (the scorer's differing-ray zone under the dw-5ray renderer is non-empty). CPU, no model."""
+    return tuple(rw.passing_seeds(n))
+
+
+@functools.lru_cache(maxsize=None)
+def changed_rays(seed: int, inst: str) -> list[int]:
+    """The rays on which the clean edited and unedited frames at the edit frame differ under ``inst``'s renderer."""
+    return rw.visible_change(seed, inst).tolist()
 
 
 def othello() -> dict:
@@ -175,11 +192,12 @@ def dump(obj, path: Path) -> None:
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--build-128ray", nargs="+", type=int, metavar="SEED", help="build the A2 caches for these seeds (GPU)")
+    ap.add_argument("--build-128ray", nargs="+", type=int, metavar="SEED", help="build the 128-ray caches for these seeds (GPU)")
     ap.add_argument("--context", type=int, default=8)
     a = ap.parse_args()
     for s in a.build_128ray or ():
         d = build_128ray(s, a.context)
-        c = d["cols"]["Standard"]
+        c = d["cols"][RAY128[0]]
         print(f"seed {s}: edit object {d['edit_object']}  origin {c['cont']['ghost_x']}  destination {c['cont']['target_x']}  "
+              f"changed rays {len(c['cont']['differing_rays'])} (5-ray: {len(changed_rays(s, rw.FILTER_INST))})  "
               f"tile changes {c['cat']['changes_tile']}  arms cont {c['cont']['arms']}  cat {c['cat']['arms']}", flush=True)

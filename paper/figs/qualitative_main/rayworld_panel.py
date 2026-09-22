@@ -4,11 +4,12 @@
     R2  Standard, 8-ray, 5-ray x PI, GS, GS (categorical), IM                                   seed 0
     R3  Standard only, three scenarios (seeds 0, 1, 2) x PI, GS, IM                            continuous
     R4  R3 plus a 5-ray column on scenario 1, with the GS (categorical) row (the coarse foil)
-    A1  the final cut (round 2): Standard (continuous) x two scenarios | Standard (categorical) x the SAME two;
-        rows Context, Unedited, Ground truth, PI, GS, IM. Standard = dw-noiseless, whose categorical block
-        carries no IM arm: those two cells are blank (thin frame, nothing drawn), as in the table.
-    A2  the same cut on the 128-ray model of the ray family (dw-128ray, radius 1.0): every cell a scored arm,
-        the categorical IM through the categorical inverse map.
+    A3  the final cut (round 4, Sevan's spec), four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless,
+        Cartesian block), 128-ray (categorical) on Example 3 (dw-128ray, appearance-fac block, IM = the categorical
+        inverse map) and 5-ray (categorical) on the SAME Example 3 (dw-5ray); rows Context, Unedited Pred, Ground
+        truth, PI, GS, IM. Examples 1-3 are the first three seeds passing the 5-ray visibility filter
+        (``common.passing_seeds``). Rounds 2-3's A1 / A2 cuts (two scenarios x continuous | categorical, one model)
+        were retired with this round.
 
 Every column: the last 8 observed frames (time downward), then single next-step frames: Unedited, Ground
 truth, and each editor's write at the run's guarded best arm, with the signed error (prediction minus
@@ -16,7 +17,7 @@ truth, clipped prediction) directly beneath. Cyan / pink lines mark the edited d
 the edit. Output beside this script: ``rayworld_<opt>.{pdf,png,json}`` and one PDF per strip under
 ``pieces/rayworld_<opt>/``.
 
-    .pim/bin/python paper/figs/qualitative_main/rayworld_panel.py [--options R3 A1 A2] [--no-pieces]
+    .pim/bin/python paper/figs/qualitative_main/rayworld_panel.py [--options R3 A3] [--no-pieces]
 """
 from __future__ import annotations
 
@@ -33,10 +34,10 @@ from common import plt, ps, rw
 CTX, STRIP, DIFF, GAP, BIG = 0.42, 1.0, 0.7, 0.3, 0.75        # row heights, in strip units
 GAP_U, BIG_F = 0.65, 0.9        # the final cut: room for the two-line "Unedited / Pred" and "Ground / truth" labels
 RIGHT_IN, RIGHT_F, BOT_IN = 0.5, 0.72, 0.03                   # gutters, inches; RIGHT_F leaves room for the marks key
-UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A1": 0.155, "A2": 0.155}   # inches per strip unit
-FINAL = ("A1", "A2")
-SOURCE = {"A1": "appendix", "A2": "128ray"}
-GROUP = {"cont": "Standard (continuous)", "cat": "Standard (categorical)"}
+SPACER = {False: 0.18, True: 0.0}    # the final cut: an empty column between model groups, in column widths (none in the
+                                     # narrow side-by-side, whose 7 pt "Example k" titles need every bit of column width)
+UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A3": 0.155}   # inches per strip unit
+FINAL = ("A3",)
 LABELS = {"context": "Context", "unedited": "Unedited Pred", "gt": "Ground truth"}
 WRAPPED = {"unedited": "Unedited\nPred", "gt": "Ground\ntruth"}      # the final cut's narrow gutter
 
@@ -50,9 +51,8 @@ ROWS = {
     "R2": [("context",), ("unedited",), ("gt",), edit("cont", "PI"), edit("cont", "GS"), edit("cat", "GS", "GS (categorical)"), edit("cont", "IM")],
     "R3": [("context",), ("unedited",), ("gt",), edit("cont", "PI"), edit("cont", "GS"), edit("cont", "IM")],
     "R4": [("context",), ("unedited",), ("gt",), edit("cont", "PI"), edit("cont", "GS"), edit("cat", "GS", "GS (categorical)"), edit("cont", "IM")],
-    "A1": [("context",), ("unedited",), ("gt",), edit(None, "PI"), edit(None, "GS"), edit(None, "IM")],
+    "A3": [("context",), ("unedited",), ("gt",), edit(None, "PI"), edit(None, "GS"), edit(None, "IM")],
 }
-ROWS["A2"] = ROWS["A1"]
 
 
 def left_in(option):
@@ -64,52 +64,77 @@ def right_in(option):
 
 
 def top_in(option, narrow=False):
-    """The final cut carries a group title over each pair of columns; ``narrow`` (the side-by-side, strips under
-    0.6 in) sets it in two lines and the scenario titles at 7 pt."""
+    """The final cut carries a group title over each model's columns; ``narrow`` (the side-by-side, strips under
+    0.6 in) sets it in two lines and the example titles at 7 pt."""
     if option in FINAL:
         return 0.46 if narrow else 0.36
     return 0.2
 
 
-def final_seeds(source, n=2, seeds=range(6)):
-    """The first ``n`` cached seeds whose edited disc is visible before the edit (finite origin locator) AND whose
-    teleport changes a categorical tile, both judged on the drawn model."""
-    out = []
-    for s in seeds:
-        try:
-            col = C.rayworld(s, source=source)["cols"]["Standard"]
-        except FileNotFoundError:
-            continue
-        if np.isfinite(col["cont"]["ghost_x"]) and col["cat"]["changes_tile"]:
-            out.append(s)
-    return tuple(out[:n])
-
-
 def columns(option):
-    """(title, variant, seed, source, block) per column; block None = the row decides (R1..R4)."""
+    """(title, variant, seed, source, block, group) per column. block None = the row decides (R1..R4); group = the
+    title over a run of consecutive columns of one model (the final cut only, else None)."""
     if option == "R1":
-        return [(n, n, 0, "appendix", None) for n in ("Standard", "Blink", "16-ray", "8-ray", "5-ray")]
+        return [(n, n, 0, "appendix", None, None) for n in ("Standard", "Blink", "16-ray", "8-ray", "5-ray")]
     if option == "R2":
-        return [(n, n, 0, "appendix", None) for n in ("Standard", "8-ray", "5-ray")]
+        return [(n, n, 0, "appendix", None, None) for n in ("Standard", "8-ray", "5-ray")]
     if option == "R3":
-        return [(f"Scenario {k + 1}", "Standard", s, "appendix", None) for k, s in enumerate(C.HERO_SEEDS)]
+        return [(f"Scenario {k + 1}", "Standard", s, "appendix", None, None) for k, s in enumerate(C.HERO_SEEDS)]
     if option == "R4":
-        return ([(f"Standard\nscenario {k + 1}", "Standard", s, "appendix", None) for k, s in enumerate(C.HERO_SEEDS)]
-                + [("5-ray\nscenario 1", "5-ray", C.HERO_SEEDS[0], "appendix", None)])
-    if option in FINAL:
-        src = SOURCE[option]
-        return [(f"Example {k + 1}", "Standard", s, src, blk) for blk in ("cont", "cat") for k, s in enumerate(final_seeds(src))]
+        return ([(f"Standard\nscenario {k + 1}", "Standard", s, "appendix", None, None) for k, s in enumerate(C.HERO_SEEDS)]
+                + [("5-ray\nscenario 1", "5-ray", C.HERO_SEEDS[0], "appendix", None, None)])
+    if option == "A3":
+        s1, s2, s3 = C.passing_seeds(3)              # the first three seeds whose teleport changes the 5-ray frame
+        return [("Example 1", "Standard", s1, "appendix", "cont", "Standard (continuous)"),
+                ("Example 2", "Standard", s2, "appendix", "cont", "Standard (continuous)"),
+                ("Example 3", "128-ray", s3, "128ray", "cat", "128-ray (categorical)"),
+                ("Example 3", "5-ray", s3, "appendix", "cat", "5-ray (categorical)")]
     raise ValueError(option)
+
+
+def runs(cols, f=lambda col: col[5]):
+    """(value, first column, last column) of every run of consecutive columns on which ``f`` agrees; falsy values
+    (no group) are skipped. Default ``f``: the group title."""
+    out = []
+    for c, col in enumerate(cols):
+        v = f(col)
+        if out and out[-1][0] == v:
+            out[-1][2] = c
+        else:
+            out.append([v, c, c])
+    return [tuple(r) for r in out if r[0]]
+
+
+def model_of(col):
+    """The model half of a group title ("Standard (continuous)" -> "Standard")."""
+    return col[5] and col[5].split(" (")[0]
+
+
+def block_of(col):
+    """The block half of a group title ("Standard (continuous)" -> "(continuous)")."""
+    return col[5] and "(" + col[5].split(" (")[1]
+
+
+def grid_columns(cols, spacer):
+    """The GridSpec column of every figure column and the width ratios: an empty column ``spacer`` column-widths
+    wide wherever the group changes (``spacer`` 0: none)."""
+    idx, widths = [], []
+    for c, col in enumerate(cols):
+        if c and spacer and col[5] != cols[c - 1][5]:
+            widths.append(spacer)
+        idx.append(len(widths))
+        widths.append(1.0)
+    return idx, widths
 
 
 def run_of(variant, source):
     """(instance, run) behind a column."""
-    return tuple(C.A2_VARIANT[1:]) if source == "128ray" else C.RW_RUNS[variant]
+    return tuple(C.RAY128[1:]) if source == "128ray" else C.RW_RUNS[variant]
 
 
 def geometry(option):
     cols = columns(option)
-    data = {(src, v, s): C.rayworld(s, source=src)["cols"][v] for _, v, s, src, _ in cols}
+    data = {(src, v, s): C.rayworld(s, source=src)["cols"][v] for _, v, s, src, *_ in cols}
     n_ctx = next(iter(data.values()))["context"].shape[0]
     lay = []                                            # (kind, row spec, height)
     for r in ROWS[option]:
@@ -181,26 +206,35 @@ def panel(F, option, *, unit, titles=True, letter=None, colorbar=True, diff_scal
     cols, data, lay = geometry(option)
     W, H = F.bbox.width / F.dpi, F.bbox.height / F.dpi
     final = option in FINAL
-    gs = GridSpec(len(lay), len(cols), figure=F, height_ratios=[h for *_, h in lay], left=left_in(option) / W,
-                  right=1 - right_in(option) / W, top=1 - top_in(option, narrow) / H, bottom=BOT_IN / H,
-                  wspace=0.13 if narrow else 0.06, hspace=0.0)
-    for c, (title, v, s, src, blk) in enumerate(cols):
+    gcol, widths = grid_columns(cols, SPACER[narrow] if final else 0)
+    gs = GridSpec(len(lay), len(widths), figure=F, height_ratios=[h for *_, h in lay], width_ratios=widths,
+                  left=left_in(option) / W, right=1 - right_in(option) / W, top=1 - top_in(option, narrow) / H,
+                  bottom=BOT_IN / H, wspace=0.13 if narrow else 0.06, hspace=0.0)
+    for c, (title, v, s, src, blk, _) in enumerate(cols):
         col = data[(src, v, s)]
         for r, (kind, spec, _) in enumerate(lay):
             if kind == "gap":
                 continue
-            ax = F.add_subplot(gs[r, c])
+            ax = F.add_subplot(gs[r, gcol[c]])
             cell(ax, kind, spec, col, blk, diff_scale)
             if r == 0 and titles:
                 ax.set_title(title, pad=3, fontsize=(7 if narrow else 8) if final else 9, color=ps.TEXT)
             if c == 0 and kind != "diff":
                 row_label(ax, kind, spec, wrap=final)
-    if final and titles:                                # one group title over each pair of scenario columns
+    if final and titles:                                # one group title over each model's run of columns
         y = gs[0, 0].get_position(F).y1 + (0.18 if narrow else 0.21) / H
-        for k, blk in enumerate(("cont", "cat")):
-            x = (gs[0, 2 * k].get_position(F).x0 + gs[0, 2 * k + 1].get_position(F).x1) / 2
-            F.text(x, y, GROUP[blk].replace(" (", "\n(") if narrow else GROUP[blk], ha="center", va="bottom",
-                   fontsize=8 if narrow else 9, linespacing=0.95, color=ps.TEXT)
+        xc = lambda c0, c1: (gs[0, gcol[c0]].get_position(F).x0 + gs[0, gcol[c1]].get_position(F).x1) / 2  # noqa: E731
+        text = lambda x, y_, s, size: F.text(x, y_, s, ha="center", va="bottom", fontsize=size, color=ps.TEXT)  # noqa: E731
+        if narrow:
+            # Two lines: the model over its own columns; the block qualifier once over the neighbouring groups that share
+            # it ("(categorical)" at 7 pt is 0.54 in, wider than a narrow column, so it cannot sit over each single).
+            for name, c0, c1 in runs(cols, model_of):
+                text(xc(c0, c1), y + 0.1 / H, name, 8)
+            for blk, c0, c1 in runs(cols, block_of):
+                text(xc(c0, c1), y, blk, 8)
+        else:
+            for label, c0, c1 in runs(cols):
+                text(xc(c0, c1), y, label, 9)
     if colorbar:
         r0 = next(r for r, (k, *_) in enumerate(lay) if k == "pred")
         r1 = max(r for r, (k, *_) in enumerate(lay) if k == "diff")
@@ -221,11 +255,14 @@ def error_key(cax, diff_scale=1.0):
 
 
 def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
-    """Every strip of the option as its own PDF (+ PNG), plus the two keys. A blank cell (no arm) exports nothing."""
+    """Every strip of the option as its own PDF (+ PNG), plus the two keys. A blank cell (no arm) exports nothing.
+    Names: ``col<k>_<instance>_seed<s>_<row>`` (rows ``context``, ``unedited``, ``ground_truth``,
+    ``<block>_<editor>_{prediction,error}``)."""
     out_dir.mkdir(parents=True, exist_ok=True)
     cols, data, lay = geometry(option)
-    for c, (title, v, s, src, blk) in enumerate(cols):
+    for c, (title, v, s, src, blk, _) in enumerate(cols):
         col = data[(src, v, s)]
+        tag = f"col{c + 1}_{run_of(v, src)[0]}_seed{s}"
         for kind, spec, h in lay:
             if kind == "gap" or (kind in ("pred", "diff") and frame_of(col, spec, blk)[0] is None):
                 continue
@@ -233,7 +270,6 @@ def pieces(option, out_dir, *, w_in=1.6, unit=0.16):
             cell(fig.add_axes([0, 0, 1, 1]), kind, spec, col, blk)
             name = {"context": "context", "unedited": "unedited", "gt": "ground_truth"}.get(kind) \
                 or f"{spec[1] or blk}_{spec[2]}_{'error' if kind == 'diff' else 'prediction'}"
-            tag = f"col{c + 1}_{v.replace(' ', '')}{'-128ray' if src == '128ray' else ''}_seed{s}"
             ps.save(fig, out_dir / f"{tag}_{name}")
             plt.close(fig)
     fig = plt.figure(figsize=(0.5, 1.2))
@@ -251,24 +287,32 @@ def sidecar(option):
     cols, data, _ = geometry(option)
     rows = [LABELS.get(r[0], f"{r[2]} [{r[1] or 'column block'}]" if r[0] == "edit" else r[0]) for r in ROWS[option]]
     out = {"option": option, "rows": rows, "columns": [], "blank_cells": []}
-    for c, (title, v, s, src, blk) in enumerate(cols):
+    for c, (title, v, s, src, blk, grp) in enumerate(cols):
         col, full = data[(src, v, s)], C.rayworld(s, source=src)
         inst, run = run_of(v, src)
         arms = {b: {ed: None if a is None else {"point": int(a[0]), "alpha": float(a[1])} for ed, a in col[b]["arms"].items()}
                 for b in ("cont", "cat")}
+        rays = {i: C.changed_rays(s, i) for i in dict.fromkeys((rw.FILTER_INST, inst, "dw-noiseless", "dw-128ray"))}
         out["columns"].append({
-            "title": title.replace("\n", ", "), "group": GROUP.get(blk), "variant": v, "instance": inst, "run": run, "seed": s,
+            "title": title.replace("\n", ", "), "group": grp, "variant": v, "instance": inst, "run": run, "seed": s,
             "source_cache": C.SOURCES[src].format(seed=s, context=8), "block": None if blk is None else C.DW_BLOCK[blk],
             "edit_object": full["edit_object"], "origin_x": col["cont"]["ghost_x"], "destination_x": col["cont"]["target_x"],
-            "changes_categorical_tile": bool(col["cat"]["changes_tile"]), "arms_drawn": arms, "table2": C.table2_rayworld(run)})
+            "changes_categorical_tile": bool(col["cat"]["changes_tile"]),
+            "n_changed_rays_5ray": len(rays[rw.FILTER_INST]), "changed_rays": rays,
+            "arms_drawn": arms, "table2": C.table2_rayworld(run)})
         if blk is not None:
             out["blank_cells"] += [f"col{c + 1} {ed}" for ed in C.EDITORS if col[blk][ed] is None]
     out["selection"] = (
-        "Scenarios are the appendix caches (seed = generator seed of the teleport case, radius-1.0 geometry, rendered "
-        "under each variant); R1 / R2 use seed 0 like the appendix figure; R3 / R4 the first three cached seeds whose "
-        "edited disc is visible before the edit on Standard (0, 1, 2); A1 / A2 the first two cached seeds whose edited "
-        "disc is visible before the edit AND whose teleport changes a categorical tile, on the drawn model. Arms are "
-        "the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.")
+        "Scenario filter (2026-09-21): a seed is drawn only if its teleport changes at least one ray of the clean 5-ray "
+        "frame at the edit frame (the scorer's differing-ray zone under the dw-5ray renderer is non-empty); A3's "
+        "Examples 1-3 are the first three passing seeds in seed order, Example 3 shared by the two categorical columns. "
+        "R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1). Arms are the tables' guarded best arms "
+        "(pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.")
+    out["matching"] = (
+        "One scenario = one world (positions, velocities, teleport) generated under the tightest geometry (radius 1.0) "
+        "and rendered under each instance's own renderer (radius 0.5 / 128 rays for dw-noiseless, radius 1.0 / N rays "
+        "for the ray family); positions are identical across columns, only the rendering differs. changed_rays = the "
+        "rays on which the clean edited and unedited frames at the edit frame differ, per renderer.")
     out["error_strip"] = "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale ±1"
     return out
 
@@ -286,4 +330,4 @@ if __name__ == "__main__":
         C.dump(sidecar(opt), C.HERE / f"rayworld_{opt}.json")
         if not a.no_pieces:
             pieces(opt, C.HERE / "pieces" / f"rayworld_{opt}")
-        print(f"→ rayworld_{opt}.pdf ({height_in(opt, UNIT[opt]):.2f} in tall)  columns {[(t, s, src) for t, _, s, src, _ in columns(opt)]}", flush=True)
+        print(f"→ rayworld_{opt}.pdf ({height_in(opt, UNIT[opt]):.2f} in tall)  columns {[(t, s, src) for t, _, s, src, *_ in columns(opt)]}", flush=True)
