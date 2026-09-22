@@ -27,7 +27,7 @@ nothing else, the bottom row ("Board Update") shows the position after the move 
 and every disc it flips ringed pink. Row names are rotated down the left side, the key is a column on the right,
 panel letters are bold.
 
-Outputs: ``composite_O2`` and ``composite_O2_altmove`` (6.0 in wide), ``legend_key``, the before / after / pair
+Outputs: ``composite_O2`` and ``composite_O2_altmove`` (5.83 in wide), ``legend_key``, the before / after / pair
 boards under ``pieces/`` (2.0 in boards), ``boards.json``. Colours and geometry come from ``paper_style`` and
 the qualitative Othello figure's ``draw_board``.
 
@@ -246,9 +246,10 @@ def row(specs: list[dict], stem: Path, *, size: float = BOARD_IN, gap: float = 0
     plt.close(fig)
 
 
-FIG_W = 6.0                      # the composite's drawn width, inches (the key column sits beside the boards)
-KEY_TILE, KEY_GAP, KEY_ROW = 0.26, 0.07, 0.30            # the key's marker tile, tile-to-label gap, row pitch
-KEY_W, KEY_H = 0.95, 3 * KEY_ROW                         # the key column, inches
+KEY_TILE, KEY_GAP, KEY_ROW, KEY_FS = 0.20, 0.055, 0.25, 7.5   # the key's tile, tile-to-label gap, row pitch, label pt
+KEY_W, KEY_H = 0.78, 3 * KEY_ROW                         # the key column, inches (the rest of its slack is cropped)
+CELL = 1.0875                    # ONE board on the composite page, inches, fixed so the key's size sets the
+                                 # figure's width and never eats into board area
 ROW_LABELS = ("Legal Moves", "Board Update")
 
 
@@ -256,11 +257,12 @@ def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, lab
               key: bool = True) -> None:
     """The four rule sets across (bold panel letters only), one row per key, each row named by a rotated label
     down the left side, the legend key as a column on the right."""
-    W, cg, top = FIG_W, 0.12, 0.2
+    cg, top = 0.12, 0.2
     left = 0.24 if labels else 0.0
     right = KEY_W + 0.10 if key else 0.0
     rg = 0.34 if arrows else 0.12
-    s = (W - left - right - 3 * cg) / 4
+    s = CELL
+    W = left + 4 * s + 3 * cg + right
     n = len(keys)
     H = top + n * s + (n - 1) * rg
     fig = plt.figure(figsize=(W, H))
@@ -296,7 +298,7 @@ def key_entries(ax) -> None:
             ax.add_patch(Circle((t / 2, cy), DISC_R * t, facecolor="black", edgecolor="#333333", linewidth=0.5))
             ax.add_patch(Circle((t / 2, cy), RING_R * t, facecolor="none", linewidth=1.2,
                                 edgecolor=PLACED_C if label == "chosen move" else FLIP_C))
-        ax.text(t + KEY_GAP, cy, label, ha="left", va="center", fontsize=8)
+        ax.text(t + KEY_GAP, cy, label, ha="left", va="center", fontsize=KEY_FS)
 
 
 def legend_key(stem: Path) -> None:
