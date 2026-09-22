@@ -227,11 +227,17 @@
   "composite_onerow": "composite_onerow.pdf/.png: the same four panels in ONE band, 5.5 x 1.79 in, its frustum drawing every 5-th ray (heavier weights) and its waterfalls carrying a two baseline compact axis; sizes and gaps in ONEROW / onerow_geometry, pieces at those sizes in pieces_onerow/",
   "onerow_panels_in": {
    "frustum": 1.2,
-   "waterfall_a": 0.56,
-   "waterfall_b": 0.5,
-   "nray_strip": 0.3,
-   "nray_strip_gap": 0.105,
-   "cells": 0.9,
+   "waterfall_a": 0.5,
+   "waterfall_b": 0.45,
+   "nray_strip": 0.27,
+   "nray_strip_gap": 0.115,
+   "cells": 1.2,
+   "cells_box": [
+    -6.1,
+    6.1,
+    2.85,
+    12.15
+   ],
    "band_height": 1.32
   },
   "pieces": [

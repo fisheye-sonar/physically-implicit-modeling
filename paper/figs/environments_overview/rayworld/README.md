@@ -29,8 +29,19 @@ Regenerate (deterministic):
 
 All the sizes and gaps live in `ONEROW` / `onerow_geometry` (one place, so the composite and the
 `pieces_onerow/` exports cannot drift). The band is 1.32 in tall and the panels are, left to right:
-frustum **1.20**, (a) waterfall **0.56**, (b) blink **0.50**, (c) three strips of **0.30** with 0.105 in
-between them, (d) the hard crop at **0.90 x 0.68**, centred in the band. The frustum draws **every 5th ray
+frustum **1.20**, (a) waterfall **0.50**, (b) blink **0.45**, (c) three strips of **0.27** with 0.115 in
+between them, (d) **1.20 x 0.91**, centred in the band; the gaps between the five groups are 0.30, 0.42,
+0.26, 0.09.
+
+(d) shows the **complete frustum** — both walls and the near and far planes — drawn to `FULL_D`, the
+standard crop trimmed to the frustum itself (x ±6.1, y 2.85 to 12.15), which keeps the whole shape while
+spending about 6% less of the panel on margin. Every other panel in the band gives up a little width so
+this one can be as big as possible: the partition itself is drawn at **0.88 x 0.69 in**. A zoomed version
+(cropped to the cells, partition 0.96 x 0.80) was tried and rejected — with the near and far planes outside
+the crop the outline survives only as two diagonal slashes, and the panel stops reading as the frustum from
+(a). Recognizability wins: a complete, smaller frustum beats a larger fragment. The panel keeps **equal
+aspect**, so the discs stay circular and match (a); filling the band's full 1.32 in height would need a
+1.4x vertical stretch and elliptical discs. The frustum draws **every 5th ray
 (26 of 128) at heavier weights** (hit rays lw 0.55 / alpha 0.85, misses 0.36 / 0.42 — clearly stronger than
 the two-band composite's 0.5 / 0.7 and 0.3 / 0.22, which disappear at this size). Each waterfall carries a
 compact two baseline axis: the range ("0", "127") 2 pt under the panel and "ray" centred 11 pt under it at
@@ -62,7 +73,9 @@ The same elements at the sizes `composite_onerow` uses, all 1.32 in tall: `stand
 and `standard_frustum_light_every6_strip` (1.20 in wide, the two ray densities tried — **every 5th is the one
 in the composite**: 26 rays still read as a fan while every individual ray resolves, where every 6th at 21
 rays starts to look sparse; `ONEROW_EVERY` switches it), `standard_waterfall` (0.56), `blink_waterfall`
-(0.50), `nray_waterfall_{16,8,5}ray_matched` (0.30 each) and `categorical_frustum_8ray_crop` (0.90 x 0.68).
+(0.45), `nray_waterfall_{16,8,5}ray_matched` (0.27 each) and `categorical_frustum_8ray_crop` (1.20 x 0.91,
+the `FULL_D` box; `pieces/categorical_frustum_8ray_crop` is the same drawing at the two-band composite's
+2.40 x 1.82).
 `key_frustum` is size independent and lives in `pieces/` only. The strips here carry no ray-count label; the
 composite adds it below them.
 
@@ -132,7 +145,9 @@ other disc lit in every frame, the blinking disc lit whenever visible and travel
   dots read on top, and every boundary also carries a thin grey line. The two discs' cells are the same hue
   further saturated and are outlined in black; the discs are drawn at alpha 0.65 with a dot at the true
   centre. The factorised target the paper reports (`appearance-fac`) reads the same partition as run centre
-  (15 classes) times run length (5 classes). Both composites cut the view just below the near plane.
+  (15 classes) times run length (5 classes). Both composites show the complete frustum in (d) at the same
+  border weight and colour: `composite` cuts the view just below the near plane, `composite_onerow` frames
+  the trapezoid itself (`FULL_D`).
 - At t* in the dw-8ray sequence the far disc (0.4) sits in the lone-disc cell for rays 2 to 3, but the near
   disc (0.8, rays 3 to 6) occludes ray 3, so the frame shows the far disc on ray 2 only. The cell is what the
   probe target labels; the rays are what the frame shows. Worth one caption sentence if panel (d) is used.
@@ -153,10 +168,11 @@ discs' cells are runs 2 to 3 (disc 0, far, y 9.9) and 3 to 6 (disc 1, near, y 5.
 - The composite is 5.5 x about 3.3 in: the frustum's size is tied to the top band's height by the equal
   aspect, so the bigger frustum asked for in round 3 made the figure about 0.3 in taller than round 2's.
   `hf` in `composite()` is the one number to change.
-- In `composite_onerow` the frustum's discs are about 0.10 in across and the partition's cells about 0.08 in
-  wide: legible in print, but the two-band `composite` is the one to use where there is room. A single band
-  cannot hold five annotated groups at 5.5 in without that shrink, since the frustum's width grows with the
-  band's height — which is also why making (a) bigger in round 5, and giving every label its clearance in
-  round 6, took the one-row figure from 1.55 to 1.79 in tall. The label clearances came out of (d), the
-  panel that carries the least detail: it went 1.18 → 0.90 in wide over round 6. If (d) needs to be bigger
-  again, the room has to come from the gaps in `ONEROW["gaps"]` or from the band height.
+- In `composite_onerow` the frustum's discs are about 0.10 in across and (d)'s cells about 0.07 in wide at
+  their widest: legible in print, but the two-band `composite` is the one to use where there is room. A
+  single band cannot hold five annotated groups at 5.5 in without that shrink, since the frustum's width
+  grows with the band's height — which is also why making (a) bigger, and giving every label its clearance,
+  took the one-row figure to 1.79 in tall. (d) is now the largest it can be with the complete frustum in
+  view: every other panel has already been trimmed to the point where its labels keep about 0.03 to 0.07 in
+  of clearance. Any further growth has to come from the band height, from (a), or from dropping (d) out of
+  the one-row variant altogether.

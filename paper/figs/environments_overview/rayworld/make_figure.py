@@ -53,8 +53,14 @@ ONEROW_EVERY = 5       # the one-row variant's frustum is small: fewer rays (26 
 # The one-row band, in inches: panel sizes and the gaps between them (``onerow_geometry`` lays them out).
 # Its labels are placed in POINTS off the panel edge, not in axes fractions, so they keep their clearance
 # on panels this narrow.
-ONEROW = {"band": 1.32, "wf_a": 0.56, "wf_b": 0.50, "strip": 0.30, "strip_gap": 0.105, "axis": 0.27,
-          "gaps": (0.34, 0.46, 0.28, 0.11)}   # frustum→(a), (a)→(b), (b)→(c), (c)→(d)
+ONEROW = {"band": 1.32, "wf_a": 0.50, "wf_b": 0.45, "strip": 0.27, "strip_gap": 0.115, "axis": 0.27,
+          "gaps": (0.30, 0.42, 0.26, 0.09)}   # frustum→(a), (a)→(b), (b)→(c), (c)→(d)
+# (d) shows the COMPLETE frustum — both walls and the near and far planes — because a fragment of the
+# trapezoid reads as stray marks and gives the reader nothing to tie the panel to (a) with. Zooming into
+# the cells (tried 2026-09-22) buys cell size and loses that, so it is out. This box is the standard crop
+# trimmed to the frustum itself (it spans x ±6, y 3–12), which keeps the whole shape and spends ~6% less
+# of the panel on margin. Every other panel in the band gives up a little width so this one can be big.
+FULL_D = (-6.1, 6.1, 2.85, 12.15)
 DISC_ALPHA_CELLS = 0.65  # discs on the partition panel let the cells show through
 SEED = 0
 CELL_EDGE = "#9c9c9c"
@@ -211,12 +217,12 @@ def frustum_width(h: float, sim: dict, **kw) -> float:
 
 
 def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows=True, strip=False,
-                 cells=None, rays=True, crop=False, disc_alpha=1.0, strong=False):
+                 cells=None, rays=True, crop=False, disc_alpha=1.0, strong=False, box=None):
     sim = q["sim"]
     xn, yn, xf, yf = (float(sim[k]) for k in ("x_near", "y_near", "x_far", "y_far"))
     scale = xf / yf
     ink = "white" if dark else "black"
-    (x0, x1), (y0, y1) = frustum_extent(sim, strip=strip, crop=crop)
+    (x0, x1), (y0, y1) = ((box[0], box[1]), (box[2], box[3])) if box else frustum_extent(sim, strip=strip, crop=crop)
     ax.set_aspect("equal")
     ax.axis("off")
     ax.set_xlim(x0, x1)
@@ -240,6 +246,8 @@ def draw_frustum(ax, q: dict, t: int, *, dark=False, every=1, trail=True, arrows
             else:                    # a miss: through to the far plane
                 ax.plot([s[k] * scale * ys, s[k] * xf], [ys, yf], color=ink, lw=miss_w[0],
                         alpha=miss_w[1], zorder=1)
+    # The frustum border, over the cells and under the discs. Under ``box`` the axes clip it, so it runs
+    # off the panel edges — which is what ties a zoomed panel to the frustum the reader saw in (a).
     ax.add_patch(Polygon([(-xn, yn), (-xf, yf), (xf, yf), (xn, yn)], closed=True, fill=False,
                          edgecolor=ink, lw=0.8, zorder=4))
     if not crop:
@@ -435,9 +443,10 @@ def composite(std, blk, span, eight, matched, app) -> None:
     plt.close(f)
 
 
-def onerow_geometry(std_sim: dict, eight_sim: dict) -> dict:
+def onerow_geometry(std_sim: dict) -> dict:
     """The one-row band's panel sizes and x positions, in inches — ONE place, so the composite and the
-    pieces_onerow exports cannot drift apart. (d) takes what is left after the gaps the labels need."""
+    pieces_onerow exports cannot drift apart. (d) takes what is left after the gaps the labels need, and
+    its height follows ``FULL_D``'s aspect (equal aspect, so the discs stay round)."""
     g1, g2, g3, g4 = ONEROW["gaps"]
     g = {"band": ONEROW["band"], "axis": ONEROW["axis"],
          "wf": frustum_width(ONEROW["band"], std_sim, strip=True)}
@@ -450,7 +459,7 @@ def onerow_geometry(std_sim: dict, eight_sim: dict) -> dict:
     x += 3 * ONEROW["strip"] + 2 * ONEROW["strip_gap"] + g4
     g["x_d"] = x
     g["wd"] = 5.48 - x
-    g["hd"] = g["wd"] / frustum_width(1.0, eight_sim, crop=True)
+    g["hd"] = g["wd"] * (FULL_D[3] - FULL_D[2]) / (FULL_D[1] - FULL_D[0])
     return g
 
 
@@ -461,7 +470,7 @@ def composite_onerow(std, blk, span, eight, matched, app) -> None:
     baseline axis (the range under the panel, "ray" centred below it), the markers are spaced in points
     rather than axes fractions, and (a) draws ``ONEROW_EVERY``-th ray at heavier weights, because the
     two-band composite's thin pale rays vanish at this size."""
-    g = onerow_geometry(std["sim"], eight["sim"])
+    g = onerow_geometry(std["sim"])
     hb, xlab = g["band"], g["axis"]
     top = xlab + hb                        # the band's top edge
     f = plt.figure(figsize=(5.5, top + 0.26), dpi=300)
@@ -475,7 +484,7 @@ def composite_onerow(std, blk, span, eight, matched, app) -> None:
     _letter(f, g["x_strips"] - 0.02, ytxt, "(c)")   # the ray counts go BELOW the strips, so this row is free
     _strips(f, g["x_strips"], xlab, ONEROW["strip"], ONEROW["strip_gap"], hb, matched, size=7.0, below=True)
     draw_frustum(_ax(f, g["x_d"], xlab + (hb - g["hd"]) / 2, g["wd"], g["hd"]), eight, T_STAR, cells=app,
-                 trail=False, arrows=False, crop=True, disc_alpha=DISC_ALPHA_CELLS)
+                 trail=False, arrows=False, crop=True, disc_alpha=DISC_ALPHA_CELLS, box=FULL_D)
     _letter(f, g["x_d"], ytxt, "(d)")
     ps.save(f, HERE / "composite_onerow")
     plt.close(f)
@@ -596,7 +605,7 @@ def main(all_: bool = False):
 
     # the one-row alternative and ITS pieces, at the sizes that layout uses (pieces_onerow/)
     one = dict(into=PIECES_ONEROW)
-    g = onerow_geometry(std["sim"], sims["dw-8ray"])   # the sizes the one-row composite places
+    g = onerow_geometry(std["sim"])                    # the sizes the one-row composite places
     hb = g["band"]
     for every in (ONEROW_EVERY, 6):                    # the two ray densities asked for: 26 and 21 of 128
         piece(f"standard_frustum_light_every{every}_strip", g["wf"], hb,
@@ -610,7 +619,7 @@ def main(all_: bool = False):
         piece(f"nray_waterfall_{inst.split('-')[1]}_matched", ONEROW["strip"], hb,
               lambda ax: draw_waterfall(ax, matched[inst], ticks=False, arrow=False), **one)
     piece("categorical_frustum_8ray_crop", g["wd"], g["hd"],
-          lambda ax: draw_frustum(ax, eight, T_STAR, crop=True, **cat), **one)
+          lambda ax: draw_frustum(ax, eight, T_STAR, crop=True, box=FULL_D, **cat), **one)
     composite_onerow(std, blk, span, eight, matched, app)
     if all_:
         composite_rows(std, blk, span, eight, matched, app)
@@ -628,8 +637,8 @@ def main(all_: bool = False):
                                           f"pieces at those sizes in pieces_onerow/",
                       "onerow_panels_in": {"frustum": 1.20, "waterfall_a": ONEROW["wf_a"],
                                            "waterfall_b": ONEROW["wf_b"], "nray_strip": ONEROW["strip"],
-                                           "nray_strip_gap": ONEROW["strip_gap"], "cells": 0.90,
-                                           "band_height": ONEROW["band"]},
+                                           "nray_strip_gap": ONEROW["strip_gap"], "cells": 1.20,
+                                           "cells_box": list(FULL_D), "band_height": ONEROW["band"]},
                       "pieces": sorted(p.stem for p in PIECES.glob("*.pdf")),
                       "pieces_onerow": sorted(p.stem for p in PIECES_ONEROW.glob("*.pdf")),
                       "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays "
