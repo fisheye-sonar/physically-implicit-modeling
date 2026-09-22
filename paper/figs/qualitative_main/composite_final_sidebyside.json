@@ -124,6 +124,10 @@
       123
      ]
     },
+    "delta_intensity_5ray": [
+     0.4,
+     0.4
+    ],
     "arms_drawn": {
      "cont": {
       "PI": {
@@ -204,161 +208,11 @@
     "variant": "Standard",
     "instance": "dw-noiseless",
     "run": "noise_ablation/L-dw-noiseless-20m",
-    "seed": 1,
-    "source_cache": "qualitative_edits_catim_seed1_ctx8.pkl",
+    "seed": 2,
+    "source_cache": "qualitative_edits_catim_seed2_ctx8.pkl",
     "block": "cartesian",
     "edit_object": 0,
-    "origin_x": 31.5,
-    "destination_x": 81.5,
-    "changes_categorical_tile": true,
-    "n_changed_rays_5ray": 2,
-    "changed_rays": {
-     "dw-5ray": [
-      0,
-      3
-     ],
-     "dw-noiseless": [
-      25,
-      26,
-      27,
-      28,
-      29,
-      30,
-      31,
-      32,
-      33,
-      34,
-      35,
-      36,
-      37,
-      38,
-      76,
-      77,
-      78,
-      79,
-      80,
-      81,
-      82,
-      83,
-      84,
-      85,
-      86,
-      87
-     ],
-     "dw-128ray": [
-      16,
-      17,
-      18,
-      19,
-      20,
-      21,
-      22,
-      23,
-      24,
-      25,
-      26,
-      27,
-      28,
-      82,
-      83,
-      84,
-      85,
-      86,
-      87,
-      88,
-      89,
-      90,
-      91,
-      92,
-      93,
-      94
-     ]
-    },
-    "arms_drawn": {
-     "cont": {
-      "PI": {
-       "point": 5,
-       "alpha": 12.0
-      },
-      "GS": {
-       "point": 0,
-       "alpha": 0.35
-      },
-      "IM": {
-       "point": 6,
-       "alpha": 1.0
-      }
-     },
-     "cat": {
-      "PI": {
-       "point": 4,
-       "alpha": 0.25
-      },
-      "GS": {
-       "point": 0,
-       "alpha": 0.35
-      },
-      "IM": null
-     }
-    },
-    "table2": {
-     "cont": {
-      "block": "cartesian",
-      "unedited": -0.93,
-      "PI": {
-       "point": 5,
-       "alpha": 12.0,
-       "edit_index": -0.096,
-       "fidelity_ratio": 0.959,
-       "within_guard": true
-      },
-      "GS": {
-       "point": 0,
-       "alpha": 0.35,
-       "edit_index": -0.162,
-       "fidelity_ratio": 0.956,
-       "within_guard": true
-      },
-      "IM": {
-       "point": 6,
-       "alpha": 1.0,
-       "edit_index": 0.59,
-       "fidelity_ratio": 0.342,
-       "within_guard": true
-      }
-     },
-     "cat": {
-      "block": "appearance-fac",
-      "unedited": -0.928,
-      "PI": {
-       "point": 4,
-       "alpha": 0.25,
-       "edit_index": -0.341,
-       "fidelity_ratio": 0.992,
-       "within_guard": true
-      },
-      "GS": {
-       "point": 0,
-       "alpha": 0.35,
-       "edit_index": 0.326,
-       "fidelity_ratio": 0.706,
-       "within_guard": true
-      },
-      "IM": null
-     }
-    }
-   },
-   {
-    "title": "Example 3",
-    "group": "128-ray (categorical)",
-    "variant": "128-ray",
-    "instance": "dw-128ray",
-    "run": "ray_ablation/L-dw-128ray-20m",
-    "seed": 2,
-    "source_cache": "qualitative_edits_catim_128ray_seed2_ctx8.pkl",
-    "block": "appearance-fac",
-    "edit_object": 0,
-    "origin_x": 110.5,
+    "origin_x": 109.5,
     "destination_x": 61.5,
     "changes_categorical_tile": true,
     "n_changed_rays_5ray": 4,
@@ -368,6 +222,52 @@
       2,
       3,
       4
+     ],
+     "dw-noiseless": [
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      103,
+      104,
+      105,
+      106,
+      107,
+      108,
+      109,
+      110,
+      111,
+      112,
+      113,
+      114,
+      115,
+      116
      ],
      "dw-128ray": [
       31,
@@ -462,54 +362,168 @@
       123,
       124,
       125
-     ],
-     "dw-noiseless": [
-      47,
-      48,
-      49,
-      50,
-      51,
-      52,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63,
-      64,
-      65,
-      66,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      75,
-      76,
-      103,
-      104,
-      105,
-      106,
-      107,
-      108,
-      109,
-      110,
-      111,
-      112,
-      113,
-      114,
-      115,
-      116
      ]
     },
+    "delta_intensity_5ray": [
+     0.4,
+     0.4,
+     0.4,
+     0.4
+    ],
+    "arms_drawn": {
+     "cont": {
+      "PI": {
+       "point": 5,
+       "alpha": 12.0
+      },
+      "GS": {
+       "point": 0,
+       "alpha": 0.35
+      },
+      "IM": {
+       "point": 6,
+       "alpha": 1.0
+      }
+     },
+     "cat": {
+      "PI": {
+       "point": 4,
+       "alpha": 0.25
+      },
+      "GS": {
+       "point": 0,
+       "alpha": 0.35
+      },
+      "IM": null
+     }
+    },
+    "table2": {
+     "cont": {
+      "block": "cartesian",
+      "unedited": -0.93,
+      "PI": {
+       "point": 5,
+       "alpha": 12.0,
+       "edit_index": -0.096,
+       "fidelity_ratio": 0.959,
+       "within_guard": true
+      },
+      "GS": {
+       "point": 0,
+       "alpha": 0.35,
+       "edit_index": -0.162,
+       "fidelity_ratio": 0.956,
+       "within_guard": true
+      },
+      "IM": {
+       "point": 6,
+       "alpha": 1.0,
+       "edit_index": 0.59,
+       "fidelity_ratio": 0.342,
+       "within_guard": true
+      }
+     },
+     "cat": {
+      "block": "appearance-fac",
+      "unedited": -0.928,
+      "PI": {
+       "point": 4,
+       "alpha": 0.25,
+       "edit_index": -0.341,
+       "fidelity_ratio": 0.992,
+       "within_guard": true
+      },
+      "GS": {
+       "point": 0,
+       "alpha": 0.35,
+       "edit_index": 0.326,
+       "fidelity_ratio": 0.706,
+       "within_guard": true
+      },
+      "IM": null
+     }
+    }
+   },
+   {
+    "title": "Example 3",
+    "group": "128-ray (categorical)",
+    "variant": "128-ray",
+    "instance": "dw-128ray",
+    "run": "ray_ablation/L-dw-128ray-20m",
+    "seed": 1,
+    "source_cache": "qualitative_edits_catim_128ray_seed1_ctx8.pkl",
+    "block": "appearance-fac",
+    "edit_object": 0,
+    "origin_x": 21.5,
+    "destination_x": 88.0,
+    "changes_categorical_tile": true,
+    "n_changed_rays_5ray": 2,
+    "changed_rays": {
+     "dw-5ray": [
+      0,
+      3
+     ],
+     "dw-128ray": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93,
+      94
+     ],
+     "dw-noiseless": [
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87
+     ]
+    },
+    "delta_intensity_5ray": [
+     0.4,
+     0.4
+    ],
     "arms_drawn": {
      "cont": {
       "PI": {
@@ -599,68 +613,26 @@
     "variant": "5-ray",
     "instance": "dw-5ray",
     "run": "ray_ablation/L-dw-5ray-20m",
-    "seed": 2,
-    "source_cache": "qualitative_edits_catim_seed2_ctx8.pkl",
+    "seed": 1,
+    "source_cache": "qualitative_edits_catim_seed1_ctx8.pkl",
     "block": "appearance-fac",
     "edit_object": 0,
-    "origin_x": 4.0,
-    "destination_x": 2.0,
+    "origin_x": 0.0,
+    "destination_x": 3.0,
     "changes_categorical_tile": true,
-    "n_changed_rays_5ray": 4,
+    "n_changed_rays_5ray": 2,
     "changed_rays": {
      "dw-5ray": [
-      1,
-      2,
-      3,
-      4
+      0,
+      3
      ],
      "dw-noiseless": [
-      47,
-      48,
-      49,
-      50,
-      51,
-      52,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63,
-      64,
-      65,
-      66,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      75,
-      76,
-      103,
-      104,
-      105,
-      106,
-      107,
-      108,
-      109,
-      110,
-      111,
-      112,
-      113,
-      114,
-      115,
-      116
-     ],
-     "dw-128ray": [
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
       31,
       32,
       33,
@@ -669,43 +641,6 @@
       36,
       37,
       38,
-      39,
-      40,
-      41,
-      42,
-      43,
-      44,
-      45,
-      46,
-      47,
-      48,
-      49,
-      50,
-      51,
-      52,
-      53,
-      54,
-      55,
-      56,
-      57,
-      58,
-      59,
-      60,
-      61,
-      62,
-      63,
-      64,
-      65,
-      66,
-      67,
-      68,
-      69,
-      70,
-      71,
-      72,
-      73,
-      74,
-      75,
       76,
       77,
       78,
@@ -717,44 +652,41 @@
       84,
       85,
       86,
+      87
+     ],
+     "dw-128ray": [
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      82,
+      83,
+      84,
+      85,
+      86,
       87,
       88,
       89,
       90,
       91,
       92,
-      96,
-      97,
-      98,
-      99,
-      100,
-      101,
-      102,
-      103,
-      104,
-      105,
-      106,
-      107,
-      108,
-      109,
-      110,
-      111,
-      112,
-      113,
-      114,
-      115,
-      116,
-      117,
-      118,
-      119,
-      120,
-      121,
-      122,
-      123,
-      124,
-      125
+      93,
+      94
      ]
     },
+    "delta_intensity_5ray": [
+     0.4,
+     0.4
+    ],
     "arms_drawn": {
      "cont": {
       "PI": {
@@ -840,7 +772,7 @@
    }
   ],
   "blank_cells": [],
-  "selection": "Scenario filter (2026-09-21): a seed is drawn only if its teleport changes at least one ray of the clean 5-ray frame at the edit frame (the scorer's differing-ray zone under the dw-5ray renderer is non-empty); A3's Examples 1-3 are the first three passing seeds in seed order, Example 3 shared by the two categorical columns. R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1). Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.",
+  "selection": "Scenario filter (2026-09-21, tightened in round 5): a seed is drawn only if its teleport changes at least 2 rays of the clean dw-5ray frame at the edit frame, at least 2 of them by at least 0.2 in intensity (the scorer's differing-ray zone and the gap between its two clean reference renders under the 5-ray renderer). A3's three scenarios are the first three passing seeds; the two categorical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the other two are the continuous Examples 1 and 2 in seed order. R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1, unfiltered). Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.",
   "matching": "One scenario = one world (positions, velocities, teleport) generated under the tightest geometry (radius 1.0) and rendered under each instance's own renderer (radius 0.5 / 128 rays for dw-noiseless, radius 1.0 / N rays for the ray family); positions are identical across columns, only the rendering differs. changed_rays = the rays on which the clean edited and unedited frames at the edit frame differ, per renderer.",
   "error_strip": "prediction (clipped to [0, 1]) minus clean ground truth at the edit frame, drawn on the canonical signed-error map, fixed scale \u00b11"
  },

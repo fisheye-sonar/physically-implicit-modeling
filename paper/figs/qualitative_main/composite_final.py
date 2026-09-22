@@ -1,4 +1,4 @@
-"""The main-text qualitative figure (Sevan's spec, rounds 2-4), two files:
+"""The main-text qualitative figure (Sevan's spec, rounds 2-5), two files:
 
     composite_final              (a) four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless, Cartesian block),
                                  128-ray (categorical) on Example 3 (dw-128ray, appearance-fac block) and 5-ray (categorical)
@@ -8,7 +8,8 @@
     composite_final_sidebyside   (a) left; (b) right with Standard / Adjacent Flip / Adjacent NoFlip as columns and Unedited
                                  Pred, Ground truth, PI, IM as rows (no GS), thinner rims.
 
-Every drawn scenario passes the 5-ray visibility filter (``rayworld_panel`` option A3, ``common.passing_seeds``). The
+Every drawn scenario passes the 5-ray visibility filter (``rayworld_panel`` option A3, ``common.passing_seeds``); the
+two categorical columns share the second passing seed (``rayworld_panel.CAT_SLOT``), the continuous columns the other two. The
 pre-edit / post-edit key (dots) sits at the top right of each figure, above the "prediction - truth" colour bar; the figure
 is 0.22 in wider than the text width to make room for it (LaTeX scales it to the column). Pieces under
 pieces/composite_final{,_sidebyside}; sidecars composite_final{,_sidebyside}.json.

@@ -1,11 +1,11 @@
 # qualitative_main — the main-text editability figure: (a) Rayworld, (b) Othello
 
-Two deliverables (round 4, 2026-09-21): **`composite_final`** and **`composite_final_sidebyside`**, Sevan's spec
-(`paper/figs/briefs/qualitative_main_round4.md` on top of rounds 2-3). Panel (a) has **four columns from three models**:
-Standard (continuous) on Examples 1 and 2 (dw-noiseless, `noise_ablation/L-dw-noiseless-20m`, Cartesian block), 128-ray
-(categorical) on Example 3 (dw-128ray, `ray_ablation/L-dw-128ray-20m`, appearance-fac block) and 5-ray (categorical) on the
-SAME Example 3 (dw-5ray, `ray_ablation/L-dw-5ray-20m`, appearance-fac block). Every drawn scenario passes the 5-ray visibility
-filter (below). Panel (b) is round 3's, unchanged. Everything is drawn from caches by the appendix scripts' own helpers
+Two deliverables (round 5, 2026-09-21): **`composite_final`** and **`composite_final_sidebyside`**, Sevan's spec
+(`paper/figs/briefs/qualitative_main_round4.md` plus round 5's three fixes, on top of rounds 2-3). Panel (a) has **four columns
+from three models**: Standard (continuous) on Examples 1 and 2 (dw-noiseless, `noise_ablation/L-dw-noiseless-20m`, Cartesian
+block), 128-ray (categorical) on Example 3 (dw-128ray, `ray_ablation/L-dw-128ray-20m`, appearance-fac block) and 5-ray
+(categorical) on the SAME Example 3 (dw-5ray, `ray_ablation/L-dw-5ray-20m`, appearance-fac block). Every drawn scenario passes
+the 5-ray visibility filter (below). Panel (b) is round 3's, unchanged. Everything is drawn from caches by the appendix scripts' own helpers
 (`paper/figs/qualitative_edits/make_figure.py`: `_panel`, `_blank`, `error`, and its `build` / `predictions` / filter
 machinery; `paper/figs/qualitative_edits_othello/make_figure.py`: `draw_board`, `marked_squares`, `mark`, `mark_key`), style by
 `paper/figs/paper_style.py` (Arial as TrueType, white page, zero outer padding). No metric is computed here except the canonical
@@ -23,8 +23,8 @@ Positions are identical across columns; only the rendering differs.
 
 ## Regenerate
 
-    .pim/bin/python paper/figs/qualitative_edits/make_figure.py --passing 6        # the appendix caches of the six passing seeds (GPU; --redraw reuses them)
-    .pim/bin/python paper/figs/qualitative_main/common.py --build-128ray 2         # the 128-ray cache of Example 3's seed (GPU, one model)
+    .pim/bin/python paper/figs/qualitative_edits/make_figure.py --set             # the appendix caches and figures (GPU; --redraw reuses the caches)
+    .pim/bin/python paper/figs/qualitative_main/common.py --build-128ray 1         # the 128-ray cache of Example 3's seed (GPU, one model)
     .pim/bin/python paper/figs/qualitative_main/composite_final.py                 # both figures + pieces + sidecars (CPU)
     # options kept in the scripts, not delivered: rayworld_panel.py --options R1 R2 R3 R4 (round 1, seeds 0 / 0-2 unfiltered);
     # othello_panel.py [--rule typical --rank k] [--gs]; composite.py (round 1's composites). Rounds 2-3's A1 / A2 cuts were retired.
@@ -37,30 +37,36 @@ Positions are identical across columns; only the rendering differs.
 | `composite_final_sidebyside.{pdf,png}` | (a) left (3.27 in), (b) right (2.45 in): variants Standard / Adjacent Flip / Adjacent NoFlip as columns, Unedited Pred / Ground truth / PI / IM as rows (no GS), boards 0.60 in, rims 1.0 pt. **5.72 x 2.93 in**; (a)'s strips are 0.46 x 0.19 in with 7 pt example titles and no spacers; its group titles are two lines: the model over its own columns ("Standard", "128-ray", "5-ray"), the block qualifier once over the neighbouring columns that share it ("(continuous)" over Examples 1-2, "(categorical)" over the two Example 3 columns), because a 7 pt "(categorical)" is 0.54 in wide, wider than a 0.46 in column |
 | `pieces/composite_final/` | every element as its own PDF (+ PNG preview): the 36 strips of (a), named `col<k>_<instance>_seed<s>_<row>` with rows `context`, `unedited`, `ground_truth`, `<block>_<editor>_{prediction,error}` (block `cont` / `cat`; e.g. `col3_dw-128ray_seed2_cat_IM_prediction`), `key_error_scale` (the ±1 bar), `key_locators` (cyan / pink lines); the ten boards of (b) at 1.4 in (`<Variant>_case<i>_<condition>`), a faded full-board `_thumbnail` per variant with the 5 x 5 window, `key_marks` (the dots), `key_tint` |
 | `pieces/composite_final_sidebyside/` | the twelve boards of the side-by-side (b) (rims 1.0 pt), thumbnails, keys; its strips are `pieces/composite_final/`'s |
-| `composite_final.json`, `composite_final_sidebyside.json` | sidecars: geometry (inches); the Rayworld columns (title, group, variant, instance, run, seed, cache, block, edit object, locator ray centres, `n_changed_rays_5ray`, `changed_rays` per renderer (dw-5ray, the column's own, dw-noiseless, dw-128ray), arms drawn for both blocks, the guarded Table 2 cells), the selection and matching rules; the Othello cases (run, case id, rank, flipped tile, marked squares, legal sets, window, per-case Edit Index of every condition, population means, arms drawn, Table 2 cells) |
-| `common.py`, `rayworld_panel.py`, `othello_panel.py`, `composite_final.py`, `composite.py` | the scripts (caches, the filter and selection; panel (a), option `A3` = the final cut; panel (b); the two composites; round 1's composites, kept only as a script) |
+| `composite_final.json`, `composite_final_sidebyside.json` | sidecars: geometry (inches); the Rayworld columns (title, group, variant, instance, run, seed, cache, block, edit object, locator ray centres, `n_changed_rays_5ray`, `changed_rays` per renderer (dw-5ray, the column's own, dw-noiseless, dw-128ray), `delta_intensity_5ray`, arms drawn for both blocks, the guarded Table 2 cells), the selection and matching rules; the Othello cases (run, case id, rank, flipped tile, marked squares, legal sets, window, per-case Edit Index of every condition, population means, arms drawn, Table 2 cells) |
+| `common.py`, `rayworld_panel.py`, `othello_panel.py`, `composite_final.py`, `composite.py` | the scripts (caches, the filter and selection; panel (a), option `A3` = the final cut, `CAT_SLOT` = which scenario the categorical pair takes; panel (b); the two composites; round 1's composites, kept only as a script) |
 
 ## Selection rules
 
-- **Scenario filter (Sevan, round 4: "only show examples which change for all of them").** A seed is eligible only if its
-  teleport VISIBLY changes the 5-ray observation: the scenario is rendered under the dw-5ray config and the clean post-edit frame
-  at the edit frame must differ from the clean unedited frame on at least one ray. The quantity is the scorer's own
-  differing-ray zone (`pim.metrics.zone_editability.build_edit_zones` through `bench.bench_from_arrays`, the support the Edit
-  Index is scored over) under the dw-5ray renderer (`make_figure.visible_change`, CPU, no model). Seeds 0-39: 27 pass, 13 fail;
-  the failures (3, 4, 6, 11, 13, 14, 15, 26, 28, 30, 31, 32, 33) are teleports that stay inside the disc's own 5-ray ray(s), so
-  the coarse frame does not change. **Examples 1-3 are the first three passing seeds in seed order: 0, 1, 2** (Example 3 shared
-  by the two categorical columns), the same first six seeds (0, 1, 2, 5, 7, 8) as the appendix figure. Per example, the rays
-  on which the clean edited and unedited frames differ:
+- **Scenario filter (Sevan: "only show examples which change for all of them"; tightened in round 5).** A seed is eligible only
+  if its teleport VISIBLY changes the 5-ray observation: the scenario is rendered under the dw-5ray config and the clean
+  post-edit frame at the edit frame must differ from the clean unedited frame **on at least 2 rays, at least 2 of them by at
+  least 0.2 in intensity**. Round 4 asked only for a non-empty difference, which passed scenarios changing a single ray; those
+  read as no change at all in the drawing (seed 8 changes only 5-ray ray 1), so round 5 raised the bar. Both quantities come
+  from the scorer's own zone construction (`pim.metrics.zone_editability.build_edit_zones` through `bench.bench_from_arrays`):
+  the `differing` mask is the support the Edit Index is scored over, the magnitudes are the gap between its two clean reference
+  renders (`make_figure.passes` / `change_at`, CPU, no model). **Seeds 0-59: 29 pass**, 31 fail; 15 of the failures (8, 16, 18,
+  19, 20, 22, 23, 35, 36, 38, 45, 46, 55, 56, 59) passed the round-4 rule on a single ray, the rest change no ray at all. On
+  this generator the intensity clause never binds on its own: the discs' fixed reflectivities make every changed ray differ by
+  0.4 or 0.8, so the ray-count clause decides every case in 0-59.
+- **The three scenarios are the first three passing seeds: 0, 1, 2.** Which one the categorical pair takes is Sevan's editorial
+  choice (round 5, `rayworld_panel.CAT_SLOT`): **the second, seed 1**, whose teleport crosses the frame; the other two are the
+  continuous examples in seed order. So **Example 1 = seed 0, Example 2 = seed 2, Example 3 = seed 1** (one world drawn at two
+  resolutions in columns 3 and 4). Per example, the rays on which the clean edited and unedited frames differ:
 
-  | example | seed | 5-ray (the filter) | dw-noiseless (128 rays, r 0.5) | dw-128ray (128 rays, r 1.0) | edited object | tile changes (all three) |
-  |---|---|---|---|---|---|---|
-  | 1 | 0 | 2: rays 0, 4 | 28 | 52 | 0 | yes |
-  | 2 | 1 | 2: rays 0, 3 | 26 | 26 | 0 | yes |
-  | 3 | 2 | 4: rays 1, 2, 3, 4 | 44 | 92 | 0 | yes |
+  | example | column(s) | seed | 5-ray (the filter) | dw-noiseless (128 rays, r 0.5) | dw-128ray (128 rays, r 1.0) | edited object | tile changes |
+  |---|---|---|---|---|---|---|---|
+  | 1 | 1, Standard continuous | 0 | 2: rays 0, 4 (delta 0.4, 0.4) | 28 | 52 | 0 | yes |
+  | 2 | 2, Standard continuous | 2 | 4: rays 1, 2, 3, 4 (delta 0.4 each) | 44 | 92 | 0 | yes |
+  | 3 | 3 and 4, categorical | 1 | 2: rays 0, 3 (delta 0.4, 0.4) | 26 | 26 | 0 | yes |
 
   Locator ray centres (cyan origin / pink destination) in each column's own renderer: Example 1 on dw-noiseless 107.5 / 28.5;
-  Example 2 on dw-noiseless 31.5 / 81.5; Example 3 on dw-128ray 110.5 / 61.5 and on dw-5ray ray 4 / ray 2 (the centre of rays
-  1-3). In Example 3 the teleported disc lands near the camera and occludes the lighter disc.
+  Example 2 on dw-noiseless 109.5 / 61.5; Example 3 on dw-128ray 21.5 / 88.0 and on dw-5ray ray 0 / ray 3. As drawn, the
+  5-ray column's Ground truth and Unedited Pred differ on exactly those two rays (ray 0: 0.39 to 0.00, ray 3: 0.07 to 0.40).
 - **Othello eligibility.** Among the 1000 bench cases of a variant (all at move 20): at least 3 squares change legality
   (|legal_pre XOR legal_post| ≥ 3) and the window {flipped tile} ∪ changed squares + one-square margin fits 5 x 5. Eligible:
   65 / 396 / 379 on Standard / Adjacent Flip / Adjacent NoFlip.
@@ -80,10 +86,10 @@ Positions are identical across columns; only the rendering differs.
   under-prediction, green = over, black = correct), fixed ±1, the prediction clipped to 0..1 before differencing (the scorer
   does not clip). Cyan line = ray centre of the edited disc before the edit, pink = after, in each column's own renderer.
   Single next-step frames, not rollouts; the write targets the pre-dynamics state; edit at frame 20. **Columns 1-2** edit the
-  continuous full state of the Standard model (dw-noiseless, Cartesian block: PI pt 5 a 12, GS pt 0 a 0.35, IM pt 6) on two
-  scenarios. **Column 3** edits the factorised appearance labels of the 128-ray model (dw-128ray, appearance-fac block: PI pt 3
-  a 0.5, GS pt 0 a 0.35, IM pt 6) on a third scenario; **column 4** the same labels of the 5-ray model (dw-5ray, appearance-fac
-  block: PI pt 1 a 20, GS pt 0 a 0.35, IM pt 5) on that SAME scenario, seen through 5 rays. Categorical IM = the categorical
+  continuous full state of the Standard model (dw-noiseless, Cartesian block: PI pt 5 a 12, GS pt 0 a 0.35, IM pt 6) on
+  scenarios seed 0 and seed 2. **Column 3** edits the factorised appearance labels of the 128-ray model (dw-128ray,
+  appearance-fac block: PI pt 3 a 0.5, GS pt 0 a 0.35, IM pt 6) on scenario seed 1; **column 4** the same labels of the 5-ray
+  model (dw-5ray, appearance-fac block: PI pt 1 a 20, GS pt 0 a 0.35, IM pt 5) on that SAME scenario, seen through 5 rays. Categorical IM = the categorical
   inverse map (one-hot labels + Cartesian velocity; `pim.probes.inverse.encode_categorical_state`). Discs have radius 0.5 in
   columns 1-2 and 1.0 in columns 3-4 (each instance's own geometry).
 - **(b)** Unedited Pred = the pre-edit board with the model's next-move distribution; every other column = the post-edit
@@ -128,7 +134,9 @@ Per-case Edit Index (symdiff) of the drawn cases, for the caption's "read agains
 | Adjacent NoFlip | 39 | 37 (4, 5) | 37, 38, 45, 46 | −1.00 / −0.00 / −0.54 / −0.08 |
 
 No per-case statistic exists for the drawn Rayworld examples (the cache holds frames, not indices); the appendix's
-`qualitative_edits/more_seeds/` shows how much the picture moves with the scenario (the same six filtered seeds).
+`qualitative_edits/more_seeds/` shows how much the picture moves with the scenario. That set (seeds 5, 7, 9, 10, 12) has been
+**disjoint from this figure's scenarios** since round 5, so no appendix column repeats a column drawn here. The primary appendix
+figure is still seed 0, so its Standard column is the same world as Example 1 here; Sevan's call whether to move it.
 
 ## Caveats
 

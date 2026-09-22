@@ -7,7 +7,13 @@
    0,
    4
   ],
-  "rule": "drawn only if the teleport changes at least one ray of the clean 5-ray frame at the edit frame"
+  "delta_intensity": [
+   0.4,
+   0.4
+  ],
+  "n_strong": 2,
+  "passes": true,
+  "rule": "drawn only if the teleport changes at least 2 rays of the clean dw-5ray frame at the edit frame, at least 2 of them by at least 0.2 in intensity"
  },
  "differing_rays": {
   "Standard": [

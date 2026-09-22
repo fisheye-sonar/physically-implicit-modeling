@@ -4,12 +4,13 @@
     R2  Standard, 8-ray, 5-ray x PI, GS, GS (categorical), IM                                   seed 0
     R3  Standard only, three scenarios (seeds 0, 1, 2) x PI, GS, IM                            continuous
     R4  R3 plus a 5-ray column on scenario 1, with the GS (categorical) row (the coarse foil)
-    A3  the final cut (round 4, Sevan's spec), four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless,
+    A3  the final cut (rounds 4-5, Sevan's spec), four columns: Standard (continuous) on Examples 1 and 2 (dw-noiseless,
         Cartesian block), 128-ray (categorical) on Example 3 (dw-128ray, appearance-fac block, IM = the categorical
         inverse map) and 5-ray (categorical) on the SAME Example 3 (dw-5ray); rows Context, Unedited Pred, Ground
-        truth, PI, GS, IM. Examples 1-3 are the first three seeds passing the 5-ray visibility filter
-        (``common.passing_seeds``). Rounds 2-3's A1 / A2 cuts (two scenarios x continuous | categorical, one model)
-        were retired with this round.
+        truth, PI, GS, IM. The three scenarios are the first three seeds passing the 5-ray visibility filter
+        (``common.passing_seeds``); the categorical pair takes the second of them (``CAT_SLOT``), the continuous
+        columns the other two. Rounds 2-3's A1 / A2 cuts (two scenarios x continuous | categorical, one model) were
+        retired in round 4.
 
 Every column: the last 8 observed frames (time downward), then single next-step frames: Unedited, Ground
 truth, and each editor's write at the run's guarded best arm, with the signed error (prediction minus
@@ -38,6 +39,8 @@ SPACER = {False: 0.18, True: 0.0}    # the final cut: an empty column between mo
                                      # narrow side-by-side, whose 7 pt "Example k" titles need every bit of column width)
 UNIT = {"R1": 0.12, "R2": 0.15, "R3": 0.15, "R4": 0.13, "A3": 0.155}   # inches per strip unit
 FINAL = ("A3",)
+CAT_SLOT = 1     # which of the three passing seeds the two categorical columns share (Sevan, round 5: the second,
+                 # whose teleport crosses the frame; the other two are the continuous examples, in seed order)
 LABELS = {"context": "Context", "unedited": "Unedited Pred", "gt": "Ground truth"}
 WRAPPED = {"unedited": "Unedited\nPred", "gt": "Ground\ntruth"}      # the final cut's narrow gutter
 
@@ -84,11 +87,14 @@ def columns(option):
         return ([(f"Standard\nscenario {k + 1}", "Standard", s, "appendix", None, None) for k, s in enumerate(C.HERO_SEEDS)]
                 + [("5-ray\nscenario 1", "5-ray", C.HERO_SEEDS[0], "appendix", None, None)])
     if option == "A3":
-        s1, s2, s3 = C.passing_seeds(3)              # the first three seeds whose teleport changes the 5-ray frame
-        return [("Example 1", "Standard", s1, "appendix", "cont", "Standard (continuous)"),
-                ("Example 2", "Standard", s2, "appendix", "cont", "Standard (continuous)"),
-                ("Example 3", "128-ray", s3, "128ray", "cat", "128-ray (categorical)"),
-                ("Example 3", "5-ray", s3, "appendix", "cat", "5-ray (categorical)")]
+        seeds = C.passing_seeds(C.rw.N_MAIN)         # the first three seeds that pass the 5-ray visibility filter
+        cat = seeds[CAT_SLOT]                        # the scenario the two categorical columns share
+        cont = [s for k, s in enumerate(seeds) if k != CAT_SLOT]
+        last = f"Example {len(cont) + 1}"
+        return ([(f"Example {k + 1}", "Standard", s, "appendix", "cont", "Standard (continuous)")
+                 for k, s in enumerate(cont)]
+                + [(last, "128-ray", cat, "128ray", "cat", "128-ray (categorical)"),
+                   (last, "5-ray", cat, "appendix", "cat", "5-ray (categorical)")])
     raise ValueError(option)
 
 
@@ -293,21 +299,26 @@ def sidecar(option):
         arms = {b: {ed: None if a is None else {"point": int(a[0]), "alpha": float(a[1])} for ed, a in col[b]["arms"].items()}
                 for b in ("cont", "cat")}
         rays = {i: C.changed_rays(s, i) for i in dict.fromkeys((rw.FILTER_INST, inst, "dw-noiseless", "dw-128ray"))}
+        deltas = list(rw.change_at(s)[1])
         out["columns"].append({
             "title": title.replace("\n", ", "), "group": grp, "variant": v, "instance": inst, "run": run, "seed": s,
             "source_cache": C.SOURCES[src].format(seed=s, context=8), "block": None if blk is None else C.DW_BLOCK[blk],
             "edit_object": full["edit_object"], "origin_x": col["cont"]["ghost_x"], "destination_x": col["cont"]["target_x"],
             "changes_categorical_tile": bool(col["cat"]["changes_tile"]),
             "n_changed_rays_5ray": len(rays[rw.FILTER_INST]), "changed_rays": rays,
+            "delta_intensity_5ray": [round(x, 3) for x in deltas],
             "arms_drawn": arms, "table2": C.table2_rayworld(run)})
         if blk is not None:
             out["blank_cells"] += [f"col{c + 1} {ed}" for ed in C.EDITORS if col[blk][ed] is None]
     out["selection"] = (
-        "Scenario filter (2026-09-21): a seed is drawn only if its teleport changes at least one ray of the clean 5-ray "
-        "frame at the edit frame (the scorer's differing-ray zone under the dw-5ray renderer is non-empty); A3's "
-        "Examples 1-3 are the first three passing seeds in seed order, Example 3 shared by the two categorical columns. "
-        "R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1). Arms are the tables' guarded best arms "
-        "(pim.metrics.selection.best_arm); a block with no arm for an editor is a blank cell.")
+        f"Scenario filter (2026-09-21, tightened in round 5): a seed is drawn only if its teleport changes at least "
+        f"{rw.MIN_RAYS} rays of the clean {rw.FILTER_INST} frame at the edit frame, at least {rw.MIN_STRONG} of them by "
+        f"at least {rw.MIN_DELTA} in intensity (the scorer's differing-ray zone and the gap between its two clean "
+        f"reference renders under the 5-ray renderer). A3's three scenarios are the first three passing seeds; the two "
+        f"categorical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the other two are the "
+        f"continuous Examples 1 and 2 in seed order. R1 / R2 use seed 0, R3 / R4 seeds 0, 1, 2 (round 1, unfiltered). "
+        f"Arms are the tables' guarded best arms (pim.metrics.selection.best_arm); a block with no arm for an editor is "
+        f"a blank cell.")
     out["matching"] = (
         "One scenario = one world (positions, velocities, teleport) generated under the tightest geometry (radius 1.0) "
         "and rendered under each instance's own renderer (radius 0.5 / 128 rays for dw-noiseless, radius 1.0 / N rays "

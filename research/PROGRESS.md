@@ -3,7 +3,23 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 13:25 PT — oth-standard n = 3, oth-adjflip n = 2 (extension path verified on Othello); MOVES.md merge fix in the dispatcher; queue 22 of 37_
+_Last updated: 2026-09-21 20:20 PT — appendix table skeletons added to the paper draft (paper-text session); queue: rep_dw-blink_s1 (lab) + rep_oth-adjacent_s1 (remote) running_
+
+## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
+
+Sevan asked for the appendix TABLE STRUCTURE (values to be refreshed later): eight tables added to `paper/paper_draft.tex`
+under their existing `\subsection`s, in Tables 1/2's style (heat column types P / E / F, `G` gaps, `\multirow` + `\shortstack`),
+every value read through the canonical readers (`pim.figures.tables.collect` under `select="index"` and `"fidelity"`, cartesian
+basis; `tables.prediction_rows`; `runs/_baselines/*/{baselines,bayes_floor}.json`; `paper/figs/editability_trends/by_point_values.md`)
+with `% source:` comments above each table. Blanks left where no number exists: Rayworld Bayes floors (queue `appendix_prediction`),
+nearest-neighbour latent R² (`nn_r2` not folded into scores.json), categorical IM on smooth / obs5 / standard / blink (no arm),
+the token model's mean-frame IM. Two tables are PROVISIONAL and marked `\red{}`: the token model's mean-frame editability
+(`experiments/dw_tokens/bridge`, 2026-09-06, frustum, pre-guard) and legal-vs-illegal Othello targets
+(`experiments/adjacent_flip_ablation/scores/ceiling_symdiff_*.json`, 2026-09-15; canonical re-run = `scripts/index_ceiling.py
+--reachability --editors`). The grid-layout table was restyled (ND dropped as in the main tables, IM column added, guarded arms).
+Main text untouched (verified byte-identical outside `\appendix`). Draft NOT committed (Sevan's working tree).
+Noted at session start: 10 peer sessions on this repo, one busy; `qualitative_main/` round-4 scripts edited 19:55 with the
+composites not yet regenerated — left alone.
 
 ## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
 
@@ -100,6 +116,14 @@ quality: rayworld = (a) Standard (b) Blink (c) 5-ray × 2 sequences × GT / Pred
 Blink and 5-ray free-runs via the canonical bench calls, cached `.scratch/predictive_quality_<inst>.npz`, `compute_rayworld.py`)
 — ⚠ the random 5-ray pair (cases 20, 26) shows large free-run misses (the disc never moves to its new ray); flagged to Sevan,
 seed is the knob; othello = three examples per variant stacked (full page).
+**ROUND 5 (20:00 PT):** the 5-ray visibility filter was too weak (it passed a ONE-ray change; seed 8 looked unchanged to Sevan).
+New rule in `qualitative_edits/make_figure.py::passes`: at least 2 changed rays of the clean 5-ray frame AND at least 2 with
+|Delta| >= 0.2, both off the scorer's own `build_edit_zones`. Seeds 0-59: 29 pass, 31 fail (15 that passed the old rule now fail).
+⚠ The intensity clause never binds on discworld — fixed reflectivities make every changed ray differ by exactly 0.4 or 0.8, so the
+ray-count clause decides every case; it is a guard for a future fainter instance, not a live discriminator. Main figure re-assigned
+(Sevan's swap): Example 1 = seed 0, Example 2 = seed 2 (both Standard continuous), Example 3 = seed 1 (128-ray + 5-ray categorical).
+Appendix more_seeds made disjoint from the main figure's seeds: 1, 2, 8 dropped, now 5, 7, 9, 10, 12; primary stays seed 0 so the
+tex path resolves (its Standard column still shares seed 0 with the main figure's Example 1 - Sevan's call, left as is).
 **Figure work is DONE pending Sevan's two hand-drawn figures. NEXT: the paper text** — Table 2 + §Results to the guarded arms and the
 categorical map (+0.637 / +0.823 / +0.866 / +0.913), seed ± from the families, "one seed / 780k steps" wording, captions from the
 folder READMEs (selection rules, arms, guard, which model each panel uses), the empty appendix sections the figures now fill.

@@ -4,7 +4,8 @@ The two appendix scripts are loaded as modules so their drawing helpers (``_pane
 ``_blank``, ``draw_board``, ``mark``) draw every strip and board here too; nothing is re-implemented.
 Predictions are read from the appendix caches in ``.scratch/`` (``_catim``: the categorical blocks'
 IM through the categorical inverse map, 2026-09-21). Scenarios are chosen by the appendix's filter
-(``passing_seeds``: the teleport changes at least one ray of the clean 5-ray frame). The only metric touched
+(``passing_seeds``: the teleport changes at least 2 rays of the clean 5-ray frame, at least 2 of them by at
+least 0.2 in intensity). The only metric touched
 is the canonical per-case Othello Edit Index (``pim.metrics.set_editability.edit_index_legal``), used by the
 "typical case" rule.
 
@@ -73,8 +74,9 @@ def build_128ray(seed: int, context: int = 8) -> dict:
 # ── the scenario filter (the appendix's, ``rw.passing_seeds``) ──────────────────────────
 @functools.lru_cache(maxsize=None)
 def passing_seeds(n: int) -> tuple[int, ...]:
-    """The first ``n`` seeds whose teleport changes at least one ray of the clean 5-ray frame at the edit frame
-    (the scorer's differing-ray zone under the dw-5ray renderer is non-empty). CPU, no model."""
+    """The first ``n`` seeds that pass the 5-ray visibility filter (``rw.passes``: at least ``rw.MIN_RAYS`` changed
+    rays of the clean 5-ray frame at the edit frame, at least ``rw.MIN_STRONG`` of them by at least ``rw.MIN_DELTA``
+    in intensity). CPU, no model."""
     return tuple(rw.passing_seeds(n))
 
 

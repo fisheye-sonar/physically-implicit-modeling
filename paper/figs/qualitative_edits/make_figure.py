@@ -16,20 +16,23 @@ On a categorical block the IM write goes through the block's OWN inverse map (on
 Cartesian velocity, 2026-09-20); a block with no IM arm (Standard, Blink) draws a blank cell.
 Output: ``qualitative_edits_seed<seed>.{pdf,png}`` beside this script.
 
-The scenario filter (2026-09-21): a seed is drawn only if its teleport changes at least one ray of the clean
-5-ray frame at the edit frame (``visible_change``: the scorer's differing-ray zone under the dw-5ray renderer
-is non-empty), so every column of every figure shows an edit that is visible even on the coarsest sensor.
+The scenario filter (2026-09-21, tightened in round 5): a seed is drawn only if its teleport changes at least
+2 rays of the clean 5-ray frame at the edit frame, at least 2 of them by at least 0.2 in intensity (``passes``:
+the scorer's differing-ray zone and its two clean reference renders under the dw-5ray renderer), so every column
+of every figure shows an edit a reader can see even on the coarsest sensor.
 
     python paper/figs/qualitative_edits/make_figure.py --seed 7
     python paper/figs/qualitative_edits/make_figure.py --seed 7 --find   # advance the seed until it passes the filter
-    python paper/figs/qualitative_edits/make_figure.py --passing 6       # the first six passing seeds: the first beside
-                                                         # this script, the rest under more_seeds/seed<k>/
+    python paper/figs/qualitative_edits/make_figure.py --set             # the whole appendix set: the primary figure
+                                                         # (first passing seed) + more_seeds/seed<k>/ (the passing
+                                                         # seeds the main-text figure does not draw)
 """
 from __future__ import annotations
 
 import argparse
 import contextlib
 import dataclasses
+import functools
 import json
 import pickle
 import sys
@@ -131,31 +134,67 @@ def base_config(cfgs: dict | None = None) -> SimConfig:
     return max((cfgs[inst] for _, inst, _ in VARIANTS), key=lambda c: c.radius)
 
 
-# ── the scenario filter (Sevan, 2026-09-21: "only show examples which change for all of them") ──
+# ── the scenario filter (Sevan: "only show examples which change for all of them") ──
+# Round 4 asked for a non-empty differing zone under the coarsest renderer; round 5 (2026-09-21) tightened it,
+# because a single changed ray is not visible in the drawing (seed 8 changes one 5-ray ray and reads as no change).
 FILTER_INST = "dw-5ray"      # the coarsest renderer: a scenario is drawn only if its teleport changes THIS frame
+MIN_RAYS = 2                 # at least this many rays of the clean 5-ray frame differ at the edit frame
+MIN_DELTA, MIN_STRONG = 0.2, 2    # and at least MIN_STRONG of them by at least MIN_DELTA in intensity
 
 
-def differing_rays(sc: dict, cfg: SimConfig, seed: int) -> np.ndarray:
-    """The rays on which the clean post-edit frame at EF differs from the clean unedited frame, under
-    ``cfg``'s renderer: the scorer's own ``differing`` zone (``build_edit_zones`` inside
-    ``bench_from_arrays``), the support the Edit Index is scored over. Empty: the teleport is invisible."""
+def ray_change(sc: dict, cfg: SimConfig, seed: int) -> tuple[np.ndarray, np.ndarray]:
+    """(changed ray indices, |Δ intensity| on those rays) at the edit frame under ``cfg``'s renderer. Both come
+    from the scorer's own zone construction (``build_edit_zones`` inside ``bench_from_arrays``): the ``differing``
+    mask is the support the Edit Index is scored over, the magnitudes are the gap between its two clean reference
+    renders (edited world minus counterfactual). No model involved."""
     obs, clean, vis = render_under(sc, cfg, seed)
-    a = bench_arrays_for(sc, obs, clean, vis, sim_dict(cfg, seed), *CONT)
-    return np.flatnonzero(a["zones"].differing[0])
+    z = bench_arrays_for(sc, obs, clean, vis, sim_dict(cfg, seed), *CONT)["zones"]
+    idx = np.flatnonzero(z.differing[0])
+    return idx, np.abs(z.gt_edited[0] - z.gt_unedited[0])[idx]
+
+
+@functools.lru_cache(maxsize=None)
+def change_at(seed: int, inst: str = FILTER_INST) -> tuple[tuple[int, ...], tuple[float, ...]]:
+    """``ray_change`` of the seed's scenario under ``inst``'s renderer, as hashable tuples (CPU, no model)."""
+    idx, d = ray_change(scenario(seed, base_config()), sim_config(inst), seed)
+    return tuple(int(i) for i in idx), tuple(float(x) for x in d)
 
 
 def visible_change(seed: int, inst: str = FILTER_INST) -> np.ndarray:
-    """``differing_rays`` of the seed's scenario under ``inst``'s renderer (CPU, no model)."""
-    return differing_rays(scenario(seed, base_config()), sim_config(inst), seed)
+    """The changed rays of the seed's scenario under ``inst``'s renderer."""
+    return np.array(change_at(seed, inst)[0], dtype=int)
 
 
-def passing_seeds(n: int, start: int = 0, inst: str = FILTER_INST, max_tries: int = 500) -> list[int]:
-    """The first ``n`` seeds from ``start`` whose teleport changes at least one ray of the clean frame under
-    ``inst`` (default: the 5-ray renderer). The selection rule of every drawn scenario since 2026-09-21."""
-    out = [s for s in range(start, start + max_tries) if len(visible_change(s, inst))][:n]
+def passes(seed: int, inst: str = FILTER_INST) -> bool:
+    """THE filter (round 5): the teleport changes at least ``MIN_RAYS`` rays of the clean frame under ``inst``,
+    at least ``MIN_STRONG`` of them by at least ``MIN_DELTA`` in intensity: a change a reader can see."""
+    idx, d = change_at(seed, inst)
+    return len(idx) >= MIN_RAYS and sum(x >= MIN_DELTA for x in d) >= MIN_STRONG
+
+
+def passing_seeds(n: int, start: int = 0, inst: str = FILTER_INST, max_tries: int = 500,
+                  exclude: tuple[int, ...] = ()) -> list[int]:
+    """The first ``n`` seeds from ``start`` that ``passes``, skipping ``exclude``."""
+    out = [s for s in range(start, start + max_tries) if s not in exclude and passes(s, inst)][:n]
     if len(out) < n:
-        raise SystemExit(f"only {len(out)} of {n} seeds in [{start}, {start + max_tries}) change the {inst} frame")
+        raise SystemExit(f"only {len(out)} of {n} seeds in [{start}, {start + max_tries}) pass the {inst} filter")
     return out
+
+
+# ── which seeds each figure draws ──────────────────────────────────────────────────────
+# The main-text figure (paper/figs/qualitative_main) draws the first three passing seeds as its three scenarios.
+# The appendix's more_seeds/ set is disjoint from them (Sevan, round 5: more_seeds/seed2 was redrawing the main
+# figure's 5-ray column), while the PRIMARY appendix figure stays at the first passing seed so the paper's
+# \includegraphics path keeps resolving; its Standard column is still the main figure's Example 1 world.
+N_MAIN = 3
+N_MORE = 5
+
+
+def appendix_seeds(n_more: int = N_MORE) -> tuple[int, list[int]]:
+    """(primary seed, more_seeds seeds): the first passing seed, then the first ``n_more`` passing seeds that the
+    main-text figure does not draw."""
+    main = passing_seeds(N_MAIN)
+    return main[0], passing_seeds(n_more, exclude=tuple(main))
 
 
 def best_arm(scores: dict, block: str, editor: str) -> dict | None:
@@ -450,9 +489,14 @@ def render(data: dict, context: int, out_dir: Path, **kw) -> Path:
         draw(data, context, out.with_name(f"{out.name}_{mode}"), mode=mode, **kw)
     if not all(c["cat"]["changes_tile"] for c in data["cols"].values()):
         print("⚠ on some variant the teleport does not change a factorised tile: the categorical rows there ask for no change")
+    rays, deltas = change_at(seed)
     json.dump({"seed": seed, "edit_object": data["edit_object"],
-               "filter": {"instance": FILTER_INST, "changed_rays": visible_change(seed).tolist(),
-                          "rule": "drawn only if the teleport changes at least one ray of the clean 5-ray frame at the edit frame"},
+               "filter": {"instance": FILTER_INST, "changed_rays": list(rays),
+                          "delta_intensity": [round(x, 3) for x in deltas],
+                          "n_strong": sum(x >= MIN_DELTA for x in deltas), "passes": passes(seed),
+                          "rule": f"drawn only if the teleport changes at least {MIN_RAYS} rays of the clean "
+                                  f"{FILTER_INST} frame at the edit frame, at least {MIN_STRONG} of them by "
+                                  f"at least {MIN_DELTA} in intensity"},
                "differing_rays": {n: c["cont"]["differing_rays"].tolist() for n, c in data["cols"].items()},
                "arms": {n: {"cont": c["cont"]["arms"], "cat": c["cat"]["arms"]} for n, c in data["cols"].items()},
                "changes_tile": {n: c["cat"]["changes_tile"] for n, c in data["cols"].items()}},
@@ -467,8 +511,9 @@ if __name__ == "__main__":
     ap.add_argument("--context", type=int, default=8, help="frames of context above the edit")
     ap.add_argument("--find", action="store_true",
                     help="advance the seed until it passes the scenario filter (the teleport changes the 5-ray frame)")
-    ap.add_argument("--passing", type=int, default=0, metavar="N",
-                    help="draw the first N seeds that pass the filter: the first beside this script, the rest under more_seeds/seed<k>/")
+    ap.add_argument("--set", action="store_true",
+                    help="draw the whole appendix set: the primary figure beside this script and the more_seeds/seed<k>/ entries")
+    ap.add_argument("--more", type=int, default=N_MORE, metavar="N", help="--set: how many more_seeds entries")
     ap.add_argument("--out-dir", default=None, help="write the outputs here instead of beside this script")
     ap.add_argument("--redraw", action="store_true", help="reuse the cached predictions (.scratch/) where they exist")
     ap.add_argument("--diff-scale", type=float, default=1.0, help="± range of the error map in the _diff variant")
@@ -479,12 +524,15 @@ if __name__ == "__main__":
                          "count) instead of the clipped, visible one")
     a = ap.parse_args()
     kw = dict(diff_scale=a.diff_scale, tint_gamma=a.tint_gamma, locators=not a.no_locators, raw_error=a.raw_error)
-    if a.passing:                                  # the appendix set: slot k = the k-th passing seed
-        seeds = passing_seeds(a.passing)
-        dirs = [HERE] + [HERE / "more_seeds" / f"seed{s}" for s in seeds[1:]]
+    if a.set:
+        primary, more = appendix_seeds(a.more)
+        seeds = [primary] + more
+        dirs = [HERE] + [HERE / "more_seeds" / f"seed{s}" for s in more]
     else:
         seeds = passing_seeds(1, start=a.seed) if a.find else [a.seed]
         dirs = [Path(a.out_dir) if a.out_dir else HERE]
     for seed, out_dir in zip(seeds, dirs):
-        print(f"seed {seed}  changed 5-ray rays {visible_change(seed).tolist()}", flush=True)
+        rays, deltas = change_at(seed)
+        print(f"seed {seed}  changed 5-ray rays {list(rays)}  |Δ| {[round(x, 2) for x in deltas]}  "
+              f"passes {passes(seed)}", flush=True)
         render(cached(seed, a.context, a.redraw), a.context, out_dir, **kw)
