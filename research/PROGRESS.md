@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-23 01:20 PT — oth-adjacent n = 3 (nine of ten families complete); probe-seed extras running; queue 32 of 37_
+_Last updated: 2026-09-23 08:15 PT — all probe-seed extras done (probe spread ≪ training spread except IM on adjflip); last training job on the lab, then final_tables + appendix_prediction_
 
 ## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
 
@@ -387,6 +387,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 08:15 — all five `pseed_*` extras done; the 4090 is idle for the rest of the queue.** The three oth-adjflip members, 10 probe refits each + 10 inverse-map refits, at the canonical arm (`variance.json` in each member): seed 0 (`__seed0_s512000`) LIN 0.9479 ± 0.0007 · PI +0.375 ± 0.014 · ND +0.392 ± 0.006 · IM +0.642 ± 0.036; seed 1 LIN 0.9485 ± 0.0007 · PI +0.337 ± 0.008 · ND +0.337 ± 0.003 · IM +0.650 ± 0.025; seed 2 LIN 0.9485 ± 0.0006 · PI +0.238 ± 0.016 · ND +0.270 ± 0.016 · IM +0.638 ± 0.027. Reading across the whole set (oth-standard, dw-8ray, adjflip × 3): refitting the LINEAR probe moves the Edit Index by ≤ 0.016 and skill by ≤ 0.0007; refitting the INVERSE MAP moves IM by 0.004 (oth-standard) to 0.036 (adjflip) — on adjflip that is the size of the training-seed spread (± 0.028), so the IM ± there is instrument as much as model; everywhere else the ± is the model. Six `stall` lines on the `pseed_*` jobs, all false (progress never read from these jobs). Remaining: `rep_oth-noflip_s2` (lab, 270k at 07:48, scored ≈ 16:00) → `final_tables` → `appendix_prediction`.
 
 **2026-09-23 05:10 — `pseed_dw-8ray` done (4090, 2.83 h): the discworld probe-seed spread is as small; `pseed_oth-adjflip_s0` fixed and requeued.** `runs/ray_ablation/L-dw-8ray-20m/variance.json`: full state, 10 probe seeds — LIN skill 0.9503 ± 0.0005, PI at the seed-0 arm +0.220 ± 0.001; `appearance-fac`, 6 seeds — skill 0.9355 ± 0.0003, PI at the canonical arm +0.381 ± 0.005 (ratio 0.96 ± 0.006), ND +0.474 ± 0.000. Training seeds gave PI ± 0.022 on this family. Every `stall` line on the `pseed_*` jobs (three so far) was the blind spot — the check never saw progress on these jobs at all (166 min at 05:00 while the log advanced every ~27 min). `pseed_oth-adjflip_s0` launched at 05:04 against `__seed0_s492188`, a member name guessed in `plan.py` before the extension (the real one is `__seed0_s512000`) → FileNotFoundError; fixed (7658024) and the file regenerated at its requeue, before attempt 2. Running: `pseed_oth-adjflip_s0` retry (4090), `rep_oth-noflip_s2` (lab, ~15:30). 34 of 37 done.
 
@@ -2675,7 +2677,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-23 01:20 PT — oth-adjacent n = 3 (nine of ten families complete); probe-seed extras running; queue 32 of 37_
+_Last updated: 2026-09-23 08:15 PT — all probe-seed extras done (probe spread ≪ training spread except IM on adjflip); last training job on the lab, then final_tables + appendix_prediction_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
