@@ -7,7 +7,7 @@
   "lab"
  ],
  "lane": "gpu",
- "cmd": "python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1 --seeds 10",
+ "cmd": ".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1 --seeds 10",
  "env": {},
  "deps": [
   "rep_oth-adjflip_s1",

@@ -78,9 +78,20 @@ def missing_inverse(r, prev, s=None) -> list:
             return True
         return (s is not None and os.environ.get("PIM_ADD_CAT_IM") == "1"
                 and cat_inverse_in_scope(r.get("instance"), blk.get("target"), s))
-    keys = [k for k, blk in prev.get("bases", {}).items() if not _has_im(blk.get("arms")) and owed(blk)]
-    if r["env"] == "othello" and "arms" in prev and not _has_im(prev["arms"]):
-        keys = ["mine/theirs"] + keys
+    # PIM_ADD_NN_R2=1 (2026-09-23): a block that HAS its IM arms but whose `inverse_map` predates the
+    # stored retrieval R² gets them re-added — the g maps are cached, so this is the bank + the arms
+    # again (minutes), and `attach_inverse` / `add_inverse` replace the IM / IM-NN arms in place.
+    want_nn = os.environ.get("PIM_ADD_NN_R2") == "1"
+    def lacks_nn(inv) -> bool:
+        return want_nn and isinstance(inv, dict) and inv.get("nn_r2") is None
+    keys = [k for k, blk in prev.get("bases", {}).items()
+            if (not _has_im(blk.get("arms")) and owed(blk))
+            or (blk.get("kind") == "regression" and lacks_nn(blk.get("inverse_map")))]
+    if r["env"] == "othello" and "arms" in prev and (not _has_im(prev["arms"]) or lacks_nn(prev.get("inverse_map"))):
+        # Othello's inverse block is top-level and ONE computation serves every block, so the nn_r2
+        # catch-up re-attaches to all of them; the plain missing-IM case lists only what lacks the arms
+        extra = [k for k in prev.get("bases", {}) if k not in keys] if lacks_nn(prev.get("inverse_map")) else []
+        keys = ["mine/theirs"] + extra + keys
     return keys
 
 def add_inverse(model, r, prev, keys, s) -> list:
@@ -103,7 +114,8 @@ def add_inverse(model, r, prev, keys, s) -> list:
                 blk["best"][ed] = best_arm(sub, "edit_index_union") if sub else None
                 for d in blk.get("best_by_dims", {}):
                     blk["best_by_dims"][d][ed] = blk["best"][ed]
-        prev["inverse_map"] = {"g_r2": st["g_r2"], "g_rmse": st["g_rmse"], "version": IM_VERSION}
+        prev["inverse_map"] = {"g_r2": st["g_r2"], "g_rmse": st["g_rmse"], "version": IM_VERSION,
+                               "nn_r2": st.get("nn_r2")}
         return keys
     tokens = r["arch"].endswith("_tokens")
     benches, ucards, arrays = {}, {}, {}

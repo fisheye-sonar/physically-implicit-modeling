@@ -7,7 +7,7 @@
   "lab"
  ],
  "lane": "gpu",
- "cmd": "python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s492188 --seeds 10",
+ "cmd": ".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s512000 --seeds 10",
  "env": {},
  "deps": [
   "rep_oth-adjflip_s1",
@@ -20,13 +20,13 @@
   "remote": 0.8
  },
  "inputs": [
-  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s492188"
+  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s512000"
  ],
  "outputs": [
-  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s492188"
+  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s512000"
  ],
  "progress": null,
  "mem_max": null,
  "max_attempts": 2,
- "note": "10 probe seeds on the 512k member L-oth-adjacent-flip-20m__seed0_s492188"
+ "note": "10 probe seeds on the 512k member L-oth-adjacent-flip-20m__seed0_s512000"
 }

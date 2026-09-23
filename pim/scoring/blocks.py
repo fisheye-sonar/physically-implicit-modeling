@@ -115,7 +115,10 @@ def attach_inverse(blocks: dict, arms_by_key: dict, stats: dict, ei_key: str = "
             for d in blk.get("best_by_dims", {}):
                 blk["best_by_dims"][d][ed] = blk["best"][ed]
         blk["inverse_map"] = {"g_r2": stats["g_r2"], "g_rmse": stats["g_rmse"], "hidden": INVERSE_HIDDEN,
-                              "epochs": INVERSE_EPOCHS, "k": RETRIEVAL_K, "version": IM_VERSION}
+                              "epochs": INVERSE_EPOCHS, "k": RETRIEVAL_K, "version": IM_VERSION,
+                              # the k-nearest-state retrieval's held-out R² on the same rows as g's, per point
+                              # (2026-09-23; computed since 2026-09-16, stored only now — Table 1b's NN column)
+                              "nn_r2": stats.get("nn_r2")}
 
 def probe_block(lin, mlp, sanity, u, arms, dimsets, *, target, basis, kind, n_classes, recipe,
                 alphas, selection, ei_key="edit_index", extra=None):

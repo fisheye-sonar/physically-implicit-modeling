@@ -203,6 +203,37 @@ def categorical_im_jobs() -> list[dict]:
             for jid, runs, prio, est, note in spec]
 
 
+SHORTLIST = {"initial_othello_comparison": ["L-oth-20m"], "adjacent_flip_ablation": ["L-oth-adjacent-flip-20m"],
+             "adjacency_ablation": ["L-oth-adjacent-20m"], "flip_ablation": ["L-oth-noflip-20m"],
+             "noise_ablation": ["L-dw-noiseless-20m"], "blink_ablation": ["L-dw-blink-20m"],
+             "ray_ablation": ["L-dw-128ray-20m", "L-dw-16ray-20m", "L-dw-8ray-20m", "L-dw-5ray-20m"]}
+
+
+def appendix_im_jobs() -> list[dict]:
+    """Two appendix catch-ups on the idle 4090 (Sevan 2026-09-23 09:30), before final_tables:
+    * nn_r2_shortlist — the retrieval form's held-out R² (`inverse_map.nn_r2`, Table 1b's NN column) into the
+      ten shortlist parents: PIM_ADD_NN_R2=1 re-adds the (cached) inverse arms of every block whose inverse
+      block predates the stored value — the bank and the arms again, minutes per basis;
+    * catim_grid_8ray — the categorical inverse map for the bins-vs-grids table's four remaining rows on the
+      8-ray parent (appearance, grid-6x5, grid-10x3, grid-16x8; SETTINGS dw_cat_im), ~40 min a target there.
+    Both push the parents' run dirs in and pull them back; nothing on the lab writes those dirs until
+    final_tables, which depends on both. gpu lane, remote only, serialised by the lane (nn_r2 first)."""
+    base = {"group": "appendix-IM", "kind": "score", "hosts": ["remote"], "lane": "gpu", "deps": [], "host_deps": {},
+            "progress": None, "mem_max": None, "max_attempts": 2, "hold": False}
+    dirs = [f"runs/{t}/{r}" for t, rs in SHORTLIST.items() for r in rs]
+    runs = [r for rs in SHORTLIST.values() for r in rs]
+    return [{**base, "id": "nn_r2_shortlist", "cmd": "bash scripts/drivers/score_pending.sh nn_r2_shortlist",
+             "env": {"PIM_ADD_NN_R2": "1", "PIM_ONLY_RUNS": ",".join(runs), **ENV_SCORE},
+             "inputs": dirs, "outputs": dirs + ["logs/nn_r2_shortlist"], "priority": 60,
+             "est_hours": {"remote": 3.0},
+             "note": "retrieval R² at every point into inverse_map.nn_r2 of the ten shortlist parents (Table 1b NN column)"},
+            {**base, "id": "catim_grid_8ray", "cmd": "bash scripts/drivers/score_pending.sh catim_grid_8ray",
+             "env": {"PIM_ADD_CAT_IM": "1", "PIM_ONLY_RUNS": "L-dw-8ray-20m", **ENV_SCORE},
+             "inputs": ["runs/ray_ablation/L-dw-8ray-20m"], "outputs": ["runs/ray_ablation/L-dw-8ray-20m", "logs/catim_grid_8ray"],
+             "priority": 61, "est_hours": {"remote": 3.0},
+             "note": "categorical IM for appearance / grid-6x5 / grid-10x3 / grid-16x8 on the 8-ray parent (appendix bins-vs-grids table)"}]
+
+
 def build() -> list[dict]:
     jobs = [transfer_job(i, p) for i, p in TRANSFERS.items()]
     for fam, F in FAMILIES.items():
@@ -211,6 +242,7 @@ def build() -> list[dict]:
     jobs += probe_seed_jobs()
     jobs += control_jobs()
     jobs += categorical_im_jobs()
+    jobs += appendix_im_jobs()
     # final_tables waits for EVERYTHING else (2026-09-19): it and the appendix job after it rewrite
     # scores.json files on the lab, and a remote job finishing meanwhile would pull its parent run dir
     # back over them. Nothing runs on either host while these two do.

@@ -105,7 +105,8 @@ def score_othello(model, run_dir, s, only=None) -> dict:
             for r in recs:
                 r["edit_index"] = r["edit_index_union"]
             _im["recs"], _im["stats"] = recs, st
-            out["inverse_map"] = {"g_r2": st["g_r2"], "g_rmse": st["g_rmse"], "version": IM_VERSION}
+            out["inverse_map"] = {"g_r2": st["g_r2"], "g_rmse": st["g_rmse"], "version": IM_VERSION,
+                                  "nn_r2": st.get("nn_r2")}
         return list(_im["recs"])
 
     if only is None or "mine/theirs" in only:

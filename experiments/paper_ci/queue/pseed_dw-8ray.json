@@ -7,7 +7,7 @@
   "remote"
  ],
  "lane": "gpu",
- "cmd": "python -u experiments/seed_variance/scripts/probe_seeds.py --run ray_ablation/L-dw-8ray-20m --targets full appearance-fac --seeds 10 6",
+ "cmd": ".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds.py --run ray_ablation/L-dw-8ray-20m --targets full appearance-fac --seeds 10 6",
  "env": {},
  "deps": [],
  "host_deps": {
