@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-23 14:15 PT — all three 4090 appendix catch-ups done (NN column, grid IMs, token rescore with the mean-frame guard); last training job on the lab ~16:00, then final_tables + appendix_prediction_
+_Last updated: 2026-09-23 15:15 PT — all ten families at n = 3; final_tables done; appendix_prediction (the last job) running; tables rendered under an uncommitted selection-fallback change (see 15:15 entry)_
 
 ## 2026-09-23 (afternoon) — PAPER session: the selection FALLBACK changed; IM-vs-NN table filled (UNCOMMITTED)
 
@@ -413,6 +413,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 15:15 — ALL TEN FAMILIES AT n = 3; `final_tables` done (lab, 15:07–15:09); `appendix_prediction` running (15:09, ~1 h) — the queue's last job.** `rep_oth-noflip_s2` (lab, 15.08 h; one pass, 282 arms, no errors) closed oth-noflip: LIN 1.000 ± 0.000, PI −0.966 ± 0.001, GS −0.959 ± 0.002, IM −0.883 ± 0.026 (guarded on a world where every editor fails). `final_tables`: master_eval pass 11 s (nothing unscored), both table notebooks executed in place without an error cell (full: 9 cells / 11 figures; paper: 5 cells / 4 figures). ⚠ **The tables were rendered under an UNCOMMITTED change to the arm-selection fallback** in the working tree (`pim/metrics/selection.py::best_arm` and the matching `tables.py` comments, written 13:07, attributed in its own text to Sevan 2026-09-23): when no arm of an editor passes the guard, the reported arm is now the LOWEST-fidelity-ratio arm (the least-degrading write) instead of the highest-index arm. Every guarded cell is unchanged; the failing-editor cells move (e.g. oth-adjacent GS −0.157 / fidelity −5.68 → −0.96 / −0.01; oth-noflip GS canonical −0.522 → −0.968) and their seed SDs mostly collapse (noflip GS ± 0.050 → ± 0.002). Ledger and dashboard re-rendered under it. Dagger set (seed SD > 0.1) under this rule: oth-adjflip PI, ND, ND-fidelity, IM-fidelity; oth-adjacent PI, IM (−0.50 ± 0.42), ND-fidelity. This session did not write the change; whoever did should commit it (or revert it) and the paper's selection paragraph should state the fallback.
 
 **2026-09-23 14:15 — `token_rescore_8ray` done (4090, 2.34 h): the 8-ray token model rescored from scratch; the token table's mean-frame rows are complete.** Every frame-set cell REPRODUCES the draft exactly (continuous PI +0.00 / 0.25, GS −0.01 / 0.24, IM +0.65 / 0.70; categorical +0.23 / 0.44, +0.35 / 0.53, +0.78 / 0.80), so the pipeline is deterministic given the cached probes. Mean-frame rows (arm = best `zone_edit_index_expected` among arms with mean-frame fidelity ≥ 0, i.e. `fidelity_ratio_expected` ≤ 1; index / fidelity): continuous PI +0.14 / 0.19 (pt 7, α 175), GS −0.08 / 0.15 (pt 0, α 0.7), IM +0.84 / 0.75 (pt 8); categorical (appearance-fac) PI +0.46 / 0.32 (pt 2, α 20), GS +0.48 / 0.43 (pt 2, α 0.7), IM +0.92 / 0.75 (pt 8). The draft's handcrafted continuous mean-frame cells (PI +0.15 / 0.17, GS −0.27 / 0.13) came from no stored arm and are superseded. The `prediction` block was dropped by the fresh score, as expected; `appendix_prediction` re-adds it. All three 4090 catch-ups are done; the 4090 is idle. Remaining: `rep_oth-noflip_s2` (lab, 475k at 13:45 → scored ≈ 16:00) → `final_tables` → `appendix_prediction`.
 
@@ -2711,7 +2713,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-23 14:15 PT — all three 4090 appendix catch-ups done (NN column, grid IMs, token rescore with the mean-frame guard); last training job on the lab ~16:00, then final_tables + appendix_prediction_
+_Last updated: 2026-09-23 15:15 PT — all ten families at n = 3; final_tables done; appendix_prediction (the last job) running; tables rendered under an uncommitted selection-fallback change (see 15:15 entry)_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
