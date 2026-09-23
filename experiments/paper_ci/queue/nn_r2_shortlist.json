@@ -1,0 +1,53 @@
+{
+ "group": "appendix-IM",
+ "kind": "score",
+ "hosts": [
+  "remote"
+ ],
+ "lane": "gpu",
+ "deps": [],
+ "host_deps": {},
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "id": "nn_r2_shortlist",
+ "cmd": "bash scripts/drivers/score_pending.sh nn_r2_shortlist",
+ "env": {
+  "PIM_ADD_NN_R2": "1",
+  "PIM_ONLY_RUNS": "L-oth-20m,L-oth-adjacent-flip-20m,L-oth-adjacent-20m,L-oth-noflip-20m,L-dw-noiseless-20m,L-dw-blink-20m,L-dw-128ray-20m,L-dw-16ray-20m,L-dw-8ray-20m,L-dw-5ray-20m",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "inputs": [
+  "runs/initial_othello_comparison/L-oth-20m",
+  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+  "runs/adjacency_ablation/L-oth-adjacent-20m",
+  "runs/flip_ablation/L-oth-noflip-20m",
+  "runs/noise_ablation/L-dw-noiseless-20m",
+  "runs/blink_ablation/L-dw-blink-20m",
+  "runs/ray_ablation/L-dw-128ray-20m",
+  "runs/ray_ablation/L-dw-16ray-20m",
+  "runs/ray_ablation/L-dw-8ray-20m",
+  "runs/ray_ablation/L-dw-5ray-20m"
+ ],
+ "outputs": [
+  "runs/initial_othello_comparison/L-oth-20m",
+  "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+  "runs/adjacency_ablation/L-oth-adjacent-20m",
+  "runs/flip_ablation/L-oth-noflip-20m",
+  "runs/noise_ablation/L-dw-noiseless-20m",
+  "runs/blink_ablation/L-dw-blink-20m",
+  "runs/ray_ablation/L-dw-128ray-20m",
+  "runs/ray_ablation/L-dw-16ray-20m",
+  "runs/ray_ablation/L-dw-8ray-20m",
+  "runs/ray_ablation/L-dw-5ray-20m",
+  "logs/nn_r2_shortlist"
+ ],
+ "priority": 60,
+ "est_hours": {
+  "remote": 3.0
+ },
+ "note": "retrieval R\u00b2 at every point into inverse_map.nn_r2 of the ten shortlist parents (Table 1b NN column)"
+}

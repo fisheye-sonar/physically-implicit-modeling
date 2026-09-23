@@ -1,0 +1,35 @@
+{
+ "group": "appendix-IM",
+ "kind": "score",
+ "hosts": [
+  "remote"
+ ],
+ "lane": "gpu",
+ "deps": [],
+ "host_deps": {},
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "id": "catim_grid_8ray",
+ "cmd": "bash scripts/drivers/score_pending.sh catim_grid_8ray",
+ "env": {
+  "PIM_ADD_CAT_IM": "1",
+  "PIM_ONLY_RUNS": "L-dw-8ray-20m",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "inputs": [
+  "runs/ray_ablation/L-dw-8ray-20m"
+ ],
+ "outputs": [
+  "runs/ray_ablation/L-dw-8ray-20m",
+  "logs/catim_grid_8ray"
+ ],
+ "priority": 61,
+ "est_hours": {
+  "remote": 3.0
+ },
+ "note": "categorical IM for appearance / grid-6x5 / grid-10x3 / grid-16x8 on the 8-ray parent (appendix bins-vs-grids table)"
+}

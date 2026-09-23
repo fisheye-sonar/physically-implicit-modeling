@@ -1,0 +1,35 @@
+{
+ "group": "appendix-IM",
+ "kind": "score",
+ "hosts": [
+  "remote"
+ ],
+ "lane": "gpu",
+ "deps": [],
+ "host_deps": {},
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "id": "token_rescore_8ray",
+ "cmd": "bash scripts/drivers/score_pending.sh token_rescore_8ray",
+ "env": {
+  "PIM_FORCE_RESCORE": "L-dw-8ray-tok-20m",
+  "PIM_ONLY_RUNS": "L-dw-8ray-tok-20m",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "inputs": [
+  "runs/interface_ablation/L-dw-8ray-tok-20m"
+ ],
+ "outputs": [
+  "runs/interface_ablation/L-dw-8ray-tok-20m",
+  "logs/token_rescore_8ray"
+ ],
+ "priority": 62,
+ "est_hours": {
+  "remote": 2.0
+ },
+ "note": "the 8-ray token model rescored from scratch with the mean-frame guard on every arm (appendix token table)"
+}
