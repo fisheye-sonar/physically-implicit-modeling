@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-23 00:05 PT — oth-noflip n = 2, last training job launched; fidelity reported as 1 − ratio (e359c2b); queue 31 of 37_
+_Last updated: 2026-09-23 01:20 PT — oth-adjacent n = 3 (nine of ten families complete); probe-seed extras running; queue 32 of 37_
 
 ## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
 
@@ -387,6 +387,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 01:20 — oth-adjacent complete (n = 3 at 512k); `pseed_oth-standard` launched on the 4090 (the first probe-seed extra).** `rep_oth-adjacent_s2` (4090, 17.80 h; one pass, 282 arms, no errors; `runs/MOVES.md` intact after the sync-back — the merge fix holds). Ledger (guarded): LIN 0.987 ± 0.001, GS −0.176 ± 0.016, ND +0.270 ± 0.094, PI −0.121 ± 0.196 (members −0.280 / −0.180 / +0.098), IM −0.118 ± 0.304 (−0.119 / +0.186 / −0.422), GS fidelity −4.9 ± 0.4. The wide cells are again the failing editors on an inert world: the guarded arm lands on a different alpha per seed and the index straddles zero. For Sevan's main-table question (2026-09-22 17:30): the seed SD is ≤ 0.004 on every decodability cell, ≤ 0.04 on every editability cell the text relies on (discworld IM ≤ 0.012; oth-standard / adjflip IM ≤ 0.034), and > 0.1 only on Othello cells where the editor fails (adjflip PI; adjacent PI and IM; adjacent GS fidelity) — mark those † in the main table, spreads in Table S5. Three of four Othello families at n = 3; noflip's seed 2 is the last training job (lab, ~15:30). 32 of 37 done.
 
 **2026-09-23 00:05 — `rep_oth-noflip_s1` done (lab, 15.53 h): oth-noflip at n = 2; `rep_oth-noflip_s2` launched on the lab (the LAST training job).** Two members scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors). Ledger (guarded): LIN 1.000 ± 0.000, PI −0.967 ± 0.002, ND −0.970 ± 0.002, GS −0.495 ± 0.050, IM −0.877 ± 0.034 — vs the canonical parent's IM −0.553 / fidelity −1.58: on this inert world NO arm of the parent passes the guard, so its cell is the unguarded best (a degraded arm), while both members have an arm inside the guard that does essentially nothing (fidelity ≈ 0.00, index ≈ −0.9). Same selection rule, different branch — the canonical-vs-members gap here is the guard rule on a row where every editor fails, not a seed effect; state it in the Table 5 caption. Overnight before this (2026-09-22): `rep_oth-adjacent_s1` done (4090, 07:29), `rep_dw-blink_s2` done (lab, 08:29) → dw-blink n = 3 (all six discworld families complete); fidelity reported as 1 − ratio since e359c2b (11:00). 31 of 37 done; running: `rep_oth-adjacent_s2` (4090, ~02:00) and `rep_oth-noflip_s2` (lab, ~15:30); then the five `pseed_*` extras, `final_tables`, `appendix_prediction`.
 
@@ -2669,7 +2671,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-23 00:05 PT — oth-noflip n = 2, last training job launched; fidelity reported as 1 − ratio (e359c2b); queue 31 of 37_
+_Last updated: 2026-09-23 01:20 PT — oth-adjacent n = 3 (nine of ten families complete); probe-seed extras running; queue 32 of 37_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
