@@ -27,8 +27,11 @@ GUARD = 1.0          # a fidelity ratio above this = the edit degraded the predi
 
 
 def best_point(values) -> tuple[float, int]:
-    """(maximum over residual points, its index)."""
+    """(maximum over residual points, its index); ``(nan, -1)`` when there is no finite value —
+    a categorical block's retrieval R² is one NaN per point (no bank), stored since 2026-09-23."""
     v = np.asarray(values, float)
+    if v.size == 0 or not np.isfinite(v).any():
+        return float("nan"), -1
     return float(np.nanmax(v)), int(np.nanargmax(v))
 
 

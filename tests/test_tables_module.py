@@ -43,3 +43,14 @@ def test_every_table_renders_or_declines():
     figs = T.tables_components(F) + T.tables_components(F, above_floor=True)
     assert all(hasattr(f, "savefig") for f in figs)
     matplotlib.pyplot.close("all")
+
+
+def test_best_point_all_nan_is_undefined_not_an_error():
+    """A categorical block stores nn_r2 as one NaN per point (no retrieval bank, 2026-09-23); the
+    table collector must read it as 'undefined', not crash the ledger / the paper tables."""
+    import math
+    from pim.metrics.selection import best_point
+    v, i = best_point([float("nan")] * 9)
+    assert math.isnan(v) and i == -1
+    assert best_point([]) [1] == -1
+    assert best_point([0.1, float("nan"), 0.7]) == (0.7, 2)
