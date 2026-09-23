@@ -158,3 +158,29 @@ uninterrupted runs (`batch_order_exact: False` on discworld); their spread is in
 families'. The 5-ray canonical factorised GS (+0.598 at 780k) sits ~3 SD above its 512k members — a budget
 mismatch the canonical row carries, not a seed effect. oth-noflip's canonical IM (−0.93) vs members (−0.85 … −0.90)
 is the guard's fallback branching on an all-fail row, not variance.
+
+## 2026-09-23 (evening) — Why four cells of the editability table spread by more than 0.1: selection at the fidelity cutoff · `observed`
+
+**Question (Sevan).** The four daggered cells (adjflip PI index 0.245, adjflip IM fidelity 0.108, adjacent-noflip PI index 0.196,
+adjacent-noflip IM index 0.422) spread far more than every other cell. Bug, or real?
+
+**Test.** Read every seed at the MAIN run's reported setting (same point and step size) instead of each seed's own selection.
+Three of the four are selection, one is the model:
+- adjflip PI: at the main setting (pt 2, α 5) the seeds give +0.28 / +0.33 / +0.19 with fidelity +0.17 / +0.13 / **−0.40**; seed 2
+  is excluded by the guard and falls to pt 1 α 10 (−0.12). Fixed-setting index SD 0.071.
+- adjacent-noflip PI: seed 2's α 20 scrapes inside the guard (fidelity +0.06) and reports +0.10; seeds 0–1 at α 20 sit just outside
+  (−0.05, −0.17) and fall back to α 10 (−0.28, −0.18). Fixed-setting index SD 0.050.
+- adjacent-noflip IM: seed 1 has NO arm inside the guard (best misses at −0.085), so the fallback reports a do-nothing write
+  (−0.95). But IM is unstable even at a fixed point: pt 1 gives −0.27 / +0.19 / −0.42 (SD 0.317). Partly model.
+- adjflip IM fidelity: no selection (all seeds pt 5, index 0.62 ± 0.03); fidelity 0.40 / 0.59 / 0.58 is real model variation.
+
+**Mechanism.** On the adjacency variants the writes that raise the index most also wreck the rest of the board (unguarded best arms
+at fidelity −0.9 to −2.2), so the best arm inside the guard sits at fidelity ≈ 0 and small model differences decide which side of the
+cutoff it lands; dropping out means a much weaker next-best. Elsewhere the winning arm is far inside the guard (standard Othello,
+every Rayworld IM) or every arm fails identically (standard-noflip).
+
+**Decision (Sevan, 2026-09-23).** Keep per-seed selection for Table 5 / `tab:seed_spread` (it is what rerunning the whole pipeline
+gives, and it was the protocol fixed before these results). The fixed-setting alternative was computed and REJECTED as the table's
+rule: it does not remove the spread but moves it — index daggers 3 → 1 (adjacent-noflip IM), fidelity daggers 1 → 4 (adjflip PI
+fidelity 0.320, adjflip IM 0.108, adjacent-noflip IM 0.126, 8-ray continuous PI at α 175 0.113); 5 daggers against 4. The paper's
+appendix describes the mechanism and quotes the fixed-setting index spread (0.05–0.07 for the PI cells, 0.32 for adjacent-noflip IM).
