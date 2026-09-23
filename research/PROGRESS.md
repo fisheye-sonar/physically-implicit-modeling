@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-21 20:20 PT — appendix table skeletons added to the paper draft (paper-text session); queue: rep_dw-blink_s1 (lab) + rep_oth-adjacent_s1 (remote) running_
+_Last updated: 2026-09-23 00:05 PT — oth-noflip n = 2, last training job launched; fidelity reported as 1 − ratio (e359c2b); queue 31 of 37_
 
 ## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
 
@@ -387,6 +387,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 00:05 — `rep_oth-noflip_s1` done (lab, 15.53 h): oth-noflip at n = 2; `rep_oth-noflip_s2` launched on the lab (the LAST training job).** Two members scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors). Ledger (guarded): LIN 1.000 ± 0.000, PI −0.967 ± 0.002, ND −0.970 ± 0.002, GS −0.495 ± 0.050, IM −0.877 ± 0.034 — vs the canonical parent's IM −0.553 / fidelity −1.58: on this inert world NO arm of the parent passes the guard, so its cell is the unguarded best (a degraded arm), while both members have an arm inside the guard that does essentially nothing (fidelity ≈ 0.00, index ≈ −0.9). Same selection rule, different branch — the canonical-vs-members gap here is the guard rule on a row where every editor fails, not a seed effect; state it in the Table 5 caption. Overnight before this (2026-09-22): `rep_oth-adjacent_s1` done (4090, 07:29), `rep_dw-blink_s2` done (lab, 08:29) → dw-blink n = 3 (all six discworld families complete); fidelity reported as 1 − ratio since e359c2b (11:00). 31 of 37 done; running: `rep_oth-adjacent_s2` (4090, ~02:00) and `rep_oth-noflip_s2` (lab, ~15:30); then the five `pseed_*` extras, `final_tables`, `appendix_prediction`.
 
 **2026-09-21 13:25 — `rep_oth-adjflip_s2` done (4090, 13.74 h): the Othello EXTENSION path verified; oth-adjflip at n = 2 (512k); `rep_oth-adjacent_s1` launched on the 4090.** Seed 2 resumed 160k → 512k, the new `__seed0_s512000` member was laid out and both scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors); the 421,875 member is left out of the pool. Ledger so far (guarded): LIN 0.948 ± 0.000, IM +0.607 ± 0.002 (canonical +0.664), GS −0.064 ± 0.018; PI +0.083 ± 0.284 (members +0.284 / −0.117 — the guarded PI arm flips between a landing and a failing alpha across seeds) and ND +0.441 ± 0.155 — the wide cells are selection jumping between arms, to be read against `variance.json` when seed 1 lands (≈ 2026-09-22 05:00). **`runs/MOVES.md` erased a SECOND time** by this job's sync-back (the 4090's copy lacked the 13:06 adjflip-s1 park lines) → restored from git and the dispatcher now MERGES `runs/MOVES.md` from a remote (appends lines it lacks, never overwrites; 3365814, installed atomically between ticks — the dispatcher is a fresh process every 2 min, unlike the bash drivers). 22 of 37 done; gpu lanes: adjflip_s1 (lab, extension from 390k) and adjacent_s1 (4090).
 
@@ -2667,7 +2669,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-21 13:25 PT — oth-standard n = 3, oth-adjflip n = 2 (extension path verified on Othello); MOVES.md merge fix in the dispatcher; queue 22 of 37_
+_Last updated: 2026-09-23 00:05 PT — oth-noflip n = 2, last training job launched; fidelity reported as 1 − ratio (e359c2b); queue 31 of 37_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
