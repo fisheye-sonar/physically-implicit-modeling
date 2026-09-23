@@ -114,7 +114,7 @@ editor, not refitted here — carries a probe-seed spread of its own.
 cartesian + `appearance-fac` where the parent has it), pooled by `pim.metrics.replicates.pool_replicates` at the
 matched budget (±10 %; the dw-noiseless / oth-adjacent-flip 390k members were EXTENDED to 512k and their 390k scores
 parked as `scores.s390000.json`, `runs/MOVES.md`). Ledger: `experiments/paper_ci/dashboard/ledger.{md,json,csv}`;
-Table 5 (SD and CI panels) from `build_paper_tables_and_figs.ipynb`; probe-seed refits in each run's `variance.json`.
+Table 5 (SD and CI panels) from `build_full_tables.ipynb` (the paper's appendix table `tab:seed_spread` is the SD panel); probe-seed refits in each run's `variance.json`.
 Cells are the tables' REPORTED arm: the best Edit Index inside the fidelity guard, else — under the fallback in force
 when Table 5 was rendered (2026-09-23 15:07, `pim.metrics.selection.best_arm`) — the lowest-fidelity-ratio arm.
 Fidelity = 1 − the RMSE ratio (2026-09-22). n = 3 throughout; ± = SD with n − 1.
