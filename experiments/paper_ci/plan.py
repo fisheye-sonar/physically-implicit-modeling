@@ -140,7 +140,7 @@ def probe_seed_jobs() -> list[dict]:
          "progress": None, "mem_max": None, "max_attempts": 2, "note": "10 regression + 6 factorised probe seeds on dw-8ray"},
     ]
     P = "adjacent_flip_ablation/L-oth-adjacent-flip-20m"
-    for k, member in ((1, f"{P}__seed1"), (2, f"{P}__seed2"), (0, f"{P}__seed0_s492188")):
+    for k, member in ((1, f"{P}__seed1"), (2, f"{P}__seed2"), (0, f"{P}__seed0_s512000")):
         jobs.append({"id": f"pseed_oth-adjflip_s{k}", "group": "oth-adjflip", "kind": "probe_seeds", "hosts": ["remote", "lab"],
                      "lane": "gpu", "cmd": f".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run {member} --seeds 10",
                      "env": {}, "deps": ["rep_oth-adjflip_s1", "rep_oth-adjflip_s2"], "host_deps": {}, "priority": 62,
