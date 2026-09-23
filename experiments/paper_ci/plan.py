@@ -129,12 +129,12 @@ def probe_seed_jobs() -> list[dict]:
     (its 390k probe seeds are parked with the old budget)."""
     jobs = [
         {"id": "pseed_oth-standard", "group": "oth-standard", "kind": "probe_seeds", "hosts": ["remote", "lab"], "lane": "gpu",
-         "cmd": "python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run initial_othello_comparison/L-oth-20m --seeds 10",
+         "cmd": ".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run initial_othello_comparison/L-oth-20m --seeds 10",
          "env": {}, "deps": [], "host_deps": {}, "priority": 60, "est_hours": {"lab": 0.6, "remote": 0.8},
          "inputs": ["runs/initial_othello_comparison/L-oth-20m"], "outputs": ["runs/initial_othello_comparison/L-oth-20m"],
          "progress": None, "mem_max": None, "max_attempts": 2, "note": "10 probe seeds (linear grid + inverse map) on standard Othello"},
         {"id": "pseed_dw-8ray", "group": "dw-8ray", "kind": "probe_seeds", "hosts": ["lab", "remote"], "lane": "gpu",
-         "cmd": "python -u experiments/seed_variance/scripts/probe_seeds.py --run ray_ablation/L-dw-8ray-20m --targets full appearance-fac --seeds 10 6",
+         "cmd": ".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds.py --run ray_ablation/L-dw-8ray-20m --targets full appearance-fac --seeds 10 6",
          "env": {}, "deps": [], "host_deps": {"remote": ["xfer_dw-8ray_train"]}, "priority": 61, "est_hours": {"lab": 1.5, "remote": 2.0},
          "inputs": ["runs/ray_ablation/L-dw-8ray-20m"], "outputs": ["runs/ray_ablation/L-dw-8ray-20m"],
          "progress": None, "mem_max": None, "max_attempts": 2, "note": "10 regression + 6 factorised probe seeds on dw-8ray"},
@@ -142,7 +142,7 @@ def probe_seed_jobs() -> list[dict]:
     P = "adjacent_flip_ablation/L-oth-adjacent-flip-20m"
     for k, member in ((1, f"{P}__seed1"), (2, f"{P}__seed2"), (0, f"{P}__seed0_s492188")):
         jobs.append({"id": f"pseed_oth-adjflip_s{k}", "group": "oth-adjflip", "kind": "probe_seeds", "hosts": ["remote", "lab"],
-                     "lane": "gpu", "cmd": f"python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run {member} --seeds 10",
+                     "lane": "gpu", "cmd": f".pim/bin/python -u experiments/seed_variance/scripts/probe_seeds_othello.py --run {member} --seeds 10",
                      "env": {}, "deps": ["rep_oth-adjflip_s1", "rep_oth-adjflip_s2"], "host_deps": {}, "priority": 62,
                      "est_hours": {"lab": 0.6, "remote": 0.8}, "inputs": [f"runs/{member}"], "outputs": [f"runs/{member}"],
                      "progress": None, "mem_max": None, "max_attempts": 2, "note": f"10 probe seeds on the 512k member {member.split('/')[-1]}"})
