@@ -11,6 +11,10 @@ Deterministic (prior-mean) eval. Engineering record: `research/scratch/2026-06-2
 
 ## Current understanding
 
+> **Updated 2026-09-23.** For the paper's ten models the question is settled against the Bayes floor of each
+> world (log entry 2026-09-23): every model closes ≥ 99 % of the trivial-to-floor gap, so editability
+> differences between worlds are not prediction-quality differences.
+>
 > **Updated 2026-08-17.** Two capacity/data results now bound this concept. Predictive quality
 > **saturates by `H=128`** and `H=512` buys nothing (2026-07-30, replicated across four model
 > families 2026-08-13). And the repo's standard dataset is **not a neutral choice**: its
@@ -40,6 +44,50 @@ comparison (so architecture differences there aren't undertraining artifacts), a
 (mean-hedging / sampled forking) is a real observation-fidelity phenomenon worth its own thread.
 
 ## Log
+
+### 2026-09-23 — Every paper model predicts its world to within a few percent of the Bayes floor · `replicated`
+
+**Evidence:** `scripts/bayes_floor.py` → `runs/_baselines/<instance>/bayes_floor.json` (ten instances);
+`scripts/score_prediction.py` → the `prediction` block in every scored run (held-out `eval/test.h5` /
+`test_10000.npz`, 10k sequences, paired 1000-sequence subset for the floor comparison);
+`notebooks/build_appendix_tables_and_figs.ipynb` → Table A1. Queue job `appendix_prediction`
+(experiments/paper_ci, lab, 2026-09-23 15:09–15:45, log `logs/paper_ci/appendix_prediction/`); accept list
+in `experiments/bayes_floor/QUEUE_HANDOFF.md`, every item met (parity 1.0 on all six discworld instances,
+reset share 0.6–0.7 % at 128 rays and < 0.1 % at 5–16 rays, bracket width 9 % / 2–5 %, Othello floors equal
+each run's `gates.bayes_ce` to six decimals, no loss below its floor's lower bound, no `—` in the table).
+Method and pilot: the other session's `experiments/bayes_floor/` (Othello floors exact — the generator is
+uniform over the legal set; discworld floors by a particle sampler over the latent state, bracketed).
+
+| run | trivial | Bayes floor | model | excess | gap closed |
+|---|---|---|---|---|---|
+| L-oth-20m (nats / move) | 4.094 | 2.0107 | 2.0286 | 0.018 | 0.991 |
+| L-oth-adjacent-flip-20m | 4.094 | 2.2955 | 2.3007 | 0.005 | 0.997 |
+| L-oth-adjacent-20m | 4.094 | 2.4326 | 2.4349 | 0.002 | 0.999 |
+| L-oth-noflip-20m | 4.094 | 1.6788 | 1.6803 | 0.001 | 0.999 |
+| L-dw-noiseless-20m (MSE ×10⁻³) | 72.6 | 0.80 [0.77, 0.83] | 1.06 | 0.26 | 0.996 |
+| L-dw-blink-20m | 66.0 | 0.98 [0.96, 1.01] | 1.26 | 0.28 | 0.996 |
+| L-dw-128ray-20m | 92.4 | 0.75 [0.72, 0.77] | 0.94 | 0.19 | 0.998 |
+| L-dw-16ray-20m | 97.2 | 3.77 [3.67, 3.86] | 4.00 | 0.23 | 0.997 |
+| L-dw-8ray-20m | 100.7 | 5.62 [5.55, 5.69] | 5.74 | 0.12 | 0.999 |
+| L-dw-5ray-20m | 105.5 | 6.86 [6.78, 6.93] | 7.05 | 0.19 | 0.998 |
+| L-dw-8ray-tok-20m, tokens (nats / frame) | 5.176 | 0.441 [0.434, 0.448] | 0.464 | 0.023 | 0.995 |
+| L-dw-8ray-tok-20m, expected frame (MSE ×10⁻³) | 100.7 | 5.62 | 5.73 | 0.11 | 0.999 |
+
+**Reading.** Every model closes ≥ 99 % of the trivial-to-floor gap. The Othello excesses (0.001–0.018 nats)
+are below 1 % of the floor; the Rayworld excesses are 2–5 % of the floor at 5–16 rays and 26–32 % at 128 rays
+(the 128-ray floors are small — 0.75–0.98 × 10⁻³ — so a fixed absolute excess of ≈ 0.2 × 10⁻³ is a large
+fraction; it is the same absolute excess as at 8 rays). The token model matches the frame model on the same
+world under both readings. So the editability differences the paper reports (`ray-ablation.md`,
+`inverse-probe.md`) are not differences in how well the models predict: every model sits within a few
+percent of what its world allows. Status `replicated`: two environments, ten models, two readings of the
+token model, floors by two independent methods (exact / sampled) agreeing on the world both can compute.
+
+**Caveats.** The discworld floor is a sampled bracket, not an exact value (the exact position-0 check is
+usable only at low ray counts, where it agrees with the sampler within its SE); the 128-ray relative excess
+depends on that bracket's lower edge. One seed per run here — the training-seed spread of the loss is the
+`loss_sd` column of the notebook's table (≤ 0.0004 nats on Othello, ≤ 6 × 10⁻⁶ MSE on Rayworld), far below
+every excess.
+
 
 ### 2026-07-30 — Observation noise is a regulariser that makes position *linearly* readable · `replicated` ★-candidate
 

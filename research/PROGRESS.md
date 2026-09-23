@@ -3,7 +3,7 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-23 15:15 PT — all ten families at n = 3; final_tables done; appendix_prediction (the last job) running; tables rendered under an uncommitted selection-fallback change (see 15:15 entry)_
+_Last updated: 2026-09-23 15:50 PT — QUEUE DRAINED (40 of 40): all ten families at n = 3, tables and Table A1 rendered; post-queue write-up in progress_
 
 ## 2026-09-23 (afternoon) — PAPER session: the selection FALLBACK changed; IM-vs-NN table filled (UNCOMMITTED)
 
@@ -413,6 +413,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 15:50 — `appendix_prediction` done (lab, 0.58 h): THE QUEUE IS DRAINED — 40 of 40 jobs, 4.8 days after launch, no job left failed.** Bayes floors for all ten instances, the `prediction` block re-added to every scored run (incl. the freshly rescored token model), Table A1 rendered (12 rows, no `—`, no error cell). Accept list (experiments/bayes_floor/QUEUE_HANDOFF.md): parity OK on all six discworld instances; resets 0.6–0.7 % (128-ray) and ≈ 0.07 % (5/8/16-ray) — all below 1 %; bracket widths (hi−lo)/lo 9 % at 128 rays, 2–5 % at 5–16 rays; every loss sits between its trivial predictor and its floor and none below `floor_lo`; Othello floors equal each run's `gates.bayes_ce` to six decimals (2.010689 / 2.295461 / 2.432636 / 1.678793); the exact position-0 check is usable only at low ray counts (as the hand-off says) and agrees there. Excess over the floor: Othello 0.001–0.018 nats (gap closed ≥ 0.991); Rayworld 0.00012–0.00028 MSE (relative excess 2–32 %; gap closed ≥ 0.996). Finding entry → `findings/predictive-quality.md`. Post-queue write-up next: Table 5 → `findings/seed-variance.md`, REGISTRY run rows, smoke artefacts archived, the driver-script deferred edits.
 
 **2026-09-23 15:15 — ALL TEN FAMILIES AT n = 3; `final_tables` done (lab, 15:07–15:09); `appendix_prediction` running (15:09, ~1 h) — the queue's last job.** `rep_oth-noflip_s2` (lab, 15.08 h; one pass, 282 arms, no errors) closed oth-noflip: LIN 1.000 ± 0.000, PI −0.966 ± 0.001, GS −0.959 ± 0.002, IM −0.883 ± 0.026 (guarded on a world where every editor fails). `final_tables`: master_eval pass 11 s (nothing unscored), both table notebooks executed in place without an error cell (full: 9 cells / 11 figures; paper: 5 cells / 4 figures). ⚠ **The tables were rendered under an UNCOMMITTED change to the arm-selection fallback** in the working tree (`pim/metrics/selection.py::best_arm` and the matching `tables.py` comments, written 13:07, attributed in its own text to Sevan 2026-09-23): when no arm of an editor passes the guard, the reported arm is now the LOWEST-fidelity-ratio arm (the least-degrading write) instead of the highest-index arm. Every guarded cell is unchanged; the failing-editor cells move (e.g. oth-adjacent GS −0.157 / fidelity −5.68 → −0.96 / −0.01; oth-noflip GS canonical −0.522 → −0.968) and their seed SDs mostly collapse (noflip GS ± 0.050 → ± 0.002). Ledger and dashboard re-rendered under it. Dagger set (seed SD > 0.1) under this rule: oth-adjflip PI, ND, ND-fidelity, IM-fidelity; oth-adjacent PI, IM (−0.50 ± 0.42), ND-fidelity. This session did not write the change; whoever did should commit it (or revert it) and the paper's selection paragraph should state the fallback.
 
@@ -2713,7 +2715,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-23 15:15 PT — all ten families at n = 3; final_tables done; appendix_prediction (the last job) running; tables rendered under an uncommitted selection-fallback change (see 15:15 entry)_
+_Last updated: 2026-09-23 15:50 PT — QUEUE DRAINED (40 of 40): all ten families at n = 3, tables and Table A1 rendered; post-queue write-up in progress_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
