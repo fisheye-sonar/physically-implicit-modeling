@@ -25,7 +25,7 @@ Regenerate (CPU, ~15 s):
 |---|---|
 | `composite_O2.pdf` / `.png` | 5.81 x 2.67 in. (a) d1 flips d2, d3, d4; (b) c4 flips d4; **(c) c4**, the same board and move as (b), flips nothing; (d) own game, g2 flips nothing. Key column on the right. |
 | `composite_O2_altmove.pdf` / `.png` | Same, except **(c) f5**: a move that would flip e5 under the flip rules (it is legal under all three rule sets) and flips nothing here. |
-| `legend_key.pdf` / `.png` | The key alone (0.87 x 0.75 in), the same vertical column the composites carry: legal move, chosen move, flipped disc. |
+| `legend_key.pdf` / `.png` | The key alone (0.87 x 0.75 in), the same vertical column the composites carry: legal move, chosen move, flipped token. |
 | `boards.json` | Sidecar: the shared board (case, move, board array, standard moves, the placement orders that prove reachability, both legal sets, the search record), every panel's move and flips for both composites, the own-game rule and its picks. |
 | `make_figure.py` | The one script (search, drawing, composites). |
 | `pieces/<variant>_before.pdf`, `_after.pdf`, `_O2_pair.pdf` | Each panel's two boards at 2.0 in and the pair with an arrow (`standard`, `adjacent_flip`, `adjacent_noflip`, `standard_noflip`); `adjacent_noflip_*_altmove.pdf` are panel (c) of the altmove composite. PNG previews beside them are gitignored. |

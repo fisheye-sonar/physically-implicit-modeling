@@ -290,7 +290,7 @@ def key_entries(ax) -> None:
     figure draws it. ``ax`` spans KEY_W x KEY_H inches and its data units are inches."""
     ax.set_xlim(0, KEY_W), ax.set_ylim(0, KEY_H), ax.set_axis_off()
     t = KEY_TILE
-    for j, label in enumerate(("legal move", "chosen move", "flipped disc")):
+    for j, label in enumerate(("legal move", "chosen move", "flipped token")):
         cy = KEY_H - (j + 0.5) * KEY_ROW
         ax.add_patch(Rectangle((0, cy - t / 2), t, t, edgecolor=ps.BOARD_LINE, linewidth=0.4,
                                facecolor=LEGAL_C if label == "legal move" else ps.BOARD_GREEN))
@@ -375,7 +375,7 @@ if __name__ == "__main__":
         "rows": {"top": ROW_LABELS[0], "bottom": ROW_LABELS[1]},
         "markers": {"legal move": {"colour": LEGAL_C, "drawn": "the whole square filled, top row only"},
                     "chosen move": {"colour": PLACED_C, "drawn": "a ring on the placed disc, bottom row only"},
-                    "flipped disc": {"colour": FLIP_C, "drawn": "a ring on each disc the move flips, bottom row only"}},
+                    "flipped token": {"colour": FLIP_C, "drawn": "a ring on each disc the move flips, bottom row only"}},
         "shared_board": {
             "bench_instance": STD, "bench_case_id": S["case"], "board_after_move": S["m"], "mover": P_std["mover"],
             "board_white0_blank1_black2": [int(x) for x in P_std["board"]], "standard_moves": names(S["moves"]),

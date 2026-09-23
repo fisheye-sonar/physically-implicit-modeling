@@ -15,7 +15,7 @@
    "colour": "#00bcd4",
    "drawn": "a ring on the placed disc, bottom row only"
   },
-  "flipped disc": {
+  "flipped token": {
    "colour": "#ff4fa3",
    "drawn": "a ring on each disc the move flips, bottom row only"
   }
