@@ -3,7 +3,33 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-23 09:55 PT — three appendix catch-ups running on the 4090 (nn_r2, grid categorical IM, token rescore with the mean-frame guard) before final_tables; last training job on the lab ~16:00_
+_Last updated: 2026-09-23 14:15 PT — all three 4090 appendix catch-ups done (NN column, grid IMs, token rescore with the mean-frame guard); last training job on the lab ~16:00, then final_tables + appendix_prediction_
+
+## 2026-09-23 (afternoon) — PAPER session: the selection FALLBACK changed; IM-vs-NN table filled (UNCOMMITTED)
+
+**Sevan: an editor with no arm inside the guard is now reported at its HIGHEST-FIDELITY arm** (lowest stored ratio), not
+its highest index — `pim/metrics/selection.py::best_arm` (+ test; 309 pass). The draft's text and its three no-guarded-arm cells
+already read this way. Diff over all 58 collector rows: ONLY no-guarded-arm cells move — oth-adjacent GS −0.157 / −5.68 →
+−0.956 / −0.01, oth-noflip GS −0.522 / −3.78 → −0.968 / −0.01, oth-noflip IM −0.553 / −1.58 → −0.928 / −0.01 (its IM point
+7 → 1, so its g R² at the IM point 0.944 → 0.855, nn R² 0.879 → 0.762), the four Othello IM-NN cells. Seed SDs under the new rule:
+oth-adjacent GS fid 0.406 → 0.010, IM EI 0.304 → 0.422; oth-noflip GS fid 0.457 → 0.003. The three table notebooks re-executed
+(no errors); REGISTRY row, `tables.py` comments and the ledger header string updated; `final_tables` (lab, this tree) picks it up.
+**Paper edits:** IM-vs-NN table NN R² column filled (and standard-noflip IM R² → 0.855); Editors paragraph: "IM beats it by 53.6 %
+in Edit Index on average across Rayworld variants, and in Othello the nearest neighbors never land" (Sevan chose the Rayworld
+relative reading); `\dg` on adjacent-noflip PI (seed SD 0.196). `paper/WRITING_GUIDELINES.md`: scope section rewritten for
+2026-09-23 (paper-name → run map), selection / fidelity / seed rules, heat column types, the 10.25-page status.
+**Also filled:** the grid table's four IM cells (appearance 30 +0.88 / 0.73, grid 6×5 +0.64 / 0.54, 10×3 +0.70 / 0.57, 16×8 +0.73 /
+0.64; every other cell of that table re-checked against `collect`, all match). For IM, size-matched grids sit at or below the
+continuous map (+0.71) and only the appearance bins beat it — unlike GS / PI, where every grid beats continuous. Confirmed for
+Sevan: IM-NN is selected independently over the same nine points (Rayworld: guarded pick = its unguarded best; Othello: no NN
+arm passes the guard, best index ignoring it +0.04 / −0.36 / −0.15 / −0.63).
+**Introduction touched up** (Sevan's inline notes resolved and removed; nothing else in the file): paragraph 3 re-stitched (the question, then why hold everything fixed), paragraph 5 wording (no 'them', no 'pairs', inverse-map sentence reframed as driving the model from outside), paragraph 6 now previews where IM succeeds (Othello points 4–5 only; Rayworld 6–9 of 9 points, verified per point) instead of repeating the abstract; contribution 1 'methodology' → 'method' (Times-Bold estimate 402.8 → 380.0 pt of 380.8 available, so one line). Paragraph line counts unchanged by estimate.
+**Flagged to Sevan, NOT changed:** (1) Table 1's standard-noflip "Edit Point" still reads 0.944 (now 0.855), and its caption says
+the Edit Point is where IM reaches its highest index (for a row with no IM arm inside the guard it is the highest-fidelity one); (2) the
+`\dg` on adjacent-noflip GS fidelity no longer meets the > 0.1 rule (SD 0.010); (3) the Results sentence "every one of them is an
+editor that fails" — adjacent-flip IM fidelity (SD 0.108) is a dagger on an editor that lands; (4) the main qualitative figure
+(`composite_final`, Adjacent NoFlip GS drawn at pt2 α1.5) and the appendix Othello figures (adjacent-noflip GS, standard-noflip
+GS and IM) were drawn at the OLD fallback arms — regenerating them would show near-unedited boards in those cells.
 
 ## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
 
@@ -387,6 +413,8 @@ down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.5
 changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
 Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
 UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 14:15 — `token_rescore_8ray` done (4090, 2.34 h): the 8-ray token model rescored from scratch; the token table's mean-frame rows are complete.** Every frame-set cell REPRODUCES the draft exactly (continuous PI +0.00 / 0.25, GS −0.01 / 0.24, IM +0.65 / 0.70; categorical +0.23 / 0.44, +0.35 / 0.53, +0.78 / 0.80), so the pipeline is deterministic given the cached probes. Mean-frame rows (arm = best `zone_edit_index_expected` among arms with mean-frame fidelity ≥ 0, i.e. `fidelity_ratio_expected` ≤ 1; index / fidelity): continuous PI +0.14 / 0.19 (pt 7, α 175), GS −0.08 / 0.15 (pt 0, α 0.7), IM +0.84 / 0.75 (pt 8); categorical (appearance-fac) PI +0.46 / 0.32 (pt 2, α 20), GS +0.48 / 0.43 (pt 2, α 0.7), IM +0.92 / 0.75 (pt 8). The draft's handcrafted continuous mean-frame cells (PI +0.15 / 0.17, GS −0.27 / 0.13) came from no stored arm and are superseded. The `prediction` block was dropped by the fresh score, as expected; `appendix_prediction` re-adds it. All three 4090 catch-ups are done; the 4090 is idle. Remaining: `rep_oth-noflip_s2` (lab, 475k at 13:45 → scored ≈ 16:00) → `final_tables` → `appendix_prediction`.
 
 **2026-09-23 11:55 — `catim_grid_8ray` done (4090, 1.98 h): the bins-vs-grids table's IM cells; one crash it exposed fixed.** Categorical inverse maps on the 8-ray parent (one-hot labels + Cartesian velocity, 200k seqs), guarded IM arm, cartesian velocity: appearance (30) +0.878 / fidelity +0.73 (pt 6, g R² max 0.62) · grid-6x5 +0.643 / +0.54 · grid-10x3 +0.703 / +0.57 · grid-16x8 +0.733 / +0.64 (beside appearance-fac +0.866 / +0.73 and the snapped regression +0.703 / +0.69). The ordering of the paper's paragraph holds for IM too: the observation-exact partition beats every size-matched grid. **Crash:** the ledger render after this job died in `selection.best_point` (all-NaN) — a categorical block now stores `nn_r2` as one NaN per point (no bank) and the table collector takes its max; `best_point` returns (nan, −1) for an all-NaN input (f3e1027, test) — without it `final_tables` would have failed on the same line. Ledger re-rendered by hand. `token_rescore_8ray` launched 11:49 on the 4090 (~1–2 h).
 
@@ -2683,7 +2711,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-09-23 09:55 PT — three appendix catch-ups running on the 4090 (nn_r2, grid categorical IM, token rescore with the mean-frame guard) before final_tables; last training job on the lab ~16:00_
+_Last updated: 2026-09-23 14:15 PT — all three 4090 appendix catch-ups done (NN column, grid IMs, token rescore with the mean-frame guard); last training job on the lab ~16:00, then final_tables + appendix_prediction_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 
