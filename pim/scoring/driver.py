@@ -151,7 +151,12 @@ def score_all(runs, s, eval_version, dry_run=False) -> list:
         sp = r["dir"] / "scores.json"
         if sp.exists():
             prev = json.loads(sp.read_text())
-            if prev.get("eval_version") == eval_version(r):
+            # PIM_FORCE_RESCORE (2026-09-23): a comma list of run names scored from scratch as if stale —
+            # one deliberate job (the token model's mean-frame guard), never a version bump for everyone
+            forced = r["run"] in os.environ.get("PIM_FORCE_RESCORE", "").split(",")
+            if forced:
+                print(f"forced rescore of {r['topic']}/{r['run']} (PIM_FORCE_RESCORE)")
+            if prev.get("eval_version") == eval_version(r) and not forced:
                 missing = missing_blocks(r, prev, s)
                 if not missing and not missing_inverse(r, prev, s):
                     print(f"skip  {r['topic']}/{r['run']}  (scored at {eval_version(r)})")

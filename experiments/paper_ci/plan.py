@@ -231,7 +231,18 @@ def appendix_im_jobs() -> list[dict]:
              "env": {"PIM_ADD_CAT_IM": "1", "PIM_ONLY_RUNS": "L-dw-8ray-20m", **ENV_SCORE},
              "inputs": ["runs/ray_ablation/L-dw-8ray-20m"], "outputs": ["runs/ray_ablation/L-dw-8ray-20m", "logs/catim_grid_8ray"],
              "priority": 61, "est_hours": {"remote": 3.0},
-             "note": "categorical IM for appearance / grid-6x5 / grid-10x3 / grid-16x8 on the 8-ray parent (appendix bins-vs-grids table)"}]
+             "note": "categorical IM for appearance / grid-6x5 / grid-10x3 / grid-16x8 on the 8-ray parent (appendix bins-vs-grids table)"},
+            # the frames-as-tokens model rescored FROM SCRATCH (Sevan 2026-09-23 10:00): every arm recomputed under one
+            # rule, now carrying the mean-frame guard (token_bench.scorecard `fidelity_ratio_expected`) beside the
+            # mean-frame index, so the token table's "mean frame" rows are complete (index, guard) pairs from stored arms.
+            # Probes and inverse maps come from the run's cache; ~1-2 h. The `prediction` block a full rescore drops is
+            # re-added by appendix_prediction (scripts/score_prediction.py), which runs after final_tables.
+            {**base, "id": "token_rescore_8ray", "cmd": "bash scripts/drivers/score_pending.sh token_rescore_8ray",
+             "env": {"PIM_FORCE_RESCORE": "L-dw-8ray-tok-20m", "PIM_ONLY_RUNS": "L-dw-8ray-tok-20m", **ENV_SCORE},
+             "inputs": ["runs/interface_ablation/L-dw-8ray-tok-20m"],
+             "outputs": ["runs/interface_ablation/L-dw-8ray-tok-20m", "logs/token_rescore_8ray"],
+             "priority": 62, "est_hours": {"remote": 2.0},
+             "note": "the 8-ray token model rescored from scratch with the mean-frame guard on every arm (appendix token table)"}]
 
 
 def build() -> list[dict]:

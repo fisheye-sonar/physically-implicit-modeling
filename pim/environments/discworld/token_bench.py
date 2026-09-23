@@ -38,7 +38,9 @@ from pim.editors.nanda import addition_delta
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
+from pim.metrics.edit_index import fidelity_ratio_from
 from pim.metrics.zone_editability import edit_index as zone_edit_index
+from pim.metrics.zone_editability import zone_rmse
 from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio, move_scorecard
 
 DEV, EF = dwb.DEV, dwb.EF
@@ -146,9 +148,19 @@ def scorecard(probs: np.ndarray, tb: TokenBench, uns: np.ndarray | None = None) 
            "edit_index_per_case": c["edit_index_union_per_case"],
            "zone_edit_index_expected": float(zone_edit_index(
                expected_frame(probs, tb.vocab)[tb.keep], _mask_zones(tb.zones, tb.keep)))}
+    # the MEAN-FRAME readout's guard (2026-09-23, Sevan): the frame model's fidelity ratio applied to the
+    # expected next frame — RMSE(expected edited frame, edited-world frame) / the same for the unsteered
+    # expected frame, over the whole frame of the kept cases (`zone_editability.fidelity_ratio`'s
+    # `edit_frame_rmse` with `fidelity_ratio_from`). Beside `zone_edit_index_expected` it makes the
+    # "mean frame" row of the token-model table a complete (index, guard) pair from stored arms.
+    zk = _mask_zones(tb.zones, tb.keep)
+    allm = np.ones_like(zk.target)
+    out["mean_frame_rmse"] = zone_rmse(expected_frame(probs, tb.vocab)[tb.keep], zk.gt_edited, allm)
     if uns is not None:
         out["fidelity_ratio"] = move_fidelity_ratio(probs, uns, tb.legal_post)
         out.update(move_fidelity_ci95(probs, uns, tb.legal_post))
+        out["fidelity_ratio_expected"] = fidelity_ratio_from(
+            out["mean_frame_rmse"], zone_rmse(expected_frame(uns, tb.vocab)[tb.keep], zk.gt_edited, allm))
     return out
 
 
@@ -167,6 +179,7 @@ def unsteered(model, tb: TokenBench) -> tuple[np.ndarray, dict]:
     probs = probs_at_edit(model, tb)
     c = scorecard(probs, tb)
     c["fidelity_ratio"] = 1.0
+    c["fidelity_ratio_expected"] = 1.0
     return probs, c
 
 
