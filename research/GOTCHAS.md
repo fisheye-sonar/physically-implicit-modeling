@@ -10,6 +10,19 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-23 — The vendored `replay` accepts passes a real game never makes: a replayable history is NOT a legal game
+
+`OthelloBoardState.umpire` (and so `counterfactual.replay`, `search_cf`, `scripts/index_ceiling.py`) plays a move that is illegal
+for the player to move by handing it to the opponent — even when the player to move HAS legal moves. The generator
+(`get_ood_game`) only ever picks from `get_valid_moves()`, which passes only when forced. So a history that replays without an
+assertion can contain an UNFORCED pass and is not a legal game. On 2026-09-23 all 61 of `search_cf`'s "exact counterfactual"
+histories on `oth-adjacent` (300 cases sampled) contained one — and in fact NO flipped board on `oth-adjacent` or `oth-noflip` is
+reachable by a legal game (without flips and without forced passes, each colour's disc count is fixed by the move count). Any
+"is this a legal game" test must check every move against `get_valid_moves()`; `pim.environments.othello.reachability` does, and
+decides reachability exactly. Affected: the old legal/illegal split (`findings/inverse-probe.md` 2026-09-15, corrected
+2026-09-23) and the Othello Edit Index ceiling (`index_ceiling.py`, only `L-oth-20m`'s file exists: its 13 cases may include
+such histories; re-derive it from the exact search's witness games before quoting it).
+
 ### 2026-09-22 — `fidelity_ratio` in scores.json is the RATIO; the tables show `fidelity = 1 − ratio`
 
 Since 2026-09-22 every table, ledger and dashboard "fid" cell is the REPORTED fidelity (`pim.metrics.fidelity`:

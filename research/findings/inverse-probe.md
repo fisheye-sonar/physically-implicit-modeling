@@ -268,6 +268,33 @@ The first Othello launch failed on a 4 GB broadcast in the retrieval search (its
 the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.
 
 
+## 2026-09-23 — Legal vs illegal target boards, decided EXACTLY: flip models edit both; `adjacent-noflip` has no legal flipped board at all (`replicated` for the split; supersedes 2026-09-15)
+
+**Method.** `pim.environments.othello.reachability.decide`: exhaustive search for a legal game (passes only when forced) of the
+same length ending on exactly the flipped board with the same player to move; witnesses replayed by the vendored engine; every
+verdict matches brute-force enumeration on short prefixes (3,200 flips, 0 wrong). All 1000 bench cases per variant, 5M-node budget
+(`runs/_baselines/<inst>/reachability.json`). Each editor at its Table 2 setting, re-run on the full bench (reproduces scores.json to
+1e-4) and split by verdict: `scripts/reachability_table.py` → `runs/<run>/editability_by_reachability.json`. Index / fidelity, ± =
+case-level SE of the index:
+
+| run | legal (n) | illegal (n) | undecided | PI legal / illegal | GS legal / illegal | IM legal / illegal |
+|---|---|---|---|---|---|---|
+| standard | 441 | 555 | 4 | +0.79 ± .02 / 0.70 · +0.84 ± .01 / 0.71 | +0.84 / 0.73 · +0.82 / 0.71 | +0.83 ± .01 / 0.62 · +0.79 ± .02 / 0.62 |
+| adjacent-flip | 335 | 614 | 51 | +0.37 / 0.27 · +0.35 / 0.12 | +0.09 / 0.24 · −0.12 / 0.19 | **+0.78 ± .02 / 0.51 · +0.61 ± .02 / 0.48** |
+| adjacent-noflip | 0 | 1000 | 0 | — · −0.23 / 0.19 | — · −0.96 / −0.01 | — · −0.03 / 0.26 |
+| standard-noflip | 0 | 1000 | 0 | — · −0.95 / 0.00 | — · −0.97 / −0.01 | — · −0.93 / −0.01 |
+
+**Reading.** On `standard` every editor edits legal and illegal boards alike (differences ≤ 2 SE, opposite signs across editors).
+On `adjacent-flip` IM edits both but clearly better when a legal game produces the board (+0.17, ~6 SE); GS is positive only on
+legal boards. On the no-flip variants NO flipped board is legal: without flips each disc keeps its placer's colour and, with passes
+only when forced, each colour's disc count is fixed by the move count, so one flipped disc is never produced. The whole bench is
+illegal there, and the no-flip rows are Table 2's.
+
+**What this corrects.** The 2026-09-15 entry's `adjacent-noflip` "reachable" subset (IM +0.53, n 29) came from `search_cf`
+histories that contain unforced passes — boards no legal game produces (GOTCHAS 2026-09-23). The claim "without flips, IM lands
+only where some history produces the target board" is WITHDRAWN: no legal history produces any of these targets. Its standard and
+adjacent-flip conclusions survive, now on 441 / 335 legal cases instead of 13 / 32 "ordinary" ones.
+
 ## 2026-09-15 — IM's adjacent failure is case-level reachability; the flip models generalise past it (`observed`)
 
 `experiments/adjacent_flip_ablation/scripts/ceiling_symdiff.py` scores the canonical IM arm on the
