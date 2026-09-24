@@ -289,6 +289,12 @@ inside the guard); illegal pairs PI −0.96 / 0.00, GS −0.91 / −0.06; single
 DOES land in probe space (the linear probe reads the target at the bench tile in 100% of cases and at the partner in 99%, against 0%
 for the single-tile control), yet the prediction does not follow. So a legal target rescues the inverse map on adjacent-noflip but
 not the probe-derived editors; the checks that PI / GS at Table 2's setting still reproduce scores.json on the full bench pass.
+**Addendum 2, the same test on standard and standard-noflip** (script generalized: `--run`, `--no-legal`, parallel pair search
+proved identical to the serial one). standard (40 of the first 65 cases; 54 reachable / 104 unreachable / 4 undecided partners
+searched): legal pairs PI +0.71 / 0.53, GS +0.84 / 0.74, IM +0.74 / 0.70; illegal PI +0.72 / 0.66, GS +0.80 / 0.75, IM +0.82 / 0.75 —
+every editor lands on both, as for single flips. standard-noflip: all 480 balanced partners of the first 40 cases unreachable (every
+disc has its square's parity colour, 1000/1000 boards); illegal pairs PI −0.96 / 0.00, GS −0.91 / −0.03, IM −0.86 / −0.09 — nothing
+lands. Paper: `tab:two_flip` now shows these three variants × legal / illegal (each group's reported arm).
 
 ## 2026-09-23 — Legal vs illegal target boards, decided EXACTLY: flip models edit both; `adjacent-noflip` has no legal flipped board at all (`replicated` for the split; supersedes 2026-09-15)
 

@@ -3,6 +3,7 @@
 
     .pim/bin/python scripts/two_flip_editability.py                    # 40 cases, the paper's table
     .pim/bin/python scripts/two_flip_editability.py --n 100
+    .pim/bin/python scripts/two_flip_editability.py --run flip_ablation/L-oth-noflip-20m --no-legal   # standard-noflip
 
 On ``oth-adjacent`` (the paper's adjacent-noflip) no single flipped disc is reachable by a legal
 game: discs never change colour, so each colour's count is fixed by the number of moves
@@ -16,6 +17,11 @@ whose two-disc board is REACHABLE and the first whose board is UNREACHABLE are k
 (``pim.environments.othello.reachability.search``, exact; a partner whose search is undecided is
 skipped). The first ``--n`` cases with both are used, so every case contributes one single flip
 (its bench edit), one legal pair and one illegal pair.
+
+``--no-legal`` is for a variant with no legal pair at all (standard-noflip, where every disc's colour
+equals its square parity, so any flip is off parity): EVERY partner of each case is searched, the
+reachable ones are counted (the claim is that there are none), and the first unreachable partner
+is kept. The groups are then the single flip and the illegal pair.
 
 Editing. The canonical ``pim.environments.othello.arms.inverse_arms`` writes each group's post-edit
 board (``post_boards``) at every residual point, with the run's cached inverse maps. PI and GS
@@ -55,32 +61,50 @@ RUN = "adjacency_ablation/L-oth-adjacent-20m"
 GROUPS = ("single", "legal", "illegal")
 
 
-def find_pairs(cases: list[dict], rules: dict, n: int, budget: int) -> list[dict]:
-    """The first ``n`` bench cases with both a reachable and an unreachable balanced partner."""
+def _case_pairs(args: tuple) -> dict | None:
+    """One case: its first reachable and first unreachable balanced partner, in an order seeded by the
+    case index (or, with ``require_legal=False``, every partner searched and counted)."""
+    i, c, rules, budget, require_legal = args
+    h, s = [int(x) for x in c["history"]], int(c["pos_int"])
+    b, w, mover = state_of(replay(h, rules))
+    opp = w if (b >> s) & 1 else b                              # partners: the other colour's discs
+    partners = [t for t in range(64) if (opp >> t) & 1]
+    rng = np.random.default_rng(i)
+    legal = illegal = None
+    counts = {"reachable": 0, "unreachable": 0, "undecided": 0}
+    for t in [partners[j] for j in rng.permutation(len(partners))]:
+        tgt = (b ^ (1 << s) ^ (1 << t), w ^ (1 << s) ^ (1 << t), mover)
+        assert bin(tgt[0]).count("1") == bin(b).count("1") and bin(tgt[1]).count("1") == bin(w).count("1")
+        v = search(tgt, len(h), rules, order={m: k for k, m in enumerate(h)}, budget=budget)
+        counts[v.status] += 1
+        if v.status == "reachable" and legal is None:
+            wb = replay(v.witness, rules)
+            assert wb is not None and state_of(wb) == tgt, "witness failed the vendored engine's replay"
+            legal = {"t": t, "witness": v.witness}
+        elif v.status == "unreachable" and illegal is None:
+            illegal = {"t": t}
+        if require_legal and legal and illegal:
+            break
+    if illegal and (legal or not require_legal):
+        return {"case": i, "s": s, "legal": legal, "illegal": illegal, "partners_searched": counts}
+    return None
+
+
+def find_pairs(cases: list[dict], rules: dict, n: int, budget: int, require_legal: bool = True,
+               workers: int = 1) -> list[dict]:
+    """The first ``n`` bench cases (in bench order) that qualify. Cases are independent, so a pool
+    gives exactly the serial result: results are consumed in bench order and the pool stops at ``n``."""
+    from multiprocessing import Pool
+
+    args = [(i, c, rules, budget, require_legal) for i, c in enumerate(cases)]
     out = []
-    for i, c in enumerate(cases):
-        h, s = [int(x) for x in c["history"]], int(c["pos_int"])
-        b, w, mover = state_of(replay(h, rules))
-        opp = w if (b >> s) & 1 else b                          # partners: the other colour's discs
-        partners = [t for t in range(64) if (opp >> t) & 1]
-        rng = np.random.default_rng(i)
-        legal = illegal = None
-        for t in [partners[j] for j in rng.permutation(len(partners))]:
-            tgt = (b ^ (1 << s) ^ (1 << t), w ^ (1 << s) ^ (1 << t), mover)
-            assert bin(tgt[0]).count("1") == bin(b).count("1") and bin(tgt[1]).count("1") == bin(w).count("1")
-            v = search(tgt, len(h), rules, order={m: k for k, m in enumerate(h)}, budget=budget)
-            if v.status == "reachable" and legal is None:
-                wb = replay(v.witness, rules)
-                assert wb is not None and state_of(wb) == tgt, "witness failed the vendored engine's replay"
-                legal = {"t": t, "witness": v.witness}
-            elif v.status == "unreachable" and illegal is None:
-                illegal = {"t": t}
-            if legal and illegal:
-                break
-        if legal and illegal:
-            out.append({"case": i, "s": s, "legal": legal, "illegal": illegal})
-            if len(out) >= n:
-                break
+    with Pool(workers) as pool:
+        for r in pool.imap(_case_pairs, args, chunksize=1):
+            if r is not None:
+                out.append(r)
+                if len(out) >= n:
+                    pool.terminate()
+                    break
     return out
 
 
@@ -99,16 +123,24 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--n", type=int, default=40, help="cases (each gives one single flip, one legal and one illegal pair)")
     ap.add_argument("--budget", type=int, default=2_000_000, help="search nodes per partner before it is skipped")
+    ap.add_argument("--run", default=RUN, help="<topic>/<run> of an Othello run")
+    ap.add_argument("--no-legal", action="store_true", help="the variant has no legal pair: single flip vs illegal pair only")
+    ap.add_argument("--workers", type=int, default=16, help="processes for the pair search (the result does not depend on it)")
     a = ap.parse_args()
+    groups = ("single", "illegal") if a.no_legal else GROUPS
+    two = [g for g in groups if g != "single"]
     t0 = time.time()
-    run_dir = _REPO / "runs" / RUN
+    run_dir = _REPO / "runs" / a.run
     S = json.loads((run_dir / "scores.json").read_text())
     inst, settings = S["instance"], S["settings"]
     rules = oc.rules_of(inst)
     cases = pickle.load(open(cases_path(inst), "rb"))
-    pairs = find_pairs(cases, rules, a.n, a.budget)
-    print(f"{len(pairs)} cases with a legal and an illegal balanced pair, from the first {pairs[-1]['case'] + 1} bench cases "
+    pairs = find_pairs(cases, rules, a.n, a.budget, require_legal=not a.no_legal, workers=a.workers)
+    searched = {k: sum(p_["partners_searched"][k] for p_ in pairs) for k in ("reachable", "unreachable", "undecided")}
+    print(f"{len(pairs)} cases kept, from the first {pairs[-1]['case'] + 1} bench cases; partners searched {searched} "
           f"[{(time.time() - t0) / 60:.1f} min]", flush=True)
+    if a.no_legal and searched["reachable"]:
+        print(f"  WARNING: --no-legal, but {searched['reachable']} reachable balanced pairs exist on this variant", flush=True)
 
     # one bench holding every group: the same histories three times, the edit differing per group
     sub = [cases[p["case"]] for p in pairs]
@@ -131,7 +163,7 @@ def main() -> None:
         return sorted(b.get_valid_moves())
 
     boards, legal_post = {}, {}
-    for g in GROUPS:
+    for g in groups:
         bb = s_pre.copy()
         sets = []
         for i, p in enumerate(pairs):
@@ -145,10 +177,10 @@ def main() -> None:
     assert (boards["single"] == ref).all(), "single-flip boards differ from inverse_arms' own construction"
     assert legal_post["single"] == [list(x) for x in bench1.legal_post], "single-flip legal sets differ from the bench's"
 
-    all_cases = sub * 3
+    all_cases = sub * len(groups)
     bench = benchmark_from_cases(all_cases, **rules)
-    bench = dataclasses.replace(bench, legal_post=legal_post["single"] + legal_post["legal"] + legal_post["illegal"])
-    post_all = np.concatenate([boards[g] for g in GROUPS])
+    bench = dataclasses.replace(bench, legal_post=[x for g in groups for x in legal_post[g]])
+    post_all = np.concatenate([boards[g] for g in groups])
 
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     model, _ = load_checkpoint(run_dir / "best_model.pt", device=dev)
@@ -159,8 +191,8 @@ def main() -> None:
                                          n_games=int(settings["oth_probe_games"]), uns_probs=uns, log=None,
                                          return_probs=True, post_boards=post_all)
     pre_all = bench.legal_pre
-    res = {g: {"unedited_index": None, "points": []} for g in GROUPS}
-    for k, g in enumerate(GROUPS):
+    res = {g: {"unedited_index": None, "points": []} for g in groups}
+    for k, g in enumerate(groups):
         sl = slice(k * n, (k + 1) * n)
         pre_g, post_g = pre_all[sl], legal_post[g]
         res[g]["unedited_index"] = float(np.nanmean(edit_index_legal(uns[sl], pre_g, post_g, "symdiff")))
@@ -190,18 +222,19 @@ def main() -> None:
             f"{ed}: the single-tile path no longer reproduces scores.json ({e:+.4f} vs {t2[ed]['edit_index_symdiff']:+.4f})"
         print(f"  check {ed} at Table 2 setting (pt {pt}, a {al:g}) on the full bench: {e:+.4f} / ratio {r:.4f} = scores.json", flush=True)
     b1 = benchmark_from_cases(sub, **rules)
-    b2 = dataclasses.replace(benchmark_from_cases(sub * 2, **rules), legal_post=legal_post["legal"] + legal_post["illegal"])
+    b2 = dataclasses.replace(benchmark_from_cases(sub * len(two), **rules), legal_post=[x for g in two for x in legal_post[g]])
     cur1, tgt1 = case_targets(b1)
     cur2, tgt2 = case_targets(b2)
-    t_sq = np.array([pr_["legal"]["t"] for pr_ in pairs] + [pr_["illegal"]["t"] for pr_ in pairs])
-    cur_t = np.concatenate([s_pre, s_pre])[np.arange(2 * n), t_sq]
+    t_sq = np.array([pr_[g]["t"] for g in two for pr_ in pairs], dtype=np.int64)
+    cur_t = np.concatenate([s_pre] * len(two))[np.arange(len(two) * n), t_sq]
     assert set(np.unique(cur_t)) <= {MINE, THEIRS}, "a partner square is empty"
     tgt_t = np.where(cur_t == MINE, THEIRS, MINE)
     uns1, uns2 = oa.unsteered_probs(model, b1), oa.unsteered_probs(model, b2)
-    parts = {"single": (slice(0, n), uns1, b1.legal_pre, legal_post["single"]),
-             "legal": (slice(0, n), uns2[:n], b2.legal_pre[:n], legal_post["legal"]),
-             "illegal": (slice(n, 2 * n), uns2[n:], b2.legal_pre[n:], legal_post["illegal"])}
-    arms = {g: [] for g in GROUPS}
+    parts = {"single": (slice(0, n), uns1, b1.legal_pre, legal_post["single"])}
+    for k, g in enumerate(two):
+        sl = slice(k * n, (k + 1) * n)
+        parts[g] = (sl, uns2[sl], b2.legal_pre[sl], legal_post[g])
+    arms = {g: [] for g in groups}
 
     def add(ed, pt, al, pr1, pr2):
         for g, (sl, u, pre_g, post_g) in parts.items():
@@ -221,15 +254,15 @@ def main() -> None:
                 oa.grad_steer_arm(model, b2, mlp, ls, alpha=al, n_steps=steps, beta=beta, target_labels=tgt2,
                                   second=(t_sq, tgt_t))[0])
     print(f"  GS swept [{(time.time() - t0) / 60:.1f} min]", flush=True)
-    for g in GROUPS:
+    for g in groups:
         for q in res[g]["points"]:
             arms[g].append({"editor": "IM", "point": q["point"], "alpha": 1.0, "edit_index_symdiff": q["index"],
                             "index_se": q["index_se"], "fidelity_ratio": 1.0 - q["fidelity"]})
-    reported = {g: {ed: best_arm(arms[g], ed, "edit_index_symdiff", guard=GUARD) for ed in ("PI", "GS", "IM")} for g in GROUPS}
+    reported = {g: {ed: best_arm(arms[g], ed, "edit_index_symdiff", guard=GUARD) for ed in ("PI", "GS", "IM")} for g in groups}
     at_t2 = {g: {ed: next(x for x in arms[g] if x["editor"] == ed and x["point"] == int(t2[ed]["point"])
-                          and x["alpha"] == float(t2[ed]["alpha"])) for ed in ("PI", "GS", "IM")} for g in GROUPS}
+                          and x["alpha"] == float(t2[ed]["alpha"])) for ed in ("PI", "GS", "IM")} for g in groups}
 
-    out = {"run": RUN, "instance": inst, "version": VERSION, "created": time.strftime("%Y-%m-%d %H:%M"),
+    out = {"run": a.run, "instance": inst, "groups_run": list(groups), "partners_searched": searched, "version": VERSION, "created": time.strftime("%Y-%m-%d %H:%M"),
            "n_cases": n, "budget": a.budget, "editor": "IM (canonical inverse_arms, post_boards)",
            "reported": reported, "at_table2_setting": at_t2,
            "table2_setting": {ed: {"point": int(t2[ed]["point"]), "alpha": float(t2[ed]["alpha"])} for ed in ("PI", "GS", "IM")},
@@ -242,17 +275,17 @@ def main() -> None:
     os.replace(tmp, path)
     print(f"wrote {path.relative_to(_REPO)}")
     print(f"\nIM, n = {n} cases per group, Edit Index (symdiff) ± SE / Edit Fidelity")
-    print("point |       single flip        |    legal two-disc flip   |   illegal two-disc flip")
-    print("unedited " + "  ".join(f"| {res[g]['unedited_index']:+.3f}{'':18}" for g in GROUPS))
+    print("point | " + " | ".join(f"{g:^24}" for g in groups))
+    print("unedited " + "  ".join(f"| {res[g]['unedited_index']:+.3f}{'':18}" for g in groups))
     for j in range(len(res["single"]["points"])):
         print(f"{res['single']['points'][j]['point']:>5}    " + "  ".join(
             f"| {res[g]['points'][j]['index']:+.3f} ± {res[g]['points'][j]['index_se']:.3f} / {res[g]['points'][j]['fidelity']:+.2f}"
-            for g in GROUPS))
+            for g in groups))
 
     for title, tab in (("each group at the setting Table 2's rule picks within that group", reported),
                        ("each group at the run's Table 2 setting", at_t2)):
         print(f"\n{title}: index ± SE / Edit Fidelity (point, alpha)")
-        for g in GROUPS:
+        for g in groups:
             print(f"  {g:8} " + "   ".join(f"{ed} {tab[g][ed]['edit_index_symdiff']:+.3f} ± {tab[g][ed]['index_se']:.3f} / "
                                         f"{1 - tab[g][ed]['fidelity_ratio']:+.2f} (pt {tab[g][ed]['point']}, a {tab[g][ed]['alpha']:g})"
                                         for ed in ("PI", "GS", "IM")))
