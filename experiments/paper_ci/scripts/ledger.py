@@ -78,7 +78,7 @@ def main():
         w.writeheader()
         w.writerows(rows)
     md = [f"# Ledger — {ledger['generated_iso']} · basis {CFG['basis']} · ± = SD over training seeds (n), [CI] = t-based 95% half-width\n",
-          "Editor cells are the tables' REPORTED arm (pim.metrics.selection, 2026-09-19): the best Edit Index among arms inside the fidelity guard; the unguarded best only when no arm passes. `fid` = FIDELITY = 1 − the stored RMSE ratio (2026-09-22): 1 perfect, 0 = the guard, < 0 degraded.\n"]
+          "Editor cells are the tables' REPORTED arm (pim.metrics.selection, 2026-09-19): the best Edit Index among arms inside the fidelity guard; the highest-fidelity arm only when no arm passes (since 2026-09-23). `fid` = FIDELITY = 1 − the stored RMSE ratio (2026-09-22): 1 perfect, 0 = the guard, < 0 degraded.\n"]
     for gname, g in groups.items():
         md.append(f"\n## {gname} — `{g['run']}`\n")
         for blk, metrics in g["blocks"].items():

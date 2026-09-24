@@ -10,8 +10,13 @@ read what the scorer wrote, so changing a rule never needs a re-scoring.
     best_arm     an editor's reported arm = the highest Edit Index AMONG THE ARMS INSIDE THE GUARD
                  (fidelity ratio ≤ 1: the edit did not leave the output further from the edited
                  world than doing nothing). Only if an editor has NO arm inside the guard is its
-                 highest-index arm reported instead, and the row says so (``within_guard`` False) —
-                 that index is then the index of a degraded output, which the fidelity column shows.
+                 LOWEST-fidelity-ratio arm reported instead — the least-degrading write — and the
+                 row says so (``within_guard`` False).
+
+⛔ 2026-09-23 (Sevan): the fallback was the highest-index arm overall (2026-09-19 → 09-23), which on a
+row where every editor fails reported the index of a badly degraded output (oth-adjacent GS −0.157 at
+fidelity −5.68). It is now the highest-fidelity arm (oth-adjacent GS −0.96 at −0.01), the reading the
+paper states. Only editors with no arm inside the guard move; every guarded cell is unchanged.
 
 ⛔ Until 2026-09-19 the tables took the highest Edit Index REGARDLESS of the guard (and
 ``scores.json["best"]`` is the scorer's own argmax, on Othello under the union construction).
@@ -44,16 +49,23 @@ def arms_of(arms: list[dict], editor: str) -> list[dict]:
 
 def best_arm(arms: list[dict], editor: str, key: str, guard: float | None = GUARD) -> dict | None:
     """The arm an editor is REPORTED at: max ``key`` among arms with ``fidelity_ratio <= guard``;
-    if none is inside the guard, max ``key`` overall. The returned dict is a copy carrying
-    ``within_guard``. ``guard=None`` = the unguarded argmax (the pre-2026-09-19 rule)."""
+    if none is inside the guard, the arm with the lowest ``fidelity_ratio`` (max ``key`` overall
+    only if no arm carries a ratio). The returned dict is a copy carrying ``within_guard``.
+    ``guard=None`` = the unguarded argmax (the pre-2026-09-19 rule)."""
     def ok(v):
         return v is not None and not (isinstance(v, float) and np.isnan(v))
 
     sub = [a for a in arms_of(arms, editor) if ok(a.get(key))]
     if not sub:
         return None
-    inside = [a for a in sub if guard is not None and ok(a.get("fidelity_ratio")) and a["fidelity_ratio"] <= guard]
-    pick = max(inside or sub, key=lambda a: a[key])
+    rated = [a for a in sub if ok(a.get("fidelity_ratio"))]
+    inside = [a for a in rated if guard is not None and a["fidelity_ratio"] <= guard]
+    if inside:
+        pick = max(inside, key=lambda a: a[key])
+    elif guard is not None and rated:
+        pick = min(rated, key=lambda a: a["fidelity_ratio"])
+    else:
+        pick = max(sub, key=lambda a: a[key])
     return {**pick, "within_guard": bool(inside)}
 
 

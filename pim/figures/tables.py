@@ -10,7 +10,8 @@ under ``experiments/`` (2026-09-19).
 What this module does and does not decide. It DRAWS, and it assembles rows. Every number's definition and
 every rule that picks which number a cell shows is imported from ``pim.metrics``:
     selection.best_arm / best_point   the editor arm and the residual point a cell reports
-                                      (best Edit Index INSIDE the fidelity guard; ``ARM_GUARD`` below)
+                                      (best Edit Index INSIDE the fidelity guard, else the lowest fidelity ratio;
+                                      ``ARM_GUARD`` below)
     replicates.pool_replicates        every ± (SD over seed replicates at a matched budget) and the t-based CI
     decodability.insample_gap_from_stats, prediction.*   the overfit gap; loss / floor / excess
 What remains here are DISPLAY POLICIES, each a named constant or a short documented branch: the editors shown
@@ -136,7 +137,8 @@ def find_run(name: str, root: Path = REPO / "runs") -> Path | None:
 
 
 # THE ARM-SELECTION RULE lives in pim.metrics.selection (2026-09-19): the best Edit Index among the arms
-# INSIDE the fidelity guard, the unguarded best only when an editor has no arm inside it. ``ARM_GUARD = None``
+# INSIDE the fidelity guard, the lowest-fidelity-ratio arm only when an editor has no arm inside it (since 2026-09-23;
+# the highest-index arm before). ``ARM_GUARD = None``
 # restores the old unguarded argmax for every table at once.
 ARM_GUARD: "float | None" = GUARD
 

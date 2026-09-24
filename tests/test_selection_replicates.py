@@ -13,12 +13,14 @@ def _arm(ed, ei, fid, point=0, alpha=1.0):
 
 def test_best_arm_prefers_the_guard_and_falls_back():
     arms = [_arm("PI[zspace]", 0.40, 2.1), _arm("PI[zspace]", 0.35, 0.83, 1), _arm("PI[zspace]", 0.10, 0.5, 2),
-            _arm("GS@L0", -0.2, 4.0), _arm("GS@L1", -0.5, 6.0), _arm("PIX", 0.99, 0.1)]
+            _arm("GS@L0", -0.2, 6.0), _arm("GS@L1", -0.5, 4.0), _arm("PIX", 0.99, 0.1)]
     b = best_arm(arms, "PI", "edit_index")
     assert b["edit_index"] == 0.35 and b["within_guard"] is True          # not the +0.40 at fidelity 2.1
     assert best_arm(arms, "PI", "edit_index", guard=None)["edit_index"] == 0.40
     g = best_arm(arms, "GS", "edit_index")
-    assert g["edit_index"] == -0.2 and g["within_guard"] is False         # no arm inside the guard: the unguarded best, flagged
+    assert g["edit_index"] == -0.5 and g["within_guard"] is False         # no arm inside the guard: the lowest ratio, flagged
+    assert best_arm(arms, "GS", "edit_index", guard=None)["edit_index"] == -0.2
+    assert best_arm([_arm("GS", -0.3, float("nan")), _arm("GS", -0.1, float("nan"))], "GS", "edit_index")["edit_index"] == -0.1
     assert best_arm(arms, "IM", "edit_index") is None
     assert best_arm([_arm("PI", float("nan"), 0.5), _arm("PI", 0.1, 1.0)], "PI", "edit_index")["edit_index"] == 0.1   # 1.0 is inside
 

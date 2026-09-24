@@ -41,7 +41,10 @@
   "catim_5ray",
   "catim_8ray",
   "catim_16ray",
-  "catim_128ray"
+  "catim_128ray",
+  "nn_r2_shortlist",
+  "catim_grid_8ray",
+  "token_rescore_8ray"
  ],
  "host_deps": {},
  "priority": 90,

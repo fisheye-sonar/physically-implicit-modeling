@@ -11,6 +11,7 @@ its own rules — and the game length. CPU only, about a minute per instance at 
 Moved 2026-09-19 from ``experiments/adjacent_flip_ablation/scripts/pilot_adjacent_flip.py`` (which
 measured freshly generated games before the corpus existed).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,17 +36,30 @@ def main() -> None:
     ap.add_argument("--n-games", type=int, default=10_000)
     a = ap.parse_args()
     for inst in a.instance:
-        tok, ln = oc.load(oc.build(oc.LADDER["D"], log=lambda s: None, only=("test",), instance=inst)["test"])
+        tok, ln = oc.load(
+            oc.build(oc.LADDER["D"], log=lambda s: None, only=("test",), instance=inst)[
+                "test"
+            ]
+        )
         tok, ln = tok[: a.n_games], ln[: a.n_games]
-        res = {"instance": inst, "split": "test", "rules": oc.rules_of(inst), "created": time.strftime("%Y-%m-%d %H:%M"),
-               **flips_per_move(tok, ln, oc.rules_of(inst)), "game_length_mean": float(ln.mean())}
+        res = {
+            "instance": inst,
+            "split": "test",
+            "rules": oc.rules_of(inst),
+            "created": time.strftime("%Y-%m-%d %H:%M"),
+            **flips_per_move(tok, ln, oc.rules_of(inst)),
+            "game_length_mean": float(ln.mean()),
+        }
         out = _REPO / "runs" / "_baselines" / inst / "corpus_stats.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         tmp = out.with_suffix(".json.tmp")
         tmp.write_text(json.dumps(res, indent=1))
         os.replace(tmp, out)
-        print(f"{inst}: {res['flips_per_move']:.3f} discs flipped per move ({res['flips_per_game']:.1f} per game, "
-              f"{res['n_games']:,} games, mean length {res['game_length_mean']:.1f}) → {out.relative_to(_REPO)}", flush=True)
+        print(
+            f"{inst}: {res['flips_per_move']:.3f} discs flipped per move ({res['flips_per_game']:.1f} per game, "
+            f"{res['n_games']:,} games, mean length {res['game_length_mean']:.1f}) → {out.relative_to(_REPO)}",
+            flush=True,
+        )
 
 
 if __name__ == "__main__":
