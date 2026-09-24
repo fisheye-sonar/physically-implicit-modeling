@@ -1,4 +1,4 @@
-"""Predictive-quality arrays for the Blink and 5-ray panels of rayworld.pdf (2026-09-21, round 5). GPU.
+"""Predictive-quality arrays for every rayworld.pdf panel except Standard (2026-09-23: blink, 128 / 16 / 8 / 5-ray). GPU.
 
 For each (run, instance) the SAME three arrays the Standard panel takes from
 ``.scratch/history_rewrite_arrays.npz``, obtained exactly as ``paper/figs/history_rewrite/make_figure.py``
@@ -26,7 +26,9 @@ from pim.environments.discworld import arms as dwa, bench as dwb  # noqa: E402
 from pim.environments.discworld.bench import EF  # noqa: E402
 from pim.models import load_checkpoint  # noqa: E402
 
-RUNS = [("blink_ablation/L-dw-blink-20m", "dw-blink"), ("ray_ablation/L-dw-5ray-20m", "dw-5ray")]
+RUNS = [("blink_ablation/L-dw-blink-20m", "dw-blink"), ("ray_ablation/L-dw-128ray-20m", "dw-128ray"),
+        ("ray_ablation/L-dw-16ray-20m", "dw-16ray"), ("ray_ablation/L-dw-8ray-20m", "dw-8ray"),
+        ("ray_ablation/L-dw-5ray-20m", "dw-5ray")]
 N_BENCH = 32          # the Standard panel's pool: history_rewrite_arrays.npz holds the first 32 selected cases
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 """Predictive quality on Rayworld, for the appendix (2026-09-21, round 5): the model's free-run against the
-clean render of the UNEDITED world, no edit anywhere, and their difference, on three Rayworld variants.
+clean render of the UNEDITED world, no edit anywhere, and their difference, on six Rayworld variants.
 
 Three panels of two held-out sequences each: (a) Standard, ``runs/noise_ablation/L-dw-noiseless-20m`` on
 dw-noiseless; (b) Blink, ``runs/blink_ablation/L-dw-blink-20m`` on dw-blink; (c) 5-ray,
@@ -61,7 +61,10 @@ hr = _import(REPO / "paper" / "figs" / "history_rewrite" / "draw_paper.py")     
 qe = _import(REPO / "paper" / "figs" / "qualitative_edits" / "make_figure.py")   # error() and the signed-error _panel
 ps.apply()                                    # the reference modules set rcParams at import; one look wins
 
-PANELS = [("a", "Standard", "dw-noiseless"), ("b", "Blink", "dw-blink"), ("c", "5-ray", "dw-5ray")]
+PANELS = [("a", "Standard", "dw-noiseless"), ("b", "Blink", "dw-blink"), ("c", "128-ray", "dw-128ray"),
+          ("d", "16-ray", "dw-16ray"), ("e", "8-ray", "dw-8ray"), ("f", "5-ray", "dw-5ray")]
+PER_ROW = 3                                   # panels per band; the six run as two bands of three (Sevan, 2026-09-23)
+BAND_GAP = 0.30                               # between the two bands, inches
 ROWS = [("Ground truth", "gt_unedited_roll"), ("Prediction", "roll_unsteered"), ("Difference", None)]
 N_PER, SEED = 2, 0                            # sequences per panel; the draw's seed (one default_rng(SEED) per instance)
 DIFF_SCALE = 1.0                              # fixed +-1, the qualitative figures' scale
@@ -105,35 +108,41 @@ def panel(ax, d, case: int, body: str | None) -> None:
         hr.waterfall(ax, d["obs_hist"][case, EF - hr.N_CTX:EF], d[body][case, :K])
 
 
-def geometry(width: float):
-    ncol, npan = N_PER * len(PANELS), len(PANELS)
-    panel_w = (width - LEFT - RIGHT - COL_GAP * (ncol - npan) - PAIR_GAP * (npan - 1)) / ncol
+def geometry(width: float, per_row: int = PER_ROW):
+    ncol = N_PER * per_row
+    panel_w = (width - LEFT - RIGHT - COL_GAP * (ncol - per_row) - PAIR_GAP * (per_row - 1)) / ncol
     return panel_w, FRAME_H * (hr.N_CTX + 15)
 
 
-def figure(data: list, *, width: float):
-    """``data``: (letter, name, inst, d, cases) per panel; the panels are pairs of columns under a bold letter."""
-    panel_w, panel_h = geometry(width)
-    height = TOP + len(ROWS) * panel_h + (len(ROWS) - 1) * ROW_GAP + hr.BOTTOM
+def figure(data: list, *, width: float, per_row: int = PER_ROW):
+    """``data``: (letter, name, inst, d, cases) per panel; the panels are pairs of columns under a bold letter,
+    laid out in bands of ``per_row``. Each band repeats the three row labels, the time arrows and the colour bar,
+    so a band reads on its own; the ray arrow and the key sit once, under the last band."""
+    bands = [data[i:i + per_row] for i in range(0, len(data), per_row)]
+    panel_w, panel_h = geometry(width, per_row)
+    band_h = TOP + len(ROWS) * panel_h + (len(ROWS) - 1) * ROW_GAP
+    height = len(bands) * band_h + (len(bands) - 1) * BAND_GAP + hr.BOTTOM
     fig = plt.figure(figsize=(width, height), dpi=hr.PDF_PPI)
-    x = LEFT
-    for letter, _, _, d, cases in data:
-        fig.text(x / width, 1 - 0.5 * TOP / height, f"({letter})", ha="left", va="center", fontsize=9,
-                 fontweight="bold", color=ps.TEXT)
-        for case in cases:
-            for r, (_, body) in enumerate(ROWS):
-                panel(hr._box(fig, x, TOP + r * (panel_h + ROW_GAP), panel_w, panel_h), d, case, body)
-            x += panel_w + COL_GAP
-        x += PAIR_GAP - COL_GAP
-    for r, (label, body) in enumerate(ROWS):
-        y = TOP + r * (panel_h + ROW_GAP)
-        hr._arrow(fig, LEFT - 0.12, y, LEFT - 0.12, y + panel_h)                    # time runs downward
-        yc = 1 - (y + panel_h / 2) / height
-        fig.text((LEFT - 0.19) / width, yc, "time", rotation=90, ha="center", va="center", fontsize=8, color=ps.TEXT)
-        fig.text((LEFT - 0.36) / width, yc, label, rotation=90, ha="center", va="center", fontsize=9, color=ps.TEXT)
-        if body is None:
-            colorbar(hr._box(fig, width - RIGHT + 0.07, y, 0.07, panel_h))
-    y_bot = TOP + len(ROWS) * panel_h + (len(ROWS) - 1) * ROW_GAP
+    for bi, band in enumerate(bands):
+        y0 = bi * (band_h + BAND_GAP)
+        x = LEFT
+        for letter, _, _, d, cases in band:
+            fig.text(x / width, 1 - (y0 + 0.5 * TOP) / height, f"({letter})", ha="left", va="center", fontsize=9,
+                     fontweight="bold", color=ps.TEXT)
+            for case in cases:
+                for r, (_, body) in enumerate(ROWS):
+                    panel(hr._box(fig, x, y0 + TOP + r * (panel_h + ROW_GAP), panel_w, panel_h), d, case, body)
+                x += panel_w + COL_GAP
+            x += PAIR_GAP - COL_GAP
+        for r, (label, body) in enumerate(ROWS):
+            y = y0 + TOP + r * (panel_h + ROW_GAP)
+            hr._arrow(fig, LEFT - 0.12, y, LEFT - 0.12, y + panel_h)                # time runs downward
+            yc = 1 - (y + panel_h / 2) / height
+            fig.text((LEFT - 0.19) / width, yc, "time", rotation=90, ha="center", va="center", fontsize=8, color=ps.TEXT)
+            fig.text((LEFT - 0.36) / width, yc, label, rotation=90, ha="center", va="center", fontsize=9, color=ps.TEXT)
+            if body is None:
+                colorbar(hr._box(fig, width - RIGHT + 0.07, y, 0.07, panel_h))
+    y_bot = len(bands) * band_h + (len(bands) - 1) * BAND_GAP
     hr._arrow(fig, LEFT, y_bot + 0.10, LEFT + panel_w, y_bot + 0.10)                 # rays run left to right
     fig.text((LEFT + panel_w / 2) / width, 1 - (y_bot + 0.20) / height, "ray", ha="center", va="center",
              fontsize=8, color=ps.TEXT)

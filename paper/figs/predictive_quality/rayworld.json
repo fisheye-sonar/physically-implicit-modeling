@@ -28,6 +28,45 @@
   },
   {
    "panel": "c",
+   "name": "128-ray",
+   "run": "ray_ablation/L-dw-128ray-20m",
+   "instance": "dw-128ray",
+   "arrays": ".scratch/predictive_quality_dw-128ray.npz",
+   "n_bench": 32,
+   "rays": 128,
+   "cases": [
+    20,
+    26
+   ]
+  },
+  {
+   "panel": "d",
+   "name": "16-ray",
+   "run": "ray_ablation/L-dw-16ray-20m",
+   "instance": "dw-16ray",
+   "arrays": ".scratch/predictive_quality_dw-16ray.npz",
+   "n_bench": 32,
+   "rays": 16,
+   "cases": [
+    20,
+    26
+   ]
+  },
+  {
+   "panel": "e",
+   "name": "8-ray",
+   "run": "ray_ablation/L-dw-8ray-20m",
+   "instance": "dw-8ray",
+   "arrays": ".scratch/predictive_quality_dw-8ray.npz",
+   "n_bench": 32,
+   "rays": 8,
+   "cases": [
+    20,
+    26
+   ]
+  },
+  {
+   "panel": "f",
    "name": "5-ray",
    "run": "ray_ablation/L-dw-5ray-20m",
    "instance": "dw-5ray",
@@ -66,6 +105,24 @@
    "rayworld_dw-blink_case26_gt.pdf",
    "rayworld_dw-blink_case26_pred.pdf",
    "rayworld_dw-blink_case26_diff.pdf",
+   "rayworld_dw-128ray_case20_gt.pdf",
+   "rayworld_dw-128ray_case20_pred.pdf",
+   "rayworld_dw-128ray_case20_diff.pdf",
+   "rayworld_dw-128ray_case26_gt.pdf",
+   "rayworld_dw-128ray_case26_pred.pdf",
+   "rayworld_dw-128ray_case26_diff.pdf",
+   "rayworld_dw-16ray_case20_gt.pdf",
+   "rayworld_dw-16ray_case20_pred.pdf",
+   "rayworld_dw-16ray_case20_diff.pdf",
+   "rayworld_dw-16ray_case26_gt.pdf",
+   "rayworld_dw-16ray_case26_pred.pdf",
+   "rayworld_dw-16ray_case26_diff.pdf",
+   "rayworld_dw-8ray_case20_gt.pdf",
+   "rayworld_dw-8ray_case20_pred.pdf",
+   "rayworld_dw-8ray_case20_diff.pdf",
+   "rayworld_dw-8ray_case26_gt.pdf",
+   "rayworld_dw-8ray_case26_pred.pdf",
+   "rayworld_dw-8ray_case26_diff.pdf",
    "rayworld_dw-5ray_case20_gt.pdf",
    "rayworld_dw-5ray_case20_pred.pdf",
    "rayworld_dw-5ray_case20_diff.pdf",
