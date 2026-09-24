@@ -283,6 +283,12 @@ illegal pairs from the same cases +0.65 ± 0.07 / 0.31 (point 4); the bench's si
 colour counts); toward legal boards the model edits as well as standard Othello (+0.81 / 0.62). Illegal but count-consistent
 pairs land in between. Caveats: 40 cases, one seed, IM only (PI / GS would need two-tile writes), best point read after the fact
 (the gap holds at every point from 2 on). Paper: `tab:two_flip` in the reachability appendix.
+**Addendum, PI and GS on the same 40 cases** (same script; `linear_arm` / `grad_steer_arm` gained an optional `second` tile; each
+group at the setting Table 2's rule picks within it): legal pairs PI +0.13 ± 0.11 / 0.26 (pt 1, α 10), GS −0.89 / −0.10 (no setting
+inside the guard); illegal pairs PI −0.96 / 0.00, GS −0.91 / −0.06; single flip PI +0.08 / 0.29, GS −0.88 / −0.11. PI's two-tile write
+DOES land in probe space (the linear probe reads the target at the bench tile in 100% of cases and at the partner in 99%, against 0%
+for the single-tile control), yet the prediction does not follow. So a legal target rescues the inverse map on adjacent-noflip but
+not the probe-derived editors; the checks that PI / GS at Table 2's setting still reproduce scores.json on the full bench pass.
 
 ## 2026-09-23 — Legal vs illegal target boards, decided EXACTLY: flip models edit both; `adjacent-noflip` has no legal flipped board at all (`replicated` for the split; supersedes 2026-09-15)
 

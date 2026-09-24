@@ -307,7 +307,7 @@ def unsteered(model, bench: Benchmark) -> dict:
 
 @torch.no_grad()
 def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
-               mode: str, alpha: float, points) -> tuple[np.ndarray, dict]:
+               mode: str, alpha: float, points, second=None) -> tuple[np.ndarray, dict]:
     """ND and PI on the classification probes — ``pim.editors.nanda`` / ``pim.editors.pinv``
     called with the Othello case structure; NOTHING is re-derived here (the inline copies
     this function carried until 2026-09-07 are pinned equal in
@@ -320,7 +320,14 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
     mode "pinv"     PI: ``pinv_step`` in z-space (a classification probe has no y-affine,
                     so there is no affine question here). The target is the probe's own
                     read-out with the intervened tile's current↔target class scores swapped.
+
+    ``second`` (2026-09-23): ``(squares, cur_labels, tgt_labels)``, one per case — a SECOND tile flipped
+    in the same write (``scripts/two_flip_editability.py``). PI on classification probes only: the
+    target swaps both tiles' classes (``swap_class_logits`` once per tile, as the discworld grid
+    target does per cell). None (default) = the canonical single-tile edit, unchanged.
     """
+    if second is not None and mode != "pinv":
+        raise NotImplementedError("a second tile is implemented for PI (mode 'pinv') only")
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
     ratios = []
     for toks, ids in zip(bench.tokens, bench.case_ids):
@@ -329,6 +336,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
         sq = torch.from_numpy(bench.pos_int[ids]).to(DEV)
         td = torch.from_numpy(tgt_lab[ids]).to(DEV)
         cd = torch.from_numpy(cur_lab[ids]).to(DEV)
+        if second is not None:
+            sq2, cd2, td2 = (torch.from_numpy(np.asarray(a, dtype=np.int64)[ids]).to(DEV) for a in second)
         rec = []
 
         def hook(layer, x, _rec=rec):
@@ -336,6 +345,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 return x
             p = probes[layer]
             cur = x[:, -1]
+            if p.n_classes is None and second is not None:
+                raise NotImplementedError("a second tile is implemented for classification probes only")
             if p.n_classes is None:
                 # the signed mine/theirs REGRESSION probe (2026-09-09): the flip asks the
                 # tile's value to become +1 (mine) or −1 (theirs). ND: the tile's probe row,
@@ -364,6 +375,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 # (the shared spelling of a categorical flip — discworld's grid target
                 # calls the same helper twice, once per cell)
                 lg = swap_class_logits(p(cur), sq, cd, td)   # (B, N_TILES, N_CLASSES)
+                if second is not None:
+                    lg = swap_class_logits(lg, sq2, cd2, td2)
                 delta = alpha * pinv_step(cur, lg.view(bsz, -1), p, space="zspace")
             _rec.append(float((delta.norm(dim=1) / cur.norm(dim=1)).mean()))
             out = x.clone()
@@ -381,7 +394,7 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
 def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
                    alpha: float, n_steps: int, beta: float,
                    optimizer: str = "adam",
-                   target_labels=None) -> tuple[np.ndarray, dict]:
+                   target_labels=None, second=None) -> tuple[np.ndarray, dict]:
     """GS over the 1001 cases — ``transfer_pipeline.run_arm``, on the canonical parts.
 
     Bucket by bucket, because the intervention hook writes ``x[:, -1]`` and every row
@@ -393,6 +406,10 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
     mine-coordinate targets from ``case_targets(bench)[1]`` to steer through the
     ``mine`` probes instead — the open question (2026-08-31) is whether GS is dead
     in that frame or the old negative was an artefact of the pre-canonical probes.
+
+    ``second`` (2026-09-23): ``(squares, target_labels)``, one per case — a SECOND tile the descent must
+    also move (added to the edit mask and the target board; classification probes only). None
+    (default) = the canonical single-tile edit, unchanged.
     """
     n_points = model.n_layers + 1
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
@@ -414,6 +431,12 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
         else:
             tv = torch.zeros(bsz, N_TILES, dtype=torch.long, device=DEV)
             tv[torch.arange(bsz), sq_t] = torch.from_numpy(lab[ids]).to(DEV)
+        if second is not None:
+            if next(iter(probes.values())).n_classes is None:
+                raise NotImplementedError("a second tile is implemented for classification probes only")
+            sq2 = np.asarray(second[0], dtype=np.int64)[ids]
+            cm[np.arange(bsz), sq2] = True
+            tv[torch.arange(bsz), torch.from_numpy(sq2).to(DEV)] = torch.from_numpy(np.asarray(second[1], dtype=np.int64)[ids]).to(DEV)
         specs = {ell: build_edit_spec(probes[ell], x0[ell], cm, tv, beta=beta)
                  for ell in range(n_points)}
         hook = make_intervention_hook(probes, specs, start_layer, alpha=alpha,
