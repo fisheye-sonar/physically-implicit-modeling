@@ -10,6 +10,30 @@ Newest first. Every entry dated.
 
 ---
 
+### 2026-09-23 — The vendored `replay` accepts passes a real game never makes: a replayable history is NOT a legal game
+
+`OthelloBoardState.umpire` (and so `counterfactual.replay`, `search_cf`, `scripts/index_ceiling.py`) plays a move that is illegal
+for the player to move by handing it to the opponent — even when the player to move HAS legal moves. The generator
+(`get_ood_game`) only ever picks from `get_valid_moves()`, which passes only when forced. So a history that replays without an
+assertion can contain an UNFORCED pass and is not a legal game. On 2026-09-23 all 61 of `search_cf`'s "exact counterfactual"
+histories on `oth-adjacent` (300 cases sampled) contained one — and in fact NO flipped board on `oth-adjacent` or `oth-noflip` is
+reachable by a legal game (without flips and without forced passes, each colour's disc count is fixed by the move count). Any
+"is this a legal game" test must check every move against `get_valid_moves()`; `pim.environments.othello.reachability` does, and
+decides reachability exactly. Affected: the old legal/illegal split (`findings/inverse-probe.md` 2026-09-15, corrected
+2026-09-23) and the Othello Edit Index ceiling (`index_ceiling.py`, only `L-oth-20m`'s file exists: its 13 cases may include
+such histories; re-derive it from the exact search's witness games before quoting it).
+
+### 2026-09-22 — `fidelity_ratio` in scores.json is the RATIO; the tables show `fidelity = 1 − ratio`
+
+Since 2026-09-22 every table, ledger and dashboard "fid" cell is the REPORTED fidelity (`pim.metrics.fidelity`:
+1 perfect, 0 = the guard, < 0 degraded — higher is better, like the Edit Index). The stored key `fidelity_ratio`
+in every `scores.json` / `variance.json` / the corpus-size and ceiling scripts is STILL the RMSE ratio (1 = doing
+nothing, > 1 degraded); nothing was rescored and no stored value was rewritten. So: a `fidelity_ratio` of 0.30 in a
+scores file and a fidelity of +0.70 in Table 2 are the SAME arm; a findings entry dated before 2026-09-22 quotes
+ratios; never apply `1 −` twice; the guard is `ratio ≤ 1` (`selection.GUARD`) ⇔ `fidelity ≥ 0` (`FIDELITY_GUARD`).
+The flip lives in ONE place, `pim/figures/tables.py::_block_row` (+ the training-curve tracker in the same file); a
+new consumer of `scores.json` that wants the reported number calls `fidelity(arm["fidelity_ratio"])`.
+
 ### 2026-09-13 — Three position samplers, not one: adding a spatial rule must reach all of them
 
 `sim.sample_position` (initial conditions; "THE draw order every generator uses") is NOT the only
@@ -1047,3 +1071,51 @@ one place the clean render is not the Bayes mean — the mean-reference spec's s
 - **Tonight's queued run** is `scripts/drivers/rescore_2026-09-12.sh` (launch instructions in its
   header). Until it runs, every table shows the OLD benches' numbers under the NEW headline
   construction; scores.json files stamped `2026-09-12.*` are the new protocol.
+
+## Othello residual streams overflow FP16 at the deep points (2026-09-16)
+
+`transformer_l_tokens` carries outlier residual features up to **~1.1e5** at points 5–8 (point 0:
+22). Half precision tops out at 65504, so anything that stores an Othello residual as `float16`
+silently gets ±inf in ~1 % of rows. Found in `RetrievalBank` (IM-NN's bank was `resid.half()` as a
+memory optimisation): every retrieval mean touching an inf row was inf, which made
+`RetrievalBank.r2` NaN. The bank is float32 since, and the constructor raises on non-finite input.
+Discworld peaks at ~3.5e3 and was never affected. The measured damage to the scored IM-NN arms was
+≤0.002 Edit Index — too few rows to move an aggregate over 1000 cases — so no recorded number
+changed; the pooled 20k-row R² was the only casualty. **Check the dynamic range before storing
+activations in half**, and prefer float32 for anything whose mean is taken.
+
+## 2026-09-19 — A notebook edited while `nbconvert --execute --inplace` is running is OVERWRITTEN when it ends
+
+`master_eval.ipynb` is executed IN PLACE by every scoring job (`scripts/drivers/score_pending.sh`). nbconvert
+reads the file once at the start and writes its in-memory copy back at the end, up to an hour later. An edit
+saved in between is silently lost: on 2026-09-19 Sevan added a `dw_extra_targets` line at 12:20 while the
+11:59 execution of the seed-replicate queue was running; its write at 13:18 dropped the line. The same
+execution also did not SEE the edit, so whatever it scored used the old settings.
+**Rule:** before editing a notebook a queue executes, check for a running execution
+(`ps -eo pid,lstart,args | grep 'nbconvert.*master_eval'`); if one is running, COMMIT the edit at once and
+restore it (`git checkout -- <notebook>`) the moment that process exits, before the next execution starts.
+**When checking the edit survived, parse the cell SOURCE** — the executed notebook's printed OUTPUT contains
+run paths, and a text match on the file reported "survived" when the line was gone. The sibling trap:
+"Never edit a driver script while bash is executing it" (2026-09-08).
+
+## 2026-09-20 — The inverse-map fit holds a residual point's rows about FIVE times over: size it from measurement
+
+`arms.inverse_arms` (Othello) is dense: per residual point it holds the harvested activations, the masked rows, their
+train / test copies, the fit's standardised copies and the retrieval bank's staging copy. Measured on the 4090
+(`ctrl_corpus_oth`, 2026-09-20): 60k games = 3.5M rows = **40.7 GB anonymous**, OOM-killed at the unit's 40 GB cap
+(the LINEAR grid at the same 60k fitted fine). A cgroup kill is not a Python exception — a `try/except` does not
+catch it, the job just vanishes ("unit gone without an end record"). Rules: budget ~0.7 GB of anonymous memory per
+1k Othello games for the inverse map (canonical 20k ≈ 14 GB); put any size whose memory is uncertain in its OWN job
+with one attempt, last; write results after every part so a kill keeps what finished. The discworld inverse map
+(`iter_inverse_maps`) memmaps its residuals but still makes the train / test / bank copies — the same factor applies
+to its rows (30k sequences = 1.2M rows).
+
+## 2026-09-20 (evening) — The DENSE regression probe fit does not scale past ~60k sequences on the lab box either
+
+Same family as the morning's entry, different component: `arms.fit_probes`' regression path memmaps the residual stack
+(9 points × n × 39 × 512 × 4 B — 72 GB of scratch at 100k, 144 GB at 200k) and then copies one point's training rows
+several times inside `fit_linear` / `fit_mlp`. Measured: **100k sequences = 46.8 GB anonymous**, OOM-killed at the lab
+unit's 45 GB cap 21 minutes in (`ctrl_corpus_dw`, 2026-09-20 19:57). 30k (canonical) is ~14 GB. A killed process does not
+run its `finally:` — the 72 GB memmap stayed in `.scratch/` until removed by hand (`fuser` first). To fit regression
+probes on the large corpus, write the streamed variant the categorical path already has (`fit_probe_stream` over
+`MemmapRows`); do not raise the cap (59 GB box, taken down by OOM before).

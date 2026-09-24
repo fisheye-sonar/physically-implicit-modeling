@@ -1,0 +1,60 @@
+{
+ "id": "final_tables",
+ "group": "tables",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "cmd": "bash scripts/drivers/score_pending.sh paper_ci_final",
+ "env": {
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve"
+ },
+ "deps": [
+  "rep_dw-8ray_s1",
+  "rep_dw-8ray_s2",
+  "rep_dw-5ray_s1",
+  "rep_dw-5ray_s2",
+  "rep_dw-16ray_s1",
+  "rep_dw-16ray_s2",
+  "rep_dw-128ray_s1",
+  "rep_dw-128ray_s2",
+  "rep_dw-noiseless_s1",
+  "rep_dw-noiseless_s2",
+  "rep_oth-standard_s1",
+  "rep_oth-standard_s2",
+  "rep_oth-adjflip_s1",
+  "rep_oth-adjflip_s2",
+  "rep_dw-blink_s1",
+  "rep_dw-blink_s2",
+  "rep_oth-adjacent_s1",
+  "rep_oth-adjacent_s2",
+  "rep_oth-noflip_s1",
+  "rep_oth-noflip_s2",
+  "pseed_oth-standard",
+  "pseed_dw-8ray",
+  "pseed_oth-adjflip_s1",
+  "pseed_oth-adjflip_s2",
+  "pseed_oth-adjflip_s0",
+  "catim_parents",
+  "catim_5ray",
+  "catim_8ray",
+  "catim_16ray",
+  "catim_128ray",
+  "nn_r2_shortlist",
+  "catim_grid_8ray",
+  "token_rescore_8ray"
+ ],
+ "host_deps": {},
+ "priority": 90,
+ "est_hours": {
+  "lab": 0.5
+ },
+ "inputs": [],
+ "outputs": [],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "note": "master_eval catches anything unscored, both table notebooks re-render with every \u00b1 in place"
+}

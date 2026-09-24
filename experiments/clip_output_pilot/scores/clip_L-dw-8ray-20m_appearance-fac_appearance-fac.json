@@ -1,0 +1,107 @@
+{
+ "run": "runs/ray_ablation/L-dw-8ray-20m",
+ "instance": "dw-8ray",
+ "basis": "frustum",
+ "block": "appearance-fac",
+ "target": "appearance-fac",
+ "n": 1000,
+ "arms": [
+  {
+   "editor": "unedited",
+   "point": null,
+   "alpha": null,
+   "frac_rays_out_of_range": 0.20675,
+   "min": -0.010286927223205566,
+   "max": 0.80916428565979,
+   "raw": {
+    "edit_index": -0.8989481404074917,
+    "target_rmse": 0.4510338604450226,
+    "ghost_rmse": 0.5986022353172302,
+    "collateral_rmse": 0.11787930876016617,
+    "edit_frame_rmse": 0.3396625220775604
+   },
+   "clipped": {
+    "edit_index": -0.8998129877710644,
+    "target_rmse": 0.45055124163627625,
+    "ghost_rmse": 0.5986022353172302,
+    "collateral_rmse": 0.11787930876016617,
+    "edit_frame_rmse": 0.33947646617889404
+   }
+  },
+  {
+   "editor": "PI",
+   "point": 1,
+   "alpha": 60.0,
+   "frac_rays_out_of_range": 0.15625,
+   "min": -1.0908490419387817,
+   "max": 1.8563191890716553,
+   "raw": {
+    "edit_index": 0.38013823394289487,
+    "target_rmse": 0.3077540099620819,
+    "ghost_rmse": 0.34609174728393555,
+    "collateral_rmse": 0.35500890016555786,
+    "edit_frame_rmse": 0.3229358494281769,
+    "fidelity_ratio": 0.9507550242897741
+   },
+   "clipped": {
+    "edit_index": 0.4152333041308625,
+    "target_rmse": 0.28240513801574707,
+    "ghost_rmse": 0.3059781491756439,
+    "collateral_rmse": 0.3413768410682678,
+    "edit_frame_rmse": 0.306698739528656,
+    "fidelity_ratio": 0.9034462476318899
+   },
+   "clipped_raw_denominator_fidelity": 0.9029513696498512
+  },
+  {
+   "editor": "ND",
+   "point": 0,
+   "alpha": 12.0,
+   "frac_rays_out_of_range": 0.147875,
+   "min": -0.18702825903892517,
+   "max": 0.9616528749465942,
+   "raw": {
+    "edit_index": 0.4879926593314239,
+    "target_rmse": 0.3151516616344452,
+    "ghost_rmse": 0.27786773443222046,
+    "collateral_rmse": 0.4039691388607025,
+    "edit_frame_rmse": 0.33437976241111755,
+    "fidelity_ratio": 0.9844470339732195
+   },
+   "clipped": {
+    "edit_index": 0.5037784456844561,
+    "target_rmse": 0.3128250539302826,
+    "ghost_rmse": 0.2741423547267914,
+    "collateral_rmse": 0.4011317491531372,
+    "edit_frame_rmse": 0.3325551748275757,
+    "fidelity_ratio": 0.9796118669749819
+   },
+   "clipped_raw_denominator_fidelity": 0.9790752679850802
+  },
+  {
+   "editor": "GS",
+   "point": 0,
+   "alpha": 0.35,
+   "frac_rays_out_of_range": 0.095,
+   "min": -0.35918286442756653,
+   "max": 1.0972613096237183,
+   "raw": {
+    "edit_index": 0.4578162232913452,
+    "target_rmse": 0.20276755094528198,
+    "ghost_rmse": 0.2527551054954529,
+    "collateral_rmse": 0.15619558095932007,
+    "edit_frame_rmse": 0.1844596266746521,
+    "fidelity_ratio": 0.5430673526958372
+   },
+   "clipped": {
+    "edit_index": 0.4616241432419505,
+    "target_rmse": 0.20139499008655548,
+    "ghost_rmse": 0.2516831159591675,
+    "collateral_rmse": 0.15534774959087372,
+    "edit_frame_rmse": 0.18289054930210114,
+    "fidelity_ratio": 0.5387429395642502
+   },
+   "clipped_raw_denominator_fidelity": 0.5384478339954706
+  }
+ ]
+}

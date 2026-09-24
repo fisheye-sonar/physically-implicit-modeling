@@ -16,7 +16,8 @@ from __future__ import annotations
 
 import numpy as np
 
-__all__ = ["masked_rmse_per_case", "edit_index_per_case", "fidelity_ratio_from"]
+__all__ = ["masked_rmse_per_case", "edit_index_per_case", "fidelity_ratio_from",
+           "case_stats", "ratio_ci95"]
 
 
 def masked_rmse_per_case(pred: np.ndarray, ref: np.ndarray, mask: np.ndarray) -> np.ndarray:
@@ -55,3 +56,80 @@ def fidelity_ratio_from(rmse_edited: float, rmse_unsteered: float, eps: float = 
     Index, which scores a wrecked output mildly positive when it lands marginally nearer
     the edited world."""
     return float(rmse_edited) / max(float(rmse_unsteered), eps)
+
+
+FIDELITY_GUARD = 0.0     # fidelity below this = the edit degraded the prediction (ratio > 1)
+
+
+def fidelity(ratio):
+    """THE REPORTED fidelity (2026-09-22, Sevan): ``1 - fidelity_ratio``, so that every
+    editability column reads higher-is-better on one axis with the Edit Index — **1 = the
+    edit reproduced the edited world exactly, 0 = no better than doing nothing (THE GUARD),
+    < 0 = degraded.** Scores files keep the RATIO under ``fidelity_ratio`` (five scorers on
+    two hosts write it; a stored key's meaning never changes); every table, ledger and
+    dashboard cell goes through this one function. Works on floats, arrays and NaN. A
+    ratio's 95% interval ``[lo, hi]`` becomes ``[1 - hi, 1 - lo]``."""
+    return 1.0 - ratio
+
+
+# ── case-level spread (2026-09-18) ────────────────────────────────────────────
+#
+# Every arm's Edit Index is a mean over bench cases and its guard a ratio of two
+# case-aggregates. The numbers below describe how much those aggregates would move under a
+# RESAMPLING OF THE BENCH — the metric's own estimation noise on ONE fixed model. They are
+# recorded beside each arm so the option exists later; they are NOT the training-seed spread
+# the tables quote (that is the replicate set, ``pim.figures.tables.pool_replicates``), and
+# the two are never added. Bootstrap: cases resampled with replacement, fixed seed, so a
+# rescoring reproduces the interval exactly.
+
+N_BOOT = 1000
+
+
+def case_stats(per_case, *, n_boot: int = N_BOOT, seed: int = 0, prefix: str = "") -> dict:
+    """Case-level spread of a per-case metric whose scalar is its ``nanmean``: the SD across
+    scored cases (ddof 1), the standard error of the mean, the number of scored cases, and a
+    percentile-bootstrap 95% interval of the mean. NaN cases (unscoreable) are dropped, as
+    the scalar drops them. Keys are prefixed (``<prefix>case_sd`` …) so several metrics can
+    live in one record."""
+    v = np.asarray(per_case, float)
+    v = v[np.isfinite(v)]
+    n = int(v.size)
+    out = {f"{prefix}case_sd": float("nan"), f"{prefix}case_se": float("nan"), f"{prefix}n_cases": n,
+           f"{prefix}ci95_lo": float("nan"), f"{prefix}ci95_hi": float("nan")}
+    if n < 2:
+        return out
+    out[f"{prefix}case_sd"] = float(v.std(ddof=1))
+    out[f"{prefix}case_se"] = float(v.std(ddof=1) / np.sqrt(n))
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(n_boot, n))
+    means = v[idx].mean(axis=1)
+    lo, hi = np.percentile(means, [2.5, 97.5])
+    out[f"{prefix}ci95_lo"], out[f"{prefix}ci95_hi"] = float(lo), float(hi)
+    return out
+
+
+def ratio_ci95(num_per_case, den_per_case, *, root: bool = False, n_boot: int = N_BOOT,
+               seed: int = 0, eps: float = 1e-12) -> tuple[float, float]:
+    """Percentile-bootstrap 95% interval of a guard-style ratio ``agg(num) / agg(den)`` over the
+    SAME resampled cases (paired: numerator and denominator are the edited and unsteered
+    errors of one case). ``agg`` is the mean — or the root of the mean when ``root`` is set,
+    for a ratio of RMSEs built from per-case mean squared errors (discworld's whole-frame
+    guard); Othello's guard is a ratio of means of per-case RMSEs, so ``root`` is off there.
+    Cases where either side is NaN are dropped, as the scalars drop them."""
+    a = np.asarray(num_per_case, float)
+    b = np.asarray(den_per_case, float)
+    if a.shape != b.shape:
+        raise ValueError(f"per-case arrays differ in shape: {a.shape} vs {b.shape}")
+    keep = np.isfinite(a) & np.isfinite(b)
+    a, b = a[keep], b[keep]
+    n = int(a.size)
+    if n < 2:
+        return float("nan"), float("nan")
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, n, size=(n_boot, n))
+    na, nb = a[idx].mean(axis=1), b[idx].mean(axis=1)
+    if root:
+        na, nb = np.sqrt(na), np.sqrt(nb)
+    r = na / np.maximum(nb, eps)
+    lo, hi = np.percentile(r, [2.5, 97.5])
+    return float(lo), float(hi)

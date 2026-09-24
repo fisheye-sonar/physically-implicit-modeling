@@ -8,6 +8,8 @@ The three workhorses every analysis defaults to (one file each):
     nanda.py        ND — Nanda et al. direction addition: one vector along the probe
                     weight row, no solve, no gradients.
     grad_steer.py   GS — Li et al. MLP gradient steering, sequential across layers.
+    inverse.py      IM — inverse-map overwrite: h′ = g(s_post), the state-conditional mean
+                    of the residual (canonical 2026-09-15; pairs with pim.probes.inverse).
 
 Three kept non-default editors:
 
@@ -21,6 +23,7 @@ Three kept non-default editors:
 
 from pim.editors.freeze_interpolation import freeze_time_rollout, frozen_frames
 from pim.editors.grad_steer import EditSpec, build_edit_spec, make_intervention_hook
+from pim.editors.inverse import inverse_delta, inverse_overwrite, retrieval_overwrite
 from pim.editors.nanda import addition_delta, addition_hook, probe_direction
 from pim.editors.nullspace import multiprobe_delta
 from pim.editors.oracle_overwrite import counterfactual_state, overwrite_rollout
@@ -49,6 +52,10 @@ __all__ = [
     "EditSpec",
     "build_edit_spec",
     "make_intervention_hook",
+    # IM
+    "inverse_overwrite",
+    "inverse_delta",
+    "retrieval_overwrite",
     # non-default
     "multiprobe_delta",
     "counterfactual_state",

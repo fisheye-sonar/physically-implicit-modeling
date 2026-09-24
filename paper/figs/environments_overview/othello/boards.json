@@ -1,0 +1,439 @@
+{
+ "seed": 0,
+ "move": 14,
+ "min_flips": 1,
+ "rows": {
+  "top": "Legal Moves",
+  "bottom": "Board Update"
+ },
+ "markers": {
+  "legal move": {
+   "colour": "#ffe600",
+   "drawn": "the whole square filled, top row only"
+  },
+  "chosen move": {
+   "colour": "#00bcd4",
+   "drawn": "a ring on the placed disc, bottom row only"
+  },
+  "flipped token": {
+   "colour": "#ff4fa3",
+   "drawn": "a ring on each disc the move flips, bottom row only"
+  }
+ },
+ "shared_board": {
+  "bench_instance": "oth-uniform",
+  "bench_case_id": 182,
+  "board_after_move": 6,
+  "mover": "black",
+  "board_white0_blank1_black2": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   0,
+   0,
+   0,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1,
+   2,
+   2,
+   0,
+   1,
+   1,
+   1,
+   1,
+   2,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "standard_moves": [
+   "d3",
+   "e3",
+   "f2",
+   "c3",
+   "f3",
+   "d2"
+  ],
+  "placement_orders": {
+   "oth-adjacent": [
+    "f3",
+    "d3",
+    "f2",
+    "d2",
+    "e3",
+    "c3"
+   ],
+   "oth-adjacent-flip": [
+    "f3",
+    "d3",
+    "f2",
+    "d2",
+    "e3",
+    "c3"
+   ]
+  },
+  "adjacent_flip_evidence": "a flip-free adjacency order",
+  "legal_standard": [
+   "b3",
+   "c1",
+   "c2",
+   "c4",
+   "c5",
+   "d1",
+   "e6",
+   "f5"
+  ],
+  "legal_adjacency": [
+   "c4",
+   "c5",
+   "c6",
+   "d6",
+   "e1",
+   "e2",
+   "e6",
+   "f1",
+   "f4",
+   "f5",
+   "g1",
+   "g2",
+   "g3",
+   "g4"
+  ],
+  "legal_under_all_three": [
+   "c4",
+   "c5",
+   "e6",
+   "f5"
+  ],
+  "search": {
+   "moves_scanned": "14 down to 4, stopping at the first move count with a survivor",
+   "reachable_under_all_three_by_move": {
+    "6": [
+     138,
+     182,
+     745
+    ]
+   },
+   "condition": "exact for adjacent-noflip; for adjacent-flip a sufficient condition (flip-free order or adjacency-legal standard prefix)"
+  }
+ },
+ "panel_moves": {
+  "a": "the enclosure-legal move flipping the most discs",
+  "b": "the adjacency-legal move flipping the most discs",
+  "c": {
+   "composite_O2": "the same move as (b)",
+   "composite_O2_altmove": "the move legal under all three rule sets farthest from (b)'s"
+  },
+  "d": "the own game's real move K+1"
+ },
+ "panels": {
+  "composite_O2": {
+   "a": {
+    "variant": "standard",
+    "instance": "oth-uniform",
+    "board": "shared",
+    "sequence": [
+     "d3",
+     "e3",
+     "f2",
+     "c3",
+     "f3",
+     "d2"
+    ],
+    "legal_moves": [
+     "b3",
+     "c1",
+     "c2",
+     "c4",
+     "c5",
+     "d1",
+     "e6",
+     "f5"
+    ],
+    "move": {
+     "square": 24,
+     "name": "d1"
+    },
+    "flipped": [
+     "d2",
+     "d3",
+     "d4"
+    ]
+   },
+   "b": {
+    "variant": "adjacent_flip",
+    "instance": "oth-adjacent-flip",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": [
+     "d4"
+    ]
+   },
+   "c": {
+    "variant": "adjacent_noflip",
+    "instance": "oth-adjacent",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": []
+   },
+   "d": {
+    "variant": "standard_noflip",
+    "instance": "oth-noflip",
+    "board": "own game",
+    "bench_case_id": 943,
+    "board_after_move": 14,
+    "mover": "black",
+    "legal_moves": [
+     "a4",
+     "b3",
+     "e2",
+     "e6",
+     "f5",
+     "g2",
+     "h3"
+    ],
+    "move": {
+     "number": 15,
+     "square": 49,
+     "name": "g2"
+    },
+    "flipped": []
+   }
+  },
+  "composite_O2_altmove": {
+   "a": {
+    "variant": "standard",
+    "instance": "oth-uniform",
+    "board": "shared",
+    "sequence": [
+     "d3",
+     "e3",
+     "f2",
+     "c3",
+     "f3",
+     "d2"
+    ],
+    "legal_moves": [
+     "b3",
+     "c1",
+     "c2",
+     "c4",
+     "c5",
+     "d1",
+     "e6",
+     "f5"
+    ],
+    "move": {
+     "square": 24,
+     "name": "d1"
+    },
+    "flipped": [
+     "d2",
+     "d3",
+     "d4"
+    ]
+   },
+   "b": {
+    "variant": "adjacent_flip",
+    "instance": "oth-adjacent-flip",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 19,
+     "name": "c4"
+    },
+    "flipped": [
+     "d4"
+    ]
+   },
+   "c": {
+    "variant": "adjacent_noflip",
+    "instance": "oth-adjacent",
+    "board": "shared",
+    "sequence": [
+     "f3",
+     "d3",
+     "f2",
+     "d2",
+     "e3",
+     "c3"
+    ],
+    "legal_moves": [
+     "c4",
+     "c5",
+     "c6",
+     "d6",
+     "e1",
+     "e2",
+     "e6",
+     "f1",
+     "f4",
+     "f5",
+     "g1",
+     "g2",
+     "g3",
+     "g4"
+    ],
+    "move": {
+     "square": 44,
+     "name": "f5"
+    },
+    "flipped": []
+   },
+   "d": {
+    "variant": "standard_noflip",
+    "instance": "oth-noflip",
+    "board": "own game",
+    "bench_case_id": 943,
+    "board_after_move": 14,
+    "mover": "black",
+    "legal_moves": [
+     "a4",
+     "b3",
+     "e2",
+     "e6",
+     "f5",
+     "g2",
+     "h3"
+    ],
+    "move": {
+     "number": 15,
+     "square": 49,
+     "name": "g2"
+    },
+    "flipped": []
+   }
+  }
+ },
+ "own_game_rule": {
+  "rule": "first case in a seeded permutation of the instance's 1000 bench cases whose moves K+1 and K+2 are regular (no pass) and, where the rule set flips, whose move K+1 flips at least min_flips discs; applied to every instance in VARIANTS order, only standard-noflip is drawn",
+  "picks": {
+   "oth-uniform": 459,
+   "oth-adjacent-flip": 358,
+   "oth-adjacent": 72,
+   "oth-noflip": 943
+  }
+ }
+}

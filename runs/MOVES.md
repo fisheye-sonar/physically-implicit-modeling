@@ -124,3 +124,7 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 
 ## 2026-09-12
 - copy `runs/dropout_ablation/L-oth-adjacent-nodrop-390k/` (checkpoints, config, metrics; NOT scores.json / probes) → `runs/dropout_ablation/L-oth-adjacent-nodrop-20m/` — the no-dropout run continued to 780k under a new name; the 390k dir stays as the scored snapshot
+- 2026-09-20 runs/noise_ablation/L-dw-noiseless-20m__seed1/scores.json -> scores.s390000.json (replicate extended 390000 -> 512000; rescored at the new budget)
+- 2026-09-20 runs/noise_ablation/L-dw-noiseless-20m__seed2/scores.json -> scores.s390000.json (replicate being extended 390000 -> 512000; parked at the START of the extension by the queue operator so the tables never pool 390k scores under the 512k budget the trainer has already written to config.json; rescored at the new budget when training ends)
+- 2026-09-21 runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1/scores.json -> scores.s390000.json (parked by the dispatcher at the START of the extension 390000 -> 512000; rescored at the new budget when training ends)
+- 2026-09-21 runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1/variance.json -> variance.s390000.json (parked by the dispatcher at the START of the extension 390000 -> 512000; rescored at the new budget when training ends)

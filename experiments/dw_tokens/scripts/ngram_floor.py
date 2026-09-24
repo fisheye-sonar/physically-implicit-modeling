@@ -26,7 +26,8 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
-from pim.environments.discworld.tokens import load_tokens  # noqa: E402
+from pim.environments import layout  # noqa: E402
+from pim.environments.discworld.tokens import encode_h5, load_tokens  # noqa: E402
 
 EXP = REPO / "experiments" / "dw_tokens"
 ALPHA = 0.01
@@ -86,12 +87,12 @@ def main() -> None:
                    help="contexts are base-V int64 codes, so V**(k+1) must fit in int64: k <= 6 at V=422")
     a = ap.parse_args()
     t0 = time.time()
-    tdir = REPO / "datasets" / "discworld" / a.instance / "tokens"
-    tok, _, vocab, meta = load_tokens(tdir)
+    tok, _, vocab, meta = load_tokens(layout.tokens_dir(a.instance))
     V = vocab.size
     if V ** (a.max_order + 1) >= 2 ** 63:
         raise SystemExit(f"--max-order {a.max_order} overflows the int64 context key at V={V}")
-    test = np.load(tdir / "test.npy").astype(np.int64)
+    # the held-out split, encoded at read time (byte-identical to the retired tokens/test.npy)
+    test = encode_h5(layout.eval_file("discworld", a.instance), vocab).astype(np.int64)
     n, T = test.shape
     orders = {}
     for k in range(1, a.max_order + 1):

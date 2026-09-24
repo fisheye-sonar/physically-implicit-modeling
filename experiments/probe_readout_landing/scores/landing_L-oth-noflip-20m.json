@@ -1,0 +1,59 @@
+{
+ "run": "runs/flip_ablation/L-oth-noflip-20m",
+ "instance": "oth-noflip",
+ "n_cases": 1000,
+ "arms": [
+  {
+   "editor": "PI",
+   "tag": "best",
+   "point": 3,
+   "alpha": 100.0,
+   "probe": "linear",
+   "tile_landed": 1.0,
+   "board_landed": 1.0,
+   "board_wrong_squares_mean": 0.0,
+   "recomputed_symdiff": -0.312278815399686
+  },
+  {
+   "editor": "PI",
+   "tag": "alpha1",
+   "point": 3,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 1.0,
+   "board_landed": 1.0,
+   "board_wrong_squares_mean": 0.0,
+   "recomputed_symdiff": -0.9575372708994568
+  },
+  {
+   "editor": "ND",
+   "tag": "best",
+   "point": 2,
+   "alpha": 0.2,
+   "probe": "linear",
+   "tile_landed": 0.992,
+   "board_landed": 0.0,
+   "board_wrong_squares_mean": 51.026
+  },
+  {
+   "editor": "GS",
+   "tag": "best",
+   "point": 2,
+   "alpha": 1.5,
+   "probe": "mlp",
+   "tile_landed": 1.0,
+   "board_landed": 0.999,
+   "board_wrong_squares_mean": 0.001
+  },
+  {
+   "editor": "IM",
+   "tag": "best",
+   "point": 8,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.01,
+   "board_landed": 0.0,
+   "board_wrong_squares_mean": 12.756
+  }
+ ]
+}

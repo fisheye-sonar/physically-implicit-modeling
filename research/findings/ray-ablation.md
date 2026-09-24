@@ -102,3 +102,44 @@ which for the recurrent model is point 0 (aggregate 0.967, position-dominated) �
 which no velocity is linearly present (0.00–0.03) although points 1–4 read velocity at
 0.4–0.7 (LIN) / 0.45–0.80 (MLP). The rule "per-component at the aggregate-best point"
 hides that; the per-point profile is in the run's scores.json.
+
+
+## Addendum 2026-09-16 — the ray axis closed at the top: `ray_ablation/L-dw-128ray-20m` (dw-128ray)
+
+**Why.** dw-noiseless (128 rays cast, radius 0.5, no edge-ray drop) and the coarse-ray family
+(5 / 8 / 16 kept rays, radius 1.0, wall rays dropped, `--max-edit-attempts 2000`) differed in
+TWO things, ray count and disc size. dw-128ray is the family's geometry with 130 rays cast → 128
+kept (Sevan, 2026-09-15 night; `scripts/drivers/dw_128ray.sh`; built and trained on the lab box —
+generation 2 h 14, training 8.0 h, best val 0.000929 vs dw-noiseless 0.00107, dw-16ray 0.0040).
+The chain was interrupted by two hard freezes during scoring (07:22, ~10:20; a failing PSU,
+replaced) and finished under a 400 W GPU power cap; every stage is idempotent and nothing was
+re-fitted.
+
+**Result: dw-128ray lands on dw-noiseless, not on dw-16ray — the coarse-ray gains are a ray-count
+effect, not a disc-size effect.** Cartesian regression block (PI / GS / IM, Edit Index / fidelity):
+
+| run | skill LIN / MLP | PI | GS | IM |
+|---|---|---|---|---|
+| dw-noiseless (128 cast, r 0.5) | 0.872 / 0.973 | +0.20 / 1.71 | -0.06 / 1.07 | +0.59 / 0.34 |
+| **dw-128ray (128 kept, r 1.0)** | 0.914 / 0.981 | +0.24 / 1.57 | -0.03 / 1.19 | +0.57 / 0.32 |
+| dw-16ray (16 kept, r 1.0) | 0.892 / 0.965 | +0.22 / 1.33 | -0.10 / 0.90 | +0.66 / 0.29 |
+| dw-8ray (8 kept, r 1.0) | 0.886 / 0.932 | +0.21 / 1.00 | -0.07 / 0.88 | +0.71 / 0.27 |
+| dw-5ray (5 kept, r 1.0) | 0.850 / 0.883 | +0.14 / 0.85 | -0.10 / 0.86 | +0.81 / 0.23 |
+
+Factorised categorical target (appearance-fac):
+
+| run | skill LIN / MLP | PI | ND | GS | IM |
+|---|---|---|---|---|---|
+| dw-noiseless (128 cast, r 0.5) | 0.433 / 0.786 | +0.01 / 1.93 | +0.61 / 0.80 | +0.33 / 0.71 | +0.60 / 0.34 |
+| **dw-128ray (128 kept, r 1.0)** | 0.261 / 0.705 | -0.00 / 1.80 | +0.54 / 0.96 | +0.31 / 0.79 | +0.57 / 0.32 |
+| dw-16ray (16 kept, r 1.0) | 0.879 / 0.918 | +0.10 / 1.39 | +0.42 / 0.90 | +0.28 / 0.85 | +0.68 / 0.28 |
+| dw-8ray (8 kept, r 1.0) | 0.935 / 0.943 | +0.38 / 0.95 | +0.49 / 0.98 | +0.46 / 0.54 | +0.70 / 0.31 |
+| dw-5ray (5 kept, r 1.0) | 0.926 / 0.932 | +0.51 / 0.70 | +0.55 / 0.58 | +0.60 / 0.46 | +0.84 / 0.26 |
+
+On both targets every column of dw-128ray is within a few hundredths of dw-noiseless: the
+categorical read-out is barely linearly decodable (0.26 vs 0.43), PI is destructive, GS is weak,
+IM lands at the late points only (IM by point: −0.22 −0.25 −0.02 +0.29 +0.47 +0.55 **+0.57**
++0.55 +0.54; the same ramp as dw-noiseless and dw-blink, where the coarse-ray runs are flat at
++0.55 … +0.81 across every point). Doubling the disc radius at 128 rays changed nothing.
+Registry: instance row `dw-128ray`, run row `ray_ablation/L-dw-128ray-20m`; the run is in both
+table notebooks (between blink and 16-ray, so the family reads 128 → 16 → 8 → 5).

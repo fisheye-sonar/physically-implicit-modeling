@@ -1,0 +1,59 @@
+{
+ "run": "runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m",
+ "instance": "oth-adjacent-flip",
+ "n_cases": 1000,
+ "arms": [
+  {
+   "editor": "PI",
+   "tag": "best",
+   "point": 2,
+   "alpha": 5.0,
+   "probe": "linear",
+   "tile_landed": 0.984,
+   "board_landed": 0.602,
+   "board_wrong_squares_mean": 0.711,
+   "recomputed_symdiff": 0.34828150228910865
+  },
+  {
+   "editor": "PI",
+   "tag": "alpha1",
+   "point": 2,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.984,
+   "board_landed": 0.602,
+   "board_wrong_squares_mean": 0.711,
+   "recomputed_symdiff": -0.8931846736334842
+  },
+  {
+   "editor": "ND",
+   "tag": "best",
+   "point": 1,
+   "alpha": 2.0,
+   "probe": "linear",
+   "tile_landed": 0.644,
+   "board_landed": 0.0,
+   "board_wrong_squares_mean": 44.096
+  },
+  {
+   "editor": "GS",
+   "tag": "best",
+   "point": 0,
+   "alpha": 0.35,
+   "probe": "mlp",
+   "tile_landed": 0.898,
+   "board_landed": 0.0,
+   "board_wrong_squares_mean": 18.286
+  },
+  {
+   "editor": "IM",
+   "tag": "best",
+   "point": 4,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.795,
+   "board_landed": 0.379,
+   "board_wrong_squares_mean": 0.921
+  }
+ ]
+}

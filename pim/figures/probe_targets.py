@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from pim.figures.theme import PALETTE, style_ax
+from pim.metrics.selection import best_arm, best_point
 
 EDITORS = ("PI", "ND", "GS")
 FAMILIES = ("grid", "appearance", "misaligned", "factorised")
@@ -69,14 +70,15 @@ def sweep_figure(rows: list[dict]) -> plt.Figure:
                 continue
             col, m = _hex(STYLE[fam][0]), STYLE[fam][1]
             x = [c for c, _ in pts]
-            a.plot(x, [max(b["probe_skill_mlp"]) for _, b in pts], color=col, lw=2, marker=m,
+            a.plot(x, [best_point(b["probe_skill_mlp"])[0] for _, b in pts], color=col, lw=2, marker=m,
                    ms=6, mec="white", mew=1.0, label=LABEL[fam])
-            a.plot(x, [max(b["probe_skill_linear"]) for _, b in pts], color=col, lw=1.4,
+            a.plot(x, [best_point(b["probe_skill_linear"])[0] for _, b in pts], color=col, lw=1.4,
                    ls="--", marker=m, ms=5, mfc="white", mec=col)
             for k, ed in enumerate(EDITORS, start=1):
                 ax = axes[r][k]
-                ei = np.array([b["best"][ed]["edit_index"] for _, b in pts])
-                fid = np.array([b["best"][ed]["fidelity_ratio"] for _, b in pts])
+                arms = [best_arm(b["arms"], ed, "edit_index") or b["best"][ed] for _, b in pts]   # pim.metrics.selection
+                ei = np.array([a["edit_index"] for a in arms])
+                fid = np.array([a["fidelity_ratio"] for a in arms])
                 ax.plot(x, ei, color=col, lw=2, label=LABEL[fam])
                 ok = fid <= 1.0
                 ax.plot(np.array(x)[ok], ei[ok], ls="none", marker=m, ms=7, color=col,

@@ -1,0 +1,279 @@
+{
+ "run": "initial_othello_comparison/L-oth-20m",
+ "n_games": 20000,
+ "rows": 1179476,
+ "hidden": 128,
+ "epochs": 200,
+ "k": 10,
+ "unedited": {
+  "li_error_vs_post": 2.752,
+  "li_error_vs_pre": 0.014,
+  "edit_index_union": -0.6587908980106643,
+  "edit_index_symdiff": -0.9334961471230508,
+  "legal_mass": 0.9274620413780212,
+  "n_scored": 1000
+ },
+ "canonical": {
+  "PI": {
+   "edit_index": 0.8177401144968419,
+   "fidelity_ratio": 0.29851022457772547
+  },
+  "ND": {
+   "edit_index": 0.7234683549867938,
+   "fidelity_ratio": 0.305869190733195
+  },
+  "GS": {
+   "edit_index": 0.8281930337443418,
+   "fidelity_ratio": 0.2838459294160601
+  }
+ },
+ "cases": "canonical",
+ "n_cases": 1000,
+ "recon_only": true,
+ "canonical_on_cases": null,
+ "points": {
+  "0": {
+   "g_r2_heldout": 0.3931992243264718,
+   "g_r2_insample": 0.3979633698268812,
+   "g_rmse": 1.9553508758544922,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.29003170762015246,
+     "edit_index_union": -0.13095032845488686,
+     "fidelity_ratio": 2.0425657026603536,
+     "pre_fidelity": 9.481381410036382,
+     "drift_rmse": 0.03401831537485123,
+     "write_ratio": 0.8108052611351013,
+     "landed_tile": 0.133,
+     "board_agreement": 0.76334375
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.2604481590137215,
+     "edit_index_union": -0.0880207326471697,
+     "fidelity_ratio": 2.17412247690839,
+     "pre_fidelity": 10.377544714841356,
+     "drift_rmse": 0.0360526517033577,
+     "write_ratio": 0.9025872945785522,
+     "landed_tile": 0.07,
+     "board_agreement": 0.741359375
+    }
+   }
+  },
+  "1": {
+   "g_r2_heldout": 0.6816942625250921,
+   "g_r2_insample": 0.6827429666550939,
+   "g_rmse": 23.112749099731445,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.26809762193581077,
+     "edit_index_union": -0.09842981216394373,
+     "fidelity_ratio": 2.0042521673251508,
+     "pre_fidelity": 9.419653594158614,
+     "drift_rmse": 0.032911043614149094,
+     "write_ratio": 0.5856887698173523,
+     "landed_tile": 0.087,
+     "board_agreement": 0.950203125
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.33605009994909846,
+     "edit_index_union": -0.11560396464856268,
+     "fidelity_ratio": 1.9598022520742453,
+     "pre_fidelity": 9.089063311741976,
+     "drift_rmse": 0.03230869024991989,
+     "write_ratio": 0.6272862553596497,
+     "landed_tile": 0.066,
+     "board_agreement": 0.8730625
+    }
+   }
+  },
+  "2": {
+   "g_r2_heldout": 0.7693736368784708,
+   "g_r2_insample": 0.7698259983880732,
+   "g_rmse": 39.7419319152832,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.2980403851078273,
+     "edit_index_union": -0.08575156612560463,
+     "fidelity_ratio": 1.705581517800239,
+     "pre_fidelity": 7.990522931056044,
+     "drift_rmse": 0.02760700136423111,
+     "write_ratio": 0.5593987703323364,
+     "landed_tile": 0.006,
+     "board_agreement": 0.9831875
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.30752529417911706,
+     "edit_index_union": -0.08572327415285767,
+     "fidelity_ratio": 2.001110877619023,
+     "pre_fidelity": 9.46645975699757,
+     "drift_rmse": 0.03286242485046387,
+     "write_ratio": 0.5957827568054199,
+     "landed_tile": 0.047,
+     "board_agreement": 0.878390625
+    }
+   }
+  },
+  "3": {
+   "g_r2_heldout": 0.7960148207884896,
+   "g_r2_insample": 0.7965122380774119,
+   "g_rmse": 53.80238342285156,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.46564169373558434,
+     "edit_index_union": -0.1959078288931317,
+     "fidelity_ratio": 1.334619848453128,
+     "pre_fidelity": 5.41870416262433,
+     "drift_rmse": 0.01940210908651352,
+     "write_ratio": 0.520727813243866,
+     "landed_tile": 0.0,
+     "board_agreement": 0.98425
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.325184450197543,
+     "edit_index_union": -0.09131106844172372,
+     "fidelity_ratio": 1.933908168686441,
+     "pre_fidelity": 9.038600743401974,
+     "drift_rmse": 0.03131972625851631,
+     "write_ratio": 0.5678335428237915,
+     "landed_tile": 0.039,
+     "board_agreement": 0.882234375
+    }
+   }
+  },
+  "4": {
+   "g_r2_heldout": 0.818079350505819,
+   "g_r2_insample": 0.818325490398593,
+   "g_rmse": 67.97569274902344,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.8416702823694515,
+     "edit_index_union": -0.5197114748138747,
+     "fidelity_ratio": 1.0375979538000488,
+     "pre_fidelity": 1.9475308865340046,
+     "drift_rmse": 0.007508942391723394,
+     "write_ratio": 0.45314091444015503,
+     "landed_tile": 0.0,
+     "board_agreement": 0.984015625
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.37865461464197064,
+     "edit_index_union": -0.07970025340413199,
+     "fidelity_ratio": 1.8999588602514006,
+     "pre_fidelity": 8.776712540303269,
+     "drift_rmse": 0.029642704874277115,
+     "write_ratio": 0.5423123836517334,
+     "landed_tile": 0.032,
+     "board_agreement": 0.873578125
+    }
+   }
+  },
+  "5": {
+   "g_r2_heldout": 0.8274560401143215,
+   "g_r2_insample": 0.8278096801486328,
+   "g_rmse": 90.14653778076172,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.8612364208293581,
+     "edit_index_union": -0.5239533976163605,
+     "fidelity_ratio": 1.0422566169661802,
+     "pre_fidelity": 1.7998143670061295,
+     "drift_rmse": 0.007036292459815741,
+     "write_ratio": 0.387478768825531,
+     "landed_tile": 0.0,
+     "board_agreement": 0.98425
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.3463502838621915,
+     "edit_index_union": -0.049453686290766484,
+     "fidelity_ratio": 2.199392111799937,
+     "pre_fidelity": 10.418094450210804,
+     "drift_rmse": 0.03404700383543968,
+     "write_ratio": 0.5019771456718445,
+     "landed_tile": 0.021,
+     "board_agreement": 0.8605625
+    }
+   }
+  },
+  "6": {
+   "g_r2_heldout": 0.752815260551311,
+   "g_r2_insample": 0.7532615403756266,
+   "g_rmse": 130.08160400390625,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.4578397346265548,
+     "edit_index_union": -0.11467035631238304,
+     "fidelity_ratio": 1.4168871038584476,
+     "pre_fidelity": 6.162190306478804,
+     "drift_rmse": 0.020416896790266037,
+     "write_ratio": 0.30036550760269165,
+     "landed_tile": 0.002,
+     "board_agreement": 0.981703125
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.27863275743897675,
+     "edit_index_union": -0.02562186506862418,
+     "fidelity_ratio": 2.61341925554476,
+     "pre_fidelity": 12.77291338475695,
+     "drift_rmse": 0.040958307683467865,
+     "write_ratio": 0.36153388023376465,
+     "landed_tile": 0.027,
+     "board_agreement": 0.854796875
+    }
+   }
+  },
+  "7": {
+   "g_r2_heldout": 0.7279707839756913,
+   "g_r2_insample": 0.728336861932807,
+   "g_rmse": 153.50271606445312,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.30986155497426576,
+     "edit_index_union": -0.03876088465349589,
+     "fidelity_ratio": 2.121447760607998,
+     "pre_fidelity": 10.125184486880649,
+     "drift_rmse": 0.032784610986709595,
+     "write_ratio": 0.324761301279068,
+     "landed_tile": 0.012,
+     "board_agreement": 0.9743125
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.19546950853581957,
+     "edit_index_union": -0.00733022198480411,
+     "fidelity_ratio": 4.370127993092549,
+     "pre_fidelity": 21.993373671039297,
+     "drift_rmse": 0.06977357715368271,
+     "write_ratio": 0.39137810468673706,
+     "landed_tile": 0.026,
+     "board_agreement": 0.85559375
+    }
+   }
+  },
+  "8": {
+   "g_r2_heldout": 0.884400721650116,
+   "g_r2_insample": 0.8848305089163394,
+   "g_rmse": 172.97132873535156,
+   "arms": {
+    "recon_overwrite": {
+     "edit_index": -0.26891536102454644,
+     "edit_index_union": -0.01489786869355309,
+     "fidelity_ratio": 3.162877145585867,
+     "pre_fidelity": 15.689752906685293,
+     "drift_rmse": 0.05045775696635246,
+     "write_ratio": 0.2154339700937271,
+     "landed_tile": 0.015,
+     "board_agreement": 0.9759375
+    },
+    "nn_recon_overwrite": {
+     "edit_index": -0.20522071153804394,
+     "edit_index_union": -0.008245688356254976,
+     "fidelity_ratio": 4.215604355582893,
+     "pre_fidelity": 21.20500736115265,
+     "drift_rmse": 0.06784837692975998,
+     "write_ratio": 0.25325214862823486,
+     "landed_tile": 0.029,
+     "board_agreement": 0.856984375
+    }
+   }
+  }
+ }
+}

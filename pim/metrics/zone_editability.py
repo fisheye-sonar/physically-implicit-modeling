@@ -82,7 +82,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from pim.metrics.edit_index import edit_index_per_case, fidelity_ratio_from
+from pim.metrics.edit_index import case_stats, edit_index_per_case, fidelity_ratio_from, ratio_ci95
 
 DIFF_EPS = (
     1e-3  # intensity difference that counts as "the two worlds differ on this ray"
@@ -354,8 +354,9 @@ def edit_scorecard(
         for s in range(roll.shape[1])
     ]
     allm = np.ones_like(zones.target)
+    ei_case = edit_index_per_case(p0, zones.gt_edited, zones.gt_unedited, zones.differing)
     return dict(
-        edit_index=edit_index(p0, zones),
+        edit_index=float(np.nanmean(ei_case)),
         edit_index_by_step=edit_index_by_step(roll, zones, gt_traj),
         edit_frame_rmse=zone_rmse(p0, zones.gt_edited, allm),
         target_rmse=zone_rmse(p0, zones.gt_edited, zones.target),
@@ -363,7 +364,24 @@ def edit_scorecard(
         collateral_rmse=zone_rmse(p0, zones.gt_edited, zones.collateral),
         gt_traj_rmse=float(np.mean(step)),
         step_rmse_to_gt=step,
+        # case-level spread of the index (2026-09-18; ``edit_index.case_stats``) and the per-case
+        # whole-frame MSE behind ``edit_frame_rmse`` (a list, so it never reaches scores.json's
+        # scalar arm records) for the guard's bootstrap in ``fidelity_ci95``
+        **case_stats(ei_case, prefix="edit_index_"),
+        mse_per_case=((p0 - zones.gt_edited) ** 2).mean(axis=1).tolist(),
     )
+
+
+def fidelity_ci95(card: dict, unsteered_card: dict) -> dict:
+    """Percentile-bootstrap 95% interval of ``fidelity_ratio`` over the bench cases — the same
+    ratio of whole-frame RMSEs, numerator and denominator resampled as pairs
+    (``edit_index.ratio_ci95`` with ``root``, since ``edit_frame_rmse`` is the root of the mean
+    per-case MSE). Empty when either card lacks its per-case MSEs."""
+    a, b = card.get("mse_per_case"), unsteered_card.get("mse_per_case")
+    if a is None or b is None:
+        return {}
+    lo, hi = ratio_ci95(a, b, root=True)
+    return {"fidelity_ci95_lo": lo, "fidelity_ci95_hi": hi}
 
 
 def fidelity_ratio(card: dict, unsteered_card: dict) -> float:

@@ -38,8 +38,10 @@ from pim.editors.nanda import addition_delta
 from pim.editors.pinv import pinv_step, readout_error
 from pim.environments.discworld import bench as dwb
 from pim.environments.discworld.tokens import UNK, FrameVocab, encode
+from pim.metrics.edit_index import fidelity_ratio_from
 from pim.metrics.zone_editability import edit_index as zone_edit_index
-from pim.metrics.set_editability import move_fidelity_ratio, move_scorecard
+from pim.metrics.zone_editability import zone_rmse
+from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio, move_scorecard
 
 DEV, EF = dwb.DEV, dwb.EF
 
@@ -146,8 +148,19 @@ def scorecard(probs: np.ndarray, tb: TokenBench, uns: np.ndarray | None = None) 
            "edit_index_per_case": c["edit_index_union_per_case"],
            "zone_edit_index_expected": float(zone_edit_index(
                expected_frame(probs, tb.vocab)[tb.keep], _mask_zones(tb.zones, tb.keep)))}
+    # the MEAN-FRAME readout's guard (2026-09-23, Sevan): the frame model's fidelity ratio applied to the
+    # expected next frame — RMSE(expected edited frame, edited-world frame) / the same for the unsteered
+    # expected frame, over the whole frame of the kept cases (`zone_editability.fidelity_ratio`'s
+    # `edit_frame_rmse` with `fidelity_ratio_from`). Beside `zone_edit_index_expected` it makes the
+    # "mean frame" row of the token-model table a complete (index, guard) pair from stored arms.
+    zk = _mask_zones(tb.zones, tb.keep)
+    allm = np.ones_like(zk.target)
+    out["mean_frame_rmse"] = zone_rmse(expected_frame(probs, tb.vocab)[tb.keep], zk.gt_edited, allm)
     if uns is not None:
         out["fidelity_ratio"] = move_fidelity_ratio(probs, uns, tb.legal_post)
+        out.update(move_fidelity_ci95(probs, uns, tb.legal_post))
+        out["fidelity_ratio_expected"] = fidelity_ratio_from(
+            out["mean_frame_rmse"], zone_rmse(expected_frame(uns, tb.vocab)[tb.keep], zk.gt_edited, allm))
     return out
 
 
@@ -166,6 +179,7 @@ def unsteered(model, tb: TokenBench) -> tuple[np.ndarray, dict]:
     probs = probs_at_edit(model, tb)
     c = scorecard(probs, tb)
     c["fidelity_ratio"] = 1.0
+    c["fidelity_ratio_expected"] = 1.0
     return probs, c
 
 
@@ -275,3 +289,56 @@ def token_encoder(vocab: FrameVocab):
         return encode(obs, vocab)
     tag = f"tokens:V{vocab.size}:{int(vocab.counts.sum())}"
     return enc, tag
+
+
+@torch.no_grad()
+def inverse_arms(model, tbenches: dict, arrays: dict, vocab: FrameVocab, *, basis_name: str,
+                 target: str = "full", uns: dict | None = None, **fit_kw) -> tuple[dict, dict]:
+    """IM and IM-NN on the frames-as-tokens model (2026-09-15): ``arms.inverse_arms`` with the
+    token write (``_write_hook`` at the last position) and the frame-set scorecard.
+    ``arrays`` ({key: bench_arrays(...) of the SAME target}) supplies the world positions a
+    TokenBench does not carry; ``uns`` ({key: unsteered probs}) attaches the guard.
+
+    ``target`` (2026-09-20) as in ``arms.inverse_arms``: a categorical target writes through that
+    target's OWN state — the bench's post-edit labels (``arrays[key]["y"]``), one-hot, plus the discs'
+    Cartesian velocity — IM only; never a categorical bench through the continuous map."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.discworld.arms import N_OBJ, categorical_target, iter_inverse_maps
+    from pim.probes.inverse import encode_categorical_state
+
+    cat = categorical_target(target) is not None
+    enc, tag = token_encoder(vocab)
+    S, LAB = {}, {}
+    for key, tb in tbenches.items():
+        a = arrays[key]
+        if cat != (a["kind"] == "classification"):
+            raise ValueError(f"{key}: a {a['kind']} bench cannot be written through the inverse map of target "
+                             f"{target!r} — the map must invert the state the block's own probes read")
+        _, s_post = dwb.full_state_pair(a["pos"], a["vel"], a["edit_object"], a["sim"],
+                                        "cartesian" if cat else basis_name)
+        assert len(s_post) == tb.n, f"{key}: bench_arrays and TokenBench disagree on n"
+        S[key] = torch.from_numpy(s_post).to(DEV)
+        if cat:
+            LAB[key] = torch.from_numpy(np.asarray(a["y"])).long().to(DEV)
+    H0 = {key: residuals_last(model, tb) for key, tb in tbenches.items()}
+    arms = {key: [] for key in tbenches}
+    stats = {"g_r2": [], "g_rmse": [], "nn_r2": [], "g_r2_insample": []}
+    for ell, g, bank, st in iter_inverse_maps(model, basis_name=basis_name, target=target, encoder=enc,
+                                              encoder_tag=tag, **fit_kw):
+        stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        stats["nn_r2"].append(float(st["nn_r2"]))
+        stats["g_r2_insample"].append(float(st.get("r2_insample", float("nan"))))
+        for key, tb in tbenches.items():
+            h0 = H0[key][ell]
+            s_post = (encode_categorical_state(LAB[key], S[key][:, 2 * N_OBJ:], st["n_classes"]) if cat else S[key])
+            for editor, h_new in ((("IM", inverse_overwrite(g, s_post)),) if bank is None else
+                                  (("IM", inverse_overwrite(g, s_post)),
+                                   ("IM-NN", retrieval_overwrite(bank, s_post)))):
+                probs = probs_at_edit(model, tb, hook=_write_hook(ell, h_new))          # THE write
+                rec = {"editor": editor, "point": ell, "alpha": 1.0, "dims": "all",
+                       "write_ratio": float((h_new - h0).norm(dim=1).div(h0.norm(dim=1)).mean()),
+                       "g_r2": float(st["r2"]), **scorecard(probs, tb, None if uns is None else uns.get(key))}
+                if editor == "IM-NN":
+                    rec["k"] = int(bank.k)
+                arms[key].append(rec)
+    return arms, stats

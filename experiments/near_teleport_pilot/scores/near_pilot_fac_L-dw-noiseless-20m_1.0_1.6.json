@@ -1,0 +1,100 @@
+{
+ "run": "runs/noise_ablation/L-dw-noiseless-20m",
+ "instance": "dw-noiseless",
+ "target": "appearance-fac",
+ "n": 191,
+ "benches": {
+  "near": {
+   "unedited": -0.9337407704619362,
+   "collateral_unedited": 0.1251625418663025,
+   "best": {
+    "PI": {
+     "editor": "PI[zspace]",
+     "point": 1,
+     "alpha": 100.0,
+     "edit_index": 0.02243308315878103,
+     "fidelity_ratio": 1.9477377421247792,
+     "collateral_rmse": 0.6564544439315796
+    },
+    "ND": {
+     "editor": "ND",
+     "point": 3,
+     "alpha": 3.0,
+     "edit_index": 0.6408528055938862,
+     "fidelity_ratio": 0.7694799707204075,
+     "collateral_rmse": 0.43359607458114624
+    },
+    "GS": {
+     "editor": "GS@L0",
+     "point": 0,
+     "alpha": 0.35,
+     "edit_index": 0.3639659093943688,
+     "fidelity_ratio": 0.6868496310615203,
+     "collateral_rmse": 0.26120150089263916
+    },
+    "IM": {
+     "editor": "IM",
+     "point": 5,
+     "alpha": 1.0,
+     "edit_index": 0.6257836157194768,
+     "fidelity_ratio": 0.3162048280098254,
+     "collateral_rmse": 0.1441894769668579
+    },
+    "IM-NN": {
+     "editor": "IM-NN",
+     "point": 7,
+     "alpha": 1.0,
+     "edit_index": 0.4285426845639261,
+     "fidelity_ratio": 0.6801628123432599,
+     "collateral_rmse": 0.25792378187179565
+    }
+   }
+  },
+  "far": {
+   "unedited": -0.924637344850529,
+   "collateral_unedited": 0.11858923733234406,
+   "best": {
+    "PI": {
+     "editor": "PI[zspace]",
+     "point": 1,
+     "alpha": 60.0,
+     "edit_index": 0.01767179201738849,
+     "fidelity_ratio": 1.8953016286845503,
+     "collateral_rmse": 0.6421933174133301
+    },
+    "ND": {
+     "editor": "ND",
+     "point": 2,
+     "alpha": 6.0,
+     "edit_index": 0.611651752119656,
+     "fidelity_ratio": 0.7947109794998182,
+     "collateral_rmse": 0.4158441126346588
+    },
+    "GS": {
+     "editor": "GS@L0",
+     "point": 0,
+     "alpha": 0.7,
+     "edit_index": 0.34731829073375065,
+     "fidelity_ratio": 0.8734672028603095,
+     "collateral_rmse": 0.31392043828964233
+    },
+    "IM": {
+     "editor": "IM",
+     "point": 6,
+     "alpha": 1.0,
+     "edit_index": 0.6005808709389473,
+     "fidelity_ratio": 0.3290207269066018,
+     "collateral_rmse": 0.12168758362531662
+    },
+    "IM-NN": {
+     "editor": "IM-NN",
+     "point": 7,
+     "alpha": 1.0,
+     "edit_index": 0.3822492178144033,
+     "fidelity_ratio": 0.6110951814437645,
+     "collateral_rmse": 0.21922388672828674
+    }
+   }
+  }
+ }
+}

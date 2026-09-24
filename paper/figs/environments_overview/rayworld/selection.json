@@ -1,0 +1,286 @@
+{
+ "seed": 0,
+ "t_star": 20,
+ "arrow_frames": 15,
+ "ghost_frames": 7,
+ "ghost_frame_indices": [
+  0,
+  3,
+  6,
+  9,
+  11,
+  14,
+  17
+ ],
+ "rays_drawn_every": 3,
+ "disc_alpha_on_cells": 0.65,
+ "panels": {
+  "dw-noiseless": {
+   "instance": "dw-noiseless",
+   "sequence_index": 8368,
+   "sequence_seed": 52200008368,
+   "n_rule_survivors": 174,
+   "radii": [
+    0.5,
+    0.5
+   ],
+   "reflectivities": [
+    0.4000000059604645,
+    0.800000011920929
+   ],
+   "rays": 128,
+   "positions_t_star": [
+    [
+     0.832,
+     7.501
+    ],
+    [
+     3.013,
+     10.047
+    ]
+   ],
+   "velocities_t_star": [
+    [
+     -0.0758,
+     0.0806
+    ],
+    [
+     0.0908,
+     0.0445
+    ]
+   ]
+  },
+  "dw-blink": {
+   "instance": "dw-blink",
+   "sequence_index": 6837,
+   "sequence_seed": 135200006837,
+   "n_rule_survivors": 60,
+   "radii": [
+    0.5,
+    0.5
+   ],
+   "reflectivities": [
+    0.4000000059604645,
+    0.800000011920929
+   ],
+   "rays": 128,
+   "positions_t_star": [
+    [
+     -1.99,
+     9.482
+    ],
+    [
+     1.205,
+     8.693
+    ]
+   ],
+   "velocities_t_star": [
+    [
+     0.0703,
+     0.0771
+    ],
+    [
+     -0.0628,
+     -0.0274
+    ]
+   ],
+   "blackout": {
+    "disc": 1,
+    "first_hidden": 16,
+    "last_hidden": 22,
+    "markers": [
+     15,
+     22
+    ]
+   }
+  },
+  "dw-16ray": {
+   "instance": "dw-16ray",
+   "sequence_index": 5725,
+   "sequence_seed": 295200005725,
+   "n_rule_survivors": 90,
+   "radii": [
+    1.0,
+    1.0
+   ],
+   "reflectivities": [
+    0.4000000059604645,
+    0.800000011920929
+   ],
+   "rays": 16,
+   "positions_t_star": [
+    [
+     1.61,
+     6.846
+    ],
+    [
+     -0.966,
+     9.502
+    ]
+   ],
+   "velocities_t_star": [
+    [
+     -0.0489,
+     -0.0409
+    ],
+    [
+     0.0791,
+     0.0106
+    ]
+   ]
+  },
+  "dw-8ray": {
+   "instance": "dw-8ray",
+   "sequence_index": 2770,
+   "sequence_seed": 85200002770,
+   "n_rule_survivors": 74,
+   "radii": [
+    1.0,
+    1.0
+   ],
+   "reflectivities": [
+    0.4000000059604645,
+    0.800000011920929
+   ],
+   "rays": 8,
+   "positions_t_star": [
+    [
+     -1.311,
+     9.942
+    ],
+    [
+     0.516,
+     5.414
+    ]
+   ],
+   "velocities_t_star": [
+    [
+     -0.0718,
+     0.0332
+    ],
+    [
+     -0.048,
+     -0.0419
+    ]
+   ]
+  },
+  "dw-5ray": {
+   "instance": "dw-5ray",
+   "sequence_index": 3368,
+   "sequence_seed": 185200003368,
+   "n_rule_survivors": 107,
+   "radii": [
+    1.0,
+    1.0
+   ],
+   "reflectivities": [
+    0.4000000059604645,
+    0.800000011920929
+   ],
+   "rays": 5,
+   "positions_t_star": [
+    [
+     0.753,
+     6.004
+    ],
+    [
+     -1.124,
+     10.009
+    ]
+   ],
+   "velocities_t_star": [
+    [
+     0.0727,
+     0.0485
+    ],
+    [
+     0.1051,
+     0.0121
+    ]
+   ]
+  }
+ },
+ "matched_nray": {
+  "source": "dw-8ray",
+  "sequence_index": 2770,
+  "sequence_seed": 85200002770,
+  "note": "positions of the dw-8ray sequence rendered by renderer.render_scene under the dw-16ray / dw-5ray SimConfig (radius 1.0 on all three); the 8-ray re-render equals the stored frames exactly"
+ },
+ "categorical": {
+  "target": "appearance (the partition the factorised appearance-fac target reads as run centre x run length)",
+  "instance": "dw-8ray",
+  "sequence_index": 2770,
+  "n_cells": 30,
+  "cells_at_t_star": [
+   10,
+   24
+  ]
+ },
+ "rules": {
+  "standard_and_nray": "The selection rule (README): the two streaks cross (the discs swap lateral order between the first and last frame), with a disc fully occluded in at most MAX_HIDDEN frames; each run centre travels >= 0.2 R rays; at t* the discs are >= 2 depth units apart, their runs disjoint with a gap >= max(1, 0.05 R), each lit by >= max(1, 0.03 R) rays, and of different length.",
+  "blink": "Blink rule (README): exactly one blackout in the sequence, of disc 1 (its marker ray is the rightmost, so marker and bracket share a side), 5-10 frames long, starting at frame >= 6 and ending by frame 33 (both markers present, context on both sides); the other disc lit in every frame, the blinking disc lit whenever visible and travelling >= 0.2 R rays.",
+  "max_hidden_frames": 3,
+  "draw": "numpy default_rng(SEED).choice over the survivors, in the order standard, blink, 16-ray, 8-ray, 5-ray"
+ },
+ "outputs": {
+  "composite": "composite.pdf/.png: (a) frustum with the t* strip + waterfall and (b) blink across the top, (c) 16/8/5-ray matched strips and (d) the cells below; 5.5 x 3.3 in (two bands)",
+  "composite_onerow": "composite_onerow.pdf/.png: the same four panels in ONE band, 5.5 x 1.79 in, its frustum drawing every 5-th ray (heavier weights) and its waterfalls carrying a two baseline compact axis; sizes and gaps in ONEROW / onerow_geometry, pieces at those sizes in pieces_onerow/",
+  "onerow_panels_in": {
+   "frustum": 1.2,
+   "waterfall_a": 0.5,
+   "waterfall_b": 0.45,
+   "nray_strip": 0.27,
+   "nray_strip_gap": 0.115,
+   "cells": 1.2,
+   "cells_box": [
+    -6.1,
+    6.1,
+    2.85,
+    12.15
+   ],
+   "band_height": 1.32
+  },
+  "pieces": [
+   "blink_waterfall",
+   "categorical_frustum_8ray",
+   "categorical_frustum_8ray_crop",
+   "key_frustum",
+   "nray_frustum_8ray",
+   "nray_frustum_8ray_strip",
+   "nray_waterfall_16ray_matched",
+   "nray_waterfall_5ray_matched",
+   "nray_waterfall_8ray_matched",
+   "standard_frame_tstar",
+   "standard_frustum_light",
+   "standard_frustum_light_every3",
+   "standard_frustum_light_every3_strip",
+   "standard_frustum_light_strip",
+   "standard_waterfall"
+  ],
+  "pieces_onerow": [
+   "blink_waterfall",
+   "categorical_frustum_8ray_crop",
+   "nray_waterfall_16ray_matched",
+   "nray_waterfall_5ray_matched",
+   "nray_waterfall_8ray_matched",
+   "standard_frustum_light_every5_strip",
+   "standard_frustum_light_every6_strip",
+   "standard_waterfall"
+  ],
+  "pruned_2026-09-21": "every 2nd / 4th ray frustums, dark frustums, _own strips, the no-rays partition, composite_v1(_dark), composite_v2_rows: regenerate with --all (git history keeps the committed ones)"
+ },
+ "cell_colours": {
+  "n_cells": 30,
+  "n_adjacent_pairs": 59,
+  "min_distance": 0.166,
+  "median_distance": 0.286,
+  "deterministic": true,
+  "construction": "One colour per appearance cell, placed so that cells ADJACENT ON THE PAGE differ as strongly as the cell count allows. No sampling and no seed: the hues are the ``n`` evenly spaced points of the colour circle, and the cells take them greedily \u2014 most constrained cell first, ties by cell index \u2014 each taking the free hue whose circular distance to its already coloured neighbours is the largest. Saturation and value then cycle over four and three fixed levels to separate cells whose hues tie. Every colour stays light (high value, low saturation) so the rays, the discs and the centre dots read on top."
+ },
+ "recommended": {
+  "rays_drawn_every": 3,
+  "rays_drawn_every_onerow": 5,
+  "nray_strips": "matched",
+  "frustum_page": "light"
+ }
+}

@@ -85,3 +85,17 @@ def test_move_rmse_sees_damage_outside_the_edit_support(legal):
     off_support = [i for i in range(64) if i not in set().union(*[set(L) for L in legal])]
     dirty[:, off_support[0]] = 0.5
     assert move_rmse(dirty, legal) > move_rmse(clean, legal)
+
+
+def test_reported_fidelity_is_one_minus_the_ratio():
+    """The tables report fidelity = 1 - ratio (2026-09-22): 1 perfect, 0 = the guard, < 0 degraded.
+    Scores files keep the ratio; the guard on the ratio (<= 1) and on the fidelity (>= 0) agree."""
+    import numpy as np
+    from pim.metrics import FIDELITY_GUARD, fidelity
+    from pim.metrics.selection import GUARD
+    assert fidelity(1.0) == pytest.approx(FIDELITY_GUARD) and fidelity(GUARD) == pytest.approx(FIDELITY_GUARD)
+    assert fidelity(0.0) == 1.0 and fidelity(2.0) == -1.0
+    r = np.array([0.3, 1.0, 1.69, np.nan])
+    f = fidelity(r)
+    assert np.allclose(f[:3], [0.7, 0.0, -0.69]) and np.isnan(f[3])
+    assert all((ri <= GUARD) == (fi >= FIDELITY_GUARD) for ri, fi in zip(r[:3], f[:3]))

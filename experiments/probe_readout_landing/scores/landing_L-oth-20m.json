@@ -1,0 +1,59 @@
+{
+ "run": "runs/initial_othello_comparison/L-oth-20m",
+ "instance": "oth-uniform",
+ "n_cases": 1000,
+ "arms": [
+  {
+   "editor": "PI",
+   "tag": "best",
+   "point": 4,
+   "alpha": 3.0,
+   "probe": "linear",
+   "tile_landed": 0.994,
+   "board_landed": 0.85,
+   "board_wrong_squares_mean": 0.218,
+   "recomputed_symdiff": 0.8177401144968419
+  },
+  {
+   "editor": "PI",
+   "tag": "alpha1",
+   "point": 4,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.994,
+   "board_landed": 0.85,
+   "board_wrong_squares_mean": 0.218,
+   "recomputed_symdiff": -0.7002913590539807
+  },
+  {
+   "editor": "ND",
+   "tag": "best",
+   "point": 4,
+   "alpha": 0.35,
+   "probe": "linear",
+   "tile_landed": 0.999,
+   "board_landed": 0.653,
+   "board_wrong_squares_mean": 0.502
+  },
+  {
+   "editor": "GS",
+   "tag": "best",
+   "point": 4,
+   "alpha": 0.2,
+   "probe": "mlp",
+   "tile_landed": 0.817,
+   "board_landed": 0.695,
+   "board_wrong_squares_mean": 0.398
+  },
+  {
+   "editor": "IM",
+   "tag": "best",
+   "point": 5,
+   "alpha": 1.0,
+   "probe": "linear",
+   "tile_landed": 0.999,
+   "board_landed": 0.988,
+   "board_wrong_squares_mean": 0.012
+  }
+ ]
+}

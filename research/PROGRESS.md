@@ -3,7 +3,607 @@
 > Agent-owned, rewritten freely each session. Answers **"where is the work right
 > now?"** — *not* "what's true" (that's `findings/`). Git history is the backstop.
 
-_Last updated: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+_Last updated: 2026-09-23 15:50 PT — QUEUE DRAINED (40 of 40): all ten families at n = 3, tables and Table A1 rendered; post-queue write-up in progress_
+
+## 2026-09-23 (afternoon) — PAPER session: the selection FALLBACK changed; IM-vs-NN table filled (UNCOMMITTED)
+
+**Sevan: an editor with no arm inside the guard is now reported at its HIGHEST-FIDELITY arm** (lowest stored ratio), not
+its highest index — `pim/metrics/selection.py::best_arm` (+ test; 309 pass). The draft's text and its three no-guarded-arm cells
+already read this way. Diff over all 58 collector rows: ONLY no-guarded-arm cells move — oth-adjacent GS −0.157 / −5.68 →
+−0.956 / −0.01, oth-noflip GS −0.522 / −3.78 → −0.968 / −0.01, oth-noflip IM −0.553 / −1.58 → −0.928 / −0.01 (its IM point
+7 → 1, so its g R² at the IM point 0.944 → 0.855, nn R² 0.879 → 0.762), the four Othello IM-NN cells. Seed SDs under the new rule:
+oth-adjacent GS fid 0.406 → 0.010, IM EI 0.304 → 0.422; oth-noflip GS fid 0.457 → 0.003. The three table notebooks re-executed
+(no errors); REGISTRY row, `tables.py` comments and the ledger header string updated; `final_tables` (lab, this tree) picks it up.
+**Paper edits:** IM-vs-NN table NN R² column filled (and standard-noflip IM R² → 0.855); Editors paragraph: "IM beats it by 53.6 %
+in Edit Index on average across Rayworld variants, and in Othello the nearest neighbors never land" (Sevan chose the Rayworld
+relative reading); `\dg` on adjacent-noflip PI (seed SD 0.196). `paper/WRITING_GUIDELINES.md`: scope section rewritten for
+2026-09-23 (paper-name → run map), selection / fidelity / seed rules, heat column types, the 10.25-page status.
+**Also filled:** the grid table's four IM cells (appearance 30 +0.88 / 0.73, grid 6×5 +0.64 / 0.54, 10×3 +0.70 / 0.57, 16×8 +0.73 /
+0.64; every other cell of that table re-checked against `collect`, all match). For IM, size-matched grids sit at or below the
+continuous map (+0.71) and only the appearance bins beat it — unlike GS / PI, where every grid beats continuous. Confirmed for
+Sevan: IM-NN is selected independently over the same nine points (Rayworld: guarded pick = its unguarded best; Othello: no NN
+arm passes the guard, best index ignoring it +0.04 / −0.36 / −0.15 / −0.63).
+**Introduction touched up** (Sevan's inline notes resolved and removed; nothing else in the file): paragraph 3 re-stitched (the question, then why hold everything fixed), paragraph 5 wording (no 'them', no 'pairs', inverse-map sentence reframed as driving the model from outside), paragraph 6 now previews where IM succeeds (Othello points 4–5 only; Rayworld 6–9 of 9 points, verified per point) instead of repeating the abstract; contribution 1 'methodology' → 'method' (Times-Bold estimate 402.8 → 380.0 pt of 380.8 available, so one line). Paragraph line counts unchanged by estimate.
+**Flagged to Sevan, NOT changed:** (1) Table 1's standard-noflip "Edit Point" still reads 0.944 (now 0.855), and its caption says
+the Edit Point is where IM reaches its highest index (for a row with no IM arm inside the guard it is the highest-fidelity one); (2) the
+`\dg` on adjacent-noflip GS fidelity no longer meets the > 0.1 rule (SD 0.010); (3) the Results sentence "every one of them is an
+editor that fails" — adjacent-flip IM fidelity (SD 0.108) is a dagger on an editor that lands; (4) the main qualitative figure
+(`composite_final`, Adjacent NoFlip GS drawn at pt2 α1.5) and the appendix Othello figures (adjacent-noflip GS, standard-noflip
+GS and IM) were drawn at the OLD fallback arms — regenerating them would show near-unedited boards in those cells.
+
+## 2026-09-21 (evening) — PAPER TEXT session (appendix tables; no other edits)
+
+Sevan asked for the appendix TABLE STRUCTURE (values to be refreshed later): eight tables added to `paper/paper_draft.tex`
+under their existing `\subsection`s, in Tables 1/2's style (heat column types P / E / F, `G` gaps, `\multirow` + `\shortstack`),
+every value read through the canonical readers (`pim.figures.tables.collect` under `select="index"` and `"fidelity"`, cartesian
+basis; `tables.prediction_rows`; `runs/_baselines/*/{baselines,bayes_floor}.json`; `paper/figs/editability_trends/by_point_values.md`)
+with `% source:` comments above each table. Blanks left where no number exists: Rayworld Bayes floors (queue `appendix_prediction`),
+nearest-neighbour latent R² (`nn_r2` not folded into scores.json), categorical IM on smooth / obs5 / standard / blink (no arm),
+the token model's mean-frame IM. Two tables are PROVISIONAL and marked `\red{}`: the token model's mean-frame editability
+(`experiments/dw_tokens/bridge`, 2026-09-06, frustum, pre-guard) and legal-vs-illegal Othello targets
+(`experiments/adjacent_flip_ablation/scores/ceiling_symdiff_*.json`, 2026-09-15; canonical re-run = `scripts/index_ceiling.py
+--reachability --editors`). The grid-layout table was restyled (ND dropped as in the main tables, IM column added, guarded arms).
+Main text untouched (verified byte-identical outside `\appendix`). Draft NOT committed (Sevan's working tree).
+Noted at session start: 10 peer sessions on this repo, one busy; `qualitative_main/` round-4 scripts edited 19:55 with the
+composites not yet regenerated — left alone.
+
+## 2026-09-21 (day) — PAPER FIGURES session (Sevan: finish all figures today; this session = paper help only, not the queue)
+
+**Plan agreed with Sevan 10:30 PT.** Figure 1 = (a) mini teaser + (b) probe-derived editing vs inverse map, hand-drawn by
+Sevan (`paper/figs/mini_teaser.pdf`; the wrapfigure goes); the network diagram (`paper/figs/teaser.pdf`) moves to
+§Experimental Setup with its symbols aligned to the text (h / z / s; it shows only the edited reference for editability).
+Five WORKERS launched ~10:50 PT, one folder each under `paper/figs/`, briefs in each folder's `BRIEF.md`, common rules in
+`paper/figs/FIGURE_BRIEF_COMMON.md`, shared look in `paper/figs/paper_style.py` (Times New Roman, TrueType-embedded vector
+PDFs, Okabe-Ito, one colour per editor):
+`environments_overview/othello/` (rule-set boards, legal moves, flips; options O1–O3 + composite),
+`environments_overview/rayworld/` (frustum + rays + discs + velocity arrows + faded trajectory, linked waterfall, blink /
+N-ray / appearance-cell panels + composite), `qualitative_main/` (editorial main-text figure from the cached guarded
+writes: Rayworld options R1–R3 with the 128-ray model as the hero, Othello options T1–T3 incl. a zoom on the
+symmetric-difference squares), `editability_trends/` (Edit Index by residual point; Edit Index by ray count with seed SD
+via `tables.collect`), `history_rewrite/` (compute split from drawing; 3-edit × 4-column paper waterfall). Pieces AND
+composites; Sevan assembles. Workers write only in their folders + `.scratch/`; the GPU is shared with the queue's
+training job (one model at a time). Results land in each folder's README; this entry is updated when they report.
+**Landed and verified on disk (11:05–11:30 PT), four of five:** `history_rewrite/` (`history_rewrite_top3` recommended: 3 largest
+teleports × GT | Unedited | Single-point edit | History rewrite, K = 15; variants hist-alone / K = 10 / random-3; `pieces/`;
+stretch `prediction_quality` = GT vs free-run, no edit; arms from the saved cards: IM +0.61 / 0.36, hist+IM +0.63 / 0.36,
+hist +0.65 / 0.48, n = 32 one seed; the PDF now embeds all 128 rays — matplotlib's default ppi had resampled to 125).
+`environments_overview/othello/` (O1 recommended: four boards after move 14 with legal-move dots, chosen move, flipped discs
+ringed; O2 before/after pairs; O3 three positions; 52 vector pieces; stretch `predictive_composite` = legal set vs model
+distribution per variant, visually identical at the canonical tint). `editability_trends/` (A2: Edit Index by residual
+point for oth-standard | dw-noiseless with hollow = outside guard + an R² / MLP-skill row — IM on Othello lands only at
+points 4–5, on Rayworld climbs to +0.59 by point 6 with g R² ≈ 0.3; B2 / B1_half: Edit Index by ray count, n = 3 pooled
+means, SD bars smaller than the markers; every value matches the ledger; categorical IM = the new categorical map).
+`qualitative_main/` (recommended composite `composite_R3_T3_typical_2row`: (a) Standard model × 3 scenarios × PI / GS / IM
+— PI / GS smear, IM renders the teleported disc; (b) 5×5 zoom on the edited tile + changed squares, Standard vs
+Adjacent NoFlip × Unedited / GT / PI / IM; `typical` = cases whose per-case index is nearest the population mean; R4 adds
+a 5-ray foil column; T1 / T2 alternatives; 401 pieces). Still running: `environments_overview/rayworld/`.
+**Fifth landed 11:40 PT — `environments_overview/rayworld/`** (composite recommended: (a) frustum with observer, 128 rays — hits
+dark and stopping at the disc, misses light — discs filled with their reflectivity grey, velocity arrows, seven fading ghosts,
+the frame-t* strip laid along the far plane, beside the 40 × 128 waterfall with a t axis and a t* pointer; (b) blink waterfall
+with the hidden span bracketed and the 0.5 edge markers; (c) 8-ray frustum + the SAME world through 16 / 8 / 5 rays via
+`render_scene` under each sibling's config; (d) the 30-cell appearance partition on dw-8ray with the discs' cells filled;
+21 vector pieces, light and dark variants; sequences by a stated `default_rng(0)` rule in `selection.json`).
+**ALL FIVE DONE in ~50 min wall clock; GPU freed (only the queue's training job remains).** Committed with the scripts, READMEs,
+sidecars, top-level PDFs / PNGs and piece PDFs; piece PNG previews are gitignored (`paper/figs/.gitignore`, regenerable).
+**ROUND 2 (Sevan's review, 11:50 PT):** ALL figure text → **Arial** (was Times New Roman; `paper_style.py` switched, maths in
+Arial via the custom mathtext set; the two appendix qualitative scripts get the same) and `ps.save` crops with ZERO outer
+padding (spacing is set in LaTeX). Asked: Othello O2 layout with ONE board reachable under standard / adjacent-flip /
+adjacent-noflip for (a)–(c) (reachability search over standard bench prefixes with the vendor board class; (d) stays);
+Rayworld pieces: fewer drawn rays in the big frustum (64 / 43 / 32 variants, strips stay 128), wider N-ray waterfalls,
+"(signaled)" under "hidden", (c) without the small frustum, (d) bigger with translucent discs, a flatter composite with
+letters set apart and less whitespace; main qualitative figure `composite_final` (Rayworld 2 × continuous + 2 × categorical
+columns — A1 dw-noiseless with BLANK categorical IM cells (no arm by Sevan's own spec) vs A2 the 128-ray ray-family model
+where the categorical map exists; Othello + GS, new `typical` rank-2 cases, CYAN on the flipped tile + legality-switching
+squares in Unedited and PINK on the same squares elsewhere, boards +10 %, larger GT→PI gap, bigger panel letters) and
+`composite_final_sidebyside` (variants as columns incl. Adjacent Flip, no GS, thinner rims); the appendix qualitative figures
+regenerated in Arial with the CURRENT arms (categorical IM = the categorical map on 5/8/16/128-ray, blank on Standard /
+Blink — the cached old-map frames matched no scored arm); history figure: original observed history above the line in EVERY
+column, "origin / destination position". Trends re-rendered (done, 12:00). History round 2 DONE 12:10 (context rows asserted
+identical across columns; `history_frames_*` = original | rewritten | counterfactual render as a separate appendix piece).
+Othello / Rayworld / qualitative round-2 workers running (brief `qualitative_main/BRIEF_ROUND2.md`).
+⚠ 14:10 PT all three round-2 workers were KILLED by the account's API session limit (reset 14:30); resumed 14:35 with their
+transcripts intact (partial script edits were on disk). **Rayworld round 2 DONE 14:45:** `composite_v2_split` recommended
+(5.46 × 2.96 in; every-3rd ray drawn = 43 of 128, strips and waterfall at full 128; N-ray strips 1.25 in wide; "(signaled)";
+(c) strips only; (d) `categorical_frustum_8ray_crop` with discs at alpha 0.65); round-1 composites kept as `composite_v1*`. **Othello round 2 DONE 14:50:** a board reachable under
+all three rule sets EXISTS only early-game — standard bench case 182 after move 6 (10 discs; adjacency placement order
+`f3 d3 f2 d2 e3 c3`, flip-free, asserted equal to the standard board; nothing after moves 7–14 survives in 1000 games, exact
+DFS for adjacent-noflip, flip-free sufficient condition for adjacent-flip); `composite_O2` = shared board (a)–(c), one move
+c4 legal under all three (flips d4 in a, b; nothing in c), (d) own checkerboard game; `composite_O2_alt` = per-rule moves
+(d1 flipping three in a row in a). Search ~45 lines, orders in `boards.json`. **Qualitative round 2 DONE 15:25 — ROUND 2 COMPLETE.**
+`composite_final_A2` recommended (5.5 × 4.78 in): (a) the 128-ray ray-family model (`ray_ablation/L-dw-128ray-20m`) × 2 scenarios
+× continuous + categorical columns — every one of the 12 edit cells a scored arm (cartesian PI −0.02 / GS −0.10 / IM +0.57;
+appearance-fac PI −0.31 / GS +0.31 / categorical IM +0.64); `_A1` = dw-noiseless with the two categorical IM cells blank (no arm).
+(b) 5×5 zoom, Standard (case 342) / Adjacent NoFlip (case 39), `typical` rank 2, Unedited / GT / PI / GS / IM, CYAN outlines
+(flipped tile + legality-switching squares) in Unedited, PINK on the same squares elsewhere, key "pre-edit / post-edit";
+boards +6 % (a five-column row at 5.5 in cannot give +10 %). `composite_final_sidebyside_A1/_A2` (5.5 × 3.26 in; Othello variants
+as columns incl. Adjacent Flip case 261, no GS, rims 1 pt; the Rayworld strips there are 0.44 in wide — readable, not pretty).
+APPENDIX figures regenerated in Arial with the CURRENT arms: `qualitative_edits/` categorical IM through the canonical
+categorical map (cache hits only; 16 / 8 / 5-ray at pt 6 / 6 / 5), BLANK cells on Standard and Blink (no arm since 2026-09-20),
+new caches `.scratch/qualitative_edits_catim_*`; `qualitative_edits_othello/` with the cyan / pink marking (shared helper).
+All five folders committed; GPU freed.
+**ROUND 3 (Sevan's second review, 15:40 → 17:10 PT) COMPLETE, all committed.** Othello: per-rule moves, (c) plays the would-flip move c4
+that no longer flips (alt f5), bold letters. Rayworld: bigger frustum, t* row outlined, "hidden" centred, centre dots in (d), tighter
+(composite 5.46 × 3.26 in). Qualitative: "Unedited Pred", "Example 1/2", dot key top-right above the colour bar, 128-ray model
+throughout (Sevan: "effectively the standard model", named in the caption), A1 dropped; appendix Rayworld no-arm categorical IM
+spots left fully empty (no frame). Trends: legend 0.18 in under the x labels; renamed by_point / by_rays / by_rays_half. History:
+random-3 among the 15 of 32 cases with displacement ≥ 20 rays (seed 0 → cases 14 / 18 / 25), hist+IM default, histonly alt,
+history_frames appendix piece. NEW `paper/figs/predictive_quality/` = rayworld (transposed, GT / Prediction × 3 examples) +
+othello (moved from environments_overview/othello). **PRUNED per Sevan** ("drop the million extra versions"): every folder's top level
+= the chosen figure(s) + at most one alternative + script(s) + README + sidecars; per-element PDFs under pieces/ (PNG previews
+gitignored); dropped variants regenerable via script flags (git history keeps them). Worker briefs moved to `paper/figs/briefs/`.
+**Open for Sevan:** categorical IM for dw-noiseless / dw-blink would need two ~40-min map fits (a scoring job, not started).
+**ROUND 4 (17:15 → 19:40 PT) COMPLETE, committed.** Main qualitative figure `composite_final`: columns Standard (continuous) Examples
+1–2 (dw-noiseless), 128-ray (categorical) Example 3 (dw-128ray, categorical IM), 5-ray (categorical) the SAME Example 3 (dw-5ray);
+every drawn scenario passes the 5-ray visibility filter (the scorer's differing-ray zone under the dw-5ray renderer non-empty;
+27 of seeds 0–39 pass; Examples = seeds 0 / 1 / 2). Appendix Rayworld figure re-seeded to the first six passing seeds
+(0, 1, 2, 5, 7, 8 → seed0 + more_seeds/1,2,5,7,8; seeds 3 / 4 dropped); both READMEs carry the matching explanation (one world,
+rendered under each instance's own radius / ray count). Trends: `by_rays` = one full-width overlaid panel, no ND. Predictive
+quality: rayworld = (a) Standard (b) Blink (c) 5-ray × 2 sequences × GT / Prediction / Difference (canonical signed-error map;
+Blink and 5-ray free-runs via the canonical bench calls, cached `.scratch/predictive_quality_<inst>.npz`, `compute_rayworld.py`)
+— ⚠ the random 5-ray pair (cases 20, 26) shows large free-run misses (the disc never moves to its new ray); flagged to Sevan,
+seed is the knob; othello = three examples per variant stacked (full page).
+**ROUND 5 (20:00 PT):** the 5-ray visibility filter was too weak (it passed a ONE-ray change; seed 8 looked unchanged to Sevan).
+New rule in `qualitative_edits/make_figure.py::passes`: at least 2 changed rays of the clean 5-ray frame AND at least 2 with
+|Delta| >= 0.2, both off the scorer's own `build_edit_zones`. Seeds 0-59: 29 pass, 31 fail (15 that passed the old rule now fail).
+⚠ The intensity clause never binds on discworld — fixed reflectivities make every changed ray differ by exactly 0.4 or 0.8, so the
+ray-count clause decides every case; it is a guard for a future fainter instance, not a live discriminator. Main figure re-assigned
+(Sevan's swap): Example 1 = seed 0, Example 2 = seed 2 (both Standard continuous), Example 3 = seed 1 (128-ray + 5-ray categorical).
+Appendix more_seeds made disjoint from the main figure's seeds: 1, 2, 8 dropped, now 5, 7, 9, 10, 12; primary stays seed 0 so the
+tex path resolves (its Standard column still shares seed 0 with the main figure's Example 1 - Sevan's call, left as is).
+**Figure work is DONE pending Sevan's two hand-drawn figures. NEXT: the paper text** — Table 2 + §Results to the guarded arms and the
+categorical map (+0.637 / +0.823 / +0.866 / +0.913), seed ± from the families, "one seed / 780k steps" wording, captions from the
+folder READMEs (selection rules, arms, guard, which model each panel uses), the empty appendix sections the figures now fill.
+**Next for the paper:** Sevan assembles Fig 1 (mini teaser + probe-vs-inverse panel) and the network diagram; then the text:
+Table 2 + §Results to the GUARDED numbers, the categorical IM column to the categorical map, the ± from the seed families,
+captions from each folder's README (selection rules, arms, guard). Figure text is minimal by design — every fact goes in the caption.
+**Paper facts noted for the text (not yet applied):** Table 2 / §Results quote the pre-guard numbers; the categorical
+IM column is now the categorical inverse map (5/8/16/128-ray parents +0.913 / +0.866 / +0.823 / +0.637) so "IM is unchanged
+by the target" is false; five Rayworld families at n = 3 and oth-standard at n = 2 for the ± values.
+
+## 2026-09-19 (night) — follow-up to the scoring audit (Sevan): ONE change made, the rest deliberately left
+
+**Changed:** `master_eval.ipynb` SETTINGS `dw_bases` default `"frustum"` → `"frustum,cartesian"` (Sevan: both by default,
+cartesian is the de facto basis). Frustum stays FIRST on purpose — categorical probes are keyed under `bases[0]`; putting
+cartesian first would orphan every cached categorical probe and skip those blocks on newly scored runs. Proven inert: a
+dry run of `score_all` + `score_all_baselines` gives the IDENTICAL to-do list under both defaults (every run and floor
+file already has both blocks), every queue job that runs the scorer sets `PIM_DW_BASES` itself, and with that variable
+set SETTINGS is identical before / after. Edited while the lab was mid-training (128ray_s1, ~6 h from its scoring stage);
+the remote's copy is unchanged until its next pull (harmless, same reason). **Sevan: NO other fix from the audit now** —
+none is worth any risk to the queue; revisit after it drains (list in the entry below).
+**⚠ For Sevan's decision (paper wording, not code):** in the CATEGORICAL rows IM does NOT invert from the categorical grid.
+`dwa.inverse_arms` feeds g the CONTINUOUS 8-d post-edit state (`full_state_pair`, exact target position + velocity) in
+every block; a categorical block contributes only its bench (cell-changing cases) and its basis label (frustum). So in
+those rows PI / GS are told the target CELL and IM the exact POSITION. The draft already says "IM … writes the full state
+either way"; Sevan expected a categorical inverse. Options: keep + say so in the caption (no compute), or add a
+categorical inverse map g_cat(labels → residual) as a new arm (an instrument change; ~IM's cost per run).
+**Variance on the guard:** the tables' ± on every fidelity cell = SD over training seeds (`pool_replicates` pools
+`<ed> fid`; e.g. 8-ray cartesian PI 0.921 ± 0.041, GS 0.886 ± 0.017, IM 0.265 ± 0.008, n = 3). There is NO case-level SD
+of the guard anywhere (only a bootstrap CI, and only on IM / IM-NN + Othello arms scored since this evening); the Edit
+Index has both (seed SD in the tables, `edit_index_case_sd` / `_se` on every arm scored since 2026-09-18).
+**Seen in the executed notebook:** every pass retries the replicates' inherited-but-never-fitted extra targets (8-ray
+replicates inherit 10 grid targets; 23 runs + 2 floor files are perpetually "adding … SKIPPED") — seconds each, harmless,
+noisy; fix later by letting a replicate inherit only the targets its probes exist for.
+
+## 2026-09-19 (evening) — AUDIT of `pim/scoring` (Sevan: is it pure plumbing? any bugs?) — read in full, nothing changed
+
+**No metric is defined there** (no numeric reduction in the package; ruff F clean; every recorded `best` = the true argmax
+on all 157 blocks of 51 runs, no NaN index anywhere; arm counts match SETTINGS exactly: 293 regression / 282 categorical).
+**It does make choices:** `best` = UNGUARDED argmax (Othello: on the UNION index, and the bare `edit_index` of an Othello arm IS
+the union) — not what the tables report since today (`pim.metrics.selection`); `scripts/index_ceiling.py --editors` and
+`paper/figs/history_rewrite` still read it. Categorical blocks live in `dw_bases[0]`, so Table 2's categorical IM is the
+FRUSTUM-basis inverse map beside cartesian continuous rows (8-ray +0.703 vs +0.711; ~0.02). The scored bases come from the
+env var `PIM_DW_BASES` (default frustum only — CLAUDE.md's plain nbconvert command does not produce the cartesian blocks
+the paper reads). Floors' large-corpus recipe (250k / 50 epochs), seed, which floor point is reported live in `baselines.py`.
+**Bugs / hazards (none changes a reported number):** (1) `scan_runs` excludes `_`-TOPICS only → quarantined
+`ray_ablation/_R-dw-8ray-20m` is still scored (cartesian + IM were added to it) while its SETTINGS entry (`R-dw-8ray-20m`)
+no longer matches; (2) `except RuntimeError` around `fit_probes` also swallows CUDA OOM on a REGRESSION block → run
+written without its canonical block, rc 0 (self-heals next pass); (3) discworld PI / ND / GS arms do NOT carry
+`fidelity_ci95_*` (only IM does — `score(…)` is called without the unsteered card; REGISTRY / 37edca0 say otherwise);
+(4) `score_all_baselines`: an arch on file with no scanned run (`recurrent_l` on dw-noiseless, dw-pn04) → KeyError the day
+a basis is added; baselines.json written non-atomically; (5) a metrics.jsonl line caught mid-write aborts `scan_runs`;
+(6) `inverse_discworld`'s print dereferences `best["IM"]` (None if no IM arm); (7) scores.json is read-modify-write with
+an hour-long window and a full rescore drops foreign blocks (`prediction`): the remote's pull of the shared seed-0 member
+`L-dw-8ray-20m__seed0_s512000` overwrote the lab's copy (prediction block lost; `score_prediction.py` re-adds it).
+**Found on the way (upstream, `pim.probes`):** the LINEAR probe at residual point 0 is numerically broken on every
+regression block (held-out R² −0.1 … −2.2; SAME checkpoint: lab −1.12 vs remote +0.10) — rank-deficient embedding point;
+invisible in the tables (max over points; no reported PI arm at pt 0). Same-checkpoint lab-vs-remote scoring otherwise:
+PI identical, IM ±0.011, GS up to 0.06 per arm (best GS −0.074 vs −0.032) = measurement noise of refitting the MLP probes.
+
+## 🔄 Paper seed-replicate queue (`experiments/paper_ci/`) — LAUNCHED 2026-09-18 20:48 PT, ETA ≈ 2026-09-23 03:00 PT
+
+**2026-09-19 12:15 check:** healthy. Done: `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), both corpus
+pushes. Running: `rep_dw-8ray_s1` (lab, master_eval since 11:59, ~14:00), `rep_dw-8ray_s2` (remote, 300k/512k,
+~16:30). **⚠ Gap: both dw-16ray members (`__seed1`, `__seed0_s512000`) have NO `appearance-fac` block** — their
+fac probes were fitted (stage C, cached) but `master_eval`'s `dw_extra_targets` on this branch has no
+`ray_ablation/L-dw-16ray-20m` entry (it lives only on the unmerged `dw_16ray` branch, where the parent was
+scored), so the replicates inherit nothing and the ledger shows the 16-ray categorical row at n = 1 — a paper
+Table 2 row. **FIXED by Sevan 2026-09-19:** entry added (762faae); `push_inputs` keeps the trailing slash on
+directory pushes (it was nesting `scripts/scripts/` on the remote) and a held job adds the 16-ray members' fac
+block (507d623).
+
+**2026-09-19 (Sevan) — ⚠ THE TABLES' ARM-SELECTION RULE CHANGED: best Edit Index INSIDE the fidelity guard** (≤ 1.0; the
+unguarded best only where an editor has no guarded arm) — `pim/metrics/selection.py`, read from the arms already in
+scores.json, no re-scoring. **16 of the paper's 48 cells move** (list in the REGISTRY row): every discworld PI number on the
+128-ray-class instances drops to ≤ 0 (noiseless +0.20 → −0.10, 128ray +0.24 → −0.02, blink +0.17 → +0.02), oth-adjacent-flip
+PI +0.40 / 2.09 → +0.35 / 0.83 (now INSIDE the guard), GS there → −0.06. **The draft's Table 2 and §Results text quote the
+OLD numbers — to be redone from the notebook** (and the seed ± re-pool under the new rule automatically; the CI ledger /
+dashboard already show it). The qualitative figure scripts now draw the SAME guarded arms (re-rendered on the lab GPU beside the
+queue's training job, + `more_seeds/seed1…5/` for each; write caches renamed `_guarded`). Appendix notebook gained Table A2 / A2b =
+the paper's editability table with every editor at its LOWEST FIDELITY RATIO (`collect(select="fidelity")`,
+`selection.best_arm_by_fidelity`): under it only IM (and standard Othello) keeps a positive index — PI / GS fall to −0.15 … −0.60
+on Rayworld.
+Same session: `pool_replicates` / `ci95_halfwidth` / `t975` → `pim/metrics/replicates.py` and the best-point / gap rules →
+`pim.metrics` with EVERY table value bit-identical under the old rule (58 rows × 2 bases + 10 replicate sets); Tables 1d/1e
+basis bug fixed (`_rand_perdim` matched frustum caches for cartesian rows); `table_alignment`, `table_bayes`, `fig_capacity`
+REMOVED (they read `experiments/`) with their long-list cells (Table 4 there is now `table_prediction`). Notebooks NOT
+re-executed (final_tables will; or run them by hand).
+
+**2026-09-19 (Sevan) — THE PAPER NO LONGER DEPENDS ON `experiments/`** (audit: 5 of 37 experiment folders fed a paper
+claim). Moved: the Edit-Index CEILING → `scripts/index_ceiling.py` (+ `pim/environments/othello/counterfactual.py`: the
+counterfactual-game search; writes `runs/<run>/index_ceiling.json`; `L-oth-20m` re-run on CPU reproduces +0.909, 13 cases,
+new CI 0.854–0.956; discworld ceilings on the 1000-case bench STILL TO RUN — in the proposed queue job; 24-case CPU smoke on
+8-ray +0.87); flips per move → `scripts/othello_corpus_stats.py` (run: 2.245 / 0.269 / 0 / 0 → `runs/_baselines/<inst>/
+corpus_stats.json`); the seed-0 member layout → `scripts/layout_checkpoint_replicate.py` with a FORWARDER at the old path
+(replicate.sh untouched while the queue runs — switch its stage B after the drain, see `experiments/bayes_floor/
+QUEUE_HANDOFF.md`); `build_paper_tables_and_figs` cell [5] (old Table 4 from `experiments/bayes_floor`) DELETED;
+`experiments/history_rewrite` → `paper/figs/history_rewrite/` (script moved + paths fixed, compiled, NOT re-run — GPU).
+
+**2026-09-19 (Sevan) — PREDICTIVE LOSS vs BAYES FLOOR made canonical; NOTHING RUN YET (queue owns the GPUs).**
+`pim/metrics/prediction.py`, `pim/environments/prediction.py` (a run's `prediction` block),
+`pim/environments/discworld/bayes.py` (floor by posterior sampling over the initial state; blink's marker process
+analytic), `pim/environments/othello/bayes.py` (exact), `scripts/bayes_floor.py` →
+`runs/_baselines/<inst>/bayes_floor.json`, `scripts/score_prediction.py` (fold-in), `tables.table_prediction`,
+`notebooks/build_appendix_tables_and_figs.ipynb` (Table A1; renders `—` until the files exist), 7 tests, REGISTRY
+rows. Scope (Sevan): 4 Othello + dw-noiseless / blink / 16 / 8 / 5-ray, main-table runs + the token run read two
+ways (+ dw-128ray, added the same day); no smooth / pn04 / training curves / per-position curves; columns loss · floor ·
+excess, drawn as a FIGURE in the master tables' style (heat panels, grouped rows). A sampled floor is stored as a
+bracket lo … hi and SHOWN as midpoint ± (half-width + one SE); Othello's exact floor has no ± (Sevan). A TRIVIAL-predictor
+column (Sevan): the best history-blind constant from the probe split, stored in each floor file (`trivial`); measured on
+CPU: oth-uniform 4.094 (= log 60), dw-8ray 0.1007 / token CE 5.18, dw-noiseless 0.0726. ⚠ Repeat-the-current-frame is a far
+stronger naive reference on discworld (dw-8ray 0.0078 vs floor ≈ 0.0056, model 0.00577) — recorded as `persistence_mse`,
+printed not tabulated; put to Sevan. CPU pilot, dw-8ray: floor 0.0055–0.0057 vs model 0.00577 (`scratch/2026-09-19-bayes-floor-pilot.md`);
+the old Table 4 "floor = 0" was a state oracle, not a Bayes floor. Verified on CPU: renderer parity 100% on all five
+instances, blink marker model calibrated within 1.4% on 10k sequences. **FILLED ON CPU 2026-09-19 15:10 (lab in a training phase, no scorer running):** the 4 exact Othello floors + every
+instance's trivial predictor (`bayes_floor.py`; discworld files are `+trivial-only` until the sampler runs), the
+`prediction` block in 22 runs (paper runs + their scored replicates; CPU, 26 s a run), Table A1 rendered — Othello rows
+complete (excess +0.0179 / +0.0052 / +0.0023 / +0.0015 nats), discworld rows show trivial + loss, floor pending the GPU.
+Token run: CE 0.4638 nats/frame; mean-frame MSE 0.00573 vs the frame model's 0.00574 on the same sequences.
+**To run:** one queue job after
+`final_tables` — `experiments/bayes_floor/QUEUE_HANDOFF.md` (for the session operating the queue; job file in
+`queue_proposal/`, NOT installed). `master_eval` untouched. UNCOMMITTED. When it lands: check the brackets, write
+`findings/predictive-quality.md`, fill the paper's red prediction-quality placeholders, retire Table 4.
+
+**2026-09-19 (Sevan) — `tokens/` trimmed to the minimum:** the discworld tokenizer now writes ONLY `train.i16`,
+`vocab.npz`, `meta.json`; every small split is encoded from its h5 at read time (`tokens.encode_h5`, new).
+`experiments/dw_tokens/scripts/{ce_by_position,ngram_floor}.py` and `tests/test_token_bench.py` /
+`test_discworld_tokens.py` switched off `tokens/test.npy` / `edits.npy` (re-encoding verified byte-identical;
+21 token tests pass on CPU under an audit hook that fails any open of the two files). REGISTRY, layout spec,
+`layout.py`, `make_discworld_tokens.py` updated. UNCOMMITTED. The two `.npy` files (lab + remote) are Sevan's to
+delete; the existing `tokens/meta.json` still lists the retired files under `"files"` (nothing reads it).
+
+**Live:** 28 jobs, all at 512k; first launches `rep_dw-5ray_s1` (lab), `rep_dw-16ray_s1` (remote), the
+dw-8ray corpus push (lab cpu lane). The dispatcher timer (`pimci-dispatch`, 2 min) and both watchdogs
+are the memory — nothing to re-arm after a session ends or a reboot. **How to check:** the dashboard
+(`https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`), `logs/paper_ci/dispatch.log`, `systemctl --user
+list-units 'pimci-*'` on either host, per-job `logs/paper_ci/<id>/`, `experiments/paper_ci/README.md`
+(pause / hold / reset / add). Alerts on the usual ntfy topic; 2-h digest on `pim-ci-digest-ai691k`.
+**When it drains (`final_tables` done):** read `dashboard/ledger.md`, check Table 5 (SD + CI panels) and the
+± cells in the paper notebook, update `findings/seed-variance.md` (one entry per family: n, budget, SD,
+guard verdicts k/n), the REGISTRY run rows, the brief → `done`; move the smoke artefacts
+(`experiments/paper_ci/state/_smoke/`, `logs/paper_ci/smoke_*`) to an archive folder.
+**Status 2026-09-19 13:35 PT — 4 of 31 jobs done, all verified on disk.** `rep_dw-5ray_s1` (lab, 8.05 h),
+`rep_dw-16ray_s1` (4090, 10.75 h), `rep_dw-8ray_s1` (lab, 8.44 h), `score_16ray_fac` (9 min). Pooled n = 2 so
+far (member + seed 1): decodability SD 0.000, IM ±0.002–0.007, GS ±0.003–0.02, PI ±0.02–0.03. _(Corrected 19:20: the
+"PI guard 1.056 on the 512k members" remark made here at 13:35 was under the OLD unguarded arm selection; the tables' rule
+changed that afternoon to the best arm INSIDE the guard (`pim.metrics.selection`), under which all three 8-ray members
+have a passing PI arm, guard 0.89 / 0.90 / 0.97 at index +0.18 / +0.23 / +0.21.)_ Measured rates: lab 5090 under its 450 W cap 23.4 steps/s on 8/5-ray (−15%), the 4090 20 steps/s on
+discworld (= the uncapped 5090) but 53 min per factorised fit and 45 min per `master_eval` run (lab 31 / 29);
+`plan.py` estimates recalibrated, ETA ≈ 2026-09-23 12:00. **Fixes made in flight:** the watchdog reads a tick
+heartbeat file (a quiet tick logged nothing → false "not ticking"); progress = the newest write among a job's
+outputs, stall threshold 45 min (the scoring stages write outside the training metrics → false stall 03:22);
+directory pushes keep their trailing slash (scripts/ was nesting on the remote). **The 16-ray gap:**
+`master_eval`'s `dw_extra_targets` had no entry for `ray_ablation/L-dw-16ray-20m` (it lived on the unmerged
+`dw_16ray` branch), so the 16-ray members were scored without `appearance-fac`; Sevan added the line 12:20
+(commit 762faae), an in-flight execution's in-place write dropped it, it was restored from git 13:19 and
+`score_16ray_fac` added the block to both members (values on the parent's). ⚠ A notebook edited while
+`master_eval` is executing is OVERWRITTEN when that execution ends — commit the edit and restore after.
+**Added 2026-09-19 (Sevan):** the probe-corpus-size control (`experiments/probe_corpus_size/`, README) —
+queue jobs `ctrl_corpus_dw` (lab, ~3.5 h, after the ray family) and `ctrl_corpus_oth` (either host, ~1.5 h):
+probes / inverse map refitted on up to 200k sequences / 100k games, editors re-swept, canonical numbers
+untouched. Write its result into `findings/probe-capacity.md` when it lands. Owed still: the Othello PI/ND/GS
+guard CI line in `master_eval` cell [4]; the Othello ceiling bootstrap (deprioritised by Sevan).
+**Added 2026-09-19 15:00 (Sevan, via another session's hand-off `experiments/bayes_floor/QUEUE_HANDOFF.md`):** job
+`appendix_prediction` — Bayes floors + trivial predictors per instance (`scripts/bayes_floor.py` →
+`runs/_baselines/<inst>/bayes_floor.json`), a `prediction` block folded into every scored run
+(`scripts/score_prediction.py`), appendix Table A1 re-rendered. Lab only, LAST (deps `final_tables`, which now waits
+for EVERY other job so nothing runs on either host while scores.json files are rewritten). CPU smoke passed (parity
+1.0 on all six discworld instances, four exact Othello floors). When it finishes: check each `bayes_floor.json`
+against the hand-off's accept/reject list, record in `findings/predictive-quality.md`, tell Sevan Table A1 is ready.
+**2026-09-19 18:45 — `master_eval` refactor CUT OVER on the lab (merge 108ed90, branch `master_eval_module`, another
+session's work; `experiments/master_eval_refactor/` README + CUTOVER.md).** The scorer moved out of the notebook into
+`pim/scoring/` as a PURE MOVE (notebook 1,251 → 174 code lines; SETTINGS cell hash-identical incl. the 16-ray entry;
+no driver, `paper_ci`, trainer, metric, probe or editor file touched; `EVAL_VERSION`s and the scores.json schema
+unchanged; `best_arm` unchanged — the one-rule consolidation waits for the queue to drain). Gate (theirs): Othello
+fixture 14,610 leaves and `L-dw-5ray-20m__seed1` 17,103 leaves bit-identical, decision equivalence over 32 runs, real
+nbconvert entry point. Audit (mine, independent): 37 old-notebook functions → 20 byte-identical, 17 differ only by the
+threaded `s` / `runs` argument (21 lines), the two driver loops differ only by that threading and inert `dry_run`
+branches, module constants identical; suite 301 pass on the merged tree; dry listing under the queue's environment =
+0 full rescores + the 7 known skip-when-uncached add-block items. **Still to do:** `git pull` on the 4090 during a
+training stage (before its next scoring pass); verify the first post-cut-over scoring pass on EACH host (CUTOVER.md's
+three checks: one `=== scoring` per new run, the same seven `nothing added` lines, blocks + sibling-consistent numbers).
+Rollback: `git revert 108ed90`. Now possible (NOT done, Sevan's call): `nn_r2` in `pim/scoring/blocks.py::attach_inverse`
+(+ the Othello inverse_map dicts), the guard CI in `pim/scoring/othello.py::othello_arms`.
+**19:10 — dw-8ray is the first complete family (n = 3, all members with frustum / cartesian / pos@appearance / appearance-fac):**
+cartesian IM +0.720 ± 0.006 (guard 0.265 ± 0.008), PI +0.207 ± 0.022 (0.921 ± 0.041), GS −0.074 ± 0.030; appearance-fac IM +0.718 ±
+0.013, GS +0.445 ± 0.014, PI +0.392 ± 0.006; MLP skill SD 0.000. The 4090 was pulled to 84c2e78 at 19:09 during
+`rep_dw-16ray_s2`'s training stage (refactor + guard CI; no execution running, no executing script changed). ⚠ The ledger
+reads through `pim.figures.tables`, whose arm selection became GUARDED on 2026-09-19 (another session, `pim/metrics/selection.py`):
+ledger / ping / dashboard numbers for PI in particular differ from anything quoted before that change.
+**20:53 — dw-5ray complete (n = 3) and the refactored scorer VERIFIED on the lab.** Its first pass (`rep_dw-5ray_s2`, 20:22–20:52) met CUTOVER.md's checks: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors; eight `nothing added` lines = the note's seven + the 8-ray seed-2 member synced back after the note was written; seed 2's eval version / blocks unchanged, MLP skill identical to its siblings to three decimals, scoring 29.3 min (seed 1: 28.8 under the old scorer); notebook still 6 cells / 174 lines with the 16-ray entry after the in-place write. dw-5ray (guarded selection): cartesian IM +0.808 ± 0.009 (guard +0.230 ± 0.007), PI +0.132 ± 0.036 (+0.898 ± 0.051), GS -0.093 ± 0.015; appearance-fac IM +0.849 ± 0.005, GS +0.559 ± 0.012, PI +0.538 ± 0.017; MLP skill SD 0.000 / 0.000. Lab now on `rep_dw-128ray_s1`. STILL OWED: the same three checks on the 4090's first pass (`rep_dw-16ray_s2`, early 2026-09-20), which must also produce `appearance-fac` without help.
+**2026-09-20 04:26 — dw-16ray complete (n = 3) and the refactored scorer VERIFIED on the 4090** (`rep_dw-16ray_s2`, 9.26 h; the cut-over's last owed check). Its first pass there: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors, 5 `nothing added`, notebook still 6 cells with the 16-ray entry, 50.0 min; stage C fitted `appearance-fac` for both members UNAIDED (the 2026-09-19 `dw_extra_targets` fix holds) and the block is scored. In family: cartesian IM +0.663 ± 0.007 (members +0.661 +0.656 +0.670), MLP skill +0.964 ± 0.000, IM guard 0.288 ± 0.004. 4090 now on `ctrl_corpus_oth`; lab in `rep_dw-128ray_s1`'s scoring stages (training ended 04:04).
+**2026-09-20 05:00 — `ctrl_corpus_oth` killed by its 40 GB memory cap (4090; cgroup OOM inside the DENSE Othello inverse-map fit at 60k games; host fine).** Written before the kill: 20k → 60k games is flat (LIN 0.9747 → 0.9752, PI +0.819 → +0.819, ND +0.748 → +0.746; IM +0.810 at 20k). The requeued retry is redefined to those sizes (`--sizes 20000 60000 --im-max-n 20000`, cache hits) so it cannot fail twice; `final_tables` no longer depends on the two controls. NOT run: 100k games, IM above 20k (`experiments/probe_corpus_size/README.md`). 4090 went straight on to `rep_oth-standard_s1`.
+**2026-09-20 06:12 — `rep_dw-128ray_s1` done (lab, 9.30 h): dw-128ray at n = 2.** Two members scored in one pass (the new `__seed0_s512000` and `__seed1`, 29.7 min each, three blocks each incl. `appearance-fac`, no errors, no `stale`, notebook 6 cells). cartesian IM +0.573 ± 0.008 (+0.568 +0.579), guard 0.315; MLP skill +0.981 / +0.981; fac (old continuous arm) IM +0.577 / +0.585. 10 of 32 jobs done. Lab → `rep_dw-128ray_s2` (training until ~13:20, then scoring until ~14:45 — the window in which a categorical-IM side unit on the lab cannot meet a scoring stage); 4090 on `rep_oth-standard_s1` at 8.2 steps/s (on plan, ~17.3 h of training).
+**2026-09-20 13:25 — dw-128ray complete (n = 3): all four ray families are done** (`rep_dw-128ray_s2`, lab, 7.19 h; one `=== scoring`, 29.1 min, three blocks, no errors / `stale`, notebook 6 cells). cartesian IM +0.574 ± 0.006 (guard 0.317 ± 0.008), GS −0.097 ± 0.027, PI −0.003 ± 0.009, MLP skill +0.981 ± 0.000; appearance-fac ND +0.528 ± 0.016, GS +0.286 ± 0.014, PI −0.331 ± 0.024, IM (OLD continuous arm, to be deleted on deployment) +0.580 ± 0.005. 11 of 33 done. Lab → `rep_dw-noiseless_s1` (extension to 512k); 4090 still on `rep_oth-standard_s1`. Sevan checked in 11:03 — no decision on the categorical-IM deployment yet.
+**2026-09-20 17:01 — `rep_dw-noiseless_s1` done (lab, 3.60 h): the replicate-EXTENSION path's first production run, verified.** Seed 1 resumed 390k → 512k (1.49 h), its stale scores parked as `scores.s390000.json` with a `runs/MOVES.md` line; a new `__seed0_s512000` member laid out (the 421,875-step one kept, outside ±10% so not pooled); both scored in one pass (two `=== scoring`, no errors / `stale`, 6 cells). Ledger pools n = 2 at 512k (seed 2, still at 390k, is correctly excluded until its own extension, now running): cartesian IM +0.594 ± 0.003, MLP skill +0.971. 12 of 33 done. Categorical-IM deployment: still no decision from Sevan.
+**2026-09-19 23:55 — CATEGORICAL INVERSE MAP: branch built, NOT deployed (Sevan decides in the morning).** Sevan found that every
+categorical discworld block's "IM" was its basis's CONTINUOUS full-state map scored on the categorical bench (identical `g_r2` vector
+to the frustum block; 52 blocks in 22 runs). His spec: on a categorical block g inverts the block's own one-hot labels + the discs'
+Cartesian velocity (deliberately asymmetric to the forward probes), recipe = the forward probe's (200k sequences, 50 epochs, streamed),
+IM only, scope dw-128ray / 16ray / 8ray / 5ray (+ 8ray-tok) × `appearance-fac`; old arms DELETED from every scores.json; he will
+likely move one categorical-IM run per ray family to the TOP of the queue (it shapes the writing). **Where:** staging clone
+`../pim-master-eval-refactor`, branch `categorical_inverse` (commit 70685a7, pushed, unmerged); `experiments/categorical_inverse/README.md`
+there holds the design, the evidence and the 5-step deployment. **Running from the clone, writing ONLY inside it:** unit
+`catinv_preview` (the four parents at the production recipe → `scores/preview_<run>_appearance-fac.json`, ~45 min each sharing the lab
+GPU, 5-ray first; point 0 of 5-ray: held-out R² +0.463 = in-sample, no overfit gap) then unit `catinv_gate` (parity gate on
+`L-dw-8ray-20m__seed1`: only the factorised block's old IM arms may differ). Logs `../pim-master-eval-refactor/logs/categorical_inverse/`.
+The live tree, the queue and every scores.json are UNTOUCHED. Morning: report the four numbers + the gate, get Sevan's go, then deploy
+per the README (merge in a gap → `clear_continuous_im.py --apply` → catch-up jobs at the top of the queue with `PIM_ADD_CAT_IM=1`).
+**2026-09-20 03:00 — the staging evidence is in (branch `categorical_inverse` @ 0f076a3+, pushed, STILL unmerged; live tree / queue / scores untouched).**
+Previews on the four parents, production recipe, full bench, best arm inside the guard — Edit Index / fidelity, NEW categorical map vs the
+OLD continuous map on the same bench: **5-ray +0.913 / 0.25 vs +0.836 · 8-ray +0.866 / 0.27 vs +0.703 · 16-ray +0.823 / 0.29 vs +0.684 ·
+128-ray +0.637 / 0.29 vs +0.574** (PI +0.513 / +0.380 / −0.061 / −0.308; GS +0.598 / +0.458 / +0.280 / +0.308). g's held-out R² = in-sample
+to three digits everywhere (0.61–0.71): no overfit at 200k × 50 epochs; ~37 min per run sharing the lab GPU. Landing (the run's own
+categorical probes read the target cell off the written residual) sits at the probes' natural-residual ceiling on 5 / 8 / 16-ray; ⚠ on
+128-ray the exact-cell criterion is near-unreachable (LIN 0.06 natural) and the MLP reads the write as the exact cell in 0.12 vs 0.42
+natural — a coarser write than the 1,028-class grid. **What the waterfalls show** (`experiments/categorical_inverse/outputs/`, four
+families): the Edit Index scores rollout step 0 (the edit frame), and the new map's gain is THERE — edit-frame RMSE drops (8-ray 0.106 →
+0.090), whole-rollout RMSE to the edited truth does not move (0.234 → 0.233). How long the edit holds is the family's property, identical
+under both maps: it holds for all 15 steps at 5 / 8-ray and returns to the unsteered trajectory within a frame or two at 128-ray.
+Parity gate on `L-dw-8ray-20m__seed1`, both bases (03:15): 22,386 of 22,390 leaves bit-identical, max |Δ| 0; the cartesian block —
+continuous IM / IM-NN included — is identical to disk, the ONLY differences are the factorised block's old IM arms (282 → 264 arms,
+`best.IM*`, `inverse_map`); the run's `probes/` untouched (27 files). The token path (`L-dw-8ray-tok-20m`) was never exercised by the
+frame previews: its smoke passes, and its production-recipe preview (03:52) gives **8ray-tok +0.780 / 0.20 vs the old map's +0.623 / 0.30** (PI +0.228, GS +0.351; R² 0.641 = in-sample). Catch-up queue jobs are DRAFTED in the branch (`experiments/categorical_inverse/
+queue_drafts/`, not installed): parents (arms only, with the previews' cached maps copied in), then the 5 / 8 / 16-ray members (~1.9 h a
+family on the lab), then 8ray-tok. ⚠ `score_pending.sh` holds no lock — a catch-up must never overlap a replicate's scoring stage on
+the same host (in the `gpu` lane it cannot).
+**2026-09-20 04:26 — dw-16ray complete (n = 3); the refactored scorer VERIFIED on the 4090 too.** `rep_dw-16ray_s2` (9.26 h) was its first pass on `pim/scoring`: one `=== scoring` (seed 2), 38 skips, no `stale`, no output errors; five `nothing added` lines there (its tree lacks the lab-scored 5-ray members and 8-ray seed 1 — the lab shows eight); the remote notebook is still 6 cells / 174 lines with the 16-ray entry after its in-place write; seed 2 came back with frustum / cartesian / **appearance-fac** on its own (the `dw_extra_targets` line works — no catch-up job), eval version unchanged, MLP skill identical to its siblings, case-level fields present. Stage B's moved layout script (forwarder) worked on that host as well. dw-16ray (guarded selection): cartesian IM +0.663 ± 0.007 (guard +0.288 ± 0.004), PI +0.153 ± 0.021 (+0.925 ± 0.020), GS -0.121 ± 0.010; appearance-fac IM +0.689 ± 0.007, GS +0.255 ± 0.006, PI -0.050 ± 0.014. Factorised IM across the ray family so far: 5-ray +0.849 ± 0.005 > 8-ray +0.718 ± 0.013 > 16-ray +0.689 ± 0.007 — 8 vs 16 is the closest contrast (gap 0.029, ~2–3 SD). The 4090 moved on to `ctrl_corpus_oth` (the Othello probe-corpus-size control, its first run through the queue); the lab is in `rep_dw-128ray_s1`'s scoring stages. 9/32 done.
+**2026-09-20 05:45 — corpus-size controls redefined after a memory kill; TWO SESSIONS were editing the queue.** `ctrl_corpus_oth`
+was OOM-killed on the 4090 at 05:00 (40.7 GB anonymous in the Othello inverse-map fit at 60k games; GOTCHAS 2026-09-20). Kept and
+pulled to the lab: 20k games LIN 0.9747 · PI +0.819 · ND +0.748 · IM +0.810 (canonical 0.9751 / +0.818 / +0.749 / +0.806 — a different
+20k games reproduces everything to ±0.004); 60k games LIN 0.9752 · PI +0.819 · ND +0.746 — flat at 3× the rows. Another session
+redefined the retry in the queue JSON at 05:05 (commits 4735a94, 7053ddc) while this one was rewriting the scripts; reconciled at 05:40
+into `plan.py::control_jobs` (the single source): Othello 20k/40k/60k probes + IM at 20k/40k; discworld 30k/100k + IM 30k/60k; 200k as
+its own single-attempt job; all lab-only; controls are not `final_tables` deps; both scripts skip recorded parts and accept either flag
+spelling. ⚠ Sevan has been asked to name ONE operator for `experiments/paper_ci/`. The 4090 moved on to `rep_oth-standard_s1` at 05:02.
+**2026-09-20 13:25 — dw-128ray complete (n = 3); the first EXTENSION job is running.** `rep_dw-128ray_s2` (lab, 7.19 h): seed 2 with frustum / cartesian / appearance-fac, eval version unchanged, MLP skill identical to its siblings. dw-128ray (guarded selection): cartesian IM +0.574 ± 0.006 (guard +0.317 ± 0.008), PI -0.003 ± 0.009 (+0.985 ± 0.010), GS -0.097 ± 0.027; appearance-fac IM +0.580 ± 0.005, GS +0.286 ± 0.014, PI -0.331 ± 0.024. Under the guarded rule NO probe-derived PI arm edits 128-ray (the scorer's unguarded best is +0.23 at guard 1.55 on all three). Factorised IM over the ray family: 5-ray +0.849 ± 0.005 > 8-ray +0.718 ± 0.013 > 16-ray +0.689 ± 0.007 > 128-ray +0.580 ± 0.005. `rep_dw-noiseless_s1` launched 13:25: resumed from `ckpt/latest.pt` at 390,000 → 512,000 (config `replicate.steps` 512000, `resumed` recorded). ⚠ The config says `batch_order_exact: False`: the discworld block stream has no `skip()`, so the batches after the resume are not the ones an uninterrupted 512k run would have drawn (weights, optimiser state and lr ARE exact at the resume point; the corpus had already been seen ~5× by 390k). The extended members are valid seed-1 / seed-2 runs at 512k, not bit-identical to uninterrupted ones — say so where the extension is described. When it finishes, check: stale `scores.json` parked as `scores.s390000.json` (+ a `runs/MOVES.md` line), a NEW `__seed0_s512000` member laid out (the 421,875 one is outside ±10%), three blocks on both. 11/33 done.
+**2026-09-20 14:20 — QUEUE-SIDE NOTES for the categorical-IM deployment (branch `categorical_inverse`, staging clone; NOT installed — Sevan's call).**
+Written by the session operating `experiments/paper_ci/` after reading that branch's README + `queue_drafts/`. (1) Every factorised-block "IM" number this
+queue has reported (ledger, pings, the ray-family entries above: 5-ray +0.849, 8-ray +0.718, 16-ray +0.689, 128-ray +0.580) is the OLD continuous-state arm that
+deployment deletes; the cartesian-block IM numbers are unaffected; the branch's preview of the NEW arm on the parents: +0.913 / +0.866 / +0.823 / +0.637. (2) The
+draft note "dw-128ray has no members yet" is stale: all three 128-ray members were scored by 13:25, so 128-ray needs a catch-up job like the other three families
+(16 in-scope runs in all: 4 parents + 12 members; ~37 min each, ~10 h of lab gpu lane, ~7.5 h if the preview's cached maps are copied into the parents' `probes/`).
+(3) Do NOT hand-edit `queue/final_tables.json` to add the catch-up ids: `plan.py` regenerates every still-queued job it builds, so the ids must be registered in
+`plan.py` (as `appendix_prediction` and the controls were) or the next `plan.py` run drops them. (4) Remaining discworld jobs are all lab-only (noiseless
+extensions, blink, the controls) and out of the new arm's scope; the 4090 runs only Othello from here, so its pull is for code identity, not behaviour.
+(5) Install procedure this session will follow when Sevan says go — the refactor cut-over's: audit the branch, merge between scoring passes, run the clear
+script, register the catch-up jobs in `plan.py`, pull on the 4090 during a training stage, verify the first pass on each host. ⚠ STILL OPEN: Sevan has been
+asked (05:45, repeated) to name ONE operator for the queue — two sessions have been editing it and both write this file.
+**2026-09-20 17:15 — the EXTENSION path verified end to end (`rep_dw-noiseless_s1`, lab, 3.60 h); one transient fixed.** Seed 1 resumed 390,000 → 512,000, its 390k `scores.json` was parked as `scores.s390000.json` (MOVES line), the layout script found the 421,875 member outside ±10% and laid out `__seed0_s512000`, both runs were scored fresh with frustum / cartesian / appearance-fac (eval version unchanged), and the tables now pool the 512k set: dw-noiseless n = 2 at [512000], left out [421875] — cartesian IM +0.594 ± 0.003, GS -0.198 ± 0.024, PI -0.093 ± 0.051; factorised GS +0.311 ± 0.008. `rep_dw-noiseless_s2` launched 17:01 (resumed at 390,000; n = 3 when it is scored, ~20:30). ⚠ TRANSIENT found and closed: the trainer writes the NEW budget into config.json when an extension STARTS, but `replicate.sh` parks the old scores only when training ENDS, so for the training hours the tables would pool 390k scores as a 512k member (it happened silently to seed 1 13:25–14:54). Seed 2's stale scores were parked by hand at 17:10 (the driver's own step then no-ops), and `dispatch.py::park_stale_snippet` now does it at the LAUNCH of every `extend` job, on the launching host (tested in scratch: parks scores + variance once, idempotent, leaves a run already at budget alone) — `rep_oth-adjflip_s1` (390k scores AND variance.json) is the one remaining case. The driver itself is NOT edited while bash executes it; after the queue drains, move the parking in `replicate.sh` to BEFORE the training call. 12/33 done.
+**2026-09-20 19:36 — dw-noiseless complete (n = 3 at [512000], left out [421875]): FIVE of the six discworld families are done.** `rep_dw-noiseless_s2` (lab, 2.55 h): the driver's own parking step no-opped after the hand-parking, stage B found the 512k member, seed 2 scored fresh with three blocks. dw-noiseless (guarded selection): cartesian IM +0.592 ± 0.005 (guard +0.334 ± 0.020), PI -0.080 ± 0.042, GS -0.186 ± 0.027; factorised GS +0.309 ± 0.006, PI -0.403 ± 0.009. Across the five families (n = 3 each, 512k) — CARTESIAN IM: 5ray +0.808 ± 0.009 · 8ray +0.720 ± 0.006 · 16ray +0.663 ± 0.007 · 128ray +0.574 ± 0.006 · noiseless +0.592 ± 0.005; factorised GS: 5ray +0.559 ± 0.012 · 8ray +0.445 ± 0.014 · 16ray +0.255 ± 0.006 · 128ray +0.286 ± 0.014 · noiseless +0.309 ± 0.006. (The factorised IM column is the old continuous arm — see the 14:20 note.) Remaining discworld: dw-blink (2 re-trainings, lab). The lab started `ctrl_corpus_dw` at 19:35 (probes 30k / 100k, inverse map 30k / 60k; its first real run; results persist per part); `ctrl_corpus_dw_200k` and `ctrl_corpus_oth` follow. 4090: `rep_oth-standard_s1` ~425k / 512k. 13/33 done.
+**2026-09-20 20:10 — `ctrl_corpus_dw` OOM-killed at 100k sequences (46.8 GB anonymous, lab cap 45 GB); redefined, 200k job DELETED.** The dense regression
+fit was written for 30k (GOTCHAS 2026-09-20 evening). Recorded before the kill: 30k of `probe_250k` reproduces the canonical noiseless numbers to ±0.007 (LIN 0.8718 /
+MLP 0.9727 / PI +0.197 / GS −0.063 / IM +0.592); the inverse map at 60k gives IM +0.604 (g R² 0.742 → 0.755). Held the job before its retry, removed the dead process's
+72 GB scratch memmap (+ a 2.4 GB orphan from 18:26; `fuser` clean), redefined in `plan.py`: probes 30k / 60k, IM 30k / 60k, ONE attempt, starts after `ctrl_corpus_oth`
+(running on the lab since 19:57). Sevan's "30k vs 200k" question is answered by the capacity sweep's streamed 250k fits for decodability and by this control's 2× point
+for editability; a 200k editability point needs a streamed regression fit — not mid-queue. 32 jobs, 13 done.
+**2026-09-20 20:35 — both corpus-size controls DONE and recorded; `rep_oth-standard_s2` launched on the lab (20:30).** `ctrl_corpus_oth` (lab, 0.25 h, 41 GB peak; inverse map
+at 40k games fitted) and the redefined `ctrl_corpus_dw` (lab, 0.24 h; 30k part skipped as recorded) exited 0, no scratch leaked. Result = dated entry in
+`findings/probe-capacity.md`: at 2–3× the canonical probe rows LIN / MLP skill move ≤ 0.001, PI / ND keep the same arm (≤ 0.006), Othello IM is flat, discworld GS drifts
+down inside its seed SD, and the ONE mover is the discworld inverse map (IM +0.592 → +0.604 per doubling, ~2 seed SDs; canonical IM a slight under-estimate, no ordering
+changes). Not answered: the literal 200k point (streamed regression fit, post-deadline) and discworld's GUARDED PI / GS cells (the scripts record the unguarded arm).
+Running: `rep_oth-standard_s1` (4090, ~23:30) and `rep_oth-standard_s2` (lab). 32 jobs, 15 done. Note for whoever touches the notebook: `master_eval.ipynb` carries the
+UNCOMMITTED `dw_bases` default edit of 2026-09-19 night — do not `git checkout` it.
+
+**2026-09-23 18:30 — reachability appendix written into paper_draft.tex (Sevan: directly).** `tab:legal_illegal` filled from `runs/<run>/editability_by_reachability.json` (undecided left out: standard 4, adjacent-flip 51; both no-flip variants have no legal flipped board), new `tab:two_flip` from `scripts/two_flip_editability.py` (n = 40, IM: legal two-disc +0.88 / 0.75, illegal +0.65 / 0.31, single flip ≈ 0), a two-paragraph lead, `% source:` comments. `inverse_arms` gained an optional `post_boards` (default path unchanged). Proposed to Sevan, NOT applied: the two main-text red sentences on reachability, now contradicted.
+
+**2026-09-23 17:40 — the reachability table computed (Sevan: code in a clean location, values before any LaTeX).** New canonical `pim/environments/othello/reachability.py` (exact decision, tested against the vendored engine and brute force) + `scripts/reachability_table.py`; verdicts per instance in `runs/_baselines/<inst>/reachability.json`, splits per run in `runs/<run>/editability_by_reachability.json`, logs `logs/reachability_table/`. Legal / illegal / undecided: standard 441 / 555 / 4, adjacent-flip 335 / 614 / 51, adjacent-noflip 0 / 1000, standard-noflip 0 / 1000. The old handcrafted table and the Discussion's red sentence ("under adjacent-noflip it lands only on reachable boards") rested on `search_cf` histories with unforced passes (GOTCHAS 2026-09-23); corrected in `findings/inverse-probe.md`. First classification attempt OOM-killed at 44 GB (tuple memo keys, 24 workers); packed keys + resumable partial file + 16 workers: 26.8 GB peak, 10.6 min. Paper NOT edited — Sevan supplies the LaTeX.
+
+**2026-09-23 16:25 — paper_draft.tex pass (Sevan's request): every table verified cell by cell against `tables.collect` / the notebooks' builders.** Done: Table A1's Rayworld floors and excess filled (midpoint ± (half-width + SE)); the variance appendix written with a new SD table `tab:seed_spread` (no heat colors) and a probe-refit paragraph; the Results seed sentence un-redded and corrected ("at most 0.004" for Probe Skill, "below 0.04" for the Edit Index of every editor that lands, adjflip IM fidelity named as the one dagger on a landing editor); the stale adjacent-noflip GS-fidelity dagger removed; the token table's mean-frame rows filled from the rescored run; `% source:` comments on every table. Also corrected, flagged to Sevan: Table 1's inverse-map "Edit Point" R² for adjacent-noflip (0.970 → 0.855) and standard-noflip (0.944 → 0.855) — the reported IM arm's point moved with the highest-fidelity fallback, and the appendix IM-vs-NN table already showed 0.855. Left red on purpose: the two reachability sentences and the legal/illegal caption (that table is still handcrafted). Paper file NOT committed (it carries Sevan's own uncommitted edits); backup of the pre-pass file in this session's scratchpad.
+
+**2026-09-23 15:50 — `appendix_prediction` done (lab, 0.58 h): THE QUEUE IS DRAINED — 40 of 40 jobs, 4.8 days after launch, no job left failed.** Bayes floors for all ten instances, the `prediction` block re-added to every scored run (incl. the freshly rescored token model), Table A1 rendered (12 rows, no `—`, no error cell). Accept list (experiments/bayes_floor/QUEUE_HANDOFF.md): parity OK on all six discworld instances; resets 0.6–0.7 % (128-ray) and ≈ 0.07 % (5/8/16-ray) — all below 1 %; bracket widths (hi−lo)/lo 9 % at 128 rays, 2–5 % at 5–16 rays; every loss sits between its trivial predictor and its floor and none below `floor_lo`; Othello floors equal each run's `gates.bayes_ce` to six decimals (2.010689 / 2.295461 / 2.432636 / 1.678793); the exact position-0 check is usable only at low ray counts (as the hand-off says) and agrees there. Excess over the floor: Othello 0.001–0.018 nats (gap closed ≥ 0.991); Rayworld 0.00012–0.00028 MSE (relative excess 2–32 %; gap closed ≥ 0.996). Finding entry → `findings/predictive-quality.md`. Post-queue write-up DONE 16:20: `findings/seed-variance.md` (2026-09-23 entry = Table 5 as measured), REGISTRY note on the replicate sets, smoke states archived (`experiments/paper_ci/state/archive/`), `replicate.sh` parks before training and calls `scripts/layout_checkpoint_replicate.py` (forwarder deleted; 398cfc8, 7bb3c1d), both hosts at HEAD and clean. Still open: the stall check's false alarms on jobs whose writes land outside their declared outputs (pseed: `experiments/seed_variance/probes`) — and, unexplained, on catim_grid / token_rescore whose writes DID land under a declared output dir; the timers are left running idle; the uncommitted selection-fallback change (15:15 entry) is its author's.
+
+**2026-09-23 15:15 — ALL TEN FAMILIES AT n = 3; `final_tables` done (lab, 15:07–15:09); `appendix_prediction` running (15:09, ~1 h) — the queue's last job.** `rep_oth-noflip_s2` (lab, 15.08 h; one pass, 282 arms, no errors) closed oth-noflip: LIN 1.000 ± 0.000, PI −0.966 ± 0.001, GS −0.959 ± 0.002, IM −0.883 ± 0.026 (guarded on a world where every editor fails). `final_tables`: master_eval pass 11 s (nothing unscored), both table notebooks executed in place without an error cell (full: 9 cells / 11 figures; paper: 5 cells / 4 figures). ⚠ **The tables were rendered under an UNCOMMITTED change to the arm-selection fallback** in the working tree (`pim/metrics/selection.py::best_arm` and the matching `tables.py` comments, written 13:07, attributed in its own text to Sevan 2026-09-23): when no arm of an editor passes the guard, the reported arm is now the LOWEST-fidelity-ratio arm (the least-degrading write) instead of the highest-index arm. Every guarded cell is unchanged; the failing-editor cells move (e.g. oth-adjacent GS −0.157 / fidelity −5.68 → −0.96 / −0.01; oth-noflip GS canonical −0.522 → −0.968) and their seed SDs mostly collapse (noflip GS ± 0.050 → ± 0.002). Ledger and dashboard re-rendered under it. Dagger set (seed SD > 0.1) under this rule: oth-adjflip PI, ND, ND-fidelity, IM-fidelity; oth-adjacent PI, IM (−0.50 ± 0.42), ND-fidelity. This session did not write the change; whoever did should commit it (or revert it) and the paper's selection paragraph should state the fallback.
+
+**2026-09-23 14:15 — `token_rescore_8ray` done (4090, 2.34 h): the 8-ray token model rescored from scratch; the token table's mean-frame rows are complete.** Every frame-set cell REPRODUCES the draft exactly (continuous PI +0.00 / 0.25, GS −0.01 / 0.24, IM +0.65 / 0.70; categorical +0.23 / 0.44, +0.35 / 0.53, +0.78 / 0.80), so the pipeline is deterministic given the cached probes. Mean-frame rows (arm = best `zone_edit_index_expected` among arms with mean-frame fidelity ≥ 0, i.e. `fidelity_ratio_expected` ≤ 1; index / fidelity): continuous PI +0.14 / 0.19 (pt 7, α 175), GS −0.08 / 0.15 (pt 0, α 0.7), IM +0.84 / 0.75 (pt 8); categorical (appearance-fac) PI +0.46 / 0.32 (pt 2, α 20), GS +0.48 / 0.43 (pt 2, α 0.7), IM +0.92 / 0.75 (pt 8). The draft's handcrafted continuous mean-frame cells (PI +0.15 / 0.17, GS −0.27 / 0.13) came from no stored arm and are superseded. The `prediction` block was dropped by the fresh score, as expected; `appendix_prediction` re-adds it. All three 4090 catch-ups are done; the 4090 is idle. Remaining: `rep_oth-noflip_s2` (lab, 475k at 13:45 → scored ≈ 16:00) → `final_tables` → `appendix_prediction`.
+
+**2026-09-23 11:55 — `catim_grid_8ray` done (4090, 1.98 h): the bins-vs-grids table's IM cells; one crash it exposed fixed.** Categorical inverse maps on the 8-ray parent (one-hot labels + Cartesian velocity, 200k seqs), guarded IM arm, cartesian velocity: appearance (30) +0.878 / fidelity +0.73 (pt 6, g R² max 0.62) · grid-6x5 +0.643 / +0.54 · grid-10x3 +0.703 / +0.57 · grid-16x8 +0.733 / +0.64 (beside appearance-fac +0.866 / +0.73 and the snapped regression +0.703 / +0.69). The ordering of the paper's paragraph holds for IM too: the observation-exact partition beats every size-matched grid. **Crash:** the ledger render after this job died in `selection.best_point` (all-NaN) — a categorical block now stores `nn_r2` as one NaN per point (no bank) and the table collector takes its max; `best_point` returns (nan, −1) for an all-NaN input (f3e1027, test) — without it `final_tables` would have failed on the same line. Ledger re-rendered by hand. `token_rescore_8ray` launched 11:49 on the 4090 (~1–2 h).
+
+**2026-09-23 09:50 — `nn_r2_shortlist` done (4090, 0.34 h — every inverse map was cached): the NN column of the IM-vs-NN table is on the lab.** Retrieval R² at each run's reported IM point (g's R² beside it): standard 0.726 (0.827) · adjacent-flip 0.901 (0.959) · adjacent-noflip 0.750 (0.855) · standard-noflip 0.879 (0.944) · dw standard 0.068 (0.339) · blink 0.059 (0.338) · 128-ray 0.143 (0.321) · 16-ray 0.357 (0.516) · 8-ray 0.424 (0.580) · 5-ray 0.263 (0.469). Retrieval explains 0.06–0.15 less than the fitted map on Othello and about half as much on Rayworld. `catim_grid_8ray` launched 09:48 (~3 h), then `token_rescore_8ray`. Also: the two ORIGINAL runs' `scores.json` (L-oth-20m, L-dw-20m) were still git-tracked from before `runs/` was ignored — untracked on both hosts (2ebc669; files untouched on disk) so a scorer rewrite no longer dirties a checkout.
+
+**2026-09-23 09:55 — three APPENDIX catch-ups queued on the idle 4090 (Sevan 09:30 / 10:00), all before `final_tables`.** From a read of `paper/paper_draft.tex` against what the queue produces: the main text and most of the appendix are filled or land today (Table A1's Rayworld floors from `appendix_prediction`, the variance section from Table 5); the blanks that needed new work were the NN column of the IM-vs-NN table, the IM cells of the bins-vs-grids table, the legal/illegal table (handcrafted — Sevan hands it to another agent) and the token table's mean-frame rows. Done: (1) `inverse_map.nn_r2` is now STORED (computed since 2026-09-16, never written) and `PIM_ADD_NN_R2=1` re-adds the cached inverse arms of blocks predating it → job `nn_r2_shortlist` (ten parents; launched 09:26, ~1 min per Othello run; verified on L-oth-adjacent-20m: nn_r2 per point 0.18…0.93 beside g 0.36…0.98, 282 arms intact, IM arms equal to the lab's to 1e-4); (2) SETTINGS `dw_cat_im` targets += appearance / grid-6x5 / grid-10x3 / grid-16x8 → `catim_grid_8ray` (four ~40-min categorical maps on the 8-ray parent); (3) the token model's mean-frame readout gets a guard — `token_bench.scorecard` `fidelity_ratio_expected` (identity 1.0; a push toward the edited frame 0.17) — and `PIM_FORCE_RESCORE=<runs>` rescores a named run from scratch → `token_rescore_8ray` (every arm of the 8-ray token model recomputed under one rule; the current tex row's mean-frame PI/GS cells match no stored arm, so the rescore replaces them; the `prediction` block it drops is re-added by `appendix_prediction`). Commits ad3195f, 1748cef; the 4090 pulled to HEAD (its dirty rsync copies reverted, the killed control's untracked scores parked in `.scratch/`). `final_tables` depends on all three. Mean-frame INDEX cells already on disk (`zone_edit_index_expected`): continuous PI +0.12 / GS −0.08 / IM +0.84, categorical (appearance-fac) +0.33 / +0.48 / +0.92 at the reported frame-set arms.
+
+**2026-09-23 08:15 — all five `pseed_*` extras done; the 4090 is idle for the rest of the queue.** The three oth-adjflip members, 10 probe refits each + 10 inverse-map refits, at the canonical arm (`variance.json` in each member): seed 0 (`__seed0_s512000`) LIN 0.9479 ± 0.0007 · PI +0.375 ± 0.014 · ND +0.392 ± 0.006 · IM +0.642 ± 0.036; seed 1 LIN 0.9485 ± 0.0007 · PI +0.337 ± 0.008 · ND +0.337 ± 0.003 · IM +0.650 ± 0.025; seed 2 LIN 0.9485 ± 0.0006 · PI +0.238 ± 0.016 · ND +0.270 ± 0.016 · IM +0.638 ± 0.027. Reading across the whole set (oth-standard, dw-8ray, adjflip × 3): refitting the LINEAR probe moves the Edit Index by ≤ 0.016 and skill by ≤ 0.0007; refitting the INVERSE MAP moves IM by 0.004 (oth-standard) to 0.036 (adjflip) — on adjflip that is the size of the training-seed spread (± 0.028), so the IM ± there is instrument as much as model; everywhere else the ± is the model. Six `stall` lines on the `pseed_*` jobs, all false (progress never read from these jobs). Remaining: `rep_oth-noflip_s2` (lab, 270k at 07:48, scored ≈ 16:00) → `final_tables` → `appendix_prediction`.
+
+**2026-09-23 05:10 — `pseed_dw-8ray` done (4090, 2.83 h): the discworld probe-seed spread is as small; `pseed_oth-adjflip_s0` fixed and requeued.** `runs/ray_ablation/L-dw-8ray-20m/variance.json`: full state, 10 probe seeds — LIN skill 0.9503 ± 0.0005, PI at the seed-0 arm +0.220 ± 0.001; `appearance-fac`, 6 seeds — skill 0.9355 ± 0.0003, PI at the canonical arm +0.381 ± 0.005 (ratio 0.96 ± 0.006), ND +0.474 ± 0.000. Training seeds gave PI ± 0.022 on this family. Every `stall` line on the `pseed_*` jobs (three so far) was the blind spot — the check never saw progress on these jobs at all (166 min at 05:00 while the log advanced every ~27 min). `pseed_oth-adjflip_s0` launched at 05:04 against `__seed0_s492188`, a member name guessed in `plan.py` before the extension (the real one is `__seed0_s512000`) → FileNotFoundError; fixed (7658024) and the file regenerated at its requeue, before attempt 2. Running: `pseed_oth-adjflip_s0` retry (4090), `rep_oth-noflip_s2` (lab, ~15:30). 34 of 37 done.
+
+**2026-09-23 02:15 — `pseed_oth-standard` done (4090, 0.86 h, attempt 2): PROBE-seed spread on `L-oth-20m` is an order of magnitude below the TRAINING-seed spread.** Ten refits of the linear probes (20k games) + ten refits of the inverse map, `runs/initial_othello_comparison/L-oth-20m/variance.json`: LIN skill 0.9753 ± 0.0002 (best point 7 in 10/10); at the canonical edit arm PI +0.817 ± 0.003 (ratio 0.296 ± 0.002), ND +0.747 ± 0.002; IM +0.809 ± 0.004 (ratio 0.376 ± 0.007, g R² 0.825 ± 0.003), IM-NN +0.017 ± 0.007. Training seeds gave PI ± 0.015, IM ± 0.034 — so the ± in the tables is the model, not the instrument. The script's `own_best` entries (pt 7, α 100, ratio 6.3) are its pre-guard skill-best-point rule and are not a reported number. Attempt 1 of every `pseed_*` job had died at rc 127 (bare `python` in a systemd unit); fixed in `plan.py` (b4a6788), queue regenerated before any second attempt. The 02:07 `stall` line on this job was the known blind spot (progress not read from `attempt_2.log`). `pseed_dw-8ray` running on the 4090.
+
+**2026-09-23 01:20 — oth-adjacent complete (n = 3 at 512k); `pseed_oth-standard` launched on the 4090 (the first probe-seed extra).** `rep_oth-adjacent_s2` (4090, 17.80 h; one pass, 282 arms, no errors; `runs/MOVES.md` intact after the sync-back — the merge fix holds). Ledger (guarded): LIN 0.987 ± 0.001, GS −0.176 ± 0.016, ND +0.270 ± 0.094, PI −0.121 ± 0.196 (members −0.280 / −0.180 / +0.098), IM −0.118 ± 0.304 (−0.119 / +0.186 / −0.422), GS fidelity −4.9 ± 0.4. The wide cells are again the failing editors on an inert world: the guarded arm lands on a different alpha per seed and the index straddles zero. For Sevan's main-table question (2026-09-22 17:30): the seed SD is ≤ 0.004 on every decodability cell, ≤ 0.04 on every editability cell the text relies on (discworld IM ≤ 0.012; oth-standard / adjflip IM ≤ 0.034), and > 0.1 only on Othello cells where the editor fails (adjflip PI; adjacent PI and IM; adjacent GS fidelity) — mark those † in the main table, spreads in Table S5. Three of four Othello families at n = 3; noflip's seed 2 is the last training job (lab, ~15:30). 32 of 37 done.
+
+**2026-09-23 00:05 — `rep_oth-noflip_s1` done (lab, 15.53 h): oth-noflip at n = 2; `rep_oth-noflip_s2` launched on the lab (the LAST training job).** Two members scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors). Ledger (guarded): LIN 1.000 ± 0.000, PI −0.967 ± 0.002, ND −0.970 ± 0.002, GS −0.495 ± 0.050, IM −0.877 ± 0.034 — vs the canonical parent's IM −0.553 / fidelity −1.58: on this inert world NO arm of the parent passes the guard, so its cell is the unguarded best (a degraded arm), while both members have an arm inside the guard that does essentially nothing (fidelity ≈ 0.00, index ≈ −0.9). Same selection rule, different branch — the canonical-vs-members gap here is the guard rule on a row where every editor fails, not a seed effect; state it in the Table 5 caption. Overnight before this (2026-09-22): `rep_oth-adjacent_s1` done (4090, 07:29), `rep_dw-blink_s2` done (lab, 08:29) → dw-blink n = 3 (all six discworld families complete); fidelity reported as 1 − ratio since e359c2b (11:00). 31 of 37 done; running: `rep_oth-adjacent_s2` (4090, ~02:00) and `rep_oth-noflip_s2` (lab, ~15:30); then the five `pseed_*` extras, `final_tables`, `appendix_prediction`.
+
+**2026-09-21 13:25 — `rep_oth-adjflip_s2` done (4090, 13.74 h): the Othello EXTENSION path verified; oth-adjflip at n = 2 (512k); `rep_oth-adjacent_s1` launched on the 4090.** Seed 2 resumed 160k → 512k, the new `__seed0_s512000` member was laid out and both scored in one pass (eval_version 2026-09-12.1, 282 arms each, no errors); the 421,875 member is left out of the pool. Ledger so far (guarded): LIN 0.948 ± 0.000, IM +0.607 ± 0.002 (canonical +0.664), GS −0.064 ± 0.018; PI +0.083 ± 0.284 (members +0.284 / −0.117 — the guarded PI arm flips between a landing and a failing alpha across seeds) and ND +0.441 ± 0.155 — the wide cells are selection jumping between arms, to be read against `variance.json` when seed 1 lands (≈ 2026-09-22 05:00). **`runs/MOVES.md` erased a SECOND time** by this job's sync-back (the 4090's copy lacked the 13:06 adjflip-s1 park lines) → restored from git and the dispatcher now MERGES `runs/MOVES.md` from a remote (appends lines it lacks, never overwrites; 3365814, installed atomically between ticks — the dispatcher is a fresh process every 2 min, unlike the bash drivers). 22 of 37 done; gpu lanes: adjflip_s1 (lab, extension from 390k) and adjacent_s1 (4090).
+
+**2026-09-21 13:10 — oth-standard complete (n = 3 at 512k): the FIRST Othello family done; `rep_oth-adjflip_s1` (extension) launched on the lab.** `rep_oth-standard_s2` (lab, 16.58 h; scoring 12:47–13:05, one pass, eval_version 2026-09-12.1, 282 arms, no errors). Pooled, mine/theirs symdiff, guarded selection: LIN 0.969 ± 0.003, MLP 0.971 ± 0.002, PI +0.808 ± 0.015 (members +0.798 / +0.801 / +0.826), ND +0.732 ± 0.027, GS +0.808 ± 0.012, IM +0.778 ± 0.034 (+0.795 / +0.801 / +0.738), IM-NN +0.029 ± 0.007; guards PI 0.52 ± 0.05 (canonical 0.30 — the members' guarded PI arm sits at a milder alpha), ND 0.34, GS 0.34, IM 0.40 ± 0.04. Seed 2 is the outlier on both sides (highest PI, lowest IM) — Othello's seed spread is 3–7× discworld's on the same editors; the canonical parent (+0.818 / +0.828 / +0.806) sits at the top of every member range. Extension launch verified: the dispatcher parked seed 1's 390k `scores.json` + `variance.json` as `.s390000.json` with two `runs/MOVES.md` lines at 13:06:32 and the trainer resumed from `ckpt/latest.pt` at step 390000. `rep_oth-adjflip_s2` is in its scoring stage on the 4090 (done ≈ 13:20). 21 of 37 done.
+
+**2026-09-21 09:45 — MONITORING RESUMED by this session at Sevan's word ("you should be the only active monitoring agent now"); overnight verified.** Events since the hand-back: the five `catim_*` catch-up jobs all done (21:32 → 05:01, ~1.9 h each; every 46-min `stall` line beside them was a false alarm — a fit in progress writes nothing the stall check sees); `rep_oth-standard_s1` done on the 4090 (18.33 h) → oth-standard at n = 2 (PI +0.800 ± 0.002, GS +0.815 ± 0.002, IM +0.798 ± 0.004, LIN 0.970 ± 0.003); `rep_oth-adjflip_s2` launched on the 4090 at 23:22 as an EXTENSION (seed 2 resumed from its 160k checkpoint, config rewritten to 512000, `batch_order_exact` absent = default; at 440k at 09:34, scoring done ≈ 13:00); `rep_oth-standard_s2` on the lab at 400k (≈ 14:30). **Categorical IM landed on all 16 ray-family members** (appearance-fac block, IM only): 5-ray +0.909 / +0.913 / +0.913 / +0.915, 8-ray +0.866 / +0.869 / +0.874 / +0.879, 16-ray +0.819 / +0.821 / +0.823 / +0.823, 128-ray +0.634 / +0.637 / +0.638 / +0.640 (parent first), guards 0.25–0.29. **One regression fixed:** `runs/MOVES.md` in the lab tree had LOST the two noiseless parking lines (a 0/2 diff) — the sync-back of `rep_oth-standard_s1` pulled the 4090's OLDER copy (its checkout predates 3a7d266) over the lab's, because `runs/MOVES.md` is in every replicate job's outputs. Restored from HEAD and the HEAD copy scp'd to the 4090 (its `replicate.sh` only ever appends), so the next sync-back carries it forward; a proper fix (pull on the 4090, or drop MOVES.md from remote outputs in favour of a per-job snippet) waits for a training stage / the drain. Digest last sent 08:23; dashboard ETA 09-23 16:19. Still owed from the 21:35 entry (not started): REGISTRY run rows, `findings/ray-ablation.md` / `inverse-probe.md` numbers, the four waterfalls.
+
+**2026-09-20 21:35 — CATEGORICAL INVERSE MAP DEPLOYED (Sevan's go 21:15, option A: catch-up tonight, sharing the lab GPU).** In order, each step verified: (1) the pending `dw_bases` notebook edit committed (f588e6f) — it sat beside the branch's new cell; (2) `categorical_inverse` merged in the LIVE tree (637ea41; the one conflict was the nbconvert-re-serialised notebook: live copy kept, cell [2b] inserted with the notebook editor; suite 307 pass on the merged tree); (3) `clear_continuous_im.py --apply`: the old continuous-state IM / IM-NN arms removed from **57 categorical blocks in 27 runs** (dated backup in each `scores_backup/`; idempotent; regression blocks untouched; the ledger copes with the blank cells); (4) the previews' cached maps copied into the five parents' `probes/` (routed by model fingerprint, add-only); (5) SMOKE of the production path on `L-dw-5ray-20m`: arm added in 20 s from cache, **+0.9133 / 0.25 (pt 5) = the preview exactly**; (6) catch-up registered in `plan.py` as five CPU-LANE jobs (`catim_parents`, `_5ray`, `_8ray`, `_16ray`, `_128ray`; wrapper `experiments/categorical_inverse/drivers/catchup_job.sh` never starts beside another `master_eval` execution or within 2.5 h of the gpu-lane job's scoring stage). `catim_parents` done 21:32: **5-ray +0.913 / 0.25 · 8-ray +0.866 / 0.27 · 16-ray +0.823 / 0.29 · 128-ray +0.637 / 0.29 · 8ray-tok +0.780 / 0.20**, each block recording `state onehot-labels+cartesian-velocity, n_seq 200000, epochs 50`, IM only. The 12 members follow (~37 min each, ~7.7 h; `catim_5ray` running). ETA model: `gpu_share` (dispatch.py `gpu_share_extra`, the current rate off the last two log lines) + MEASURED Othello rates in `plan.py` (capped lab 9.6 steps/s = 14.8 h per 512k run, not 12.7; 4090 8.54) — the dashboard ETA moved from 09-23 14:30 to ~18:10 because it had been optimistic, not because work was added to the gpu lanes. NOT done, deliberately: the 4090 pull (it runs only Othello from here; its tree is dirty — see the hand-back entry — and no pull is needed for correctness). Owed when the members land: REGISTRY run rows, `findings/ray-ablation.md` / `inverse-probe.md` numbers, the four waterfalls into the record.
+**2026-09-20 20:50 — HAND-BACK: the launching session (PID 4145414, local VSCode window) STANDS DOWN from `experiments/paper_ci`; the session Sevan types into
+(`physically-implicit-modeling-8f`, Remote-SSH) is the ONE operator (Sevan 20:43, relayed by that session).** The two were the same conversation in two processes;
+nothing Sevan typed after 2026-09-19 23:14 reached the launching one, and nothing it wrote reached him. Everything below is what is NOT visible in git.
+- **Nothing is held, nothing is half-done.** No `PAUSED` flag, no `hold` on any job, no job file or state file edited by hand since `aab7874`. `plan.py` is exactly as
+  committed (controls redefined, `ctrl_corpus_dw_200k` deleted) and `queue/*.json` was regenerated from it. No pending edit to `plan.py`, `dispatch.py`, `run_job.sh`,
+  `replicate.sh` or `score_pending.sh`. Last commit of that session: `a30cee2` (the corpus-size control's record), pushed.
+- **Uncommitted in the lab tree:** only `notebooks/master_eval.ipynb` — NOT that session's edit (it is the `dw_bases` default change of 2026-09-19 night plus
+  in-place execution outputs). It never ran `git checkout` on it after 2026-09-19 12:25.
+- **Nothing depends on that session's process:** dispatcher + watchdog timers, the running units and the dashboard (`pimci-dashboard.service`, `tailscale serve /ci`)
+  are systemd user units. Its only background waiter was a 30-min `tail -F logs/paper_ci/dispatch.log | grep` Monitor — stopped at hand-back.
+- **The 4090 vs a plain pull:** checkout `84c2e78`. Dirty there: `experiments/paper_ci/scripts/ledger.py` (the dispatcher's `push_inputs` rsync of `scripts/` — the
+  lab's version, not a hand edit), `notebooks/master_eval.ipynb` (execution outputs), and UNTRACKED `experiments/probe_corpus_size/scores/` (left by the 05:00 killed
+  attempt; its content was pulled to the lab at 05:10 and is committed). A plain `git pull` there will REFUSE (the untracked scores file is now tracked upstream;
+  `ledger.py` differs): first move that `scores/` directory aside and `git checkout -- experiments/paper_ci/scripts/ledger.py`, and only during a TRAINING stage (the
+  notebook is mid-write during a scoring stage). No pull is needed to keep the queue correct: among files a remote job executes, HEAD differs from `84c2e78` only in
+  `dispatch.py` (lab-only) and `ledger.py` (already pushed). No stray `.scratch/*.npy` on either host (checked 20:45); the gitignored probe cache of the killed control
+  is still under `experiments/probe_corpus_size/probes/` on the 4090 (harmless, a few GB).
+- **Intentions that session carried, none started:** (1) categorical-IM install — waits for Sevan's go; the 14:20 notes above stand, plus one sentence: MERGE IN THE
+  LIVE TREE ONLY, never inside the staging clone (`runs/` is a symlink there and `runs/MOVES.md` is tracked). (2) `nn_r2` stays on hold (Sevan). (3) `rep_oth-adjflip_s1/s2`
+  are EXTENSIONS: the dispatcher parks the stale 390k `scores.json` / `variance.json` at launch (a78f386) — verify the park line in `runs/MOVES.md`, that a new
+  `__seed0_s512000` member is laid out, that the ledger pools the 512k set, and read `batch_order_exact` in the resumed `config.json` (False on discworld; never
+  checked on Othello); seed 2 resumes from ~160k, so it is nearly a full run. (4) On `appendix_prediction` done: the accept list in
+  `experiments/bayes_floor/QUEUE_HANDOFF.md`, then `findings/predictive-quality.md`, then tell Sevan Table A1 is ready. (5) When the queue drains: ledger → Table 5
+  (SD + CI panels) → `findings/seed-variance.md` (one entry per family: n, budget, SD, guard k/n; extension members are not bit-identical to uninterrupted runs on
+  discworld; 5-ray factorised GS canonical +0.598 at 780k sits ~3 SD above its 512k members — a budget mismatch to state) → REGISTRY run rows → brief `done`; archive
+  the smoke artefacts (`state/smoke_*.json`); move `replicate.sh`'s parking step to BEFORE training and point it at `scripts/layout_checkpoint_replicate.py`.
+  (6) Deprioritised by Sevan: the Othello ceiling bootstrap.
+- **Shared memory directory:** that session appended a 20:40 state paragraph to `paper-ci-queue-in-flight.md` and, at hand-back, replaced its own 19:45
+  "working arrangement" paragraph with the decision above. It touches nothing further — repo, queue, hosts or memory — unless Sevan types to it.
+_(Build record follows.)_
+
+**Sevan (2026-09-18):** a training-seed spread on every main-table number (10 shortlist runs), n = 3,
+mean ± SD as the readout and a t-based 95% CI secondary, on the two GPUs only, in ≤ 5 days; the
+supplemental runs and the gridified layouts get none. Brief: `research/directions/paper-confidence-intervals.md`.
+Protocol written generically as `harness/MULTIDAY.md` (queue + timer dispatcher + per-host watchdog +
+dashboard + two ntfy channels); `experiments/paper_ci/README.md` is the operator's manual.
+**Plan (Sevan 20:40: ONE budget, 512k everywhere; `appearance-fac` only):** 22 replicate/extension jobs
+(dw-noiseless and oth-adjacent-flip's 390k sets are extended) + 2 corpus pushes (dw-8ray / dw-5ray → remote)
++ 5 probe-seed extras + final tables; greedy schedule ≈ 4.2 days (`plan.py --show`). 780k everywhere ≈ 6 days.
+**State:** lab timers installed and ticking (`pimci-dispatch` every 2 min, `pimci-watchdog` every 5 min,
+`pimci-dashboard` server); remote watchdog timer installed; `tailscale serve` publishes the dashboard at
+`https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/`; smoke jobs ran through the real launch path on BOTH
+hosts (the remote one failed once — the job file was not on the remote — fixed: the dispatcher now
+pushes config/scripts/job file before every remote launch). Code changes this session: case-level
+spread beside every arm (`edit_index.case_stats` / `ratio_ci95`, wired in both scorecards; Othello's
+PI/ND/GS guard CI needs one notebook line — owed), `tables.pool_replicates` gains `_ci95` / `_values`
+and pools every editor's guard, Table 5 has SD and CI panels, `layout_checkpoint_replicate.py` lays
+out a new member when the existing one is > 10% off the budget, `replicate.sh` extends a finished
+replicate and parks its stale scores, `score_pending.sh` honours `PIM_SCORE_ONLY=1`. Tests: 281 + 4 pass.
+**Launch = `rm experiments/paper_ci/state/PAUSED`.** Remote synced (runs, non-train splits, Othello
+corpora, code at HEAD after the pull). Hardening done by Sevan 20:40: nvidia packages held,
+apt-daily-upgrade.timer stopped, 5090 at 450 W. Digest topic subscribed. Dashboard: fidelity / decodability views + PWA insets.
+_Previous: 2026-09-18 18:30 PT — orientation session; 2026-09-15/17 paper-session work committed as 4c725b5_
+
+## 🔄 oth-adjacent-flip seed variance — launched 2026-09-16 17:35 PT, unit `oth_adjflip_seeds` + watcher (`scripts/drivers/oth_adjflip_seeds.sh`, logs `logs/oth_adjflip_seeds/`)
+
+**⏸ PAUSED 2026-09-17 09:25 PT at Sevan's request (he wants the GPU).** Stages A–C are DONE: the
+parent, `__seed0_s421875` (the parent's own checkpoint at a matched budget) and `__seed1` are all
+scored AND carry 10 probe seeds each. Seed 2 stopped at step 160,000/390,000 with `ckpt/latest.pt`
+written. **To resume, relaunch both unit commands from the driver's header** — A–C skip, seed 2
+continues from its checkpoint (~5.8 h train + ~35 min probe seeds).
+**Results so far (symdiff, best arm):** parent +0.399/2.09 PI, +0.138/1.75 GS, +0.664/0.51 IM ·
+seed-0 ckpt +0.364/1.90, +0.077/2.54, +0.639/0.50 · seed 1 +0.379/1.86, +0.116/2.86, +0.616/0.40.
+Training-seed spread at the matched budget: PI 0.015, GS 0.039, IM 0.023; every editor keeps its
+best point. Probe-seed spread (10 seeds): skill ±0.0008, PI ±0.007–0.014, ND ±0.003–0.005,
+IM ±0.017–0.026 — so refitting g moves IM about as much as retraining does. GS is NOT probe-reseeded
+(that needs the MLP grid refitted, ~90 min/member).
+
+Sevan: the run's quoted contrasts (symdiff IM +0.66/0.51, ND +0.58, PI +0.40) carry no spread. Two
+sources, the `experiments/seed_variance` convention: RUN seeds (re-train at 390k with `--seed 1` /
+`--seed 2` via `scripts/drivers/replicate.sh`, plus the parent's step-421,875 checkpoint as the
+seed-0 member — val at 390k is within 0.1% of the 780k best, and the tables pool replicates into the
+parent row's ± at a matched budget) and PROBE seeds (10 seeds of the linear grid **and of the
+inverse map g**, which also reseeds IM-NN's retrieval bank → `runs/<run>/variance.json`).
+**Order (Sevan): seed 1 is trained, scored AND probed before seed 2 starts.** Stages: A parent probe
+seeds (~30 min) → B seed 1 train 390k (~10 h) + seed-0 ckpt member + score → C probe seeds on both
+(~1 h) → D seed 2 (~10 h) → E probe seeds. ETA ~14:00–17:00 on 2026-09-17 (rate read from the
+heartbeat once training starts; the parent ran 8.4 steps/s on the 4090, `L-oth-20m` 11.2 here).
+**Sevan may stop this in the morning to use the GPU and resume later:** `systemctl --user stop
+oth_adjflip_seeds oth_adjflip_seeds_watch`, then relaunch the same `systemd-run` command — finished
+stages skip, and an interrupted training resumes from `ckpt/latest.pt` (replicate.sh now passes
+`--resume`; it previously died on train.py's guard). The driver exports
+`PIM_SKIP_TOPICS=training_curve`.
+Prep (commit 7d08991): IM/IM-NN section in `probe_seeds_othello.py` (`--im-seeds`, `--im-points`,
+`--out`); its canonical edit point is now the best arm under **symdiff** — `scores.json["best"]` is
+keyed on the UNION index, which named pt 4 where the tables quote pt 5; `RetrievalBank.r2`
+subsamples to 20k held-out rows (Othello's full set is ~450k against a 1.8M-row bank). Smoke:
+1 linear seed + 1 IM seed on the parent (3.0 min / 6 s per seed; artefact in
+`experiments/seed_variance/scores/adjflip_probeseeds_smoke_2026-09-16.json`), and a 200→400-step
+Othello replicate train + resume in `runs/_pipeline_smoke/L-oth-adjflip-smoke__seed1`.
+_Previous: 2026-09-16 13:55 PT
+
+## ✅ dw-128ray chain — 2026-09-15 20:57 → 2026-09-16 13:45 PT, unit `dw_128ray` — DONE (`scripts/drivers/dw_128ray.sh`, logs `logs/ray_ablation/dw_128ray/`, `logs/dw_128ray_fac/`)
+
+**Outcome (13:45):** dw-128ray lands on dw-noiseless on every column (cartesian IM +0.57/0.32, PI +0.24/1.57; appearance-fac LIN 0.26 / MLP 0.71, PI −0.00, ND +0.54, GS +0.31, IM +0.57) — the coarse-ray gains are a RAY-COUNT effect, not disc size. Recorded: `findings/ray-ablation.md` addendum, REGISTRY run row, both table notebooks re-executed. Hardware: two hard freezes during stage D (07:22, ~10:20; journal ends abruptly, no oops/OOM/Xid) → Sevan replaced the PSU; the GPU whined at 530 W on the new PSU, so the last relaunch ran under `nvidia-smi -pl 400` (Sevan raised it back later). One slip: relaunch #5 ran master_eval without `PIM_SKIP_TOPICS=training_curve`, which scored `L-dw-20m_s001000` / `s004000` (complete, valid, unrequested) before I stopped it; the driver now exports the guard.
+**Same day, parked:** Table 1b (inverse-map R² beside retrieval R²) is in the paper notebook; the retrieval column is BLANK until `inverse_map.nn_r2` is folded into the scores — patch script ready (`scratchpad/patch_master_eval_nn_r2.py`, NOT applied; ~2 h GPU for all runs, ~50 min for the listed ones). Sevan: hold. Also this session: `experiments/waterfall_gallery/` (six edit waterfalls), `experiments/history_rewrite/` (IM at every history step on dw-noiseless: rewritten history alone carries the edit, +0.65/0.48; +IM at EF +0.63/0.36 vs canonical +0.61/0.36).
+
+Sevan: a 128-ray entry that matches the 5/8/16-ray family EXACTLY — dw-8ray geometry (radius 1.0, wall rays
+dropped, max-edit-attempts 2000) with 130 cast / 128 kept rays. dw-noiseless is radius 0.5 / 128 cast / no drop,
+so until now ray count and disc size were confounded between it and the coarse-ray family. Stages: B generate
+(eval / edits / probe 120k + 250k / 20M corpus 410 GB / edit selection, ~2 h) → C train
+`runs/ray_ablation/L-dw-128ray-20m` 780k (~8 h on the 5090) → D master_eval in BOTH bases + both table
+notebooks (~40 min) → E appearance-fac (`probe_target_fit.sh`, `logs/dw_128ray_fac/`, ~1 h). **ETA ~09:00 PT
+2026-09-16.** Every stage idempotent; relaunch the same unit command to resume (train `--resume`).
+Prep this session: `bigcorpus.INSTANCES["dw-128ray"]` (+ the `dw-16ray` block pulled from the unmerged
+`dw_16ray` branch, identical text, so its seed ranges are forbidden here too); instance.json; run listed in
+`build_paper_tables_and_figs` (before 16-ray) and `build_full_tables`; master_eval `dw_extra_targets` row
+(nbformat — Read cap); REGISTRY instance + run rows. Disk: 680 GB free after deleting three orphaned 15 GB
+`.scratch/tmp*.npy` (arms.py scratch memmaps from a 2026-09-10 crash). Generator smoke with the family flags:
+128-wide obs, 100/100 edits placed. Heartbeat gpu column shows an NVML driver/library mismatch — cosmetic (torch
+sees the 5090); a reboot clears it. **When done:** read `scores.json`, update `findings/ray-ablation.md`
+(128 vs 16 vs noiseless: ray count or disc size?), flip the REGISTRY run row from IN FLIGHT, re-render tables.
+_Previous: 2026-09-14 08:00 PT — dw-8ray-obs5 chain DONE (first section); before that 2026-09-11 ~05:00 PT — oth-adjacent-flip chain on the WSL remote DONE_
+
+**2026-09-17 (paper session) — clip-to-[0,1] pilot on dw-noiseless + dw-8ray:** clipping the
+predicted frame changes no conclusion. Largest index move +0.046 (PI, dw-noiseless, cartesian);
+the effect is concentrated in PI's FIDELITY (1.93 → 1.52, 1.71 → 1.41) because only PI's write
+leaves the feasible range by a lot ([−2.16, +2.61] at α=100 vs the unedited model's [−0.02, +0.82]).
+IM / IM-NN untouched (≤0.001). Tables stay UNCLIPPED (decision recorded). Every raw number
+reproduces scores.json. Script `experiments/clip_output_pilot/scripts/clip_pilot.py`, scratch
+`2026-09-17-clip-output-pilot.md`.
+
+**2026-09-17 (paper session) — Othello edits LAND in probe space and still do not edit:** the α=1
+exact-landing PI write reads the requested board (tile 98.4–100%, all 64 squares on standard-noflip)
+and leaves the move distribution at the unedited floor on ALL FOUR instances (−0.70 vs −0.93 standard;
+−0.958 vs −0.98 standard-noflip); standard Othello's +0.82 needs a 3× overshoot, adjacent-noflip's
++0.18 needs 60×. Identical read-out at α=1 and α=3 spans −0.700 → +0.818, so probe-space landing
+carries no information about behavioural landing. GS converges perfectly on the MLP probe (100% /
+99.6%) exactly on the two no-flip variants where it is most destructive (fidelity 4.3–6.7). Validated
+by recomputing PI's canonical symdiff index (matches scores.json on all four). Script
+`experiments/probe_readout_landing/scripts/othello_landing.py`, scores `.../scores/landing_*.json`,
+scratch `2026-09-17-othello-probe-space-landing.md`. Owed: same check on the discworld categorical
+arms; decide whether the per-α landing table goes in the appendix.
+
+**2026-09-15 (evening) — near-teleport pilot (dw-noiseless):** teleports INSIDE the 1.6-unit exclusion zone
+edit as well as canonical ones (IM +0.63/0.32 vs +0.60/0.33; PI +0.26/1.52 vs +0.23/1.61; GS ≈ 0), so a hole in
+the joint support does not break IM on discworld; the adjacent-noflip failure is a code-factorisation matter,
+not off-support per se. `experiments/near_teleport_pilot/`, `findings/inverse-probe.md`, scratch note. The
+repulsion variant is OFF the table as the missing "nothing edits" discworld cell; an equality coupling remains.
+
+**2026-09-15 (later) — IM by reachability on Othello (paper-theory check):** on adjacent-noflip IM lands on the
+ordinary reachable single-flip cases (+0.53 symdiff, n 29) and fails on cases with no counterfactual board
+(−0.17, fid 1.41, n 30); on standard and adjacent-flip IM lands on both subsets (+0.70…+0.76). The inverse map
+generalises past reachability only where colour varies independently in training (flips). Recorded in
+`findings/inverse-probe.md` (dated entry) and the scratch addendum; JSONs `ceiling_symdiff_*.json`.
+Candidate discworld cell for the paper's matrix: couple the two discs' positions in the generator.
+
+**2026-09-15 (paper session) — Othello Edit-Index CEILING under the symdiff headline measured:** ≈ **+0.91** on
+all three instances with reachable counterfactual boards (standard 13 ordinary cases: +0.909 symdiff / +0.692
+union; adjacent 29: +0.916; adjacent-flip 32: +0.908), unedited −0.94 … −0.98. Standard ND recovers 91%, PI 83%.
+⚠ GS (best full-bench arm) is destructive on the 13-case subset (fid 2.89) — check its per-case fidelity.
+Script `experiments/adjacent_flip_ablation/scripts/ceiling_symdiff.py`, scores `…/scores/ceiling_symdiff_*.json`,
+scratch `2026-09-15-othello-ceiling-symdiff.md`, findings addendum in `edit-direction-alignment.md`, REGISTRY row.
+Owed: bootstrap the ceiling; re-measure the discworld overwrite-oracle ceiling (+0.91, 2026-09-07) on the
+1000-case protocol bench before the paper pairs the two.
 
 ## ✅ dw-8ray-obs5 chain — 2026-09-13 17:50 → 2026-09-14 07:29 PT, unit `dw_8ray_obs5` — DONE (`scripts/drivers/dw_8ray_obs5.sh`, logs `logs/observer_ablation/dw_8ray_obs5/`)
 
@@ -219,6 +819,120 @@ grid-4x2, grid-64x32) imports the fix fresh at each stage; **chain 3** (`probe_t
 done ~10:00 PT, chain 3 ~11:30 PT. Then: fill `findings/probe-target-type.md` with the full
 sweep table + a resolution figure, REGISTRY rows for the new targets' numbers, GOTCHAS entry
 for the OOM.
+
+**2026-09-15 — IM (inverse-map overwrite) becomes a CANONICAL EDITOR; ND dropped from the tables by default
+(Sevan).** `pim/probes/inverse.py` (g: state → residual, the mirror of MLP-128, cached per point per basis;
+`RetrievalBank` for IM-NN), `pim/editors/inverse.py` (overwrite h′ = g(s_post); delta and retrieval kept
+non-default), IM / IM-NN arm functions for frame (`dwa.inverse_arms`), token (`tkb.inverse_arms`) and Othello
+(`oa.inverse_arms`) models — one g per basis serves every block of a run. `master_eval` scores IM + IM-NN on every
+block; an EDITOR-LEVEL fold-in appends them to already-scored runs (dated backup under `runs/<run>/scores_backup/`,
+atomic write; a 3-run smoke left every existing arm byte-identical and reproduced the 2026-09-14 experiment: token
+model IM +0.650 / 0.29 at pt 8 vs +0.65 / 0.29; no-flip −0.554 vs −0.553). Tables: `EDITORS = (PI, GS, IM)`,
+`EDITORS_ALL` keeps ND / IM-NN in the frame; `T.set_basis(BASIS)` switches EVERY discworld number to one regression
+basis (knob at the top of both table notebooks, default frustum; grid-defined targets unchanged; dw-8ray-obs5 falls
+back to cartesian and is starred under frustum). Registry rows for INVERSE MAP and IM. Chain `score_im` launched
+~11:30 to fold IM into all runs in both bases (ETA ~4 h); tables to be re-rendered when it completes.
+
+**2026-09-14 19:47 → 21:18 — CARTESIAN blocks added to all 21 discworld runs (Sevan: validated cartesian scores
+"in our back pocket" for the paper; tables and figures NOT switched).** Unit `score_cartesian` + watcher, overnight
+protocol (smoke of the cartesian path, capped unit, staged driver, heartbeat, pings); 91 min because the pre-09-11
+runs still had cached cartesian probes. `master_eval` `dw_bases` now reads `PIM_DW_BASES` (default frustum —
+unchanged behaviour; applied with nbformat, the notebook exceeds the Read cap). Frustum vs cartesian canonical PI:
+noiseless +0.23 / 1.54 vs +0.20 / 1.71; L-dw-20m +0.18 vs +0.16; blink +0.21 vs +0.17; smooth +0.11 vs +0.10; 8-ray
++0.26 / 0.99 vs +0.21 / 1.00; 5-ray +0.24 / 0.94 vs +0.14 / 0.85; token model +0.00 both; GS negative in both bases
+everywhere. No conclusion moves; the coarse-ray runs lose the most, as the 2026-09-04 8-ray comparison predicted.
+Cartesian floors added for dw-smooth (the one instance without them). Verify table `logs/score_cartesian/verify.txt`.
+
+**2026-09-14 (evening) — INLP SWEEP on discworld, per-variable cascades (Sevan; new experiment
+`experiments/inlp_sweep/`, 8 run × target cells).** Redundancy (dimensions removed per variable to mean R² < 0.4,
+points 2–8): 5-ray appearance-fac 39–48 > 8-ray fac 29–34 ≈ 5-ray 26–32 > smooth 24–29 ≈ 8-ray 22–24 > 8-ray token
+14–23 > noiseless-fac 7–8 ≈ noiseless 5–7 — fewer rays and coarser targets mean MORE copies. Bets: Sevan (8-ray
+slightly less redundant; fac meaningfully less) loses all three; Claude right in direction, wrong in size. The
+K-copy write (joint weighted-ridge step over every variable's first K copies, shrunk targets; K = 1 ≡ PI in z-space,
+verified) beats canonical PI by +0.08–0.10 inside the guard on 8-ray (+0.34 / 0.93) and 5-ray (+0.31–0.34), matches
+PI on the factorised targets, and moves nothing on noiseless, smooth, the token model or noiseless-fac. Redundancy
+predicts editability in NEITHER direction across models (smooth: as redundant as 8-ray, least editable; Othello
+ran the other way) — it is a symptom of code geometry. Sevan caught a wrong first write (independent per-variable
+steps summed; cross-talk between the eight variables) — superseded, rescored from the saved cascades.
+`findings/inlp-sweep.md`; figures `experiments/inlp_sweep/outputs/inlp_r2_by_iteration*.png`.
+
+**2026-09-14 (late) — inverse probe on dw-blink by subset (Sevan): reappearance frames edit exactly like visible
+frames.** Reappearance (edited object hidden through EF−1, visible at EF; 642 cases, staleness 1–12) delta
++0.69 / 0.39, overwrite +0.53 / 0.39; visible (no blink on either object through the 15-step rollout; 630 cases)
++0.67 / 0.43, +0.53 / 0.38; canonical PI re-searched on each +0.24 / 1.57 vs +0.21 / 1.56, GS ≤ 0 on both. Per-point
+profiles coincide. Carried-through-blackout position and frame-readable position are equally writable by the
+state-conditional mean. `findings/inverse-probe.md` "dw-blink by subset".
+
+**2026-09-14 (late) — the adjacent failure put to Sevan's two tests; the positional/bypass hypothesis is
+NOT supported, the generalisation reading stands.** (1) Last-tile cases (the just-placed disc recoloured — the
+only tile whose square and colour both enter through the written position; adjacent 864 / standard 792):
+adjacent +0.41 / 0.51 at point 1, +0.22 / 0.72 at point 2, destruction from 3 with landing ≥ 0.94 — the same
+profile as the canonical cases; canonical editors re-searched on these cases: ND guarded +0.19 / 0.69, PI and
+GS nothing. Standard edits the same tile at +0.86 / 0.25 (ND +0.72, PI +0.87, GS +0.83 inside the guard).
+(2) Reconstruction control, overwrite with g(s_pre), no edit: adjacent's output preserved at points 0–5 (guard against
+the pre-edit truth 1.2–2.2), standard's damaged at 0–3 and 6–8 (guard 5–16) and preserved only at 4–5 (1.8–2.0), where its edits work. My "the output consumes the 3% the board does not explain" claim is withdrawn
+(Sevan: R² on reachable boards says nothing about g off-manifold). Adjacent's output IS a function of the board
+on reachable boards; the failure is confined to unreachable ones. Open: why standard's board function extends
+off-manifold and adjacent's does not (INLP redundancy; placement-parity features). `findings/inverse-probe.md`
+"The two tests"; scores `experiments/inverse_probe/scores/othello_*_{lasttile,recon}.json`.
+
+**2026-09-14 (evening) — INVERSE PROBE COMPLETE on twelve runs (batches 2–3: adjacent-flip, L-dw, smooth,
+blink, 8-ray token model, obs5, no-flip, 5-ray).** Every discworld instance edits through the state → latent
+write inside the guard: 5-ray +0.87 / 0.24, 8-ray +0.83 / 0.28, blink +0.67, smooth +0.67, noiseless +0.66,
+8-ray-tok +0.66 (frame-set EI), L-dw +0.65, obs5 +0.61 (cartesian) — canonical PI ≤ +0.26 on all of them.
+Othello under the fixed write follows the flipping toggle: standard +0.88, adjacent-flip +0.81 / 0.35
+(canonical +0.35), adjacent +0.41 / 0.97 at point 1 only, no-flip nothing (control by the checkerboard
+theorem — landing 0.00–0.03, the probe reads colour off occupancy; my "no-flip fails" prediction was right
+for a reason that makes it uninformative). Retrieval edits on discworld (+0.30 to +0.69), never on Othello.
+Sevan challenged the "lookup vs computed" account of the adjacent failure — discworld position is a lookup
+too and edits — and it is withdrawn; the replacement hypothesis (is the fact available from context
+positions other than the one written) and its test (write at every context position on adjacent) are
+recorded in `findings/inverse-probe.md` reading 6, UNTESTED, held at Sevan's request until agreed.
+`adjacency-ablation.md` reading 3 carries a dated addendum (discworld clause contradicted). Scores:
+`experiments/inverse_probe/scores/*_mirror128.json`; table printer `scripts/table.py`.
+
+**2026-09-14 — inverse probe on `L-oth-adjacent-20m` (Sevan): the state → latent write does NOT edit the
+adjacency model** — overwrite +0.00 / 1.48, delta's only guard-passing arm +0.41 / 0.97 (pt 1), deeper points
+destructive (guards 2–8), retrieval inert — although the board explains 97–98% of its residual (an input
+lookup). Standard Othello edits at +0.88 with R² 0.8. The flipping toggle orders the inverse-map editor as it
+orders the canonical ones: the environment effect survives the instrument change (finding, reading 5).
+
+**2026-09-14 (afternoon) — INVERSE PROBE, all three runs, mirrored map (128 hidden, 200 epochs — Sevan): the
+state → latent write EDITS DISCWORLD's regression state.** Best arms (EI / guard): Othello delta +0.88 / 0.23
+(canonical best +0.83); noiseless delta +0.66 / 0.46, overwrite +0.60 / 0.34 (canonical PI +0.23 / 1.54, GS
+−0.08); 8-ray delta +0.84 / 0.28, overwrite +0.73 / 0.27, and RETRIEVAL (10 nearest training states, no
+training) +0.63 / 0.43 (canonical PI +0.26 / 0.99). State explains only 0.29–0.57 of the residual on discworld
+yet the conditional mean edits — the alignment result closed from the other side; the probe-derived write
+was the wrong write, not the representation. Sevan's bet loses in both environments. Wide map (1024/40)
+dropped from the write-up (files kept). `findings/inverse-probe.md` rewritten with the 4-form table +
+canonical editors per run. Next candidates: 5-ray / blink / token model / adjacent Othello under the same
+write; a waterfall for the discworld delta arm.
+
+**2026-09-14 — INVERSE PROBE on Othello (Sevan's idea; contained, `experiments/inverse_probe/`): a learned
+state → latent MLP EDITS BETTER than every canonical editor.** g: one-hot board → residual (1024 hidden, 40
+epochs, 943k rows); delta write h + α(g(s_post) − g(s_pre)) at point 5, α 1.5: **+0.917 / 0.20** vs PI +0.82 /
+0.30, ND +0.72 / 0.31, GS +0.83 / 0.28; plain overwrite +0.90 / 0.22; nearest-neighbour retrieval ≤ +0.15;
+mean-residual control inert. Sevan's bet ("does not edit or poorly") loses on Othello. Works where the probes
+work (pts 4–6, g R² ≥ 0.85); early points land the read-out without moving the output; the last point
+destroys. Unit ran 4 min (after one failed launch: a 4 GB broadcast in the NN search hit the NVML-mismatch
+OOM assert — fixed as a one-hot matmul). `findings/inverse-probe.md`. Discworld (8-ray, factorised state)
+held for Sevan's go.
+
+**2026-09-14 — scoring audit (Sevan: are the remote dropout runs comparable; is everything on disk current?).**
+Every non-quarantined run is at the current version (discworld 2026-09-12.2, Othello 2026-09-12.1) on the
+standardised bench (Othello: 1000 flips at a 20-move prefix from the instance's own edits games; discworld:
+the instance's ≥2-differing-rays selection, 1000 cases, dims "all"), floors complete for every (instance,
+arch, target) at b4. The four `dropout_ablation` runs (imported from the WSL box) were SCORED HERE (local
+probe_dir, current version, mine_signed present, checkpoints + metrics intact) → directly comparable.
+⚠ Their baseline is the CANONICAL dropout: Transformer-L's class default is 0.1 (no `dropout` key in the
+older configs), so the sweep reads 0.0 (nodrop) / 0.1 (L-oth-adjacent-20m) / 0.3 / 0.7 — `nodrop-20m` is a
+regime change, not a replicate of the canonical run (PI −0.05 vs +0.18). Gaps: (1) `ray_ablation/R-dw-8ray-20m`
+was re-quarantined to `_R-dw-8ray-20m` with no ledger entry, and its 2026-09-12.2 scores hold only the
+frustum block — the recurrent `appearance-fac` result in `probe-target-type.md` / `recurrent-l.md` is at the
+OLD protocol (Sevan's call: un-quarantine + rescore fac, 2 min with cached probes, or mark old-protocol);
+(2) `_architecture_gate/R-dw-*` at 2026-09-01.4 (quarantined; recurrent finding's numbers are old-protocol);
+(3) regression blocks recorded `bench_selection: None` while the selection WAS applied — fixed in
+`bench_arrays` (record only; fills on the next rescoring); (4) three never-fitted `grid-64x32` requests removed.
 
 **2026-09-14 — replicate machinery made generic (Sevan: "make those changes; guard by default, override
 available").** (1) `master_eval`: a replicate inherits its parent's extra targets (`extra_targets_of`); the
@@ -2007,7 +2721,7 @@ written to at all while staying on-manifold. Said plainly in the notebook rather
 Skipped by design: Local PCA Geodesic (cost); Multistep Steering and Decoder Grad k=15 are **ill-posed** on a
 transformer activation edit, which cannot survive into the next step by construction.
 
-_Last updated: 2026-08-05 (branch `orthogonal_edit_analysis`: editor gallery — 17 editors in 3 slide figures; canonical editor names fixed; Decoder Grad k=15 is the only editor that both lands AND persists)_
+_Last updated: 2026-09-23 15:50 PT — QUEUE DRAINED (40 of 40): all ten families at n = 3, tables and Table A1 rendered; post-queue write-up in progress_
 
 ## 2026-08-05 (later 6) — editor gallery: three slide waterfalls, and canonical editor names
 

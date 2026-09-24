@@ -26,17 +26,31 @@ def test_collect_orders_and_symdiff():
     import json
     s = json.loads(T.find_run(OTH).read_text())
     assert oth["unedited"] == s["unedited"]["edit_index_symdiff"]
-    best_pi = max((a for a in s["arms"] if a["editor"] == "PI"), key=lambda a: a["edit_index_symdiff"])
-    assert oth["PI EI"] == best_pi["edit_index_symdiff"]
+    # the reported arm: best index INSIDE the fidelity guard, the unguarded best only if there is none
+    pi = [a for a in s["arms"] if a["editor"] == "PI"]
+    inside = [a for a in pi if a["fidelity_ratio"] <= 1.0]
+    best_pi = max(inside or pi, key=lambda a: a["edit_index_symdiff"])
+    assert oth["PI EI"] == best_pi["edit_index_symdiff"] and oth["PI guarded"] == bool(inside)
     assert set(F.perdim["probe"]) == {"LIN", "MLP"}
 
 
 def test_every_table_renders_or_declines():
     F = T.collect([OTH], [DW], label="test")
     for fn in (T.table_decodability, T.table_editability, T.table_arms, T.table_gridified,
-               T.table_alignment, T.table_bayes, T.table_seed_variance):
+               T.table_seed_variance):
         fig = fn(F)
         assert fig is None or hasattr(fig, "savefig")
     figs = T.tables_components(F) + T.tables_components(F, above_floor=True)
     assert all(hasattr(f, "savefig") for f in figs)
     matplotlib.pyplot.close("all")
+
+
+def test_best_point_all_nan_is_undefined_not_an_error():
+    """A categorical block stores nn_r2 as one NaN per point (no retrieval bank, 2026-09-23); the
+    table collector must read it as 'undefined', not crash the ledger / the paper tables."""
+    import math
+    from pim.metrics.selection import best_point
+    v, i = best_point([float("nan")] * 9)
+    assert math.isnan(v) and i == -1
+    assert best_point([]) [1] == -1
+    assert best_point([0.1, float("nan"), 0.7]) == (0.7, 2)

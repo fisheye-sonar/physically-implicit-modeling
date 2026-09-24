@@ -21,7 +21,10 @@ Five packages, strict roles (index of every canonical object: ``research/REGISTR
                     arrays in, numbers out, never imports matplotlib
     training/       ONE loop, two objectives; defaults ARE the canonical recipe
     figures/        theme + the canonical waterfall + scaling panels
+    scoring/        the canonical scorer's wiring: runs, blocks + the scores.json schema,
+                    per-environment scorers, floors, the add-what-is-missing driver
 
-Canonical scores come from ``notebooks/master_eval.ipynb`` into each run's
+Canonical scores come from ``notebooks/master_eval.ipynb`` (its SETTINGS, passed to
+``pim.scoring``) into each run's
 ``scores.json``; the pre-2026-08-31 tree lives at the ``pre-cleanup-2026-08`` git tag.
 """

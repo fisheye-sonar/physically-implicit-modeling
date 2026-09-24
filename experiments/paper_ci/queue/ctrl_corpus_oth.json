@@ -1,0 +1,26 @@
+{
+ "group": "control",
+ "kind": "custom",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "gpu",
+ "env": {},
+ "host_deps": {},
+ "inputs": [],
+ "outputs": [
+  "experiments/probe_corpus_size/scores"
+ ],
+ "progress": null,
+ "mem_max": null,
+ "hold": false,
+ "id": "ctrl_corpus_oth",
+ "cmd": ".pim/bin/python -u experiments/probe_corpus_size/scripts/corpus_size_oth.py --run initial_othello_comparison/L-oth-20m --sizes 20000 40000 60000 --im-sizes 20000 40000",
+ "deps": [],
+ "priority": 26,
+ "est_hours": {
+  "lab": 0.8
+ },
+ "max_attempts": 2,
+ "note": "probe-corpus-size control, Othello: linear grid + PI/ND at 20k/40k/60k games (20k, 60k recorded already), inverse map + IM at 20k/40k"
+}

@@ -30,25 +30,25 @@ def test_token_bench_cases_and_arms(tmp_path):
     from pim.environments.discworld import arms as dwa
     from pim.environments.discworld import bench as dwb
     from pim.environments.discworld import token_bench as tkb
-    from pim.environments.discworld.tokens import FrameVocab, decode
+    from pim.environments.discworld.tokens import FrameVocab, decode, encode_h5
     vocab = FrameVocab.load(TOK / "vocab.npz")
     INST = "dw-8ray"
     tb = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
                               instance=INST)
     assert tb.tokens.shape == (16, 20) and tb.tgt.shape == (16, 8)
-    # the context tokens are the stored edits tokens for THE CASES THE BENCH SELECTED
+    # the context tokens are the edit split's tokens for THE CASES THE BENCH SELECTED
     # (dw-8ray carries edits_selection.json since 2026-09-08 — 20% of its teleports render
     # an identical frame, so the bench is a filtered case list, not the first n).
     sp = layout.edits_selection("discworld", INST)
     sel = (json.loads(sp.read_text())["select"][:16] if sp.exists() else list(range(16)))
-    stored = np.load(TOK / "edits.npy")[sel][:, :20]
-    assert np.array_equal(tb.tokens, stored)
+    edits_tok = encode_h5(layout.edits_file("discworld", INST), vocab)
+    assert np.array_equal(tb.tokens, edits_tok[sel][:, :20])
     # every selected case is scoreable, which is the point of the selection
     assert bool(tb.keep.all()), f"{int(tb.keep.sum())}/16 scoreable on the selected cases"
     # and the unfiltered bench is still reachable, and still equals the first n
     tb0 = tkb.load_token_bench(vocab, n=16, target="full", basis_name="cartesian",
                                instance=INST, use_selection=False)
-    assert np.array_equal(tb0.tokens, np.load(TOK / "edits.npy")[:16, :20])
+    assert np.array_equal(tb0.tokens, edits_tok[:16, :20])
     a = dwb.bench_arrays(16, "full", "cartesian", instance=INST)
     assert np.array_equal(decode(tb.post_tok, vocab), a["clean"][:, 20])
     assert np.array_equal(decode(tb.pre_tok, vocab), a["zones"].gt_unedited)

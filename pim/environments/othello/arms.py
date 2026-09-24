@@ -307,7 +307,7 @@ def unsteered(model, bench: Benchmark) -> dict:
 
 @torch.no_grad()
 def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
-               mode: str, alpha: float, points) -> tuple[np.ndarray, dict]:
+               mode: str, alpha: float, points, second=None) -> tuple[np.ndarray, dict]:
     """ND and PI on the classification probes — ``pim.editors.nanda`` / ``pim.editors.pinv``
     called with the Othello case structure; NOTHING is re-derived here (the inline copies
     this function carried until 2026-09-07 are pinned equal in
@@ -320,7 +320,14 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
     mode "pinv"     PI: ``pinv_step`` in z-space (a classification probe has no y-affine,
                     so there is no affine question here). The target is the probe's own
                     read-out with the intervened tile's current↔target class scores swapped.
+
+    ``second`` (2026-09-23): ``(squares, cur_labels, tgt_labels)``, one per case — a SECOND tile flipped
+    in the same write (``scripts/two_flip_editability.py``). PI on classification probes only: the
+    target swaps both tiles' classes (``swap_class_logits`` once per tile, as the discworld grid
+    target does per cell). None (default) = the canonical single-tile edit, unchanged.
     """
+    if second is not None and mode != "pinv":
+        raise NotImplementedError("a second tile is implemented for PI (mode 'pinv') only")
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
     ratios = []
     for toks, ids in zip(bench.tokens, bench.case_ids):
@@ -329,6 +336,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
         sq = torch.from_numpy(bench.pos_int[ids]).to(DEV)
         td = torch.from_numpy(tgt_lab[ids]).to(DEV)
         cd = torch.from_numpy(cur_lab[ids]).to(DEV)
+        if second is not None:
+            sq2, cd2, td2 = (torch.from_numpy(np.asarray(a, dtype=np.int64)[ids]).to(DEV) for a in second)
         rec = []
 
         def hook(layer, x, _rec=rec):
@@ -336,6 +345,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 return x
             p = probes[layer]
             cur = x[:, -1]
+            if p.n_classes is None and second is not None:
+                raise NotImplementedError("a second tile is implemented for classification probes only")
             if p.n_classes is None:
                 # the signed mine/theirs REGRESSION probe (2026-09-09): the flip asks the
                 # tile's value to become +1 (mine) or −1 (theirs). ND: the tile's probe row,
@@ -364,6 +375,8 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
                 # (the shared spelling of a categorical flip — discworld's grid target
                 # calls the same helper twice, once per cell)
                 lg = swap_class_logits(p(cur), sq, cd, td)   # (B, N_TILES, N_CLASSES)
+                if second is not None:
+                    lg = swap_class_logits(lg, sq2, cd2, td2)
                 delta = alpha * pinv_step(cur, lg.view(bsz, -1), p, space="zspace")
             _rec.append(float((delta.norm(dim=1) / cur.norm(dim=1)).mean()))
             out = x.clone()
@@ -381,7 +394,7 @@ def linear_arm(model, bench: Benchmark, probes: dict, tgt_lab, cur_lab, *,
 def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
                    alpha: float, n_steps: int, beta: float,
                    optimizer: str = "adam",
-                   target_labels=None) -> tuple[np.ndarray, dict]:
+                   target_labels=None, second=None) -> tuple[np.ndarray, dict]:
     """GS over the 1001 cases — ``transfer_pipeline.run_arm``, on the canonical parts.
 
     Bucket by bucket, because the intervention hook writes ``x[:, -1]`` and every row
@@ -393,6 +406,10 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
     mine-coordinate targets from ``case_targets(bench)[1]`` to steer through the
     ``mine`` probes instead — the open question (2026-08-31) is whether GS is dead
     in that frame or the old negative was an artefact of the pre-canonical probes.
+
+    ``second`` (2026-09-23): ``(squares, target_labels)``, one per case — a SECOND tile the descent must
+    also move (added to the edit mask and the target board; classification probes only). None
+    (default) = the canonical single-tile edit, unchanged.
     """
     n_points = model.n_layers + 1
     probs = np.zeros((bench.n_cases, N_TILES), np.float32)
@@ -414,6 +431,12 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
         else:
             tv = torch.zeros(bsz, N_TILES, dtype=torch.long, device=DEV)
             tv[torch.arange(bsz), sq_t] = torch.from_numpy(lab[ids]).to(DEV)
+        if second is not None:
+            if next(iter(probes.values())).n_classes is None:
+                raise NotImplementedError("a second tile is implemented for classification probes only")
+            sq2 = np.asarray(second[0], dtype=np.int64)[ids]
+            cm[np.arange(bsz), sq2] = True
+            tv[torch.arange(bsz), torch.from_numpy(sq2).to(DEV)] = torch.from_numpy(np.asarray(second[1], dtype=np.int64)[ids]).to(DEV)
         specs = {ell: build_edit_spec(probes[ell], x0[ell], cm, tv, beta=beta)
                  for ell in range(n_points)}
         hook = make_intervention_hook(probes, specs, start_layer, alpha=alpha,
@@ -423,3 +446,114 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
                                  getattr(model, "output_kind", "logits"))
         del rs, x0, specs
     return probs, move_scorecard(probs, bench.legal_pre, bench.legal_post)
+
+
+# ── IM: the inverse-map editor on Othello (2026-09-15) ──────────────────────────────────────
+
+
+@torch.no_grad()
+def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_games: int,
+                 seed: int = 0, k: int | None = None, points=None,
+                 uns_probs: np.ndarray | None = None, log=print,
+                 return_probs: bool = False, post_boards: np.ndarray | None = None):
+    """IM (h′ = g(board_post) at the last position) and IM-NN (the mean residual of the k
+    training boards nearest the target board, Hamming) at every residual point, on the
+    canonical cases. g: one-hot mine/theirs board (64 × 3) → residual, the mirror of the
+    MLP-128 probe, fitted on ``data``'s rows (the probe games; the same seeded 80/20 split
+    BY GAME as ``fit_probe_grid``) and cached in ``cache_dir`` (kind ``inverse_map``); ``rules`` =
+    ``corpus.rules_of(instance)``, to replay the bench histories into boards.
+    Returns the arm records (canonical scorecard + guard when ``uns_probs`` is given) and
+    ``{"g_r2": [...], "g_rmse": [...]}``; with ``return_probs`` also ``{(editor, point): (n_cases, 64)
+    move distributions}`` — the qualitative figure draws them (2026-09-17).
+    ``post_boards`` (2026-09-23): (n_cases, 64) post-edit boards in the mover's frame that REPLACE the
+    single-tile flip (a multi-tile edit, ``scripts/two_flip_editability.py``); the bench's ``legal_post``
+    must then describe those boards. None (default) = the canonical single-tile edit, unchanged."""
+    from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
+    from pim.environments.othello.bench import case_targets
+    from pim.environments.othello.data import (N_CLASSES, N_TILES, board_probs, canonical_vocab,
+                                               flatten_rows, harvest_point, tokens_and_labels)
+    from pim.metrics.set_editability import move_fidelity_ci95, move_fidelity_ratio, move_scorecard
+    from pim.probes.cache import ProbeCache
+    from pim.probes.inverse import (INVERSE_EPOCHS, INVERSE_HIDDEN, RETRIEVAL_K, RetrievalBank,
+                                    fit_inverse_map)
+
+    store = ProbeCache(_require_cache_dir(cache_dir))
+    seq_of_row, states = flatten_rows(data, "mine")                          # (rows,), (rows, 64) ∈ {0,1,2}
+    n_seq = int(data.mask.shape[0])
+    tr_idx, te_idx = _split(n_seq, seq_of_row, "sequence", 0.2, int(seed))
+    onehot = lambda st: np.eye(N_CLASSES, dtype=np.float32)[st].reshape(len(st), -1)   # noqa: E731
+    X_all = onehot(states)
+    # the bench's pre- and post-edit boards in the mover's frame (the case's tile flipped)
+    itos = {v: kk for kk, v in canonical_vocab().items()}
+    n_cases = bench.n_cases
+    hist = [None] * n_cases
+    for toks, ids in zip(bench.tokens, bench.case_ids):
+        for row, i in zip(toks, ids):
+            hist[i] = [itos[int(t)] for t in row]
+    bd = tokens_and_labels([hist[i] for i in range(n_cases)], **rules)   # the instance's rules (corpus.rules_of)
+    cur_lab, tgt_lab = case_targets(bench)
+    s_pre = np.stack([bd.mine[i, len(hist[i]) - 1] for i in range(n_cases)])
+    s_post = s_pre.copy()
+    s_post[np.arange(n_cases), bench.pos_int] = tgt_lab
+    assert (s_pre[np.arange(n_cases), bench.pos_int] == cur_lab).all(), "pre-edit board disagrees with the bench"
+    if post_boards is not None:
+        post_boards = np.asarray(post_boards)
+        assert post_boards.shape == s_post.shape, f"post_boards must be {s_post.shape}, got {post_boards.shape}"
+        s_post = post_boards.astype(s_post.dtype)
+    Xpost_t = torch.from_numpy(onehot(s_post)).to(DEV)
+    X_tr_t = torch.from_numpy(X_all[tr_idx]).to(DEV)
+    okind = getattr(model, "output_kind", "logits")
+    recs, stats, probs_by = [], {"g_r2": [], "g_rmse": [], "nn_r2": []}, {}
+    for ell in (points if points is not None else range(model.n_layers + 1)):
+        fname, prov = store.key(model, kind="inverse_map", target="mine-onehot", n_seq=n_seq,
+                                split="sequence", seed=int(seed), hidden=INVERSE_HIDDEN,
+                                epochs=INVERSE_EPOCHS, point=int(ell), n_games=int(n_games))
+        acts = harvest_point(model, data.tokens, ell)
+        H = acts[data.mask]
+        del acts
+        hit = store.load(fname, prov, device=DEV)
+        if hit is not None:
+            g, st = hit["g"].to(DEV), hit["stats"]
+        else:
+            g, st = fit_inverse_map(X_all[tr_idx], H[tr_idx], X_all[te_idx], H[te_idx], seed=int(seed), device=DEV)
+            store.store(fname, prov, {"g": g, "stats": st})
+            if log:
+                log(f"    inverse map point {ell}: held-out R² {st['r2']:+.3f}  WROTE {fname}")
+        bank = RetrievalBank(X_tr_t, torch.from_numpy(H[tr_idx]).to(DEV), metric="onehot",
+                             k=RETRIEVAL_K if k is None else int(k))
+        # the retrieval form's held-out R² on g's held-out games (2026-09-16)
+        stats["nn_r2"].append(bank.r2(torch.from_numpy(X_all[te_idx]).to(DEV), torch.from_numpy(H[te_idx]).to(DEV)))
+        del H
+        stats["g_r2"].append(float(st["r2"])); stats["g_rmse"].append(float(st["rmse"]))
+        for editor, h_new_all in (("IM", inverse_overwrite(g, Xpost_t)),
+                                  ("IM-NN", retrieval_overwrite(bank, Xpost_t))):
+            probs = np.zeros((n_cases, N_TILES), np.float32)
+            ratios = []
+            for toks, ids in zip(bench.tokens, bench.case_ids):
+                idx = torch.from_numpy(toks).to(DEV)
+                h_new = h_new_all[torch.as_tensor(ids, device=DEV)]
+
+                def hook(layer, x, _h=h_new):
+                    if layer != ell:
+                        return x
+                    cur = x[:, -1]
+                    ratios.append(float(((_h - cur).norm(dim=1) / cur.norm(dim=1)).mean()))
+                    out = x.clone()
+                    out[:, -1] = _h
+                    return out
+                probs[ids] = board_probs(model.decode(idx, edit=hook), okind)           # THE write
+            card = move_scorecard(probs, bench.legal_pre, bench.legal_post)
+            rec = {"editor": editor, "point": int(ell), "alpha": 1.0, "g_r2": float(st["r2"]),
+                   "write_ratio": float(np.mean(ratios)) if ratios else None,
+                   **{kk: v for kk, v in card.items() if isinstance(v, (int, float))}}
+            if uns_probs is not None:
+                rec["fidelity_ratio"] = move_fidelity_ratio(probs, uns_probs, bench.legal_post)
+                rec.update(move_fidelity_ci95(probs, uns_probs, bench.legal_post))
+            if editor == "IM-NN":
+                rec["k"] = int(bank.k)
+            recs.append(rec)
+            if return_probs:
+                probs_by[(editor, int(ell))] = probs.copy()
+        del bank
+        torch.cuda.empty_cache()
+    return (recs, stats, probs_by) if return_probs else (recs, stats)

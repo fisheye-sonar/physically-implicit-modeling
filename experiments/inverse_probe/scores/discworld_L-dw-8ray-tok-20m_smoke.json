@@ -1,0 +1,144 @@
+{
+ "run": "interface_ablation/L-dw-8ray-tok-20m",
+ "instance": "dw-8ray",
+ "ei_construction": "frame-set",
+ "n_seq": 2000,
+ "rows": 78000,
+ "hidden": 128,
+ "epochs": 2,
+ "k": 10,
+ "unedited": {
+  "edit_index": -0.7862801521006237,
+  "edit_index_symdiff": -0.7862801521006237,
+  "li_error_vs_post": 2.0,
+  "li_error_vs_pre": 0.16,
+  "p_post": 0.00011810959404101595,
+  "p_pre": 0.8298457860946655,
+  "n_scored": 50,
+  "zone_edit_index_expected": -0.9173055331113272,
+  "fidelity_ratio": 1.0
+ },
+ "canonical": {
+  "PI": {
+   "edit_index": 0.004169075626506398,
+   "fidelity_ratio": 0.7487044380261048
+  },
+  "GS": {
+   "edit_index": -0.15416127732899554,
+   "fidelity_ratio": 0.7985867436987377
+  }
+ },
+ "points": {
+  "1": {
+   "g_r2_heldout": 0.02714352140724252,
+   "g_rmse": 284.87823486328125,
+   "arms": {
+    "overwrite": {
+     "edit_index": -0.33663997519204936,
+     "edit_index_symdiff": -0.33663997519204936,
+     "fidelity_ratio": 0.9063814401240599,
+     "p_post": 0.003715135855600238,
+     "write_ratio": 0.8696587681770325
+    },
+    "mean_overwrite": {
+     "edit_index": -0.37745195528354714,
+     "edit_index_symdiff": -0.37745195528354714,
+     "fidelity_ratio": 0.9054365843790112,
+     "p_post": 0.002884275047108531,
+     "write_ratio": 0.8568903803825378
+    },
+    "nn_overwrite": {
+     "edit_index": 0.11983691704185917,
+     "edit_index_symdiff": 0.11983691704185917,
+     "fidelity_ratio": 0.7407988050639952,
+     "p_post": 0.23460613191127777,
+     "write_ratio": 0.9860838055610657
+    },
+    "delta@0.25": {
+     "edit_index": -0.7862093340362332,
+     "edit_index_symdiff": -0.7862093340362332,
+     "fidelity_ratio": 1.0000125896400276,
+     "p_post": 0.00011823679233202711,
+     "write_ratio": 0.030171066522598267
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7842873687019868,
+     "edit_index_symdiff": -0.7842873687019868,
+     "fidelity_ratio": 0.9994640941624248,
+     "p_post": 0.00013993192987982184,
+     "write_ratio": 0.168944850564003
+    },
+    "delta@0.5": {
+     "edit_index": -0.7861940201394454,
+     "edit_index_symdiff": -0.7861940201394454,
+     "fidelity_ratio": 1.0000465495160635,
+     "p_post": 0.00011836374324047938,
+     "write_ratio": 0.06034214049577713
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.7399114036738866,
+     "edit_index_symdiff": -0.7399114036738866,
+     "fidelity_ratio": 0.9874566749272539,
+     "p_post": 0.00296058040112257,
+     "write_ratio": 0.337889701128006
+    },
+    "delta@1": {
+     "edit_index": -0.7860370665842988,
+     "edit_index_symdiff": -0.7860370665842988,
+     "fidelity_ratio": 1.0001146019954132,
+     "p_post": 0.00011861838720506057,
+     "write_ratio": 0.12068428099155426
+    },
+    "nn_delta@1": {
+     "edit_index": -0.293856382583518,
+     "edit_index_symdiff": -0.293856382583518,
+     "fidelity_ratio": 0.8395378965691127,
+     "p_post": 0.1355302780866623,
+     "write_ratio": 0.675779402256012
+    },
+    "delta@1.5": {
+     "edit_index": -0.7826378648817497,
+     "edit_index_symdiff": -0.7826378648817497,
+     "fidelity_ratio": 0.9992223051083734,
+     "p_post": 0.00011902329424628988,
+     "write_ratio": 0.1810263991355896
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.02148846115084435,
+     "edit_index_symdiff": 0.02148846115084435,
+     "fidelity_ratio": 0.7334087444194551,
+     "p_post": 0.23816435039043427,
+     "write_ratio": 1.0136692523956299
+    },
+    "delta@2": {
+     "edit_index": -0.7698950887057825,
+     "edit_index_symdiff": -0.7698950887057825,
+     "fidelity_ratio": 1.000268456939185,
+     "p_post": 0.0001217670360347256,
+     "write_ratio": 0.24136856198310852
+    },
+    "nn_delta@2": {
+     "edit_index": 0.10351389714363514,
+     "edit_index_symdiff": 0.10351389714363514,
+     "fidelity_ratio": 0.7271549264736606,
+     "p_post": 0.2538917660713196,
+     "write_ratio": 1.351558804512024
+    },
+    "delta@3": {
+     "edit_index": -0.7594726953787628,
+     "edit_index_symdiff": -0.7594726953787628,
+     "fidelity_ratio": 0.9964763298988952,
+     "p_post": 0.00020173417578916997,
+     "write_ratio": 0.3620528280735016
+    },
+    "nn_delta@3": {
+     "edit_index": 0.16470798344394147,
+     "edit_index_symdiff": 0.16470798344394147,
+     "fidelity_ratio": 0.7230532093905851,
+     "p_post": 0.24765260517597198,
+     "write_ratio": 2.0273382663726807
+    }
+   }
+  }
+ }
+}

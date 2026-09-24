@@ -34,14 +34,15 @@ completed its notebook and figures, and never reported. The work was nearly lost
 | write up a result or update the record | `harness/WORKFLOW.md` |
 | spawn a subagent | `harness/ORCHESTRATION.md` |
 | launch anything that outlives a reply (a training run, a corpus build, an overnight chain) | `harness/OVERNIGHT.md` — the checklist: smoke, capped unit, staged driver, two monitors, pings |
+| launch a SET of jobs over days or across machines | `harness/MULTIDAY.md` — queue + timer dispatcher + per-host watchdog + dashboard + two channels; reference implementation `experiments/paper_ci/` |
 | build the canonical qualitative panel | `research/specs/WATERFALL_SPEC.md` |
 
 **Three hard rules restated here because they are violated most often:**
 - **Import the canonical implementations; never re-derive them.** Probes = `pim.probes`,
   editors = `pim.editors`, metrics = `pim.metrics`. A genuinely new object is fine — add
   its `research/REGISTRY.md` row in the same commit.
-- **Canonical scores come from `notebooks/master_eval.ipynb` and land in each run's
-  `scores.json`.** No metric math in notebooks; a number that matters is a one-line call
+- **Canonical scores come from `notebooks/master_eval.ipynb` (SETTINGS + three calls into
+  `pim/scoring/`) and land in each run's `scores.json`.** No metric math in notebooks; a number that matters is a one-line call
   into `pim.*`, or it is not a canonical number.
 - **Any claim about an effect on the model's generations ships with a waterfall** —
   built through `pim.figures.waterfall_grid`, per the spec. A scorecard hides the
@@ -59,7 +60,7 @@ python scripts/train.py --env discworld --arch transformer_l \
 
 # score every unscored run + the master table
 jupyter nbconvert --to notebook --execute --inplace notebooks/master_eval.ipynb
-jupyter nbconvert --to notebook --execute --inplace notebooks/build_paper_tables.ipynb   # the shortlist
+jupyter nbconvert --to notebook --execute --inplace notebooks/build_paper_tables_and_figs.ipynb   # the paper's tables + figures (the public replication notebook)
 jupyter nbconvert --to notebook --execute --inplace notebooks/build_full_tables.ipynb    # the long list
 # (both are thin callers of pim/figures/tables.py; the run lists at the top of each are the only knobs)
 
@@ -114,7 +115,7 @@ bash harness/check.sh
   beside the run directories is how `runs/` became a junkyard once already
   (cleared 2026-09-01).
 - Canonical scoring → `notebooks/master_eval.ipynb`; the cross-run tables →
-  `notebooks/build_paper_tables.ipynb` (shortlist) and `build_full_tables.ipynb` (long list),
+  `notebooks/build_paper_tables_and_figs.ipynb` (the paper's tables and figures — the canonical replication notebook, shipped public; its figures may drift from the long list) and `build_full_tables.ipynb` (long list),
   both rendering through `pim/figures/tables.py`
 - Experiments — the quarantined workspace: scripts, drivers, data, outputs, scores,
   probes, one folder per experiment → `experiments/<name>/`; generic run-queue
@@ -145,6 +146,10 @@ bash harness/check.sh
                    distinct names, quote which one you mean.
     training/      ONE loop, two objectives; the TrainConfig defaults ARE the matched
                    canonical recipe. Entry: scripts/train.py.
+    scoring/       the canonical scorer behind notebooks/master_eval.ipynb (2026-09-19):
+                   which runs and blocks, the scores.json block schema, the per-environment
+                   scorers, the decodability floors, the add-only-what-is-missing driver.
+                   Wiring only — it calls the packages above and computes no metric.
 
 Cross-environment comparisons are only meaningful because the architecture, probes,
 editors, and training recipe are IDENTICAL across environments up to the input/output

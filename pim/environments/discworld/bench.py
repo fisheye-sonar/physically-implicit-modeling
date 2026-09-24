@@ -136,59 +136,17 @@ def grid_selection(data_dir: Path | None, n: int, grid: CategoricalTarget,
                  "dropped_same_cell": int(scanned - len(sel))}
 
 
-def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
-                 data_dir: Path | None = None, select: np.ndarray | None = None,
-                 use_selection: bool = True, instance: str | None = None) -> dict:
-    """The edit set's arrays and zones, model-free (factored out of ``load_bench``,
-    2026-09-05, so a token model — ``token_bench`` — scores the SAME cases, targets
-    and zones without a frame-space state).
-
-    ``instance`` names the instance whose canonical bench (``edits/v1``) to load — the
-    layout-v2 form (2026-09-10). ``data_dir`` is the older form and still works: an
-    instance's edit directory maps onto the instance; any other directory holding an
-    ``edits.h5`` (a pilot) is read as is. See ``_edit_set``.
-
-    ``select`` (case indices into the edits split) replaces "the first ``n`` cases" —
-    for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
-    canonical bench is always ``select=None``.
-
-    ``target`` is ``"pos"`` / ``"full"`` (regression, in ``basis_name``), a SNAPPED
-    regression target ``"pos@<partition>"`` (2026-09-10: positions replaced by their cell
-    centre in the frustum basis; the case list is ``grid_selection`` on that partition, the
-    branch otherwise the regression one) or a grid name
-    such as ``"grid-16x8"`` (classification, 2026-09-09): then ``y`` holds the (N, cells)
-    labels at the edit frame, ``change_mask`` marks the old and new cell, ``cells`` the
-    per-case move, and the case list is ``grid_selection`` (teleports that change cell).
-    The zones are unchanged either way — they never depend on the probe target.
-
-    Uses ``pim.environments.discworld.loading``: ``clean_obs`` is RECONSTRUCTED from
-    stored ids/reflectivities, not stored — reading the h5 directly gets a KeyError.
-    On a blink instance the split's ``blink_visible`` schedule is handed to the zone
-    construction so the reference worlds carry the same blackouts and markers.
-    """
-    from pim.environments.discworld.loading import load_edits
-
-    edits_h5, _sp, _inst = _edit_set(data_dir, instance)
-    grid, snap, selection = categorical_target(target), snapped_target(target), None
-    sel_target = selection_target(target)      # the grid, or a snapped target's partition
-    if sel_target is not None and select is None:
-        select, selection = grid_selection(data_dir, n, sel_target, instance=instance)
-    if select is None and use_selection:                 # the instance's filtered case list
-        if _sp.exists():
-            select = np.asarray(json.loads(_sp.read_text())["select"], dtype=int)[:n]
-    # the edits split alone — its own config_json carries the sim config, so the 188 MB
-    # test split is never decompressed just to read a dict (2026-09-07)
-    b = load_edits(edits_h5, n_obj_keep=N_OBJ)
-    sl = slice(None, n) if select is None else np.asarray(select, dtype=int)
-    obs = b.obs[sl].astype(np.float32)
-    pos = b.positions[sl, :, :N_OBJ, :].astype(np.float32)
-    eobj = b.edit_object[sl].astype(int)
-    clean = b.clean_obs[sl].astype(np.float32)
+def bench_from_arrays(obs: np.ndarray, pos: np.ndarray, vel: np.ndarray, eobj: np.ndarray,
+                      clean: np.ndarray, sim: dict, blink: np.ndarray | None, *, target: str,
+                      basis_name: str, selection: dict | None = None, edit_frame: int = EF) -> dict:
+    """The bench dict from ARRAYS — the target / change-mask / zone construction of
+    ``bench_arrays``, factored out (2026-09-17) so a synthetic, matched scenario (the paper's
+    qualitative figure: one trajectory rendered under every instance's geometry) goes
+    through exactly the construction the scorer uses. ``obs`` (n, T, R) the frames the model
+    is fed, ``clean`` (n, T, R) the clean render, ``pos`` / ``vel`` (n, T, N_OBJ, 2) POST-edit,
+    ``eobj`` (n,), ``sim`` the instance's sim dict, ``blink`` (n, T, N_OBJ) bool or None."""
+    grid, snap = categorical_target(target), snapped_target(target)
     n = obs.shape[0]
-    with h5py.File(b.h5_path, "r") as f:
-        vel = f["velocities"][:, :, :N_OBJ, :].astype(np.float32)[sl]
-        sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
-    blink = None if b.blink_visible is None else b.blink_visible[sl]
     gt_roll = clean[:, EF: EF + K_ROLL, :]
     zones = build_edit_zones(pre_pos=pos[:, EF - 1], tgt_pos=pos[:, EF],
                              pre_vel=vel[:, EF - 1], edit_object=eobj, sim=sim,
@@ -266,12 +224,76 @@ def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian
             cm[np.arange(n), 2 * N_OBJ + 2 * eobj] = True
             cm[np.arange(n), 2 * N_OBJ + 2 * eobj + 1] = True
         out_dims = sorted({int(i) for i in np.where(cm.any(0))[0]})
-    ef = int(getattr(b, "edit_frame", EF))
-    assert ef == EF, f"edits split has edit_frame {ef}, every thread number assumes {EF}"
+    assert int(edit_frame) == EF, f"edit_frame {edit_frame}: every thread number assumes {EF}"
     return dict(obs=obs, pos=pos, vel=vel, edit_object=eobj, clean=clean, sim=sim,
                 gt_roll=gt_roll, zones=zones, y=y, change_mask=cm, out_dims=out_dims, n=n,
                 blink_visible=blink, kind="classification" if grid else "regression",
                 cells=cells, moves=moves, selection=selection)
+
+
+def bench_arrays(n: int = 192, target: str = "pos", basis_name: str = "cartesian",
+                 data_dir: Path | None = None, select: np.ndarray | None = None,
+                 use_selection: bool = True, instance: str | None = None) -> dict:
+    """The edit set's arrays and zones, model-free (factored out of ``load_bench``,
+    2026-09-05, so a token model — ``token_bench`` — scores the SAME cases, targets
+    and zones without a frame-space state).
+
+    ``instance`` names the instance whose canonical bench (``edits/v1``) to load — the
+    layout-v2 form (2026-09-10). ``data_dir`` is the older form and still works: an
+    instance's edit directory maps onto the instance; any other directory holding an
+    ``edits.h5`` (a pilot) is read as is. See ``_edit_set``.
+
+    ``select`` (case indices into the edits split) replaces "the first ``n`` cases" —
+    for subset benches (e.g. the dw-blink reappearance cases, 2026-09-07). The
+    canonical bench is always ``select=None``.
+
+    ``target`` is ``"pos"`` / ``"full"`` (regression, in ``basis_name``), a SNAPPED
+    regression target ``"pos@<partition>"`` (2026-09-10: positions replaced by their cell
+    centre in the frustum basis; the case list is ``grid_selection`` on that partition, the
+    branch otherwise the regression one) or a grid name
+    such as ``"grid-16x8"`` (classification, 2026-09-09): then ``y`` holds the (N, cells)
+    labels at the edit frame, ``change_mask`` marks the old and new cell, ``cells`` the
+    per-case move, and the case list is ``grid_selection`` (teleports that change cell).
+    The zones are unchanged either way — they never depend on the probe target.
+
+    Uses ``pim.environments.discworld.loading``: ``clean_obs`` is RECONSTRUCTED from
+    stored ids/reflectivities, not stored — reading the h5 directly gets a KeyError.
+    On a blink instance the split's ``blink_visible`` schedule is handed to the zone
+    construction so the reference worlds carry the same blackouts and markers.
+    """
+    from pim.environments.discworld.loading import load_edits
+
+    edits_h5, _sp, _inst = _edit_set(data_dir, instance)
+    selection = None
+    sel_target = selection_target(target)      # the grid, or a snapped target's partition
+    if sel_target is not None and select is None:
+        select, selection = grid_selection(data_dir, n, sel_target, instance=instance)
+    if select is None and use_selection:                 # the instance's filtered case list
+        if _sp.exists():
+            _sel = json.loads(_sp.read_text())
+            select = np.asarray(_sel["select"], dtype=int)[:n]
+            # RECORD that the filtered list was used (2026-09-14): the regression blocks of
+            # every discworld run had `bench_selection: None` while the selection WAS applied,
+            # so the record could not say which cases a number came from.
+            selection = {"file": str(_sp.relative_to(_REPO)) if _sp.is_relative_to(_REPO) else str(_sp),
+                         "rule": _sel.get("rule"), "n": int(len(select)),
+                         **{k: _sel[k] for k in ("min_rays", "pool", "stats") if k in _sel}}
+    # the edits split alone — its own config_json carries the sim config, so the 188 MB
+    # test split is never decompressed just to read a dict (2026-09-07)
+    b = load_edits(edits_h5, n_obj_keep=N_OBJ)
+    sl = slice(None, n) if select is None else np.asarray(select, dtype=int)
+    obs = b.obs[sl].astype(np.float32)
+    pos = b.positions[sl, :, :N_OBJ, :].astype(np.float32)
+    eobj = b.edit_object[sl].astype(int)
+    clean = b.clean_obs[sl].astype(np.float32)
+    n = obs.shape[0]
+    with h5py.File(b.h5_path, "r") as f:
+        vel = f["velocities"][:, :, :N_OBJ, :].astype(np.float32)[sl]
+        sim = json.loads(f.attrs["config_json"])["dataset"]["sim"]
+    blink = None if b.blink_visible is None else b.blink_visible[sl]
+    return bench_from_arrays(obs, pos, vel, eobj, clean, sim, blink, target=target,
+                             basis_name=basis_name, selection=selection,
+                             edit_frame=int(getattr(b, "edit_frame", EF)))
 
 
 def load_bench(model, n: int = 192, target: str = "pos",
@@ -281,6 +303,11 @@ def load_bench(model, n: int = 192, target: str = "pos",
     """Warm ``model`` on the edits split and build the ground-truth zones (``bench_arrays``)."""
     a = bench_arrays(n, target, basis_name, data_dir, select=select, use_selection=use_selection,
                      instance=instance)
+    return bench_of(model, a)
+
+
+def bench_of(model, a: dict) -> Bench:
+    """Warm ``model`` on a bench dict's frames (``bench_arrays`` / ``bench_from_arrays``)."""
     state = model.state_from_obs(torch.from_numpy(a["obs"][:, :EF]).float().to(DEV))
     tgt = torch.from_numpy(a["y"]).to(DEV)
     tgt = tgt.long() if a["kind"] == "classification" else tgt.float()
@@ -329,3 +356,26 @@ def restrict_mask(cm: torch.Tensor, dims: str) -> torch.Tensor:
     keep = torch.zeros(cm.shape[1], dtype=torch.bool, device=cm.device)
     keep[list(idx)] = True
     return cm & keep
+
+
+def full_state_pair(pos: np.ndarray, vel: np.ndarray, edit_object: np.ndarray, sim: dict,
+                    basis_name: str) -> tuple[np.ndarray, np.ndarray]:
+    """The FULL state (position + velocity of every object, in ``basis_name``) BEFORE and
+    AFTER the edit, per case — the inverse-map editor's input pair (2026-09-15).
+
+    ``s_pre`` is the state that rendered the last consumed frame (EF−1). ``s_post`` is the
+    PRE-DYNAMICS target state (the 2026-09-12 write target, see ``bench_arrays``): the
+    edited object at pos[EF] − v·dt, everything else held — so on the regression ``full``
+    bench ``s_post`` equals ``Bench.tgt`` exactly, and on a categorical bench it is the
+    same state the categorical move was derived from. Returns two (N, 4·N_OBJ) arrays.
+    """
+    n = len(pos)
+    ar = np.arange(n)
+    eobj = np.asarray(edit_object, int)
+    pre_dyn = pos[:, EF - 1].copy()
+    pre_dyn[ar, eobj] = pos[ar, EF, eobj] - vel[ar, EF - 1, eobj] * float(sim["dt"])
+    bp0, bv0 = _to_basis(pos[:, EF - 1], vel[:, EF - 1], sim, basis_name)
+    bp1, bv1 = _to_basis(pre_dyn, vel[:, EF - 1], sim, basis_name)
+    s_pre = np.concatenate([bp0.reshape(n, -1), bv0.reshape(n, -1)], 1).astype(np.float32)
+    s_post = np.concatenate([bp1.reshape(n, -1), bv1.reshape(n, -1)], 1).astype(np.float32)
+    return s_pre, s_post

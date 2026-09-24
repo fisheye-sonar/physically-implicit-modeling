@@ -44,7 +44,7 @@ for SEED in 1 2; do
 done
 
 stage "C lay out seed-0 checkpoint 421,875 as a replicate run"
-"$PY" experiments/seed_variance/scripts/layout_checkpoint_replicate.py $PARENT 421875 > "$LOGS/c_layout.log" 2>&1 \
+"$PY" scripts/layout_checkpoint_replicate.py $PARENT 421875 > "$LOGS/c_layout.log" 2>&1 \
   || fail "C layout" "$(tail -10 "$LOGS/c_layout.log")"
 
 stage "D score the replicates (canonical + appearance-fac)"

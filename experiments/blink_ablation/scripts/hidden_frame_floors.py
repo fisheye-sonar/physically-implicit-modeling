@@ -26,7 +26,9 @@ from pim.probes.baselines import CausalHistory, random_init_model  # noqa: E402
 
 DEV = "cuda"
 RUN = REPO / "runs/blink_ablation/L-dw-blink-20m"
-INST = "dw-blink"; BASIS = "frustum"; N_SEQ, START = 4000, 30_000     # the fits used [0, 30k)
+import os
+INST = "dw-blink"; BASIS = os.environ.get("PIM_BASIS", "frustum")     # the paper reports cartesian (2026-09-15)
+N_SEQ, START = 4000, 30_000                                        # the fits used [0, 30k)
 model, info = load_checkpoint(RUN / "best_model.pt", device=DEV); model.eval()
 span = int(getattr(model, "state_span", 39))
 with h5py.File(layout.probe_file("discworld", INST, "120k"), "r") as f:
@@ -101,4 +103,5 @@ for k, r in out["sources"].items():
         o = r[f"obj{j}"]
         print(f"{k:28s} {j:>3} {f(o['visible']):>8} {f(o['hidden']):>8} | {f(o['since'][1])} {f(o['since'][3])} "
               f"{f(o['since'][6])} {f(o['since'][10])}")
-(REPO / "experiments/blink_ablation/scores/hidden_frame_floors.json").write_text(json.dumps(out, indent=1))
+_tag = "" if BASIS == "frustum" else f"_{BASIS}"      # the frustum file stays where it was
+(REPO / f"experiments/blink_ablation/scores/hidden_frame_floors{_tag}.json").write_text(json.dumps(out, indent=1))

@@ -62,6 +62,9 @@ datasets/<class>/<inst>/
           othello:   cases_1001.pkl  cases_1001.json
       v2/                     RESERVED — paired counterfactual bench (pairs.h5 + manifest.json with magnitude + filters)
   tokens/                     UNCHANGED (dw-8ray only): train.i16  vocab.npz  meta.json  test.npy  edits.npy
+                              ↳ 2026-09-19: train.i16  vocab.npz  meta.json ONLY — test.npy / edits.npy retired
+                                (their readers now encode eval/test.h5 / edits/v1/edits.h5 at read time,
+                                byte-identical; tokens.encode_h5); the builder writes no small split
   _unused/                    files no code reads — MOVED, never deleted, original relative path preserved
 ```
 

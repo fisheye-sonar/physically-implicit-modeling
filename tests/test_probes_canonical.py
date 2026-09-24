@@ -110,3 +110,22 @@ def test_probe_skill_classification_anchors():
     base = trivial_error_rate(y, train)
     assert abs(probe_skill_classification(maj, y, train)
                - (1 - (maj != y).mean() / base)) < 1e-12
+
+
+def test_retrieval_bank_r2_matches_inverse_map_statistic():
+    """RetrievalBank.r2 is the inverse map's R² statistic applied to the k-nearest-state mean:
+    exact-duplicate held-out states recover their residuals (R² → 1) and unrelated ones do not."""
+    import numpy as np
+    import torch
+
+    from pim.metrics.decodability import r2
+    from pim.probes.inverse import RetrievalBank
+
+    rng = np.random.default_rng(0)
+    S = rng.normal(size=(400, 4)).astype(np.float32)
+    H = np.concatenate([S @ rng.normal(size=(4, 6)).astype(np.float32), S[:, :2]], 1)
+    bank = RetrievalBank(torch.from_numpy(S), torch.from_numpy(H), k=1)
+    assert bank.r2(torch.from_numpy(S[:50]), torch.from_numpy(H[:50])) > 0.99
+    Hr = rng.normal(size=(50, 8)).astype(np.float32)
+    pred = bank.mean(torch.from_numpy(S[:50])).numpy()
+    assert abs(bank.r2(torch.from_numpy(S[:50]), torch.from_numpy(Hr)) - r2(pred, Hr, H.mean(0))) < 1e-4

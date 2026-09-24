@@ -29,7 +29,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from pim.metrics.edit_index import edit_index_per_case, fidelity_ratio_from, masked_rmse_per_case
+from pim.metrics.edit_index import (case_stats, edit_index_per_case, fidelity_ratio_from,
+                                    masked_rmse_per_case, ratio_ci95)
 
 N_TILES = 64  # 8x8 board; probability vectors over squares are laid out row-major
 
@@ -128,6 +129,12 @@ def move_scorecard(
         "n_scored": int(np.isfinite(e_post).sum()),
         "li_error_vs_post_per_case": e_post.tolist(),
         "edit_index_union_per_case": ei_u.tolist(),
+        # case-level spread of both constructions (2026-09-18; ``edit_index.case_stats``) and
+        # the per-case RMSE vs the post-edit world behind the guard (a list: never a scalar
+        # arm field), for ``move_fidelity_ci95``
+        **case_stats(ei_u, prefix="edit_index_union_"),
+        **case_stats(ei_s, prefix="edit_index_symdiff_"),
+        "rmse_post_per_case": move_rmse_per_case(probs, legal_post).tolist(),
     }
 
 
@@ -182,3 +189,14 @@ def move_fidelity_ratio(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
     """
     return fidelity_ratio_from(move_rmse(probs_edited, legal_post),
                                move_rmse(probs_unsteered, legal_post))
+
+
+def move_fidelity_ci95(probs_edited: np.ndarray, probs_unsteered: np.ndarray,
+                       legal_post: list[list[int]]) -> dict:
+    """Percentile-bootstrap 95% interval of ``move_fidelity_ratio`` over the bench cases — the
+    same ratio of mean per-case RMSEs, numerator and denominator resampled as pairs
+    (``edit_index.ratio_ci95``, no root: ``move_rmse`` is a mean of per-case RMSEs). Keys
+    ``fidelity_ci95_lo`` / ``fidelity_ci95_hi``, to sit beside ``fidelity_ratio`` in an arm."""
+    lo, hi = ratio_ci95(move_rmse_per_case(probs_edited, legal_post),
+                        move_rmse_per_case(probs_unsteered, legal_post))
+    return {"fidelity_ci95_lo": lo, "fidelity_ci95_hi": hi}

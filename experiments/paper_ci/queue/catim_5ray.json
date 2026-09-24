@@ -1,0 +1,36 @@
+{
+ "group": "categorical-IM",
+ "kind": "score",
+ "hosts": [
+  "lab"
+ ],
+ "lane": "cpu",
+ "deps": [],
+ "host_deps": {},
+ "inputs": [],
+ "outputs": [
+  "runs/*/L-dw-5ray-20m__seed0_s512000/probes",
+  "runs/*/L-dw-5ray-20m__seed1/probes",
+  "runs/*/L-dw-5ray-20m__seed2/probes",
+  "logs/catim_5ray"
+ ],
+ "progress": null,
+ "mem_max": null,
+ "max_attempts": 2,
+ "hold": false,
+ "gpu_share": 0.2,
+ "id": "catim_5ray",
+ "cmd": "bash experiments/categorical_inverse/drivers/catchup_job.sh catim_5ray",
+ "env": {
+  "PIM_ADD_CAT_IM": "1",
+  "PIM_ONLY_RUNS": "L-dw-5ray-20m__seed0_s512000,L-dw-5ray-20m__seed1,L-dw-5ray-20m__seed2",
+  "PIM_DW_BASES": "frustum,cartesian",
+  "PIM_SKIP_TOPICS": "training_curve",
+  "PIM_SCORE_ONLY": "1"
+ },
+ "priority": 1,
+ "est_hours": {
+  "lab": 1.9
+ },
+ "note": "categorical inverse map catch-up: the three dw-5ray members at 512k"
+}

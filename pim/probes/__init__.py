@@ -10,6 +10,11 @@ One non-default probe, for the code-size question and the multi-probe editor:
 
     nullspace.py  iterative nullspace-projection cascade of orthogonal linear probes.
 
+The INVERSE map (canonical since 2026-09-15, the IM editor's instrument):
+
+    inverse.py    g: state → residual, the mirror of MLP-128 (E[h | state]); plus the
+                  k-nearest-state retrieval bank (IM-NN).
+
 Support:
 
     base.py       `WorldStateProbe` (the shared module), `collect_residuals`, `fit_probe`.
@@ -21,6 +26,7 @@ near-duplicates; a row split leaks them and inflates every number).
 
 from pim.probes.base import WorldStateProbe, collect_residuals, fit_probe
 from pim.probes.cache import ProbeCache, fingerprint
+from pim.probes.inverse import RETRIEVAL_K, RetrievalBank, fit_inverse_map
 from pim.probes.linear import fit_linear
 from pim.probes.mlp import CANONICAL_HIDDEN, ProbeSanityError, check_probe_sanity, fit_mlp
 from pim.probes.nullspace import NullspaceCascade, fit_nullspace_cascade
@@ -35,6 +41,9 @@ __all__ = [
     "ProbeSanityError",
     "check_probe_sanity",
     "NullspaceCascade",
+    "fit_inverse_map",
+    "RetrievalBank",
+    "RETRIEVAL_K",
     "fit_nullspace_cascade",
     "ProbeCache",
     "fingerprint",

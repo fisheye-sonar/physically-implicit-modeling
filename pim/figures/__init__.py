@@ -1,7 +1,8 @@
-"""pim.figures — figure builders. Pure: take pre-computed arrays/metrics, return Figure.
+"""pim.figures — figure builders. No model calls and no metric DEFINITIONS: numbers come from
+``pim.metrics`` (or are passed in as arrays), and so do the rules that pick which number a table
+cell reports (``pim.metrics.selection``, ``pim.metrics.replicates``).
 
-No model calls, no metric computation — notebooks/scripts compute numbers with
-``pim.metrics`` and pass arrays here.
+    tables.py     the master tables — reads scores.json + runs/_baselines/, assembles rows, draws
 
     theme.py      palette + style_ax (light); the dark palette lives in discworld.viz
     waterfall.py  waterfall_grid — THE canonical editor-comparison panel

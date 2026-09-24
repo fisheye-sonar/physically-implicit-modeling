@@ -1,0 +1,20 @@
+{
+ "hosts": {
+  "lab": {"ssh": null, "repo": "/home/sevan/research/PIM/physically-implicit-modeling", "rate": 1.0,
+          "mem_max": "45G", "label": "lab · RTX 5090"},
+  "remote": {"ssh": "wsl-sevan", "repo": "/home/sevan/research/physically-implicit-modeling", "rate": 0.77,
+             "mem_max": "40G", "label": "WSL · RTX 4090"}
+ },
+ "ntfy": {"alerts": "https://ntfy.sh/swirling-tornado-ai691k",
+          "digest": "https://ntfy.sh/pim-ci-digest-ai691k"},
+ "digest_hours": 2,
+ "stall_min": 45,
+ "disk_min_gb": 40,
+ "unreachable_ticks": 2,
+ "dashboard_url": "https://sevan-ubuntu-lab.tail9a3a96.ts.net/ci/",
+ "ledger": {"runs_oth": ["L-oth-20m", "L-oth-adjacent-flip-20m", "L-oth-adjacent-20m", "L-oth-noflip-20m"],
+            "runs_dw": ["L-dw-noiseless-20m", "L-dw-blink-20m", "L-dw-128ray-20m", "L-dw-16ray-20m", "L-dw-8ray-20m", "L-dw-5ray-20m"],
+            "basis": "cartesian",
+            "dw_blocks": ["cartesian", "appearance-fac"],
+            "oth_blocks": ["mine/theirs"]}
+}

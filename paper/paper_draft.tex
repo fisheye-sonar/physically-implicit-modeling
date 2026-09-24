@@ -1,30 +1,70 @@
-
 \documentclass{article} % For LaTeX2e
 \usepackage{iclr2027_conference,times}
 
-% Optional math commands from https://github.com/goodfeli/dlbook_notation.
 \input{math_commands.tex}
 
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{mathtools}
+\usepackage[table]{xcolor}
+\usepackage{pgf}
+\usepackage{collcell}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{placeins}
+\usepackage{cleveref}
+
+
+\DeclarePairedDelimiter{\set}{\{}{\}}
+
+% Should be colorblind friendly
+\definecolor{heatLo}{HTML}{c7101b}  % dark, red
+\definecolor{heatMid}{HTML}{F5F0E1}
+\definecolor{heatHi}{HTML}{6BE59A}  % light green
+\definecolor{heatHiTxt}{HTML}{449664}
+
+\newcommand{\heatTint}{60}
+
+% \heatbg{lo}{hi}{value}: sets the cell colour only
+\newcommand{\heatbg}[3]{%
+  \pgfmathsetmacro{\heatT}{max(0,min(1,((0#3)-(#1))/((#2)-(#1))))}%
+  \ifdim\heatT pt<0.5pt
+    \pgfmathsetmacro{\heatP}{200*\heatT}\edef\heatCol{heatMid!\heatP!heatLo}%
+  \else
+    \pgfmathsetmacro{\heatP}{200*\heatT-100}\edef\heatCol{heatHi!\heatP!heatMid}%
+  \fi
+  \edef\heatDo{\noexpand\cellcolor{\heatCol!\heatTint!white}}\heatDo}
+% \newcommand{\heatcell}[3]{\heatbg{#1}{#2}{#3}#3}
+% \newcommand{\heatcellmath}[3]{\heatbg{#1}{#2}{#3}$#3$}
+% Dagger marker: works in text or math mode
+\newcommand{\dg}{\ensuremath{^{\dagger}}}
+% Split "<number>\dg" (or plain "<number>") into \heatnum
+\def\heatparse#1\dg#2\heatstop{\def\heatnum{#1}}
+\newcommand{\heatcell}[3]{%
+  \heatparse#3\dg\heatstop
+  \heatbg{#1}{#2}{\heatnum}#3}
+\newcommand{\heatcellmath}[3]{%
+  \heatparse#3\dg\heatstop
+  \heatbg{#1}{#2}{\heatnum}$#3$}
+
+% Generic types: H{lo}{hi} prints as text, M{lo}{hi} prints in math mode
+\newcolumntype{H}[2]{>{\collectcell{\heatcell{#1}{#2}}}r<{\endcollectcell}}
+\newcolumntype{M}[2]{>{\collectcell{\heatcellmath{#1}{#2}}}r<{\endcollectcell}}
+
+% Paper presets
+\newcolumntype{P}{H{0.0}{1.0}}  % Probe Skill
+\newcolumntype{E}{M{-1.0}{1.0}} % Edit Index (signed)
+\newcolumntype{F}{M{-0.25}{1.0}}  % Edit Fidelity
+\newcolumntype{G}{@{}p{10pt}@{}}  % Column gap
+
+
 
 \title{When Generative Models Act as Simulators}
 
-% Authors must not appear in the submitted version. They should be hidden
-% as long as the \iclrfinalcopy macro remains commented out below.
-% Non-anonymous submissions will be rejected without review.
-
 \author{
 }
-
-% The \author macro works with any number of authors. There are two commands
-% used to separate the names and addresses of multiple authors: \And and \AND.
-%
-% Using \And between authors leaves it to \LaTeX{} to determine where to break
-% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
-% puts 3 of 4 authors names on the first line, and the last on the second
-% line, try using \AND instead of \And before the third author name.
 
 \newcommand{\fix}{\marginpar{FIX}}
 \newcommand{\new}{\marginpar{NEW}}
@@ -37,229 +77,312 @@
 \maketitle
 
 \begin{abstract}
-% 1. No thesis. The abstract lists results but never states what the reader should now believe. Your paper's claim is that decodability is not evidence of simulation, that editability is the right operationalization, and that whether a variable is editable is set by the environment, not the architecture. None of that is stated. A reader finishes and knows you ran experiments on Othello and discs; they don't know what changed. This needs a sentence, probably right after the setup, and the final sentence should return to it.
-% 2. "Act as a simulator" is never cashed out. You use the phrase in sentence 3 and then jump to "editability" in sentence 4 without connecting them. The reader needs the definition: the model acts as a simulator for a variable when interventions on its internal representation of that variable produce the outputs the simulator would produce under the corresponding intervention. Decodability vs. editability is the conceptual contribution; right now it's implicit.
-% 3. The Othello sentence is unreadable to anyone who doesn't already know your variants. "Changing whether token color varies independently from grid placement" — no reader can picture this. Say the concrete thing (remove the flipping rule), then the consequence (color becomes a deterministic function of grid parity), then the finding. And the sharpest fact you have is missing entirely: within one model, presence stays editable while color does not. That contrast does more work than anything else in the paragraph. Also check "its editability" — the referent is ambiguous between color, the model, and the board.
-% 4. Sentence 5 refers to a comparison the reader hasn't been shown. "In both cases... linearly decodable from the input action sequences" — if one of the cases is standard Othello, that's false with flipping; if the cases are the two no-flip variants, the reader doesn't know a second variant exists. Either introduce the adjacency variant explicitly (if it's run) or cut the sentence. Also "in contrast to the computational complexity" doesn't name the hypothesis you're ruling out. Say what the alternative explanation was and that it fails.
-% 5. Vocabulary for state is inconsistent. "Latent state," "board state," "object positions," "environment" — the reader can't tell when you mean the simulator's state and when you mean the model's internal representation. Pick two terms and hold them.
-% 6. The Discworld sentence undersells the negative. Its strength is the control suite: same architecture, objective, data volume, probes, editors; categorical variant; blinks; discretized targets; oracle sanity check. Without that, "cannot be cleanly edited with our tested editors" reads as "we tried a bit." One clause naming the controls turns it from a shrug into evidence. And "despite their... use in rendering" asserts an interpretation you should be careful about — decodable and used aren't the same thing, which is your own point. If velocity edits land, this sentence changes shape entirely; leave room.
-% 7. Hedging density. "In the tested settings," "cleanly," "our tested editors," "when ground truth access is assumed" — four hedges in three sentences. Keep one, move the rest to the body.
-% Smaller: "produce novel sequences from an environment" — they produce observations of one. The first two sentences could be one. The metric sentence is methodology and probably belongs before the results, not after.
-
-Generative models can produce novel sequences from an underlying environment by learning from a large set of partial observations. Many of the use cases for such systems, \textit{e.g.} agentic training, planning, or counterfactuals, depend on a view of them as a class of environment simulators. To investigate the conditions under which a generative model will act as a simulator, we hold the architecture and training setup fixed while varying attributes of the training environment, focusing our analysis on next-step prediction. Beginning with the game of Othello as a positive case, we show that changing whether token color \red{WHAT GOES HERE} also changes its editability in the tested settings, even while it remains perfectly decodable from the latent state. \red{This is in contrast to the computational complexity of the representations as it holds true even when the board state is linearly decodable from the input action sequences alone in both cases. However, in a separate environment with moving discs rendered into partial observations, we find that despite their high decodability and use in rendering the object positions cannot be cleanly edited with our tested editors.} We further present a method to quantify the editability of a generative model when ground truth access to a simulator is assumed, in order to draw comparisons across diverse environments.
+A simulator summarizes an environment in a state that people can read and set. Generative models learn from observations and capture detail no one specified, but offer no straightforward way to set such a state. Combining the two would let us produce outcomes under interpretable conditions with the accuracy of a learned model. This requires \textit{editability}: the ability to set a model's latent state so that its next prediction follows from a target simulator state. To study when it arises, we fix the training setup and evaluation and vary only the environment. Our environments are Othello and Rayworld, our own world of moving discs rendered in 1D. Given observations paired with simulator states, a common approach is to decode the state with probes, then use them as editors to steer the model. We test this with linear and MLP probes, and train an inverse map on the same pairs in reverse as a third editor. In Othello, all three editors succeed on the standard game, yet small rule changes can toggle editability while the board stays decodable. In Rayworld, the probes steer the model only once their target is discretized, resembling the observation. The inverse map, however, succeeds from continuous positions throughout, even while predicting the latent state poorly. Our controlled comparison makes it measurable when a generative model can act as a simulator, a first step toward driving such models with interpretable states and rules.
 \end{abstract}
 
 
 % #####################################################################
 \section{Introduction}
 
-It is frequently proposed that modern generative models learn internal representations and dynamics that correspond faithfully to the environments underlying their training data, leading them to be called world models \citep{Othello, SORA, GENIE, blank_cite}. This is a stronger claim than saying that they can generate realistic observations resembling those found in the data. Intuitively, it is the difference between predicting how pixels move and modeling how objects move.
+\begin{figure}[b]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/teaser.pdf}
+\caption{We examine when a generative model's latent state can be set from interpretable simulator variables. (a) We train a generator on observations from an environment, then test whether a simulator's state can be transferred into it at inference. (b) In representation steering, we train a probe to read out simulator state, then invert it or follow its gradients to steer the latent state toward a target $s^*$. (c) Alternatively, we train an inverse map from simulator state to latent state. Neither approach is trained on the observations its edits should produce. See \cref{fig:experimental_setup} for evaluation details.}
+\label{fig:teaser}
+\end{figure}
 
-One way to ground the distinction between a purely predictive model and one which is modeling its environment is to use the notion of a simulator. If the learned model's representations permit a readout of environment state, and the setting of that state can steer the generation to match a true environment observation, then the learned model is effectively operating as a simulator. Therefore, the determination of this property falls on our capacity to find mappings between the model's latent state and known environment states.
+A simulator represents an environment by holding a state, advancing it by a rule, and rendering it into observations. In conventional simulators, this state is explicit and interpretable, allowing it to be set while preserving commitments to that environment and its rules \citep{todorov2012mujoco}. Yet what these systems can express is constrained by what has been specified. Generative models, by contrast, learn from observations and can supply plausible details where that specification is incomplete \citep{brooks2024sora,bruce2024genie}. If an observer has seen only half of a room and then turns around, a generative model can propose what lies behind them, consistent with what they have already seen \citep{lu2025genex}. Their internal representations, however, typically offer no straightforward means of setting the environment's state \citep{shen2020interfacegan,tewari2020stylerig}.
 
-To quantify the extent to which a generative model is a simulator, we use the common decomposition of analysis into two categories: decodability and editability. Decodability measures the predictive power of learned mappings from latent states to environment states. Editability asks, when we have a shift in the environment state and implement a corresponding shift in the latent state, how well does the subsequent generation match the true edited observation? As has been well-established, decodability does not guarantee editability \citep{amnesiac_probing, blank_cite}.
+Combining the two would let users test outcomes under interpretable conditions while drawing on details the simulator does not specify. Applications range from forecasting and planning to training agents \citep{lam2023graphcast,hafner2025dreamerv3}. We investigate one requirement for this through \textit{editability}: whether changing a model's latent representation produces the output changes expected from editing simulator variables. This is a question about the functionality we can access, without requiring that the model internally represents or advances state in the same way as a conventional simulator. Our experiments examine the effect of an edit on next-step predictions.
 
-While prior work has extensively studied how architecture \citep{blank_cite}, training setup \citep{blank_cite}, probe class \citep{blank_cite}, and intervention method \citep{blank_cite} affect our ability to recover and manipulate learned world representations, comparatively little attention has been paid to the environment as the independent variable. We instead keep a shared transformer architecture and matched experimental protocol, with explicit controls for observation format, and systematically vary properties of the underlying environment. Using this strategy, we find that the environment setup can meaningfully determine whether a variable will be subsequently editable, and identify the relevant switches in our own environments.
+Whether a simulator variable is editable is not apparent from its decodability alone. A variable may be accurately decoded from a model's latent representations without the decoding probe providing a means of changing its effect on the output \citep{hazineh2023linear,canby2025reliable}. We ask instead which conditions make a variable editable. To avoid confounds from the architecture, training, or evaluation, we hold all three fixed and vary only the training environment. Changing the rules governing a variable, or the observations through which it is revealed, then isolates their effect on its editability.
 
-% What are we actually showing? Needs to be supplied earlier.
+We study two classes of environment: the game of Othello, where observations are move sequences and state is a discrete board configuration \citep{li2023othello}, and Rayworld, where moving discs are rendered into partial 1D observations. We vary the game rules in Othello and the observation process in Rayworld, and also compare continuous and categorical descriptions of the discs' state. Both environments have known ground truth simulators, so the correct response to each edit can be checked directly.
 
-% The reader needs the contrast: move histories with board-state targets versus partial visual observations with position targets. “State is determined by the board grid” is imprecise—presumably you mean the configuration of occupied squares and colors, with turn information where relevant.
-In this paper we focus analysis on two classes of environment, and vary properties within each to get a spread of environment instances on which a fixed model is trained. The first environment is based on the board game of Othello, and was chosen for its simplicity and prior demonstrations of positive decodability and editability \citep{othellogpt, blank_cite}. The second environment, which we call Discworld, is our own setup involving a 2D frustum where small discs move according to fixed velocity and are projected into 1D observations. In the case of Othello the state is determined by the board grid, and the editing target is the color or presence of placed tokens. In Discworld the state is composed of the 2D positions and velocities of the two discs, and our editing target is the position of one disc.
+Given observations paired with their simulator states, a common approach is to train probes that decode the state from the model's latent representations, then steer those representations with the probes \citep{li2023othello,nanda2023linear}. We train linear and MLP probes and derive from each an editor that moves the latent state along the probe's directions. We call this representation steering. A failed steering edit, however, does not rule out that some other latent state produces the intended output. To test this, we train an inverse map on the same data, from simulator state to latent state, and overwrite the latent state with the map's output. If the inverse map succeeds where steering fails, we can still drive the model from outside with simulator states, even if the model does not represent them as the simulator does. We score each edit by whether it moves the prediction toward the edited simulator state, and whether the prediction stays accurate.
 
-% Simplifying Othello preserves editability when color supplies an independent predictive distinction.
-% Changing the placement rule removes color editability despite strong decoding, while occupancy remains partly editable.
-% Discworld retains strong prediction and decoding but resists clean position edits; changing probe targets improves directional effects without eliminating collateral damage.
-Across these two environments, we find that high decodability across all our conditions, although the extent to which it lies above observation-space and random initialization baselines varies. Editability, however, is strongly influenced by the environment setup. In particular, we show that toggling the standard token flipping rule in Othello makes token color a non-editable variable, even when it is still causally needed for the prediction task. In Discworld we analyze a spread of setups that become increasingly similar to the Othello case, without ever making position an editable variable. Altogether, our findings indicate that causal relevance is insufficient for an environment variable to be editable.
-
-As part of our quantification of decodability and editability we run the environment simulators across two different trajectories and collect the latent states across them. This allows us to also measure the alignement between the linear probes' row spaces and the 'true' edit directions. We find that cases of successful editing have naturally higher alignment but still lie mostly unaligned with the true direction. We further find that linear probes may be misaligned by default, but this can be partially corrected by an unwhitening procedure as suggested by \citet{haufe, blank_cite}. Under this procedure, we find that alignment is only a partial predictor of editability, but unwhitening can materially improve the editability in some cases.
+Across our variants, decodability alone does not predict editability. Every model decodes its state well, yet removing a single rule from Othello disables all three editors. In every Rayworld variant, the probe-derived editors fail on continuous positions while the inverse map succeeds. A model can therefore be driven from a simulator's state even when its probes cannot steer it.
 
 Our main contributions are as follows:
 \begin{enumerate}[
-    label=(\arabic*),
-    leftmargin=*,
-    align=left,
-    itemsep=0.25em,
-    topsep=0pt,
-    parsep=0pt,
-    partopsep=0pt
+label=(\arabic*),
+leftmargin=*,
+align=left,
+itemsep=0.25em,
+topsep=0pt,
+parsep=0pt,
+partopsep=0pt
 ]
-\item \textbf{A characterization of how environment influences learned representations in two distinct types.}
-\item \textbf{A method for quantifying the decodability and editability of learned generative models when acccess to a simulator is assumed.}
-\item \textbf{A demonstration of a specific environmental factor (token flipping) which determines the editability of colors in Othello.}
-\item \textbf{An outline of how the alignment between probe row spaces and edit directions acquired through counterfactuals can influence editability.}
+\item \textbf{A controlled method for evaluating decodability and editability as the environment varies}
+\item \textbf{A study of when probes find steerable representations across environments}
+\item \textbf{A demonstration that an inverse map can produce the target output when probe-derived editors fail, even when it predicts latent states poorly}
 \end{enumerate}
 
 
+
 % #####################################################################
-\section{Methods}
+\section{Background and Related Work}
 
-Our design holds the analysis fixed and varies the environment. Every model is a transformer of the same size, trained with the same recipe on the same number of sequences to predict the next observation, and every model is read with the same probes, written to with the same editors, and scored with the same metrics. A difference between rows of our tables is therefore a fact about the world the training data came from. \red{Appendix labels (app:predictive, app:frustum, app:tokens, app:categorical, app:inlp) are not yet defined.}
+\subsection{World Models and Simulators}
 
-\subsection{Othello}
+World models encompass several related ideas, from learned environments for agent training \citep{ha2018worldmodels} to video generators presented as world simulators \citep{brooks2024sora,bruce2024genie,nvidia2025cosmos}. Whether these models represent environment state, use it in prediction, or allow it to be set are distinct questions \citep{li2025definition}. We focus on the last: whether setting a model's latent state produces the observations expected from a target simulator state.
 
-Players alternate placing discs on an $8 \times 8$ board, a legal move must enclose opponent discs along a line, and the enclosed discs flip. We follow \citet{othellogpt}, who trained a GPT on synthetic games and edited the board decoded from its residual stream, and \citet{nanda}, who showed the board is linearly decodable in the frame of the player about to move. Our games come from the generator of \citet{othellogpt}, which draws every move uniformly from the legal set $L_t$, so the cross entropy has an exact floor of $\mathbb{E}[\log |L_t|]$.
+Evaluations of world models approach these questions from different directions. \citet{vafa2024evaluating} test whether a model recognizes which future sequences are possible from an environment state, regardless of how it was reached. For video generators, \citet{kang2025physical} find accurate physical predictions within the training distribution but poor extrapolation, while What-If World tests whether changing a physical variable in a prompt produces the expected consequences \citep{cai2026whatif}.
 
-The state is the board after each move in the mine/theirs frame, 64 squares each empty, the mover's, or the opponent's. The edit benchmark is the 1001 cases of \citet{othellogpt}, a real prefix with one occupied square recolored, scored against the legal sets before and after the flip, and for the variants we synthesize 1001 cases with the same recipe (Appendix~\ref{app:predictive}).
+Making generation controllable often involves supplying additional structure. Trained conditioning interfaces let users specify aspects of the output \citep{zhang2023controlnet,wang2024motionctrl,nvidia2025transfer}, while geometric manipulation of latent features can guide camera motion without further training \citep{hou2026camera}. PhysDreamer instead uses generative priors to infer material properties for an explicit physical simulator \citep{zhang2024physdreamer}. These approaches make particular properties editable through conditioning interfaces or supplied geometry and physics, so the available edits depend on the structure provided. We instead investigate whether a model trained only to predict observations can accept simulator state edits through representations it has already learned.
 
-Two variants change one rule each. In no-flip, enclosed discs keep their color, which from the standard opening preserves a checkerboard invariant: every disc's color equals the parity of its square, no player ever passes, and legality never depends on color, so color is decodable by lookup and causally irrelevant. In adjacent, nothing recolors either, but a move is legal exactly when the empty square touches one of the mover's own discs, so legality depends on color while color remains a lookup on the input. \red{A third variant with adjacency placement and recoloring, in which color is used by legality and not readable from the input, is in training.}
+\subsection{Probing and Steering Learned Representations}
 
-\subsection{Discworld}
+A common approach to studying learned world models is to decode environment variables and then intervene on their representations to test whether the model uses them. In Othello, \citet{li2023othello} decode board states from transformers trained on move sequences and use probe gradients to guide predictions toward edited boards. Representing token ownership as mine/theirs permits linear decoding and edits through vector arithmetic \citep{nanda2023linear}, and similar interventions produce moves legal under edited chess boards \citep{karvonen2024chess}. Yet accurate board decoding can coexist with ineffective edits in late layers and shallow Othello models \citep{hazineh2023linear}. \citet{chawla2026metaothello} train one model on several rule variants and find that probes can guide edits across them, whereas we train a separate model per variant and hold the training and analysis fixed.
 
-An observer at the origin looks into a frustum of depth $y \in [3, 12]$ and half-width $y/2$, in which two discs of radius $0.5$ move at constant velocity for 40 frames, with trajectories that touch the walls or bring the discs within 1.6 diameters rejected, so the dynamics are exactly linear. The noise-free observation is 128 rays uniform in the tangent of the viewing angle, each returning the reflectivity of the nearest disc it hits ($0.4$ or $0.8$, fixed per disc) or $0$. Depth is never observed directly and enters only through the number of rays a disc covers and through occlusion.
+Decoding accuracy must be interpreted with care, since a probe can itself learn the structure being recovered \citep{hewitt2019probes}. Amnesic probing tests whether a model uses certain decoded information by removing it from activations and measuring the effect on behavior \citep{elazar2021amnesic}. In video encoders, \citet{joseph2026physics} edit motion representations and use a separate probe to check whether they now indicate the target direction. \citet{esmati2026invisible} study whether video-model activations distinguish physically plausible from implausible events. In Atari models, \citet{zhang2026probing} also show that interventions along probe directions change predictions. Because our simulators can be edited directly, we can instead compare a model's edited output with the output of the corresponding simulator edit. As in image editing \citep{shen2020interfacegan} and language-model steering \citep{zou2023repe,rimsky2024caa}, success also depends on preserving properties outside the target \citep{canby2025reliable}. Our metrics measure both the targeted change and prediction quality.
 
-The state is the position and velocity of both discs, and predicting the next frame requires a belief over it,
-\begin{align}
-\mathbf{x}_t &= \begin{bmatrix} p_{1,t} & v_{1,t} & p_{2,t} & v_{2,t} \end{bmatrix}^\top \in \mathbb{R}^8, \qquad
-\mathbf{x}_{t+1} = A\,\mathbf{x}_t, \qquad \mathbf{y}_t = h(\mathbf{x}_t) \in [0,1]^R, \\
-p(\mathbf{y}_{t+1} \mid \mathbf{y}_{1:t}) &= \int p(\mathbf{y}_{t+1} \mid \mathbf{x}_{t+1})\, p(\mathbf{x}_{t+1} \mid \mathbf{y}_{1:t})\, d\mathbf{x}_{t+1},
-\end{align}
-where $A$ advances each position by its velocity and $h$ is the ray caster. We probe the state in the frustum basis (the ray coordinate $u = x/(ky)$, the inverse depth $1/y$, and their rates), which is linear in what the sensor measures (Appendix~\ref{app:frustum}). The edit benchmark teleports one disc at frame 20 of a held-out sequence to a random position clear of the walls and the other disc. We warm the model on frames 0 to 19, edit its residual stream at the last position, and score its prediction of frame 20 and its 15-frame free run on the first 192 cases.
+A direct mapping into latent space can also set a model's state, without first finding a steerable representation. StyleRig learns such a mapping from face parameters into a fixed StyleGAN, using editing and consistency losses \citep{tewari2020stylerig}. Closer to our setting, \citet{liu2026carriers} learn latent edits from paired factual and counterfactual activations and compare the resulting rollouts with simulator counterfactuals. Our inverse mapping is fitted only on ordinary state--activation pairs, and we test whether it produces the intended output when probe-derived editors cannot.
 
-Two variants change the sensor. The 8-ray variant keeps 8 rays and doubles the disc radius, so a disc covers one to five rays and has exactly 30 distinct appearances, which lets us define a categorical state below. The blink variant hides a disc from the observation for a run of frames while its physics continues, marking the blackout's start and end on the disc's edge ray, so the model must carry an advanced position to predict where the disc reappears. We also tokenize the 8-ray frames into a 422-token vocabulary and train the Othello model on them (Appendix~\ref{app:tokens}).
-
-\subsection{Model, training, and probes}
-
-Every model is the minGPT used by \citet{othellogpt}, eight blocks of width 512, about 25M parameters, with only the two ends changed: an embedding table and a softmax over 61 tokens trained with cross entropy for Othello, and a linear map from and back to the $R$ ray values trained with squared error for Discworld. Every model trains on 20M sequences for 780,000 steps at batch size 256 from one seed (Appendix~\ref{app:predictive}). The probes are those of \citet{othellogpt}, a linear map and an MLP with one hidden layer of 128 units, fitted at every residual point on 30,000 sequences or 20,000 games and held out by sequence. Targets are the mine/theirs board in Othello and the eight-dimensional state in Discworld. To test whether the target's type matters we also give the 8-ray model a categorical state of Othello's shape, each of the 30 appearances a cell labeled empty or holding disc one or two, with a factorized form that reads each disc's run center (15 classes) and length (5 classes), and product grids of the frustum coordinates at matched cell counts as controls (Appendix~\ref{app:categorical}).
-
-\subsection{Editors}
-
-An editor changes the residual stream at one point (the stream after $\ell$ blocks) and the last position, and the network computes its prediction from the changed stream. Edits target position only, since a velocity change is invisible in one frame. With $\mathbf{z}$ the standardized residual and $f(\mathbf{h}) = W\mathbf{z} + \mathbf{b}$ the linear probe,
-\begin{align}
-\text{PI:}\quad & \Delta\mathbf{z} = W^{+}(\mathbf{t} - \mathbf{b} - W\mathbf{z}), \qquad \mathbf{h}' = \mathbf{h} + \alpha\,\boldsymbol{\sigma} \odot \Delta\mathbf{z}, \\
-\text{GS:}\quad & \mathbf{h} \leftarrow \mathbf{h} - \eta\, \nabla_{\mathbf{h}}\, \mathcal{L}\big(f_{\mathrm{MLP}}(\mathbf{h}), B'\big), \\
-\text{ND:}\quad & \mathbf{h}' = \mathbf{h} + \alpha\, \|\mathbf{h}\|\, \hat{\mathbf{d}}, \qquad \mathbf{d} = (\mathbf{w}_{\mathrm{new}} - \mathbf{w}_{\mathrm{old}})/\boldsymbol{\sigma}.
-\end{align}
-Pseudoinverse injection (PI) is the minimum-norm write that makes the linear probe read a target $\mathbf{t}$, exact at $\alpha = 1$, where $\mathbf{t}$ is the edited world's state in Discworld and the probe's own logits with two classes swapped at the edited square or cells otherwise. Gradient steering (GS) is the method of \citet{othellogpt}, 100 Adam steps on $\mathbf{h}$ through the frozen MLP probe toward its current reading with the edited entries replaced, repeated at every residual point after the starting layer. Direction addition (ND), from \citet{nanda}, adds the contrast between the probe rows of the requested and current class, and is defined only for a categorical change, since one direction and magnitude cannot implement teleports that differ from case to case. Every editor is swept over residual points and step sizes, and we report the arm with the highest Edit Index with its fidelity ratio. Writing to a whole cascade of orthogonal probes from iterative nullspace projection \citep{blank_cite} changes the Edit Index by at most $0.09$ (Appendix~\ref{app:inlp}).
-
-\subsection{Metrics}
-
-Decodability is Probe Skill, $1 - \text{probe loss} / \text{trivial predictor loss}$, which is $R^2$ for regression and one minus the ratio of error rates to the majority class for classification. Every skill is read against two floors fitted with the same probes on the same held-out sequences, the untrained architecture and the raw input history.
-
-Editability is scored at the edit step against two reference outputs the simulator supplies, the clean renders of the edited and unedited worlds in Discworld and the uniform distributions over the legal moves before and after the flip in Othello. With $d_{\mathrm{edit}}$ and $d_{\mathrm{uned}}$ the RMSE from the model's output $\hat{o}$ to each reference over the support where they differ,
-\begin{align}
-\text{Edit Index} = \frac{d_{\mathrm{uned}} - d_{\mathrm{edit}}}{d_{\mathrm{uned}} + d_{\mathrm{edit}}}, \qquad
-\text{Fidelity Ratio} = \frac{\operatorname{RMSE}(\hat{o}, o^{\mathrm{edit}})}{\operatorname{RMSE}(\hat{o}^{\mathrm{unedited}}, o^{\mathrm{edit}})}.
-\end{align}
-The index is $+1$ for the edited world, $-1$ for the unedited one, and near $0$ for an output far from both, so destroying the output does not score. Because it is relative, we pair it with the fidelity ratio over the whole frame or all 64 squares, and no arm above one counts as a success. Unlike interchange intervention accuracy \citep{blank_cite}, the edits are synthesized from a probe rather than patched from a counterfactual run and the outputs are frames and distributions rather than labels, so we score distance to both worlds instead of accuracy. Overwriting the model's context with the frames of the edited world reaches $+0.91$ on Discworld, so the index does register a landed edit.
+Causal abstraction tests whether interventions on a model's internal representations correspond to interventions on variables in a higher-level causal model \citep{geiger2021causal}, typically by swapping activations between inputs and, in distributed alignment search, learning the subspace where such swaps succeed \citep{geiger2025foundation,geiger2024das}. We share this intervention-based criterion, but our high-level model is the simulator we want to drive the model with, not a hypothesis about its computation. Our editors are fit only to paired latent and simulator states, without counterfactuals or optimization for intervention success, which lets us test whether decodable representations are also editable.
 
 
 % #####################################################################
-\section{Experiments}
-
-Table~\ref{tab:instances} lists the instances with their predictive quality and decodability. The Othello models sit within $0.02$ nats of their exact floors, and the Discworld models reach held-out squared errors below $0.006$ on frames whose disc values are $0.4$ and $0.8$.
-
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l r rr rr rr}
-\hline
- & & \multicolumn{2}{c}{Trained} & \multicolumn{2}{c}{Random init} & \multicolumn{2}{c}{Observation} \\
-Instance & Loss (floor) & Lin. & MLP & Lin. & MLP & Lin. & MLP \\
-\hline
-Othello & 2.029 (2.011) & 0.975 & 0.976 & 0.577 & 0.583 & 0.792 & 0.809 \\
-Othello no-flip & 1.680 (1.679) & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
-Othello adjacent & 2.435 (2.433) & 0.988 & 0.990 & 0.581 & 0.588 & 0.988 & 0.983 \\
-\red{Othello adjacent-flip} & \multicolumn{7}{c}{\red{pending}} \\
-Discworld & 0.00106 & 0.959 & 0.996 & 0.825 & 0.987 & 0.390 & 0.960 \\
-Discworld 8-ray & 0.00574 & 0.950 & 0.981 & 0.955 & 0.975 & 0.391 & 0.950 \\
-Discworld blink & 0.00126 & 0.904 & 0.992 & 0.722 & 0.940 & 0.346 & 0.906 \\
-\hline
-\end{tabular}
-\caption{Instances, predictive quality, and decodability. Loss is test cross entropy in nats with the exact floor in parentheses for Othello, and validation squared error for Discworld. Decodability is Probe Skill at the best residual point, held out by sequence, beside the two floors fitted with the same probes on the same sequences.}
-\label{tab:instances}
-\end{table}
-
-\subsection{Decodability}
-
-State is decodable in every instance, and the floors are where the instances separate. Standard Othello is the one case where training clearly builds decodability, at $0.975$ against floors of $0.58$ and $0.79$, because the board must be computed through the flips and a shallow read of the moves cannot do it. Both variants are decodable from the input alone, at $1.000$ for no-flip even from the untrained network and at the observation floor for adjacent. Discworld's decodability is likewise not a product of training, with the untrained transformer's MLP skill within $0.01$ of the trained one on 128 and 8 rays. Blink is the exception. Its linear observation floor drops to $0.35$ while the trained model reads a hidden disc at $0.63$ to $0.89$ linearly and $0.97$ to $0.99$ with the MLP, so the model carries position through a blackout. In control-theoretic terms the state is observable everywhere, and only in standard Othello does its reconstruction need computation beyond a shallow map of the history.
-
-\subsection{Editability}
-
-Table~\ref{tab:editability} reports the best arm of each editor against unedited scores of $-0.68$ to $-0.92$. Standard Othello is editable by every editor, with indices of $+0.61$ to $+0.65$ at fidelity ratios of $0.21$ to $0.24$, and a squared-error head in place of cross entropy gives $+0.68$ to $+0.74$ (Appendix~\ref{app:tokens}), so the objective is not the cause.
-
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l r rr rr rr}
-\hline
- & & \multicolumn{2}{c}{PI} & \multicolumn{2}{c}{ND} & \multicolumn{2}{c}{GS} \\
-Instance & Unedited & Index & Fid. & Index & Fid. & Index & Fid. \\
-\hline
-Othello & $-0.71$ & $+0.61$ & 0.24 & $+0.62$ & 0.23 & $+0.65$ & 0.21 \\
-Othello no-flip & $-0.82$ & $-0.00$ & 3.25 & $+0.09$ & 2.57 & $+0.02$ & 4.00 \\
-Othello adjacent & $-0.68$ & $-0.05$ & 2.31 & $+0.12$ & 1.05 & $+0.00$ & 5.73 \\
-\red{Othello adjacent-flip} & \multicolumn{7}{c}{\red{pending}} \\
-Discworld & $-0.92$ & $+0.23$ & 1.95 & -- & -- & $-0.10$ & 0.99 \\
-Discworld 8-ray & $-0.91$ & $+0.28$ & 0.90 & -- & -- & $-0.06$ & 0.82 \\
-Discworld blink & $-0.91$ & $+0.22$ & 1.78 & -- & -- & $-0.09$ & 1.00 \\
-\hline
-\end{tabular}
-\caption{Editability. Edit Index and fidelity ratio of each editor's best arm over residual points and step sizes, at the edit step, over 1001 Othello cases (legal-set construction) or 192 Discworld cases (ray-zone construction). A fidelity ratio above 1 means the edit left the output further from the edited world than no edit. \red{Bootstrap intervals to be added.}}
-\label{tab:editability}
-\end{table}
-
-Removing the flips removes editability, and restoring a causal role for color does not restore it. No editor exceeds $+0.09$ on the no-flip model, and only while destroying the prediction. On the adjacent model legality depends on color, the model predicts it essentially perfectly, and the probe reads the requested color at the edited square in 99\% of cases after the write, yet the next-move distribution does not follow, with ND at $+0.12$ and never above $+0.13$ at step sizes far beyond the grid. Within the no-flip model the variable makes the difference. Editing the presence of a disc instead of its color, with a dedicated linear probe and PI on 400 synthesized cases, reaches $+0.39$ at a fidelity ratio of $0.44$, against $+0.45$ on the standard model. \red{(Experiment-level result, not in the canonical table.)}
-
-Discworld position is not editable through these probes on any instance. PI's best index of $+0.23$ on the 128-ray model comes at a fidelity ratio of $1.95$, GS is negative everywhere, blink gives $+0.22$ at $1.78$, and the 8-ray model's one non-destructive positive, $+0.28$ at $0.90$, is a smear across the old and new rays rather than a relocated disc. The exact write at $\alpha = 1$ lands the probe read-out at every point after the embedding on every Discworld model and leaves the index within $0.03$ of the unedited floor at the first three of those points.
-
-A categorical target changes the picture, with a qualification (Table~\ref{tab:categorical}, Figure~\ref{fig:waterfall}). Through the 30-cell appearance partition GS reaches $+0.61$ at a fidelity ratio of $0.39$, PI and ND reach $+0.43$ below one, and the index stays positive over all 15 rollout steps while decaying to $+0.06$. The factorized form keeps the gain, the size-matched grids stay between $+0.29$ and $+0.36$, and across every grid from 8 to 512 cells GS never exceeds $+0.42$, so the effect is alignment with what the frame resolves rather than cell count. Snapping the regression target to the same cell centers leaves the regression numbers essentially unchanged, so the gain requires the categorical read-out and its class-swap edit. The qualification is collateral damage and provenance. PI and ND raise the error on the other disc's rays from $0.11$ to $0.34$ and $0.40$ (GS $0.14$), visible as gray smearing in Figure~\ref{fig:waterfall}, and the 8-ray appearance is close to a read of the current frame (untrained network $0.88$, trained $0.90$).
-
-\begin{table}[t]
-\centering
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{l rr rr rr rr}
-\hline
- & \multicolumn{2}{c}{Skill} & \multicolumn{2}{c}{PI} & \multicolumn{2}{c}{ND} & \multicolumn{2}{c}{GS} \\
-Probe target (8-ray model) & Lin. & MLP & Index & Fid. & Index & Fid. & Index & Fid. \\
-\hline
-Position, regression & 0.950 & 0.981 & $+0.28$ & 0.90 & -- & -- & $-0.06$ & 0.82 \\
-Appearance (30 cells) & 0.893 & 0.904 & $+0.43$ & 0.76 & $+0.43$ & 0.91 & $+0.61$ & 0.39 \\
-Appearance, factorized & 0.935 & 0.943 & $+0.41$ & 0.71 & $+0.50$ & 0.86 & $+0.46$ & 0.53 \\
-Grid $6 \times 5$ (30) & 0.466 & 0.535 & $+0.32$ & 0.87 & $+0.29$ & 0.92 & $+0.34$ & 0.66 \\
-Grid $10 \times 3$ (30) & 0.443 & 0.496 & $+0.36$ & 0.85 & $+0.34$ & 0.95 & $+0.34$ & 0.63 \\
-Grid $16 \times 8$ (128) & 0.156 & 0.212 & $+0.10$ & 1.43 & $+0.31$ & 0.99 & $+0.37$ & 0.66 \\
-Snapped regression (30) & 0.959 & 0.991 & $+0.34$ & 1.15 & -- & -- & $-0.13$ & 0.84 \\
-\hline
-\end{tabular}
-\caption{Probe targets on the Discworld 8-ray model, each a new probe fit on the same trained model with the same editors run through it on 192 cases. Grids bin the frustum coordinates uniformly as size-matched and resolution-matched controls. Snapped regression replaces each position by its appearance-cell center and keeps the regression pipeline.}
-\label{tab:categorical}
-\end{table}
+\section{Experimental Setup}
+\label{sec:experimental_setup}
 
 \begin{figure}[t]
 \centering
-\fbox{\parbox{0.9\linewidth}{\centering \vspace{3em} \red{Placeholder: qualitative panel of ground truth, unedited, PI, ND, and GS rollouts on the 8-ray model through the appearance target.} \vspace{3em}}}
-% source: runs/ray_ablation/L-dw-8ray-20m/figures/waterfall_edits_appearance.png
-\caption{Edits on the Discworld 8-ray model through the appearance target. Each column is one method's own rollout after the edit at frame 20, below six frames of observed context, with the target and vacated rays marked. Samples are drawn at random.}
-\label{fig:waterfall}
+\includegraphics[width=0.9\linewidth]{figs/setup_overview.pdf}
+\caption{Overview of our evaluation procedure. The environment simulator renders state $s_t$ into observation $o_t$. The frozen generative model encodes the observations into latent state $z_t$ with $G_E$, and $G_D$ maps it to the next-step prediction $\hat{o}_{t+1}$, where $z_t$ holds the residual activations at every point and $G_D$ reads the last. We measure \textbf{decodability} by training probes to recover simulator state from the latent state. To measure \textbf{editability}, we edit the simulator state to obtain a target $s_t^*$, use an editor to produce a corresponding latent state $z_t^*$ and pass it through $G_D$ for the edited prediction $\hat{o}_{t+1}^*$. We compare this prediction with $o_{t+1}^*$, rendered from the edited state one step forward, using the unedited observation and prediction as references (\cref{eq:editability_formulae}).}
+\label{fig:experimental_setup}
 \end{figure}
 
-\subsection{Probe alignment}
+Our experiments hold the model and its analysis fixed while the environment changes, so a difference between two rows of our tables is a fact about the environment. We use a common scheme for both environments, shown in \cref{fig:experimental_setup}. A simulator holds a state $s_t$ and renders it into an observation $o_t$, a move in Othello and a frame in Rayworld. The encoder $G_E$ maps $o_t$ and earlier latent states $z_{1:t-1}$ to $z_t$, the residual stream at every point, and the decoder $G_D$, the output layer, reads the last point to predict $\hat{o}_{t+1}$. An edit changes $s_t$ to a target $s_t^*$, an editor proposes a matching latent state $z_t^*$, and $G_D$ maps it to $\hat{o}_{t+1}^*$. The reference is $o_{t+1}^*$, rendered from $s_t^*$ advanced one step, beside the unedited $o_{t+1}$. We vary each environment along the axis it offers: the rules in Othello and what the observation reveals in Rayworld.
 
-\red{Placeholder subsection, may move to the appendix.} We compare the editors' write directions with $\Delta = \mathbf{h}_{\mathrm{cf}} - \mathbf{h}$, the displacement to the residual the model produces on a counterfactual history (a shifted and re-rendered trajectory in Discworld, a real game with the flipped board in Othello), as the fraction $\cos^2\theta$ of $\Delta$ inside the probe's row space against an unrelated displacement as chance, before and after the encoding-pattern correction of \citet{haufe}. Raw alignment tracks editability, at $0.188$ against chance $0.007$ for standard Othello, $0.077$ against $0.009$ for adjacent, and chance for every Discworld model. The correction raises every fraction without reordering them, and editing along the corrected directions triples adjacent to $+0.38$ at a fidelity ratio of $0.60$ while changing nothing on standard Othello. Patching the full $\Delta$ into the Discworld residual produces the edit ($+0.94$ at a fidelity ratio of $0.10$) almost entirely through the complement of the probe's row space, so the information is present at the edited point in a high-rank code that no linear position probe spans. \red{Full table and per-point curves in the appendix.}
+\subsection{Othello}
+\label{sec:othello_experiments}
+Othello is played on an $8 \times 8$ board. Players alternate placing tokens, and a legal move must enclose a line of opponent tokens, which then flip to the mover's color. We follow the setup of \citet{li2023othello}, whose generator draws every move uniformly from the legal set, so the optimal prediction is known exactly: a uniform distribution over the legal moves (\cref{app:predict_skill}). Following \citet{nanda2023linear}, instead of using black and white we describe the board as mine and theirs relative to the player about to move, the form in which it is linearly decodable.
+
+The simulator state $s_t$ is the board after each move, with every cell being empty, mine, or theirs. An edit flips the color of one token after a real 20-move opening and is judged against the legal moves of the board before and after the flip, according to each variant's own placement rules. The flipped board need not be reachable by any legal game, a property the edits of \citet{li2023othello} share. We split our results by reachability in \cref{app:legal_vs_illegal_othello}.
+
+% Don't remove these comments:
+% Flip rates. adjacent-flip 0.269/move: experiments/adjacent_flip_ablation/scores/pilot_adjacent_flip.json (20k games;
+% research/findings/adjacent-flip-ablation.md line 46). standard 2.249/move: measured 2026-09-22 with the same counting
+% loop (pilot_adjacent_flip.py lines 46-66) on 3000 oth-uniform games; scratch check, not stored. Both values confirmed.
+
+\paragraph{Othello Variants.}
+We introduce three variants of Othello. One modifies where a token may be placed, another removes the flipping of enclosed tokens, and the third does both. The two rules play distinct roles: placement keeps color relevant to predicting legal moves, while flipping makes the board hard to recover from the move sequence. In \texttt{adjacent-flip} a token may be placed anywhere adjacent to a token of its own color, including diagonally, with flipping active. Flips still change the legal moves but become rarer, at 0.27 flipped tokens per move against 2.2 in the \texttt{standard} game. \texttt{adjacent-noflip} uses the same placement rule with flipping off, so a placed token never changes color. \texttt{standard-noflip} keeps the standard placement rule without flipping. Every game then fills the same checkerboard in a different order, and a token's color is fully determined by the cell it occupies. \Cref{fig:othello_and_variants} illustrates the setup and its variants.
+
+\subsection{Rayworld}
+\label{sec:rayworld_experiments}
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/othello_overview.pdf}
+\caption{(a) In \texttt{standard} Othello, players alternate placing tokens that must enclose opponent tokens, which then flip color. (b) \texttt{adjacent-flip} instead allows placement anywhere adjacent (or diagonal) to one's own color, (c) \texttt{adjacent-noflip} also turns flipping off, and (d) \texttt{standard-noflip} keeps the original placement without flipping, so every game fills the same checkerboard in a different order. In all examples it is black's turn to move. See \cref{sec:othello_experiments}.}
+\label{fig:othello_and_variants}
+\end{figure}
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/rayworld_overview.pdf}
+\caption{(a) In \texttt{standard} Rayworld, two discs move at constant velocity in a 2D frustum without colliding. Each frame is rendered into a 1D observation by casting rays into the frustum, shown stacked over time. (b) In \texttt{blink}, discs vanish for signaled periods of several frames, and (c) the \texttt{N-ray} family coarsens the observation by casting fewer rays. (d) The categorical target describes each disc by appearance bins, sets of positions that produce the same observation. See \cref{sec:rayworld_experiments}.}
+\label{fig:rayworld_and_variants}
+\end{figure}
+
+Rayworld is a 2D world seen through a single fan of rays. An observer at the origin looks into a trapezoidal frustum in which two discs move at constant velocity for 40 frames. Trajectories in which a disc would hit a wall or the other disc are rejected, so the dynamics are exactly linear. Each frame is rendered into a 1D observation by casting 128 rays, spaced to cross the far edge of the frustum at equal intervals. A ray returns the reflectivity of the nearest disc it hits ($0.4$ or $0.8$ and fixed per disc) or $0$ if it hits neither, giving one noiseless pixel per ray. Depth is never observed directly. It enters only through the number of rays a disc covers, which falls with distance, and through occlusion.
+
+Here $s_t \in \mathbb{R}^8$ holds the position and velocity of both discs and evolves as $s_{t+1} = A\,s_t$, where $A$ advances each position by its velocity, and the frame $o_t = h(s_t) \in [0,1]^R$ over $R$ rays is given by the rendering function $h$. The best possible prediction of the next frame averages $h(A\,s_t)$ over whatever the past frames reveal about $s_t$. Nothing here forces a predictor to represent the state itself, and whether it does is what the probes and editors investigate. We probe the state in the Cartesian coordinates $A$ acts in. An edit teleports a single disc, moving it to a random position inside the frustum that is clear of the walls and of the other disc, with both velocities left unchanged. Unlike an Othello edit, every edited state is a valid configuration of the world, with both discs inside the frustum and apart.
+
+The description of state we probe is a modeling choice rather than a property of the environment. Othello's board is categorical and Rayworld's positions are continuous, so we also give Rayworld a categorical target for comparison. One option is a uniform grid over the frustum, with every bin labeled empty, bright disc, or dim disc. We instead let the observation draw the bins. Each disc lights a run of adjacent rays whose center follows its lateral position and whose length follows its depth, and only a finite set of runs is possible. Treating each run as a bin, two positions share a bin exactly when the disc looks the same, and we call the result the appearance target. An edit then moves a disc between bins, as an Othello edit changes one cell. We factorize the target into a center label and a length label per disc (15 and 5 classes on the \texttt{8-ray} variant) so the output size stays manageable at higher resolutions. Binning by appearance places the target in observation space rather than in positions. \Cref{app:rw_grid_ablation} tests that choice against evenly spaced bins, and we return to it in the discussion.
+
+% Don't remove these comments:
+% Blink length = min(blink_max, Geometric(1/blink_mean)) with --blink-mean 7 --blink-max 12 (pim/environments/discworld/bigcorpus.py
+% line 77; the draw is pim/environments/discworld/blink.py line 80). So 1 to 12 frames, confirmed 2026-09-22.
+\paragraph{Rayworld Variants.}
+We introduce two variants of Rayworld, each modifying what the observation reveals. In \texttt{blink}, a disc vanishes at random for 1 to 12 frames, with the frame before the blackout and its last hidden frame marked on an edge ray, so its position must be carried across the gap rather than read off the current observation. The \texttt{N-ray} family coarsens the observation by casting fewer rays, for $N \in \set{5, 8, 16, 128}$, to examine how the level of detail affects what a probe can find. The disc radius is doubled so a disc always covers at least one ray. Its \texttt{128-ray} member shares \texttt{standard} Rayworld's ray count and matches it on every continuous column, so the family's trends are an effect of ray count and not of disc size. \Cref{fig:rayworld_and_variants} illustrates the setup and variants.
+
+\subsection{Model, Training, and Probes}
+Every model is the same eight-block transformer of width 512 with about 25M parameters \citep{vaswani2017attention}, differing between environments only in its input and output layers. Rayworld uses linear input and output layers with a squared error loss, and Othello uses a token embedding and a softmax over moves with a cross entropy loss. To separate this interface from the environment, we also train an \texttt{8-ray} Rayworld model with Othello's interface, reading and predicting whole frames as tokens (\cref{app:tokenized_rw}). Each model trains for 780,000 steps at batch size 256 on 20M sequences, with a tenth held out for validation. The main results tables come from one seed per variant. To estimate variance we retrain every variant from two further seeds at a shorter budget of 512,000 steps, refit every probe and inverse map on each replicate, and report the spread in \cref{app:metric_spread}.
+
+A decoding probe reads the simulator state out of the model's latent state. The latent state $z_t$ comprises the residual stream, the vector every block adds to and passes on, at every point \citep{elhage2021mathematical}. Its value after block $k$ is residual point $k$, with point 0 as the embedding. At every point we fit a linear probe, as single affine maps \citep{alain2017probes}, and an MLP probe with one hidden layer of 128 units, the shape used by \citet{li2023othello}. Both are fit on about 1.2M pairs of latent state and simulator state, with inputs standardized. Regression targets are fit by least squares and categorical targets by cross entropy. The targets are the mine/theirs board in Othello, the eight-dimensional state in Rayworld, and the appearance target of \cref{sec:rayworld_experiments}, whose probes use a larger corpus of 200,000 sequences to match their larger output.
+
+\subsection{Editors}
+
+The editors differ only in how they produce $z_t^*$. With $f_{\mathrm{Lin}}(z) = Wz + b$ the linear probe, $W^{+}$ the pseudoinverse of $W$, and $f_{\mathrm{MLP}}$ the MLP probe at the edited residual point,
+\begin{align}
+\text{PI:}\quad & z_t^* = z_t + \alpha\, W^{+}\big(s_t^* - f_{\mathrm{Lin}}(z_t)\big), \\
+\text{GS:}\quad & z_t \leftarrow z_t - \eta\, \nabla_{z_t}\, \mathcal{L}\big(f_{\mathrm{MLP}}(z_t),\, s_t^*\big), \\
+\text{IM:}\quad & z_t^* = g(s_t^*).
+\end{align}
+
+The first two editors steer $z_t$ through the same probes that decode the state, so their success or failure indicates what those probes have found. Pseudoinverse injection (PI) makes the smallest change to the standardized latent state that moves the linear probe's reading onto the target, scaled by $\alpha$ so that $\alpha = 1$ lands exactly, and writes once at a single residual point. Gradient steering (GS) instead takes 100 gradient steps of size $\eta$ on the latent state, minimizing the MLP probe's loss $\mathcal{L}$ toward the target while weighting entries that should not change by $0.2$. Following \citet{li2023othello}, it writes at a starting point and again at every later point.
+
+% Do not remove these comments
+% 53.6% = mean over the six Rayworld variants of IM EI / IM-NN EI - 1 (80.3, 89.0, 48.7, 35.9, 32.9, 35.0%), reported arms under
+% pim.metrics.selection.best_arm (cartesian block), read via pim.figures.tables.collect. Othello IM-NN EI: -0.09 / -0.70 / -0.82 / -0.90.
+
+The inverse map (IM) runs the probe in reverse, testing whether the model can act as a simulator even when steering fails. We fit $g$ from simulator state to latent state, an MLP of the same size and training setup as the forward probe, and at edit time overwrite the latent state with $g(s_t^*)$ at one residual point. To rule out memorization, we compare against overwriting with the mean latent state of the ten nearest training states, which IM beats by 53.6\% in Edit Index on average across Rayworld variants, while in Othello the nearest neighbors never successfully edit (\cref{app:inverse_nearest_neighbor}).
+
+Each variant is scored on 1000 edit cases, each a held-out sequence with one variable changed at step 20. We skip cases whose edit leaves the observation unchanged and sweep each editor over residual points and, for PI and GS, step size.
+
+\subsection{Metrics}
+We introduce three metrics, one for decodability and two for editability, each defined relative to a reference so that environments with very different outputs can be compared directly.
+
+We measure decodability with Probe Skill $= 1 - L_{\mathrm{probe}} / L_{\mathrm{trivial}}$, a baseline-relative skill score in the sense of \citet{murphy1988skill}, where $L_{\mathrm{probe}}$ is the probe's held-out loss and $L_{\mathrm{trivial}}$ that of a predictor that ignores the model. For continuous targets we use squared error with the training mean as the trivial predictor, so Probe Skill reduces to $R^2$. For categorical targets we use the error rate, with the most common class of each cell as the trivial predictor. We also fit the same probes to a randomly initialized model \citep{li2023othello} and to the raw observation sequences, separating what training put into the model from what a probe could extract regardless.
+
+Editability requires two measurements, since an edit can implement the target change while degrading the rest of the output, or improve the output without implementing the change. Edit Index measures whether the edited prediction moves toward the edited world, and Edit Fidelity whether the output as a whole remains accurate. Edit Index compares $\hat{o}_{t+1}^*$ against both ground truths over only the part of the output the edit should change: the rays whose values differ between the two worlds in Rayworld, and the cells whose legality the flip changes in Othello. With $\operatorname{RMSE}_{\Delta}$ the error over that support, $d_{\mathrm{edit}} = \operatorname{RMSE}_{\Delta}(\hat{o}_{t+1}^*, o_{t+1}^*)$, and $d_{\mathrm{uned}} = \operatorname{RMSE}_{\Delta}(\hat{o}_{t+1}^*, o_{t+1})$,
+\vspace{0.25em}
+\begin{equation}
+\label{eq:editability_formulae}
+\text{Edit Index} = \frac{d_{\mathrm{uned}} - d_{\mathrm{edit}}}{d_{\mathrm{uned}} + d_{\mathrm{edit}}}, \qquad
+\text{Edit Fidelity} = 1 - \frac{\operatorname{RMSE}(\hat{o}_{t+1}^*, o_{t+1}^*)}{\operatorname{RMSE}(\hat{o}_{t+1}, o_{t+1}^*)}.
+\end{equation}
+Edit Index is $+1$ when the prediction matches the edited observation and $-1$ when it matches the unedited one, with outputs far from both near $0$. Edit Fidelity scores the whole output against the edited observation relative to the unedited prediction, so that $1$ reproduces it exactly, $0$ is no improvement, and negative values indicate a worse prediction. We report each editor at its highest Edit Index among settings with Edit Fidelity of at least $0$, falling back to the highest Edit Fidelity where none qualifies. Selecting on Edit Fidelity instead leads to the same conclusions (\cref{app:edit_fidelity_choice}).
+
+
+
+
+% #####################################################################
+\section{Results}
+\label{sec:results}
+
+% Do not remove these comments:
+% Seed SDs: paper_ci replicate analysis (n = 3 at 512k, cartesian / mine-theirs, guarded arms; Sevan 2026-09-22). Reproduce in
+% app:metric_spread and un-red. Dagger set today: oth-adjflip PI index and IM fidelity, oth-adjacent-noflip IM index and GS fidelity;
+% oth-noflip and the third oth-adjacent seed were still running, so the set may grow.
+% 2026-09-23, final (n = 3 for all ten variants): daggers = adjflip PI index + IM fidelity, adjacent-noflip PI index + IM index. The
+% adjacent-noflip GS-fidelity dagger is gone (SD 0.010 under the highest-fidelity fallback). Numbers un-redded; full table in app:metric_spread.
+
+% source: notebooks/build_paper_tables_and_figs.ipynb Tables 1 and 1b (pim.figures.tables.collect, cartesian basis): each run's scores.json
+% for the trained probes and the inverse map's R^2 (inverse_map.g_r2, best point and the reported IM arm's point); floors from
+% runs/_baselines/<instance>/baselines.json.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll PP G PP G PP G PP}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{11}{c}{Probe Type} \\
+\noalign{\vspace{0.25em}}
+\cline{3-13}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{2}{c}{Observation} & & \multicolumn{2}{c}{Random init} & & \multicolumn{2}{c}{Trained} & & \multicolumn{2}{c}{Inverse Map MLP} \\
+Class & Variant
+& \multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Best Point} & \multicolumn{1}{c}{Edit Point} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\rotatebox[origin=c]{90}{Othello}}
+& \texttt{standard}        & 0.792 & 0.809 & & 0.577 & 0.583 & & 0.975 & 0.976 & & 0.884 & 0.827 \\
+& \texttt{adjacent-flip}   & 0.888 & 0.914 & & 0.674 & 0.700 & & 0.947 & 0.970 & & 0.968 & 0.959 \\
+& \texttt{adjacent-noflip} & 0.988 & 0.983 & & 0.581 & 0.588 & & 0.988 & 0.990 & & 0.978 & 0.855 \\
+& \texttt{standard-noflip} & 1.000 & 1.000 & & 1.000 & 1.000 & & 1.000 & 1.000 & & 0.947 & 0.855 \\
+\cline{1-13}
+\noalign{\vspace{0.1em}}
+\multirow{6}{*}{\rotatebox[origin=c]{90}{Rayworld}}
+& \texttt{standard} (128 rays) & 0.305 & 0.885 & & 0.738 & 0.945 & & 0.872 & 0.973 & & 0.741 & 0.339 \\
+& \texttt{blink} (128 rays)    & 0.216 & 0.809 & & 0.608 & 0.870 & & 0.907 & 0.979 & & 0.613 & 0.338 \\
+& \texttt{128-ray} (big discs) & 0.377 & 0.919 & & 0.859 & 0.970 & & 0.914 & 0.981 & & 0.652 & 0.321 \\
+& \texttt{16-ray}   & 0.360 & 0.907 & & 0.890 & 0.949 & & 0.892 & 0.965 & & 0.554 & 0.516 \\
+& \texttt{8-ray}    & 0.329 & 0.877 & & 0.883 & 0.919 & & 0.886 & 0.932 & & 0.585 & 0.580 \\
+& \texttt{5-ray}    & 0.277 & 0.829 & & 0.855 & 0.871 & & 0.850 & 0.883 & & 0.617 & 0.469 \\
+\hline
+\end{tabular}
+\caption{Decodability (\textcolor{heatHiTxt}{higher} is better, \textcolor{heatLo}{lower} is worse), measured as Probe Skill at the trained model's best residual point, alongside random-initialization and observation baselines fit with the same probes on the same sequences. The inverse map columns give its $R^2$ in predicting latent state from simulator state, at its best residual point and at the point where it edits best. See \cref{sec:results}.}
+\label{tab:decodability}
+
+\vspace{0.75em}
+
+% source: notebooks/build_paper_tables_and_figs.ipynb Table 2 (tables.collect, cartesian and appearance-fac blocks, pim.metrics.selection.best_arm).
+% Daggers: seed SD > 0.1 over n = 3 at 512k (experiments/paper_ci/dashboard/ledger.md, Table 5 of build_full_tables.ipynb).
+
+\begin{tabular}{ll E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{5-12}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Class & Variant & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\rotatebox[origin=c]{90}{Othello}}
+& \texttt{standard}        & -0.93 & & +0.82 & 0.70 & & +0.83 & 0.72 & & +0.81 & 0.62 \\
+& \texttt{adjacent-flip}   & -0.96 & & +0.35\dg & 0.17 & & -0.06 & 0.21 & & +0.66 & 0.49\dg \\
+& \texttt{adjacent-noflip} & -0.96 & & -0.23\dg & 0.19 & & -0.96 & -0.01 & & -0.03\dg & 0.26 \\
+& \texttt{standard-noflip} & -0.98 & & -0.95 & 0.00 & & -0.97 & -0.01 & & -0.93 & -0.01 \\
+\cline{1-12}
+\noalign{\vspace{0.1em}}
+\multirow{6}{*}{\rotatebox[origin=c]{90}{\shortstack[c]{Rayworld\\(continuous)}}}
+& \texttt{standard} (128 rays) & -0.93 & & -0.10 & 0.04 & & -0.16 & 0.04 & & +0.59 & 0.66 \\
+& \texttt{blink} (128 rays)    & -0.92 & & +0.02 & 0.01 & & -0.09 & 0.02 & & +0.51 & 0.55 \\
+& \texttt{128-ray} (big discs) & -0.94 & & -0.02 & 0.02 & & -0.10 & 0.03 & & +0.57 & 0.68 \\
+& \texttt{16-ray}   & -0.91 & & +0.16 & 0.04 & & -0.10 & 0.10 & & +0.66 & 0.71 \\
+& \texttt{8-ray}    & -0.90 & & +0.21 & 0.00 & & -0.07 & 0.12 & & +0.71 & 0.73 \\
+& \texttt{5-ray}    & -0.89 & & +0.14 & 0.15 & & -0.10 & 0.14 & & +0.81 & 0.77 \\
+\cline{1-12}
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack[c]{Rayworld\\(categorical)}}}
+& \texttt{128-ray} (3736 bins) & -0.94 & & -0.31 & 0.02 & & +0.31 & 0.21 & & +0.64 & 0.71 \\
+& \texttt{16-ray} (77 bins)    & -0.91 & & -0.06 & 0.04 & & +0.28 & 0.15 & & +0.82 & 0.71 \\
+& \texttt{8-ray} (30 bins)     & -0.90 & & +0.38 & 0.05 & & +0.46 & 0.46 & & +0.87 & 0.73 \\
+& \texttt{5-ray} (14 bins)     & -0.91 & & +0.51 & 0.30 & & +0.60 & 0.54 & & +0.91 & 0.75 \\
+\noalign{\vspace{0.75em}}
+\hline
+\end{tabular}
+\caption{Editability (\textcolor{heatHiTxt}{higher} is better, \textcolor{heatLo}{lower} is worse). For each variant and editor, we report the highest Edit Index across residual points and step sizes among settings with Edit Fidelity $\geq 0$, with the Edit Fidelity at that setting, or the highest Edit Fidelity where no setting reaches $0$. Scores are averaged over 1000 edit cases. Edit Index compares the edited prediction against the edited and unedited ground truth over only the rays or cells that change. Edit Fidelity measures whole-output improvement over the unedited prediction, from $1$ for a perfect match to $0$ for no improvement. Cells marked $\dagger$ have a seed standard deviation above $0.1$ (\cref{app:metric_spread}). Details in \cref{sec:results}.}
+\label{tab:editability}
+\end{table}
+
+\Cref{tab:decodability,tab:editability} report decodability and editability for every variant, from one training run each. Retraining each variant from two further seeds gives a seed standard deviation of at most $0.004$ for every trained probe's Probe Skill, and below $0.04$ for the Edit Index of every editor that lands. Cells whose spread exceeds $0.1$ carry a dagger, and all but IM's fidelity on \texttt{adjacent-flip} are failing editors whose selected setting flips between seeds at the fidelity cutoff (\cref{app:metric_spread}). Every model predicts its environment well before any probing or editing begins (\cref{app:predict_skill}).
+
+\paragraph{Decodability.}
+The simulator state is decodable in every variant, with the MLP probe reaching a Probe Skill of at least $0.88$ and the linear probe close behind, so what separates the variants is the baselines. In Othello, training adds something the baselines lack only when flipping is on. Once flipping is removed the board can be read off the move sequence itself, so the \texttt{adjacent-noflip} model only matches its observation baseline, and every probe on \texttt{standard-noflip} scores a perfect $1.000$, even on a randomly initialized model. In Rayworld, a randomly initialized model already comes within $0.03$ of the trained one under the MLP probe on every variant except \texttt{blink}, where a hidden disc must be carried forward rather than located in the current frame.
+
+\paragraph{Editability.}
+Every editor edits \texttt{standard} Othello, reproducing \citet{li2023othello} and \citet{nanda2023linear}, each carrying the predicted move distribution most of the way to the flipped board. Every change to the rules breaks this. With flipping off, no editor lands on either no-flip variant, even on \texttt{adjacent-noflip}, where legal moves still depend on token color. \texttt{adjacent-flip} is where the editors first come apart: IM still lands, while PI and GS reach at most $+0.35$ at low fidelity. 
+
+In Rayworld this separation becomes the rule. On continuous positions, the probe-derived editors fail on every variant while IM lands everywhere, including two further variants in \cref{tab:additional_rw}. PI's write reaches its target in probe space, since at $\alpha = 1$ the linear probe reads the edited state exactly, yet the predicted frame does not move. A latent state that renders the teleported disc therefore exists and can be written, but not along any direction the probes provide. Discretizing the target changes this. It raises GS on the \texttt{128-ray} model, and as the rays coarsen both probe-derived editors rise steadily, to $+0.51$ and $+0.60$ at 5 rays. Since the number of bins falls with the ray count, this trend cannot separate coarseness from target size. At 8 rays, evenly spaced bins that ignore the observation also improve on continuous positions, but the appearance bins improve most (\cref{app:rw_grid_ablation}). Every conclusion above survives selecting each editor by its best fidelity instead (\cref{app:edit_fidelity_choice}), and \cref{fig:qualitative_edits} shows representative edits.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/qualitative_edits_overview.pdf}
+\caption{Qualitative examples of edited predictions in Rayworld (a) and Othello (b), across environment variants and editors. Quantitative results in \cref{tab:editability}. Cyan and magenta coloring highlight the disc or tokens that changed as a result of the edit.}
+\label{fig:qualitative_edits}
+\end{figure}
 
 
 % #####################################################################
 \section{Discussion}
+Editability is sensitive to the environment in ways decodability does not reveal. In Othello, a single token's color stays editable under both flipping variants, although under the adjacency rule only the inverse map remains successful. Once flipping is removed, no editor succeeds. Without flipping, a token keeps its original color, so each color's count is fixed by the number of moves, and flipping one token yields a board no game can reach. Unreachability alone does not explain the failure, since under flipping rules the model accepts unreachable boards readily. Flipping two tokens of opposite color instead preserves the counts, and on \texttt{adjacent-noflip} the inverse map lands again, partly even on unreachable boards (\cref{app:legal_vs_illegal_othello}). The rules thus constrain which states can be written into the model, not only which can be reached. On \texttt{standard-noflip}, color is fixed by the square and is not a free variable at all, leading every tested editor to fail.
 
-% what the two environments jointly tell us, competing explanations, and limitations.
+In Rayworld, what matters is how the state is described. The probes find no steerable direction in continuous positions, but find one once the target is discretized, and find the best one when its bins match what the observation distinguishes. The inverse map instead writes continuous positions at almost every residual point, and giving the model Othello's token interface leaves the outcome unchanged (\cref{app:tokenized_rw}). The inverse map thus lets us keep the simulator we prefer even where the model appears to have bypassed it. In Othello, by contrast, IM lands only at points 4 and 5 (\cref{app:im_editability_trends}), as if the model funnels its history through a board-like bottleneck that the Rayworld model never forms. Whether a model must form one depends on what the environment demands of prediction, resembling how a task may force a minimal sufficient statistic of the past \citep{shalizi2001computational}. Our findings do not settle this mechanism, but holding the model fixed while varying the environment turns it into a measurable comparison.
 
-
-% #####################################################################
-\section{Related Work}
+The inverse map's fit and its edits also separate in Rayworld, where it explains far less of the latent variance ($R^2$ of $0.32$ to $0.58$) yet lands everywhere. Every edit there targets a valid state like those the map was fit on, so the weak fit suggests that much of the latent variance has little bearing on the prediction. The edited predictions are visibly smoother than the model's own (\cref{fig:qualitative_edits}), consistent with $g$ writing a simplified latent that omits some of this variance.
 
 
 % #####################################################################
 \section{Conclusion}
-
+We investigated when a generative model can be driven as a simulator by setting its latent state, and found that the answer depends on the environment in ways decodability does not predict. With the model, probes, editors, and metrics held fixed, a change to Othello's rules or to Rayworld's observation can switch editing of specific variables on or off while the state stays decodable throughout. Probe-derived editing is therefore not sufficient to decide whether a model can act as a simulator. Our editability concerns a single step, whereas a simulator also carries its state forward under consistent rules (see \cref{app:limitations} for further limitations). Rewriting the history lets an edit persist through a rollout (\cref{app:history_editing}), and the next step is to drive a model continuously from a simulator, or from different simulators at different times, and to discover which environments make that possible.
 
 
 % #####################################################################
+\newpage
+\section{AI Use Statement}
+\label{sec:ai_usage}
+Artificial intelligence were used to assist in the execution of this research. Large language models were used to develop code for experiments and simulations, aid in the writing and polishing of drafts, retrieve and discover related work, and assist with ideation.
+\section{Reproducibility Statement}
+\label{sec:reproducibility}
+% TODO: add the anonymous code and artifact links.
+We will release the code for every environment, model, probe, editor, and metric, the trained weights of every model including the seed replicates, and the evaluation and edit datasets of every variant. The training corpora are not hosted, but the released scripts regenerate each one from its recorded seeds. \Cref{sec:experimental_setup} describes the setup, \cref{app:implementation} lists the remaining settings, and \cref{app:metric_spread} reports the spread over training seeds and probe refits.
+
 \bibliography{iclr2027_conference}
 \bibliographystyle{iclr2027_conference}
 
+\newpage
 
 % #####################################################################
 % #####################################################################
@@ -269,24 +392,745 @@ Snapped regression (30) & 0.959 & 0.991 & $+0.34$ & 1.15 & -- & -- & $-0.13$ & 0
 % #####################################################################
 \section{Appendix}
 
-
-\subsection{Matching GPT-style Prediction in Discworld}
-
-
-\subsection{Matching Categorical Probe Targets in Discworld}
-
-
-\subsection{Dimensionality Control with Iterative Nullspace Projection (INLP)}
+\FloatBarrier
+\subsection{Limitations}
+\label{app:limitations}
+Our editability is a statement about only one step. A simulator also carries its state forward under consistent rules, and we test only whether a single write changes the next prediction as it should. Rewriting the history so that an edit persists through a rollout is one route, which we demonstrate in \cref{app:history_editing}, and extending the metrics to rollouts is the natural next step. Every model here is one transformer at one depth, so some of what we find may be a property of that architecture or that depth rather than of the environments, and recurrent or diffusion models may behave differently. The environments also differ in difficulty in ways we cannot fully control, and a harder environment may be less editable for reasons unrelated to how its state is represented.
 
 
-\subsection{Frustum Basis Derivation for Discworld}
+\FloatBarrier
+\subsection{Predictive Loss of Trained Models}
+\label{app:predict_skill}
+
+% figure facts: paper/figs/predictive_quality/README.md (free-runs of 15 steps after 20 observed frames; two bench cases per panel).
+Every model predicts its environment nearly as well as the environment allows, so none of our editing results can be blamed on a weak predictor. \Cref{tab:predictive_skill} places each model's held-out loss between two references. The trivial predictor ignores the history and always makes the same guess, the overall frequency of each move in Othello and the average frame in Rayworld. The Bayes floor is the loss of the best possible predictor, which knows the environment's rules and is limited only by what the history leaves uncertain. The Othello floor is exact, since the generator draws each move uniformly from the legal moves. In Rayworld, a sequence is fixed by the discs' starting positions and velocities, but different starting states can light the same rays, so the frames seen so far do not pin down the next one. The best predictor averages the next frame over every starting state consistent with those frames, weighted by how likely the generator was to draw it. We approximate this average with sampled starting states, dropping each one as soon as it fails to reproduce an observed frame. The floor rises as the rays coarsen and leave more of the state undetermined. Every model closes at least 99\% of the gap from the trivial predictor to its floor. \Cref{fig:rayworld_predictions,fig:othello_predictions} show this accuracy directly. Rayworld models rolled out on their own for 15 frames track the true continuation, with most errors a ray or two at a disc's edge, and the \texttt{blink} model accurately resumes a hidden disc after its blackout. On \texttt{5-ray} a rollout can keep a disc on the wrong ray for several steps. In Othello, boards shaded by the model's predicted distribution are nearly indistinguishable from boards shaded by the true legal moves.
+
+% source: runs/<topic>/<run>/scores.json ["prediction"] (scripts/score_prediction.py) and runs/_baselines/<instance>/bayes_floor.json (scripts/bayes_floor.py).
+% Othello floors are exact (E[log |legal set|]). Rayworld floors are sampled brackets shown as midpoint ± (half-width + one SE),
+% pim.metrics.prediction.floor_estimate; rendered by notebooks/build_appendix_tables_and_figs.ipynb Table A1 (2026-09-23).
+% Trivial predictor = the best history-blind constant from the probe split (Othello: the move-frequency distribution; Rayworld: the per-ray mean frame).
+% Excess = model loss minus floor. The token run is read two ways: its own next-token cross entropy, and its mean frame scored as an MSE frame model.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll rrrr}
+\hline
+\noalign{\vspace{0.25em}}
+Class & Variant & \multicolumn{1}{c}{Trivial} & \multicolumn{1}{c}{Bayes floor} & \multicolumn{1}{c}{Model} & \multicolumn{1}{c}{Excess} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\shortstack[l]{Othello\\(nats per move)}}
+& \texttt{standard}        & 4.094 & 2.011 & 2.029 & 0.018 \\
+& \texttt{adjacent-flip}   & 4.094 & 2.295 & 2.301 & 0.005 \\
+& \texttt{adjacent-noflip} & 4.094 & 2.433 & 2.435 & 0.002 \\
+& \texttt{standard-noflip} & 4.094 & 1.679 & 1.680 & 0.001 \\
+\cline{1-6}
+\multirow{6}{*}{\shortstack[l]{Rayworld\\(MSE $\times 10^{-3}$)}}
+& \texttt{standard} (128 rays) & 72.6  & 0.80 $\pm$ 0.04 & 1.06 & 0.26 $\pm$ 0.04 \\
+& \texttt{blink} (128 rays)    & 66.0  & 0.98 $\pm$ 0.03 & 1.26 & 0.28 $\pm$ 0.03 \\
+& \texttt{128-ray}  & 92.4  & 0.75 $\pm$ 0.03 & 0.94 & 0.19 $\pm$ 0.03 \\
+& \texttt{16-ray}   & 97.2  & 3.76 $\pm$ 0.13 & 4.00 & 0.23 $\pm$ 0.13 \\
+& \texttt{8-ray}    & 100.7 & 5.62 $\pm$ 0.14 & 5.74 & 0.12 $\pm$ 0.14 \\
+& \texttt{5-ray}    & 105.5 & 6.86 $\pm$ 0.18 & 7.05 & 0.19 $\pm$ 0.18 \\
+\cline{1-6}
+\multirow{2}{*}{\shortstack[l]{Rayworld\\(\texttt{8-ray} tokens)}}
+& next-token CE (nats per frame)   & 5.176 & 0.441 $\pm$ 0.011 & 0.464 & 0.023 $\pm$ 0.011 \\
+& mean frame (MSE $\times 10^{-3}$) & 100.7 & 5.62 $\pm$ 0.14 & 5.73  & 0.11 $\pm$ 0.14 \\
+\hline
+\end{tabular}
+\caption{Held-out predictive loss of every trained model against the Bayes floor of its environment and a trivial history-blind predictor. Othello floors are exact, since the game generator is uniform over the legal set. Excess is the model loss minus the floor. Rayworld floors are estimated from sampled starting states consistent with each sequence. The sampler gives a lower value, which can read low if the samples miss some consistent states, and an upper value, the loss of a real predictor built from the samples, which cannot fall below the floor. We report the midpoint of the two, and $\pm$ spans half the gap between them plus one standard error over sequences. Every model closes at least 99\% of the gap from the trivial predictor to the floor.}
+\label{tab:predictive_skill}
+\end{table}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/rayworld_predictions.pdf}
+\caption{Randomly sampled demonstrations of Rayworld predictive accuracy in (a) \texttt{standard}, (b) \texttt{blink}, and (c) \texttt{5-ray}.}
+\label{fig:rayworld_predictions}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_predictions.pdf}
+\caption{Randomly sampled demonstrations of Othello predictive accuracy in (a) \texttt{standard}, (b) \texttt{adjacent-flip}, (c) \texttt{adjacent-noflip}, and (d) \texttt{standard-noflip}.}
+\label{fig:othello_predictions}
+\end{figure}
 
 
-\subsection{Predictive Skill Verification for Trained Models}
+\FloatBarrier
+\subsection{Metric Variance and Confidence Intervals}
+\label{app:metric_spread}
+
+The seed spread is small next to the differences between variants. We retrain every variant from two further seeds and compare the three members of each set at 512,000 steps, namely the two new models and the main run's own checkpoint at that step, each scored exactly as in the main tables. \Cref{tab:seed_spread} gives the standard deviation over the three seeds, and a 95\% confidence interval for their mean spans $\pm 2.48$ standard deviations.
+
+No Probe Skill varies by more than $0.004$, and the Edit Index of every editor that lands varies by at most $0.034$. Each step of IM's rise as Rayworld's rays coarsen is at least seven standard deviations. Four cells exceed $0.1$ and carry a dagger in \cref{tab:editability}. Three are failing editors on the two adjacency variants, PI on both and IM on \texttt{adjacent-noflip}, and their spread comes mostly from selecting a setting on each seed rather than from the models. On these variants the writes that raise the Edit Index most also degrade the rest of the board, so the best setting with an Edit Fidelity of at least $0$ sits at that cutoff, and small differences between seeds decide which side of it a setting falls on. On \texttt{adjacent-flip}, for example, PI at the main run's setting reaches $+0.28$ and $+0.33$ on two seeds, but its Edit Fidelity is $-0.40$ on the third, which falls back to a weaker setting at $-0.12$. Holding the main run's setting fixed, the Edit Index of both PI cells varies by only $0.05$ to $0.07$. IM on \texttt{adjacent-noflip} stays unstable even then, at $0.32$, and on one seed no setting passes the cutoff, so it reports a write that barely moves the prediction. We keep the per-seed selection in \cref{tab:seed_spread}, since it is what rerunning the full pipeline would give. The fourth dagger, IM's Edit Fidelity on \texttt{adjacent-flip}, involves no selection. All three seeds write at the same point with an Edit Index of $0.62 \pm 0.03$, while the fidelity ranges from $0.40$ to $0.59$.
+
+Outside the daggered cells, the seed means sit within $0.05$ of each Edit Index in \cref{tab:editability}, which reports the same runs at 780,000 steps. Edit Fidelity can differ by up to $0.26$ where the selected setting moves between the two checkpoints. PI on \texttt{standard} Othello, for example, is selected at a larger step size at 512,000 steps, with a mean Edit Fidelity of $0.48$ against $0.70$.
+
+Refitting the probes on a fixed model matters less still. Refitting the linear probe with six to ten seeds, which change its initialization and held-out split, moves Probe Skill by at most $0.0007$ and PI's Edit Index by at most $0.016$ on \texttt{standard} Othello, the three \texttt{adjacent-flip} models, and the categorical target of the \texttt{8-ray} model. Refitting the inverse map ten times moves IM by $0.004$ on \texttt{standard} Othello but by up to $0.036$ on \texttt{adjacent-flip}, close to its seed spread there. The MLP probe behind GS was not refit.
+
+% source: experiments/paper_ci/dashboard/ledger.md = notebooks/build_full_tables.ipynb Table 5 (tables.collect(...).rep_sd, cartesian basis):
+% SD (n - 1) over <run>__seed0_s512000, __seed1, __seed2, each at its own reported setting. Probe refits: variance.json of L-oth-20m,
+% L-dw-8ray-20m (appearance-fac, 6 seeds) and the three adjflip members (findings/seed-variance.md, 2026-09-23).
+% Fixed-setting check (each seed read at the main run's reported point and step size): Edit Index SD adjflip PI 0.071 (pt2 a5),
+% adjacent-noflip PI 0.050 (pt1 a10), adjacent-noflip IM 0.317 (pt1); adjflip PI at pt2 a5 per seed +0.28/+0.17, +0.33/+0.13, +0.19/-0.40.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll rr G rr G rr G rr}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{2}{c}{Probe Skill} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+\noalign{\vspace{0.25em}}
+\cline{3-4} \cline{6-7} \cline{9-10} \cline{12-13}
+\noalign{\vspace{0.25em}}
+Class & Variant & \multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\rotatebox[origin=c]{90}{Othello}}
+& \texttt{standard}        & 0.003 & 0.002 & & 0.015 & 0.054 & & 0.012 & 0.007 & & 0.034 & 0.038 \\
+& \texttt{adjacent-flip}   & 0.000 & 0.001 & & 0.245\dg & 0.031 & & 0.073 & 0.038 & & 0.028 & 0.108\dg \\
+& \texttt{adjacent-noflip} & 0.001 & 0.001 & & 0.196\dg & 0.085 & & 0.005 & 0.010 & & 0.422\dg & 0.077 \\
+& \texttt{standard-noflip} & 0.000 & 0.000 & & 0.001 & 0.001 & & 0.002 & 0.002 & & 0.026 & 0.002 \\
+\cline{1-13}
+\noalign{\vspace{0.1em}}
+\multirow{6}{*}{\rotatebox[origin=c]{90}{\shortstack[c]{Rayworld\\(continuous)}}}
+& \texttt{standard} (128 rays) & 0.002 & 0.000 & & 0.042 & 0.010 & & 0.027 & 0.026 & & 0.005 & 0.020 \\
+& \texttt{blink} (128 rays)    & 0.002 & 0.001 & & 0.060 & 0.016 & & 0.018 & 0.020 & & 0.012 & 0.007 \\
+& \texttt{128-ray} (big discs) & 0.004 & 0.000 & & 0.009 & 0.010 & & 0.027 & 0.023 & & 0.006 & 0.008 \\
+& \texttt{16-ray}   & 0.002 & 0.000 & & 0.021 & 0.020 & & 0.010 & 0.009 & & 0.007 & 0.004 \\
+& \texttt{8-ray}    & 0.002 & 0.000 & & 0.022 & 0.041 & & 0.030 & 0.017 & & 0.006 & 0.008 \\
+& \texttt{5-ray}    & 0.002 & 0.000 & & 0.036 & 0.051 & & 0.015 & 0.016 & & 0.009 & 0.007 \\
+\cline{1-13}
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack[c]{Rayworld\\(categorical)}}}
+& \texttt{128-ray} (3736 bins) & 0.001 & 0.001 & & 0.024 & 0.020 & & 0.014 & 0.019 & & 0.003 & 0.005 \\
+& \texttt{16-ray} (77 bins)    & 0.002 & 0.000 & & 0.014 & 0.019 & & 0.006 & 0.065 & & 0.002 & 0.004 \\
+& \texttt{8-ray} (30 bins)     & 0.000 & 0.000 & & 0.006 & 0.027 & & 0.014 & 0.009 & & 0.005 & 0.001 \\
+& \texttt{5-ray} (14 bins)     & 0.000 & 0.000 & & 0.017 & 0.029 & & 0.012 & 0.016 & & 0.003 & 0.000 \\
+\noalign{\vspace{0.75em}}
+\hline
+\end{tabular}
+\caption{Seed standard deviation of the trained models' Probe Skill and of each editor's Edit Index and Edit Fidelity, over three training seeds per variant at 512,000 steps. Rows and settings as in \cref{tab:decodability,tab:editability}. Cells marked $\dagger$ exceed $0.1$.}
+\label{tab:seed_spread}
+\end{table}
 
 
-% #####################################################################
-\subsection{Choice of Basis for Discworld}
+\FloatBarrier
+\subsection{Comparing Reachable vs Unreachable Target States in Othello}
+\label{app:legal_vs_illegal_othello}
 
+An Othello edit flips one token of a real board, and nothing guarantees that any game could reach the result. We therefore split the edit cases by whether some legal game ends on exactly the target board, which we decide by an exhaustive search over games (\cref{tab:legal_illegal}). On \texttt{standard} Othello every editor edits both kinds about equally well. On \texttt{adjacent-flip}, IM lands on both but does better on legal boards, at $+0.78$ against $+0.61$, with Edit Fidelities of $0.51$ and $0.48$. Neither no-flip variant has any legal flipped board, so the failures in \cref{tab:editability} there are all on illegal targets.
+
+To ask whether a model that fails on single flips can be edited toward a legal board, we flip two tokens of opposite color at once, which keeps each color's count, and compare pairs some legal game produces with pairs no game produces, on the same 40 cases per variant (\cref{tab:two_flip}). On \texttt{standard} Othello every editor lands on both kinds, as it does for single flips. On \texttt{adjacent-noflip}, IM lands on the legal pairs at $+0.88$ with an Edit Fidelity of $0.75$, comparable to \texttt{standard} Othello, and less well on the illegal ones, at $+0.65$ with a fidelity of $0.31$, while PI and GS fail on both. On \texttt{standard-noflip} no two-token edit is legal, since every token's color there is fixed by its cell, and no editor lands.
+
+% source: scripts/reachability_table.py -> runs/<run>/editability_by_reachability.json; verdicts runs/_baselines/<instance>/reachability.json
+% (pim.environments.othello.reachability: exhaustive search over legal games, passes only when forced; legal verdicts carry a replayed
+% witness game). Each editor at its Table 2 setting, re-run on the full bench (reproduces scores.json to 1e-4) and split by verdict.
+% Undecided at the 5M-node budget and left out: standard 4, adjacent-flip 51.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll r E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & & \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{6-13}
+\noalign{\vspace{0.25em}}
+& & & \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Variant & Target & \multicolumn{1}{c}{$n$} & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{2}{*}{\texttt{standard}}
+& legal   & 441 & -0.93 & & +0.79 & 0.70 & & +0.84 & 0.73 & & +0.83 & 0.62 \\
+& illegal & 555 & -0.93 & & +0.84 & 0.71 & & +0.82 & 0.71 & & +0.79 & 0.62 \\
+\cline{1-13}
+\multirow{2}{*}{\texttt{adjacent-flip}}
+& legal   & 335 & -0.95 & & +0.37 & 0.27 & & +0.09 & 0.24 & & +0.78 & 0.51 \\
+& illegal & 614 & -0.97 & & +0.35 & 0.12 & & -0.12 & 0.19 & & +0.61 & 0.48 \\
+\cline{1-13}
+\multirow{2}{*}{\texttt{adjacent-noflip}}
+& legal   & 0    & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} \\
+& illegal & 1000 & -0.96 & & -0.23 & 0.19 & & -0.96 & -0.01 & & -0.03 & 0.26 \\
+\cline{1-13}
+\multirow{2}{*}{\texttt{standard-noflip}}
+& legal   & 0    & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} \\
+& illegal & 1000 & -0.98 & & -0.95 & 0.00 & & -0.97 & -0.01 & & -0.93 & -0.01 \\
+\hline
+\end{tabular}
+\caption{Editability on Othello split by whether the target board is legal, meaning some game under the variant's rules ends on exactly the flipped board with the same player to move, or illegal, meaning no game does. Both are decided exactly by an exhaustive search over games, and the cases it could not settle within its budget are left out (4 in \texttt{standard}, 51 in \texttt{adjacent-flip}). Each editor is read at its setting from \cref{tab:editability}. Without flipping, a token keeps its placer's color and players pass only when they cannot move, so each color's count is fixed by the number of moves and no board with a single flipped token is legal. The illegal rows of both no-flip variants are therefore the full bench of \cref{tab:editability}. Columns as in \cref{tab:editability}.}
+\label{tab:legal_illegal}\end{table}
+
+% source: scripts/two_flip_editability.py (n = 40 per group; exact legality, witnesses replayed) ->
+%   standard        runs/initial_othello_comparison/L-oth-20m/two_flip_editability.json
+%   adjacent-noflip runs/adjacency_ablation/L-oth-adjacent-20m/two_flip_editability.json
+%   standard-noflip runs/flip_ablation/L-oth-noflip-20m/two_flip_editability.json (--no-legal: all 480 balanced partners unreachable)
+% Cells = each group's "reported" arm (pim.metrics.selection.best_arm within the group); PI / GS via the editors' second tile, IM via
+% inverse_arms(post_boards). PI / GS at each run's Table 2 setting reproduce scores.json on the full bench (checked by the script).
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll r E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & & \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{6-13}
+\noalign{\vspace{0.25em}}
+& & & \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Variant & Target & \multicolumn{1}{c}{$n$} & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{2}{*}{\texttt{standard}}
+& legal   & 40 & -0.92 & & +0.71 & 0.53 & & +0.84 & 0.74 & & +0.74 & 0.70 \\
+& illegal & 40 & -0.92 & & +0.72 & 0.66 & & +0.80 & 0.75 & & +0.82 & 0.75 \\
+\cline{1-13}
+\multirow{2}{*}{\texttt{adjacent-noflip}}
+& legal   & 40 & -0.96 & & +0.13 & 0.26 & & -0.89 & -0.10 & & +0.88 & 0.75 \\
+& illegal & 40 & -0.96 & & -0.96 & 0.00 & & -0.91 & -0.06 & & +0.65 & 0.31 \\
+\cline{1-13}
+\multirow{2}{*}{\texttt{standard-noflip}}
+& legal   & 0  & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} & & \multicolumn{1}{r}{--} & \multicolumn{1}{r}{--} \\
+& illegal & 40 & -0.96 & & -0.96 & 0.00 & & -0.91 & -0.03 & & -0.86 & -0.09 \\
+\hline
+\end{tabular}
+\caption{Editability on Othello for edits that flip two tokens, one black and one white, so that each color's count is unchanged. For each of $n = 40$ bench cases per variant we keep the case's own flipped token and add a partner of the opposite color, taking the first partner in a seeded order whose two-disc board is legal and the first whose board is illegal, both decided exactly. Every token's color on \texttt{standard-noflip} is fixed by its cell, so no such edit is legal there (none of the 480 searched). Each editor is read at the setting the rule of \cref{tab:editability} picks within each group. With only 40 cases, standard errors of the Edit Index reach $0.11$. Columns as in \cref{tab:legal_illegal}.}
+\label{tab:two_flip}\end{table}
+
+
+
+\FloatBarrier
+\subsection{Matching GPT-style Prediction in Rayworld}
+\label{app:tokenized_rw}
+
+% prose facts: vocabulary datasets/discworld/dw-8ray/tokens/ (421 frames + UNK, research/findings/interface-ablation.md); 951 kept =
+% bases["appearance-fac"].n_cases_kept of the token run's scores.json (pim/environments/discworld/token_bench.py drops pre == post frames);
+% mean-frame MSE 5.73 vs 5.74 x 10^-3 from Table A1; probe gaps from the table below.
+Othello and Rayworld models differ in their interface as well as their environment. The Othello model reads each move as a token and predicts a distribution over the next one, in the manner of a GPT-style language model, while the Rayworld model reads and predicts frames as vectors under a squared error loss. To make sure this interface is not what separates the two environments, we train an \texttt{8-ray} Rayworld model with Othello's interface. With fixed reflectivities and no noise, every ray takes one of three values, so each frame is one of a finite set of patterns. Every pattern that occurs in the dataset becomes a token, giving a vocabulary of 421 frames plus a reserved unknown token. The model embeds each frame token, predicts a softmax over the next frame, and trains with cross entropy, using the same sequences, architecture, and recipe as the \texttt{8-ray} frame model. Probes and editors act on the residual stream and carry over unchanged. Only scoring needs a choice, since the model outputs a distribution over frames rather than a frame. The frame-set reading follows Othello and compares that distribution against the frames of the edited and unedited worlds. The mean-frame reading averages the distribution into one frame and scores it exactly as the frame model is scored. The frame-set reading needs the two worlds' next frames to differ, which removes 49 of the categorical target's 1000 cases from the token model's rows.
+
+The interface changes almost nothing. The token model decodes the state as well as the frame model, with every trained probe within $0.013$ of it (\cref{tab:tokens_decodability}), and its mean frame predicts as accurately (\cref{tab:predictive_skill}). Its editability also follows the same pattern under either reading (\cref{tab:tokens_editability}). On continuous positions PI and GS fail while IM lands, and on the categorical target the probe-derived editors improve while IM lands. The frame-set reading gives lower scores to the editors that land, since it credits only probability on the exact edited frame, and a prediction that places the disc one ray off earns nothing. Whatever keeps the probes from steering Rayworld's continuous positions, it is not the vector interface.
+
+% source: runs/ray_ablation/L-dw-8ray-20m/scores.json and runs/interface_ablation/L-dw-8ray-tok-20m/scores.json (cartesian and appearance-fac blocks),
+% floors from runs/_baselines/dw-8ray/baselines.json (observation = right-aligned 250k / 200k corpus; random-init of each architecture).
+% The token model is scored the Othello way on its next-frame distribution (frame-set Edit Index, marked with a dagger).
+% "mean frame" rows = the token model's expected frame scored as an 8-ray frame model (ray-zone Edit Index): each arm's
+% zone_edit_index_expected and fidelity_ratio_expected in scores.json (run rescored from scratch 2026-09-23), setting chosen by best_arm on that readout.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll PP G PP G PP G PP}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{11}{c}{Probe Type} \\
+\noalign{\vspace{0.25em}}
+\cline{3-13}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{2}{c}{Observation} & & \multicolumn{2}{c}{Random init} & & \multicolumn{2}{c}{Trained} & & \multicolumn{2}{c}{Inverse Map MLP} \\
+State & Model
+& \multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Best Point} & \multicolumn{1}{c}{Edit Point} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{2}{*}{Continuous}
+& \texttt{8-ray} frames & 0.329 & 0.877 & & 0.883 & 0.919 & & 0.886 & 0.932 & & 0.585 & 0.580 \\
+& \texttt{8-ray} tokens & 0.329 & 0.877 & & 0.876 & 0.885 & & 0.899 & 0.935 & & 0.611 & 0.611 \\
+\cline{1-13}
+\multirow{2}{*}{Categorical}
+& \texttt{8-ray} frames & 0.477 & 0.935 & & 0.922 & 0.935 & & 0.935 & 0.943 & & 0.618 & 0.615 \\
+& \texttt{8-ray} tokens & 0.477 & 0.935 & & 0.921 & 0.925 & & 0.940 & 0.944 & & 0.641 & 0.641 \\
+\hline
+\end{tabular}
+\caption{Decodability of the \texttt{8-ray} frame model and the \texttt{8-ray} token model, which sees the same sequences as a vocabulary of whole-frame tokens and predicts a distribution over next frames. Columns as in \cref{tab:decodability}. The observation baseline is shared, since both models see the same frames.}
+\label{tab:tokens_decodability}
+\end{table}
+
+% source: the same two scores.json files as the table above (frame-set rows: tables.collect; mean-frame rows: see the note there).
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{5-12}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+State & Model & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{3}{*}{Continuous}
+& \texttt{8-ray} frames                       & -0.90 & & +0.21 & 0.00 & & -0.07 & 0.12 & & +0.71 & 0.73 \\
+& \texttt{8-ray} tokens, frame set$^\dagger$  & -0.75 & & +0.00 & 0.25 & & -0.01 & 0.24 & & +0.65 & 0.70 \\
+& \texttt{8-ray} tokens, mean frame           & -0.90 & & +0.14 & 0.19 & & -0.08 & 0.15 & & +0.84 & 0.75 \\
+\cline{1-12}
+\multirow{3}{*}{Categorical}
+& \texttt{8-ray} frames                       & -0.90 & & +0.38 & 0.05 & & +0.46 & 0.46 & & +0.87 & 0.73 \\
+& \texttt{8-ray} tokens, frame set$^\dagger$  & -0.73 & & +0.23 & 0.44 & & +0.35 & 0.53 & & +0.78 & 0.80 \\
+& \texttt{8-ray} tokens, mean frame           & -0.90 & & +0.46 & 0.32 & & +0.48 & 0.43 & & +0.92 & 0.75 \\
+\hline
+\end{tabular}
+\caption{Editability of the \texttt{8-ray} frame model and the \texttt{8-ray} token model through the continuous and categorical state targets. Columns as in \cref{tab:editability}. Rows marked $\dagger$ score the token model's next-frame distribution against the frame sets of the edited and unedited worlds, the legal-set construction used for Othello. Mean-frame rows take the expectation of that distribution and score it as an \texttt{8-ray} frame model with the ray-zone construction, choosing each editor's setting by the rule of \cref{tab:editability} on that readout.}
+\label{tab:tokens_editability}\end{table}
+
+% \subsection{Smooth Rendering Profile}
+% \label{app:rw_smooth_dome}
+% In the \texttt{smooth} variant each ray a disc covers reads the disc's reflectivity multiplied by $(1 - (d/r)^2)^2$, where $d$ is the perpendicular distance from the ray to the disc's center and $r$ is its radius, so the profile peaks at the center and falls to zero at the silhouette. The set of rays a disc covers is unchanged, so the appearance partition is the same as in the standard instance. \red{Figure of the profile to add.}
+
+\FloatBarrier
+\subsection{Additional Rayworld Variants}
+\label{app:additional_rayworld_runs}
+
+% prose facts: renderer and arena from research/findings/smooth-ablation.md and observer-ablation.md; numbers from the table below
+% and Table 1 (random-init linear skill: blink 0.608 -> 0.907 is the next largest gain after smooth 0.615 -> 0.962).
+Two further variants ask whether the probes fail on continuous positions because the observation shows position too crudely. In \texttt{standard} Rayworld a disc lights every ray it covers at its full reflectivity, so a frame changes only when a disc's edge crosses a ray, and a model might predict well without ever tracking a precise position. The \texttt{smooth} variant shades each disc like a dome instead. A ray passing at distance $d$ from the center of a disc of radius $r$ reads the disc's reflectivity times $(1 - (d/r)^2)^2$, so every lit ray varies continuously with the disc's exact position, while the set of rays a disc covers is unchanged. The \texttt{obs5} variant keeps coarse rays but adds viewpoints. Five \texttt{8-ray} observers stand evenly spaced on a ring around a circular arena, and each frame joins their five views into 40 values. A disc hidden from one observer behind the other disc stays visible to the rest, so together the views pin down its position far better than any one of them. Each variant trains the same model with the same recipe on data of its own, and we probe the same continuous Cartesian state.
+
+Both variants make position easier to read, and neither makes it easier to steer (\cref{tab:additional_rw}). On \texttt{smooth}, training lifts the linear probe from $0.62$ on a randomly initialized model to $0.96$, the largest gain of any Rayworld variant, so the model does learn a linearly readable position. On \texttt{obs5} an MLP reads position from the raw frames alone at $0.98$, and both probes on the trained model exceed $0.97$. Yet PI and GS fail on both variants, with Edit Indices between $-0.19$ and $+0.02$ at an Edit Fidelity of $0.02$, while IM lands on both at least as well as on \texttt{standard}.
+
+The two variants rule out two simple accounts of the probes' failure. The failure is not due to a frame that reveals position too coarsely, since the smooth profile makes every lit ray track the exact position. Nor is it due to a single viewpoint that leaves position ambiguous, since five viewpoints pin it down. A clearer view of the discs improves decoding without handing the probes a direction that moves the prediction, and the inverse map writes the edited state on every Rayworld variant we trained.
+
+% source: the CARTESIAN (continuous-state) block of runs/noise_ablation/L-dw-noiseless-20m, runs/smooth_ablation/L-dw-smooth-20m and
+% runs/observer_ablation/L-dw-8ray-obs5-20m scores.json (guarded arms, pim.metrics.selection.best_arm), with the floors from
+% runs/_baselines/{dw-noiseless,dw-smooth,dw-8ray-obs5}/baselines.json (observation = right-aligned 250k-sequence corpus).
+% The standard column repeats Tables 1 and 2 for reference; the categorical target is not shown here.
+%
+% Variants are COLUMNS here, so one column mixes skills, indices and fidelities and the P / E / F column types cannot apply.
+% Each cell therefore carries its ROW's scale through these three aliases of the preamble's heat macros:
+% \newcommand{\skillcell}[1]{\heatcell{0.0}{1.0}{#1}}       % Probe Skill, 0 to 1 (as column type P)
+% \newcommand{\indexcell}[1]{\heatcellmath{-1.0}{1.0}{#1}}  % Edit Index, -1 to +1 (as column type E)
+% \newcommand{\fidcell}[1]{\heatcellmath{-0.25}{1.0}{#1}}   % Edit Fidelity, as written (as column type F)
+% \begin{table}[ht]
+% \centering
+% \small
+% \setlength{\tabcolsep}{4pt}
+% \begin{tabular}{ll rrr}
+% \hline
+% \noalign{\vspace{0.25em}}
+% & & \multicolumn{3}{c}{Rayworld Variant} \\
+% \noalign{\vspace{0.25em}}
+% \cline{3-5}
+% \noalign{\vspace{0.25em}}
+% Quantity & Probe / Editor & \multicolumn{1}{c}{standard} & \multicolumn{1}{c}{smooth} & \multicolumn{1}{c}{obs5} \\
+% \hline
+% \noalign{\vspace{0.1em}}
+% \multirow{8}{*}{\shortstack[l]{Probe\\Skill}}
+% & Observation, Lin.       & \skillcell{0.305} & \skillcell{0.152} & \skillcell{0.575} \\
+% & Observation, MLP        & \skillcell{0.885} & \skillcell{0.829} & \skillcell{0.981} \\
+% & Random init, Lin.       & \skillcell{0.738} & \skillcell{0.615} & \skillcell{0.934} \\
+% & Random init, MLP        & \skillcell{0.945} & \skillcell{0.949} & \skillcell{0.990} \\
+% & Trained, Lin.           & \skillcell{0.872} & \skillcell{0.962} & \skillcell{0.979} \\
+% & Trained, MLP            & \skillcell{0.973} & \skillcell{0.994} & \skillcell{0.997} \\
+% & Inverse map, best point & \skillcell{0.741} & \skillcell{0.885} & \skillcell{0.641} \\
+% & Inverse map, edit point & \skillcell{0.339} & \skillcell{0.746} & \skillcell{0.488} \\
+% \cline{1-5}
+% \multirow{4}{*}{\shortstack[l]{Edit\\Index}}
+% & Unedited & \indexcell{-0.93} & \indexcell{-0.97} & \indexcell{-0.89} \\
+% & PI       & \indexcell{-0.10} & \indexcell{-0.09} & \indexcell{+0.02} \\
+% & GS       & \indexcell{-0.16} & \indexcell{-0.19} & \indexcell{-0.10} \\
+% & IM       & \indexcell{+0.59} & \indexcell{+0.67} & \indexcell{+0.60} \\
+% \cline{1-5}
+% \multirow{3}{*}{\shortstack[l]{Edit\\Fidelity}}
+% & PI & \fidcell{0.04} & \fidcell{0.02} & \fidcell{0.02} \\
+% & GS & \fidcell{0.04} & \fidcell{0.02} & \fidcell{0.02} \\
+% & IM & \fidcell{0.66} & \fidcell{0.74} & \fidcell{0.66} \\
+% \hline
+% \end{tabular}
+% \caption{Decodability and editability of the two remaining Rayworld variants, \texttt{smooth} (the rendering profile falls off continuously from each disc's center) and \texttt{obs5} (five \texttt{8-ray} observers spaced around the arena), beside \texttt{standard} Rayworld for reference. All three read the continuous position target. Probe Skill, Edit Index and Edit Fidelity are defined as in \cref{tab:decodability,tab:editability}, and every setting is the one those tables use.}
+% \label{tab:additional_rw}
+% \end{table}
+% source: the CARTESIAN (continuous-state) block of runs/noise_ablation/L-dw-noiseless-20m, runs/smooth_ablation/L-dw-smooth-20m and
+% runs/observer_ablation/L-dw-8ray-obs5-20m scores.json (guarded arms, pim.metrics.selection.best_arm), with the floors from
+% runs/_baselines/{dw-noiseless,dw-smooth,dw-8ray-obs5}/baselines.json (observation = right-aligned 250k-sequence corpus).
+% The standard row repeats Tables 1 and 2 for reference; the categorical target is not shown here.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+
+(a) Probe Skill\\[0.35em]
+\begin{tabular}{l PP G PP G PP G PP}
+\hline
+\noalign{\vspace{0.25em}}
+& \multicolumn{11}{c}{Probe Type} \\
+\noalign{\vspace{0.25em}}
+\cline{2-12}
+\noalign{\vspace{0.25em}}
+& \multicolumn{2}{c}{Observation} & & \multicolumn{2}{c}{Random init} & & \multicolumn{2}{c}{Trained} & & \multicolumn{2}{c}{Inverse Map MLP} \\
+Variant
+& \multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Best Point} & \multicolumn{1}{c}{Edit Point} \\
+\hline
+\noalign{\vspace{0.1em}}
+\texttt{standard} & 0.305 & 0.885 & & 0.738 & 0.945 & & 0.872 & 0.973 & & 0.741 & 0.339 \\
+\texttt{smooth}   & 0.152 & 0.829 & & 0.615 & 0.949 & & 0.962 & 0.994 & & 0.885 & 0.746 \\
+\texttt{obs5}     & 0.575 & 0.981 & & 0.934 & 0.990 & & 0.979 & 0.997 & & 0.641 & 0.488 \\
+\hline
+\end{tabular}
+
+\vspace{1em}
+
+(b) Edit Index and Edit Fidelity\\[0.35em]
+\begin{tabular}{l E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{4-11}
+\noalign{\vspace{0.25em}}
+& \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Variant & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\texttt{standard} & -0.93 & & -0.10 & 0.04 & & -0.16 & 0.04 & & +0.59 & 0.66 \\
+\texttt{smooth}   & -0.97 & & -0.09 & 0.02 & & -0.19 & 0.02 & & +0.67 & 0.74 \\
+\texttt{obs5}     & -0.89 & & +0.02 & 0.02 & & -0.10 & 0.02 & & +0.60 & 0.66 \\
+\hline
+\end{tabular}
+\caption{Decodability and editability of the two remaining Rayworld variants, \texttt{smooth} (the rendering profile falls off continuously from each disc's center) and \texttt{obs5} (five \texttt{8-ray} observers spaced around the arena), beside \texttt{standard} Rayworld for reference. All three read the continuous position target. Panel (a) reports Probe Skill and panel (b) Edit Index and Edit Fidelity, defined as in \cref{tab:decodability,tab:editability}; every setting is the one those tables use.}
+\label{tab:additional_rw}
+\end{table}
+
+
+\FloatBarrier
+\subsection{Inverse Mapping Trends Across Residual Points}
+\label{app:im_editability_trends}
+
+% reconstruction test: research/findings/inverse-probe.md, 2026-09-14 evening, Test 2 (L-oth-20m, 1000 canonical cases): g(unedited board)
+% written with no edit, error against the pre-edit legal set relative to the model's own: 1.8-2.0 at points 4-5, 5-16 at points 0-3 and 6-8.
+% Rayworld Edit Index / fidelity per point: the table below (IM at point 6 = +0.59 / 0.66).
+In Othello the inverse map edits at only two residual points, and the way its fit changes with depth suggests why. \Cref{tab:im_by_point} follows the \texttt{standard} Othello and \texttt{standard} Rayworld models through all nine points. In Othello, the first five blocks look like a compression phase. The inverse map's $R^2$ climbs from $0.39$ at the embedding to $0.83$ at point 5, as the board comes to determine more and more of the latent state, then dips to $0.73$ at point 7. IM lands only at the top of this climb, at points 4 and 5, and at every other point its write leaves the prediction worse than no edit. A reconstruction test agrees. Overwriting the latent state with $g$ of the unedited board, which should change nothing, keeps the output's error within about twice the model's own only at points 4 and 5, and raises it to five to sixteen times the model's own elsewhere. We read this as a bottleneck. The board is a sufficient statistic of the history for the next move, since the legal moves depend on the history only through it, and with flipping it is a complicated function of that history. The model appears to assemble the board in its early blocks, hold it near points 4 and 5, and then expand it into the features of its prediction. A board written earlier meets blocks that are still gathering one from the moves, and a board written later lacks the detail those blocks have added since. The inverse $R^2$ alone does not locate the bottleneck, since it is higher at point 8 than at point 5 while IM fails there.
+
+Rayworld shows no such bottleneck. The inverse map's $R^2$ is highest at the embedding, where the latent state is a direct function of the current frame, and falls to about $0.3$ from point 1 on, where it stays. Yet IM improves the prediction at every point, and its Edit Index climbs steadily to $+0.59$ at point 6, at an Edit Fidelity of $0.66$, and stays above $+0.54$ through point 8. No single depth holds a compact state that the rest of the network depends on, and the write works at most depths. The contrast fits what each environment demands of prediction. Othello's rules make the board both necessary and costly to compute, which gives a model reason to form it once and route everything through it, as a minimal sufficient statistic of the past \citep{shalizi2001computational}. Rayworld's frames already show most of the state, and its dynamics are linear, so its model faces no such pressure. The probe-derived editors follow the same split in \cref{fig:editability_over_res}. On Othello, PI and GS peak at point 4, just before IM, and fail from point 6 on, while on Rayworld they fail at every point.
+
+% source: paper/figs/editability_trends/by_point_values.md, read from runs/initial_othello_comparison/L-oth-20m and
+% runs/noise_ablation/L-dw-noiseless-20m (cartesian block) scores.json: MLP probe skill per point, the inverse map's held-out R^2 per point
+% (inverse_map.g_r2), and the IM arm at each point (one arm per point, the full overwrite). Edit Fidelity below 0 = outside the guard.
+% Othello points 3 and 6 sit on a rounding edge: today's scores.json gives +0.2549 / +0.3849 (IM arms re-attached 2026-09-23, 1e-4 GPU noise).
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l PP EF G PP EF}
+\hline
+\noalign{\vspace{0.25em}}
+& \multicolumn{4}{c}{Othello \texttt{standard}} & & \multicolumn{4}{c}{Rayworld \texttt{standard}} \\
+\noalign{\vspace{0.25em}}
+\cline{2-5} \cline{7-10}
+\noalign{\vspace{0.25em}}
+& \multicolumn{1}{c}{Probe} & \multicolumn{1}{c}{Inverse} & \multicolumn{2}{c}{IM} & & \multicolumn{1}{c}{Probe} & \multicolumn{1}{c}{Inverse} & \multicolumn{2}{c}{IM} \\
+Residual point & \multicolumn{1}{c}{Skill} & \multicolumn{1}{c}{$R^2$} & \multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Skill} & \multicolumn{1}{c}{$R^2$} & \multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+0 (embedding) & 0.346 & 0.393 & -0.23 & -1.07 & & 0.940 & 0.741 & -0.23 & 0.25 \\
+1             & 0.810 & 0.682 & -0.20 & -0.99 & & 0.965 & 0.340 & +0.06 & 0.43 \\
+2             & 0.879 & 0.769 & -0.03 & -0.64 & & 0.968 & 0.310 & +0.29 & 0.54 \\
+3             & 0.927 & 0.796 & +0.26 & -0.14 & & 0.969 & 0.284 & +0.44 & 0.61 \\
+4             & 0.952 & 0.818 & +0.57 & 0.51 & & 0.970 & 0.298 & +0.54 & 0.67 \\
+5             & 0.966 & 0.827 & +0.81 & 0.62 & & 0.971 & 0.343 & +0.57 & 0.66 \\
+6             & 0.974 & 0.753 & +0.39 & -0.21 & & 0.972 & 0.339 & +0.59 & 0.66 \\
+7             & 0.975 & 0.728 & +0.22 & -1.03 & & 0.972 & 0.342 & +0.58 & 0.64 \\
+8             & 0.976 & 0.884 & +0.16 & -2.08 & & 0.973 & 0.344 & +0.55 & 0.60 \\
+\hline
+\end{tabular}
+\caption{Decodability and inverse-map editability at every residual point of the \texttt{standard} Othello and \texttt{standard} Rayworld models. Probe Skill is the MLP probe's, the inverse $R^2$ is the held-out fit of $g$ from simulator state to latent state at that point, and the IM columns give the Edit Index and Edit Fidelity of the overwrite $\mathbf{h}' = g(\mathbf{s})$ written at that point. Point $k$ is the residual stream after block $k$.}
+\label{tab:im_by_point}\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figs/appendix/editability_over_res_point.pdf}
+\caption{Editability across residual points on \texttt{standard} Othello (left) and \texttt{standard} Rayworld (right). The top row gives the Edit Index of each editor's best setting at each point, with GS placed at the point where it starts writing and hollow markers where no setting at that point reaches an Edit Fidelity of $0$. The bottom row gives the inverse map's $R^2$ and the MLP probe's skill at each point.}
+\label{fig:editability_over_res}
+\end{figure}
+
+\FloatBarrier
+\subsection{Appearance Bins Against Evenly Spaced Bins}
+\label{app:rw_grid_ablation}
+
+For the probe-derived editors, categorical targets help even when their bins ignore the observation, and they help most when the bins follow it. We compare the appearance target on the \texttt{8-ray} model against evenly spaced grids over the frustum coordinates, matched to it at 30 bins and pushed beyond it at 128, with every bin labeled empty, bright disc, or dim disc (\cref{tab:categorical}). Every one of these grids improves GS from the continuous position target's Edit Index of $-0.07$ at an Edit Fidelity of $0.12$, reaching $+0.35$ to $+0.39$ at Edit Fidelities of at least $0.33$. Labeled the same way, the appearance bins improve it further, to $+0.59$ at an Edit Fidelity of $0.56$, and their factorized form from the main tables also beats every grid. Most of the gain is therefore in binning at all, and the rest in choosing bins the observation already defines. PI moves the same way, albeit less cleanly. None of this tracks Probe Skill, since the grids decode far worse than the position target and still edit better than it. Snapping each position to the center of its appearance bin while keeping the regression read-out returns GS to $-0.05$ at an Edit Fidelity of $0.07$, the continuous result, even though the partition there is the one that works.
+
+The inverse map gains only from bins that follow the observation. It rises from $+0.71$ on positions to $+0.88$ on the appearance bins, both at an Edit Fidelity of $0.73$, but reaches only $+0.64$ to $+0.73$ on the grids, at Edit Fidelities of $0.54$ to $0.64$. Unlike the probes, the inverse map needs no discretization to land, and it improves only when the bins describe what the observation shows.
+
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+% source: runs/ray_ablation/L-dw-8ray-20m/scores.json, blocks cartesian (position), appearance, appearance-fac, grid-6x5, grid-10x3, grid-16x8,
+% pos@appearance (snapped). Arms under the guarded selection rule. IM on the categorical rows = the categorical inverse map (one-hot labels +
+% Cartesian velocity, 200k sequences); appearance and the three grids added 2026-09-23 (queue job catim_grid_8ray), read via tables.collect.
+\begin{tabular}{l PP G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& \multicolumn{2}{c}{Probe Skill} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{2-3} \cline{5-12}
+\noalign{\vspace{0.25em}}
+& \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Probe target (\texttt{8-ray} model) & \multicolumn{1}{c}{Lin.} & \multicolumn{1}{c}{MLP} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+Position, regression     & 0.886 & 0.932 & & +0.21 & 0.00 & & -0.07 & 0.12 & & +0.71 & 0.73 \\
+Appearance (30 bins)  & 0.893 & 0.904 & & +0.44 & 0.11 & & +0.59 & 0.56 & & +0.88 & 0.73 \\
+Appearance, factorized   & 0.935 & 0.943 & & +0.38 & 0.05 & & +0.46 & 0.46 & & +0.87 & 0.73 \\
+Grid $6 \times 5$ (30)   & 0.466 & 0.535 & & +0.30 & 0.02 & & +0.35 & 0.33 & & +0.64 & 0.54 \\
+Grid $10 \times 3$ (30)  & 0.443 & 0.496 & & +0.37 & 0.09 & & +0.35 & 0.35 & & +0.70 & 0.57 \\
+Grid $16 \times 8$ (128) & 0.156 & 0.212 & & -0.05 & 0.06 & & +0.39 & 0.34 & & +0.73 & 0.64 \\
+Snapped regression (30)  & 0.959 & 0.991 & & +0.29 & 0.00 & & -0.05 & 0.07 & & +0.70 & 0.69 \\
+\hline
+\end{tabular}
+\caption{Probe targets on the Rayworld \texttt{8-ray} model, each a new probe fit on the same trained model with the same editors run through it on 1000 cases. Grids are evenly spaced bins over the frustum coordinates, as size-matched and resolution-matched controls for the appearance bins. Snapped regression replaces each position by the center of its appearance bin and keeps the regression pipeline. Columns as in \cref{tab:decodability,tab:editability}; IM is reported where an inverse map was fitted for the target.}
+\label{tab:categorical}\end{table}
+
+
+% \subsection{Probe Alignment}
+% \label{app:probe_alignment}
+% We compare the editors' write directions with $\Delta = \mathbf{h}_{\mathrm{cf}} - \mathbf{h}$, the displacement to the residual the model produces on a counterfactual history (a shifted and re-rendered trajectory in Rayworld, a real game with the flipped board in Othello), as the fraction $\cos^2\theta$ of $\Delta$ inside the probe's row space against an unrelated displacement as chance, before and after the encoding-pattern correction of \citet{haufe}. Raw alignment tracks editability, at $0.188$ against chance $0.007$ for standard Othello, $0.077$ against $0.009$ for adjacent, and chance for every Rayworld model. The correction raises every fraction without reordering them, and editing along the corrected directions triples adjacent to $+0.38$ at an Edit Fidelity of $0.40$ while changing nothing on standard Othello. Patching the full $\Delta$ into the Rayworld residual produces the edit ($+0.94$ at an Edit Fidelity of $0.90$) almost entirely through the complement of the probe's row space, so the information is present at the edited point in a high-rank code that no linear position probe spans. \red{Full table and per-point curves in the appendix.}
+
+% \subsection{Frustum Basis for Rayworld}
+% \label{app:frustum_basis}
+
+\FloatBarrier
+\subsection{Comparing Inverse Mapping to Nearest Neighbor Replacement}
+\label{app:inverse_nearest_neighbor}
+
+An inverse map fit on about 1.2 million pairs could succeed by memorizing them, recalling the latent state of a training example whose simulator state lies close to the target. We test this against a lookup with nothing to fit. For each target state, the nearest-neighbor control finds the ten fit states closest to it, by Hamming distance between Othello boards and standardized Euclidean distance between Rayworld states, and overwrites the latent state with the mean of their latent states. It draws on the same fit set as the inverse map, is swept over the same residual points, and is scored the same way. To compare how well each map fits, we also predict the latent states of held-out examples from their simulator states and report each map's latent $R^2$ at the point where the inverse map edits.
+
+The inverse map beats the lookup everywhere, and in Othello the lookup never edits at all (\cref{tab:im_vs_nn}). Its Edit Index is negative on every Othello variant, even on \texttt{standard}, where IM reaches $+0.81$ at an Edit Fidelity of $0.62$, and its writes leave the prediction worse than no edit. A board after 20 moves is rarely seen twice, and more than half of the flipped boards are ones no game reaches (\cref{app:legal_vs_illegal_othello}), so the nearest training boards are almost always other boards, and the mean of their latent states lands on none of them. In Rayworld, where nearby states produce similar frames, the lookup partly lands, from $+0.27$ to $+0.60$ at Edit Fidelities of $0.22$ to $0.54$, but it trails IM on every variant by $0.17$ to $0.26$ in Edit Index and at lower Edit Fidelity. The inverse map therefore does more than recall nearby examples. The latent $R^2$ also shows how poorly fit predicts editing. The lookup fits Othello's latent states better, at $0.73$ to $0.90$, than the inverse map fits Rayworld's, at $0.32$ to $0.58$, yet the lookup never edits Othello while the inverse map edits every Rayworld variant.
+
+% source: the IM and IM-NN arms of each run's scores.json (cartesian block on Rayworld), guarded selection rule (pim.metrics.selection.best_arm,
+% highest-fidelity fallback since 2026-09-23); both latent R^2 are read at the reported IM arm's point: inverse_map.g_r2 and inverse_map.nn_r2
+% (stored since 2026-09-23, job nn_r2_shortlist), via pim.figures.tables.collect columns g_r2@IM / nn_r2@IM. standard-noflip has no IM arm inside
+% the guard, so its point is the highest-fidelity arm's (point 1; point 7 under the old fallback, where g_r2 = 0.944 and nn_r2 = 0.879).
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll PP G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{2}{c}{Latent $R^2$} & & \multicolumn{5}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{3-4} \cline{6-10}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{1}{c}{} & \multicolumn{2}{c}{Inverse Map} & & \multicolumn{2}{c}{Nearest Neighbor} \\
+Class & Variant & \multicolumn{1}{c}{IM} & \multicolumn{1}{c}{NN} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{Othello}
+& \texttt{standard}        & 0.827 & 0.726 & & +0.81 & 0.62 & & -0.09 & -0.81 \\
+& \texttt{adjacent-flip}   & 0.959 & 0.901 & & +0.66 & 0.49 & & -0.70 & -0.27 \\
+& \texttt{adjacent-noflip} & 0.855 & 0.750 & & -0.03 & 0.26 & & -0.82 & -0.05 \\
+& \texttt{standard-noflip} & 0.855 & 0.762 & & -0.93 & -0.01 & & -0.90 & -0.07 \\
+\cline{1-10}
+\multirow{6}{*}{Rayworld}
+& \texttt{standard} & 0.339 & 0.068 & & +0.59 & 0.66 & & +0.33 & 0.24 \\
+& \texttt{blink}    & 0.338 & 0.059 & & +0.51 & 0.55 & & +0.27 & 0.22 \\
+& \texttt{128-ray} (big discs) & 0.321 & 0.143 & & +0.57 & 0.68 & & +0.38 & 0.37 \\
+& \texttt{16-ray}   & 0.516 & 0.357 & & +0.66 & 0.71 & & +0.49 & 0.45 \\
+& \texttt{8-ray}    & 0.580 & 0.424 & & +0.71 & 0.73 & & +0.54 & 0.47 \\
+& \texttt{5-ray}    & 0.469 & 0.263 & & +0.81 & 0.77 & & +0.60 & 0.54 \\
+\hline
+\end{tabular}
+\caption{The inverse map $g$ against the nearest-neighbor control, which overwrites the latent state with the mean latent state of the nearest training states to the target. Latent $R^2$ is each map's held-out fit of the latent state at the residual point where the inverse map edits. Index and Edit Fidelity as in \cref{tab:editability}, both editors at the same residual point sweep.}
+\label{tab:im_vs_nn}\end{table}
+
+
+\FloatBarrier
+\subsection{Persistent Transformer Edits with History Rewriting}
+\label{app:history_editing}
+
+% source: paper/figs/history_rewrite/scores.json and README.md (make_figure.py on runs/noise_ablation/L-dw-noiseless-20m, cartesian block;
+% the first 32 bench cases, one seed; IM at residual point 6; Edit Fidelity = 1 - the stored ratio). Edit Index at the edit frame / step 1 /
+% step 14: single write +0.61 / -0.63 / -0.74 (fidelity 0.64); rewritten history + write +0.63 / +0.59 / +0.23 (0.64); rewritten history alone
+% +0.65 / +0.57 / +0.21 (0.52). History-frame RMSE against the counterfactual render: rewritten 0.114, original 0.264.
+Transformers make persistent edits hard, because they carry no state from one step to the next. At every step the model recomputes its latent state from the full observation history. An edit written at the last position changes the next prediction, but at the following step the model reads the original history again, and all that remains of the edit is the one predicted frame now appended to it. That frame shows the disc in its new place while every frame before it shows the disc on its old path, and the model sides with the history. On the \texttt{standard} Rayworld model, a single inverse-map write lands at the edit frame, at $+0.61$ with an Edit Fidelity of $0.64$ on the 32 cases we use here, yet one step later the rollout has largely returned to the unedited world, at $-0.63$. Scoring rollouts would therefore mix two questions, whether the model reads the written state and whether it carries that state forward against a contradicting history. The main paper asks only the first, and scores every edit on the next prediction.
+
+History rewriting makes the history agree with the edit. The edited state keeps the moved disc's velocity, and Rayworld's dynamics are linear, so integrating backward from the target gives the counterfactual state at every earlier frame, with the other disc on its original path. We then rebuild the history one frame at a time. At each step the model reads the frames rewritten so far, we overwrite its latent state at the last position with $g$ of the counterfactual state, at the inverse map's residual point, and the model's prediction becomes the next rewritten frame. The first frame is kept, since nothing precedes it. The rollout then starts from the rewritten history, with or without the usual write at the edit frame. The simulator never renders an observation in this process. Every rewritten frame comes from the model, driven by written states alone.
+
+The rewritten history holds the edit through the rollout (\cref{fig:history_rewriting}). One step after the edit frame its Edit Index is still $+0.59$, and fourteen steps later it is $+0.23$, where the single write stands at $-0.63$ and $-0.74$. The rewritten history carries the edit on its own, reaching $+0.65$ at the edit frame with an Edit Fidelity of $0.52$ and no write there, and adding the write barely changes the Edit Index, at $+0.63$, while raising the Edit Fidelity to $0.64$. The rewritten frames sit closer to the simulator's render of the counterfactual history than the original frames do, at an RMSE of $0.114$ against $0.264$, though they are visibly blurrier, being the model's own generations. These numbers come from 32 cases and one seed, so they illustrate the mechanism rather than measure it.
+
+For a transformer, the history is part of the state. An edit persists only when the history agrees with it, and history rewriting achieves this with nothing but the inverse map and the model itself. It points toward driving a generative model continuously from a simulator, writing the simulator's state into the model at every step and using the model's own predictions as the observations, so that the simulator supplies the state and the model the detail. Two obstacles remain. The backward integration relies on Rayworld's simple, reversible dynamics, while Othello, for example, has no unique past, since many games reach the same board. The rewritten frames also drift from the true render, so errors may compound over longer horizons. A model that carries its state forward explicitly, as a recurrent model does, might avoid rewriting the history at all.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/history_rewrite.pdf}
+\caption{Persistent edits on \texttt{standard} Rayworld through history rewriting, one edit per row with time running downward. Every column shows the same last eight observed frames above the dashed line. Below it are the edited world's true continuation and 15-step rollouts from the unedited model, from a single inverse-map write at the edit frame, and from the rewritten history with the same write. Cyan and magenta lines mark the edited disc's origin and destination at the edit frame.}
+\label{fig:history_rewriting}
+\end{figure}
+
+\FloatBarrier
+\subsection{Selecting for Edit Fidelity Instead of Edit Index}
+\label{app:edit_fidelity_choice}
+
+% prose facts: settings compared through pim.figures.tables.collect(select="index") against collect(select="fidelity") (2026-09-23):
+% PI and GS mostly take smaller steps; IM's Edit Index moves by at most 0.10 (adjacent-flip +0.66 -> +0.56).
+Our main tables choose each editor's setting by its Edit Index, among the settings that leave the prediction at least as accurate as no edit. The rule rewards the strongest edit that does no harm, but it could flatter an editor sitting right at that cutoff, or make our conclusions depend on where the cutoff lies. \Cref{tab:fidelity_selected} applies the opposite rule, choosing the setting with the highest Edit Fidelity outright and reporting the Edit Index reached there. This rule prefers accuracy to change. PI and GS mostly move to smaller steps, trading Edit Index for Edit Fidelity, while IM, which has no step size, moves by at most $0.10$ in Edit Index.
+
+Every conclusion of the main text survives the change of rule. All three editors still edit \texttt{standard} Othello. On \texttt{adjacent-flip} only IM lands, and on the no-flip variants no editor does. In Rayworld, PI and GS fail on continuous positions in every variant, while IM lands in all of them and rises as the rays coarsen. On the categorical target both probe-derived editors again rise as the rays coarsen, and IM lands throughout.
+
+% source: the same scores.json arms as Table 2, selected with pim.metrics.selection.best_arm_by_fidelity (the arm with the HIGHEST Edit
+% Fidelity per editor, Edit Index reported at that arm) — notebooks/build_appendix_tables_and_figs.ipynb Table A2 / A2b, cartesian basis.
+% Categorical IM = the categorical inverse map (2026-09-20); standard and blink have no categorical IM arm.
+\begin{table}[ht]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll E G EF G EF G EF}
+\hline
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{} & & \multicolumn{8}{c}{Editor} \\
+\noalign{\vspace{0.25em}}
+\cline{5-12}
+\noalign{\vspace{0.25em}}
+& & \multicolumn{1}{c}{Unedited} & & \multicolumn{2}{c}{PI} & & \multicolumn{2}{c}{GS} & & \multicolumn{2}{c}{IM} \\
+Class & Variant & \multicolumn{1}{c}{Index} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} & &
+\multicolumn{1}{c}{Index} & \multicolumn{1}{c}{Fid.} \\
+\hline
+\noalign{\vspace{0.1em}}
+\multirow{4}{*}{Othello}
+& \texttt{standard}        & -0.93 & & +0.82 & 0.70 & & +0.78 & 0.73 & & +0.81 & 0.62 \\
+& \texttt{adjacent-flip}   & -0.96 & & +0.03 & 0.36 & & -0.06 & 0.21 & & +0.56 & 0.61 \\
+& \texttt{adjacent-noflip} & -0.96 & & -0.23 & 0.19 & & -0.96 & -0.01 & & -0.03 & 0.26 \\
+& \texttt{standard-noflip} & -0.98 & & -0.95 & 0.00 & & -0.97 & -0.01 & & -0.93 & -0.01 \\
+\cline{1-12}
+\multirow{6}{*}{\shortstack[l]{Rayworld\\(continuous state)}}
+& \texttt{standard} & -0.93 & & -0.45 & 0.13 & & -0.59 & 0.11 & & +0.54 & 0.67 \\
+& \texttt{blink}    & -0.92 & & -0.36 & 0.14 & & -0.49 & 0.13 & & +0.49 & 0.55 \\
+& \texttt{128-ray} (big discs) & -0.94 & & -0.47 & 0.16 & & -0.29 & 0.16 & & +0.55 & 0.68 \\
+& \texttt{16-ray}   & -0.91 & & -0.15 & 0.19 & & -0.30 & 0.15 & & +0.66 & 0.71 \\
+& \texttt{8-ray}    & -0.90 & & -0.16 & 0.22 & & -0.38 & 0.16 & & +0.71 & 0.74 \\
+& \texttt{5-ray}    & -0.89 & & +0.03 & 0.26 & & -0.33 & 0.16 & & +0.81 & 0.77 \\
+\cline{1-12}
+\multirow{4}{*}{\shortstack[l]{Rayworld\\(categorical state)}}
+& \texttt{128-ray} (3736 bins) & -0.94 & & -0.63 & 0.10 & & +0.10 & 0.38 & & +0.63 & 0.73 \\
+& \texttt{16-ray} (77 bins)    & -0.91 & & -0.42 & 0.14 & & +0.12 & 0.36 & & +0.78 & 0.72 \\
+& \texttt{8-ray} (30 bins)     & -0.90 & & +0.06 & 0.35 & & +0.40 & 0.46 & & +0.84 & 0.74 \\
+& \texttt{5-ray} (14 bins)     & -0.91 & & +0.38 & 0.42 & & +0.58 & 0.55 & & +0.90 & 0.75 \\
+\hline
+\end{tabular}
+\caption{\cref{tab:editability} with the opposite selection rule. For each editor we report the residual point and step size with the highest Edit Fidelity, and give the Edit Index reached at that setting, instead of the highest Edit Index among settings whose Edit Fidelity is at least $0$. Rows, columns, and cases as in \cref{tab:editability}.}
+\label{tab:fidelity_selected}\end{table}
+
+\FloatBarrier
+\subsection{Implementation Details}
+\label{app:implementation}
+
+% source (checked 2026-09-23): pim/environments/discworld/config.py + bigcorpus.py (sim flags per instance), pim/environments/othello/corpus.py
+% and scripts/make_othello_edits.py (bench recipe), pim/models/transformer_l.py, pim/training/train.py (TrainConfig; every run's config.json),
+% pim/probes/base.py + inverse.py (FIT_EPOCHS/LR/BATCH, RETRIEVAL_K; categorical recipe = discworld/arms.py GRID_PROBE_RECIPE),
+% notebooks/master_eval.ipynb SETTINGS (ALPHA_REG, ALPHA_CAT, GS_LAYERS), metrics.jsonl elapsed_s of the main runs (training time).
+
+\paragraph{Environments.}
+The Rayworld frustum spans depths 3 to 12, and its half-width at each depth is half that depth. Each disc's initial depth is drawn uniformly, then its lateral position uniformly across the frustum at that depth, and it moves in a uniformly random direction at a speed drawn uniformly between $0.05$ and $0.12$ per frame. Discs have radius $0.5$, or $1.0$ in the \texttt{N-ray} family, which casts $N + 2$ rays and drops the two that run along the walls. In \texttt{blink}, after the first three frames each disc begins a blackout with probability $0.05$ per frame, lasting a geometric number of frames with mean 7, capped at 12. Othello games come from the generator of \citet{li2023othello} under each variant's rules. A player passes only when it has no legal move, and a game ends when neither player can move. Each edit recolors one occupied square outside the four central ones, and a case is rejected if the flip leaves the legal moves unchanged or empty. Training, probe, evaluation, and edit sequences come from disjoint seed ranges.
+
+\paragraph{Models and training.}
+The transformer is the minGPT model of \citet{li2023othello}, with 8 heads, learned absolute position embeddings, and dropout of $0.1$. It reads 39 frames in Rayworld and 59 moves in Othello, whose vocabulary has 61 tokens. We train with AdamW at a learning rate of $10^{-3}$ and weight decay of $10^{-4}$, clip gradients at norm $1$, and hold the learning rate constant after 2,000 warmup steps. Since the schedule is constant, a main run's checkpoint at 512,000 steps is a fair member of its seed set in \cref{app:metric_spread}. Main runs use seed 0 and the replicates seeds 1 and 2. Each model trains on a single NVIDIA RTX 4090 or RTX 5090, in 8 to 12 hours for Rayworld and 19 to 26 hours for Othello.
+
+\paragraph{Probes and inverse map.}
+Probes are fit at every position of each sequence, with an 80/20 split by sequence into fit and held-out sets. Linear regression probes are solved in closed form. The MLP probes, the linear categorical probes, and the inverse map train with Adam at a learning rate of $10^{-3}$ and batch size 4,096, for 200 epochs, or 50 epochs on the larger corpus of the categorical Rayworld targets. The inverse map minimizes squared error in the standardized latent space. Its input is the eight-dimensional state in Rayworld, the one-hot mine/theirs board in Othello, and for the categorical target the one-hot bin labels together with both discs' velocities. The nearest-neighbor control averages the latent states of the 10 fit states nearest the target, by standardized Euclidean distance on continuous states and Hamming distance on categorical ones.
+
+\paragraph{Editors and evaluation.}
+Every editor writes only at the last position of the history. On continuous targets PI sweeps $\alpha \in \set{0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 8, 12, 20, 35, 60, 100, 175}$ and GS sweeps $\eta \in \set{0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.35, 0.5, 0.7}$. On categorical targets, Othello's included, PI sweeps $\alpha \in \set{0.25, 0.5, 1, 1.5, 2, 3, 5, 10, 20, 35, 60, 100}$ and GS sweeps $\eta \in \set{0.05, 0.1, 0.2, 0.35, 0.7, 1.5}$. GS starts at residual point 0, 2, 4, 6, or 8, while PI and IM are swept over all nine points. Edit Index is averaged over cases. Edit Fidelity divides errors that are each averaged over all cases, rather than averaging a ratio per case.
+
+
+\FloatBarrier
+\subsection{Additional Qualitative Editability Visualizations}
+\label{app:additional_edit_visuals}
+
+% figure facts: paper/figs/qualitative_edits/README.md and paper/figs/qualitative_edits_othello/README.md, rows as drawn since 2026-09-22
+% (the first rows are the true unedited world). The Othello writes are the 2026-09-19 guarded cache: where no setting passes the guard they are
+% the highest-Edit-Index setting (adjacent-noflip GS pt2 a1.5; standard-noflip GS pt0 a1.5 and IM pt7), not Table 2's highest-fidelity
+% fallback (pt2 a0.05; pt4 a0.05 and pt1). Every other drawn setting, Rayworld included, is Table 2's.
+\Cref{fig:more_qualitative_edits_othello_1,fig:more_qualitative_edits_othello_2,fig:more_qualitative_edits_othello_3,fig:more_qualitative_edits_othello_4,fig:more_qualitative_edits_othello_5,fig:more_qualitative_edits_rayworld_1,fig:more_qualitative_edits_rayworld_2} extend \cref{fig:qualitative_edits} with further edits, each editor at its setting from \cref{tab:editability}. In the Othello figures the four variants run across, one bench case each. The first two boards are shaded uniformly over the legal moves before and after the flip, the references the Edit Index compares against, and the remaining three by the model's predicted distribution after each editor's write, saturating at 2\%. Cyan outlines mark the flipped token and every cell whose legality it changes, the cells the Edit Index scores, and magenta outlines mark the same cells after the edit. Where no setting reaches an Edit Fidelity of $0$, namely GS on both no-flip variants and IM on \texttt{standard-noflip}, the figures show the setting with the highest Edit Index rather than the fallback of \cref{tab:editability}, so these writes can look more disruptive than the table's. Each Rayworld panel shows one world under every variant, with the same disc positions in every column. Below the last eight observed frames come single next-step frames rather than rollouts. The first two are the true next frame without and with the teleport, and the rest are PI, GS, and IM through the continuous and then the categorical target, each above a strip of its error against the edited ground truth, red where the prediction is too dark and green where it is too bright. Cyan and magenta lines mark the rays the moved disc leaves and enters. We drew only teleports that change at least two rays even at 5 rays, so the edit shows in every column. The categorical IM is blank for \texttt{standard} and \texttt{blink}, where we fit no categorical inverse map.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_qualitative/othello_edits_seed1_cols.pdf}
+\caption{Additional qualitative visualizations of Othello edits.}
+\label{fig:more_qualitative_edits_othello_1}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_qualitative/othello_edits_seed2_cols.pdf}
+\caption{Additional qualitative visualizations of Othello edits.}
+\label{fig:more_qualitative_edits_othello_2}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_qualitative/othello_edits_seed3_cols.pdf}
+\caption{Additional qualitative visualizations of Othello edits.}
+\label{fig:more_qualitative_edits_othello_3}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_qualitative/othello_edits_seed4_cols.pdf}
+\caption{Additional qualitative visualizations of Othello edits.}
+\label{fig:more_qualitative_edits_othello_4}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=1.0\linewidth]{figs/appendix/othello_qualitative/othello_edits_seed5_cols.pdf}
+\caption{Additional qualitative visualization of Othello edits.}
+\label{fig:more_qualitative_edits_othello_5}
+\end{figure}
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/appendix/rayworld_qualitative/qualitative_edits_seed5_paired.pdf}
+
+\vspace{1em}
+
+\includegraphics[width=0.9\linewidth]{figs/appendix/rayworld_qualitative/qualitative_edits_seed7_paired.pdf}
+
+\vspace{1em}
+
+\includegraphics[width=0.9\linewidth]{figs/appendix/rayworld_qualitative/qualitative_edits_seed9_paired.pdf}
+\caption{Additional qualitative visualizations of Rayworld edits.}
+\label{fig:more_qualitative_edits_rayworld_1}
+\end{figure}
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.9\linewidth]{figs/appendix/rayworld_qualitative/qualitative_edits_seed10_paired.pdf}
+
+\vspace{1em}
+
+\includegraphics[width=0.9\linewidth]{figs/appendix/rayworld_qualitative/qualitative_edits_seed12_paired.pdf}
+\caption{Additional qualitative visualizations of Rayworld edits.}
+\label{fig:more_qualitative_edits_rayworld_2}
+\end{figure}
 
 \end{document}

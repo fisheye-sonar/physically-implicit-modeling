@@ -1,0 +1,1029 @@
+{
+ "run": "smooth_ablation/L-dw-smooth-20m",
+ "instance": "dw-smooth",
+ "n_seq": 30000,
+ "rows": 1170000,
+ "hidden": 128,
+ "epochs": 200,
+ "k": 10,
+ "unedited": {
+  "edit_index": -0.971174329551064,
+  "edit_frame_rmse": 0.1887151598930359,
+  "target_rmse": 0.36559605598449707,
+  "ghost_rmse": 0.38387632369995117,
+  "collateral_rmse": 0.1277109533548355,
+  "gt_traj_rmse": 0.18902412950992584,
+  "fidelity_ratio": 1.0
+ },
+ "canonical": {
+  "PI": {
+   "edit_index": 0.10856017038073797,
+   "fidelity_ratio": 2.617349811993563
+  },
+  "GS": {
+   "edit_index": -0.024395862758201603,
+   "fidelity_ratio": 1.1563262073550709
+  }
+ },
+ "points": {
+  "0": {
+   "g_r2_heldout": 0.8924710444772321,
+   "g_rmse": 1.152389407157898,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6440069586175161,
+     "fidelity_ratio": 0.2738397452398286,
+     "write_ratio": 0.6526593565940857,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 17421.439453125
+    },
+    "mean_overwrite": {
+     "edit_index": -0.02318539175034326,
+     "fidelity_ratio": 1.0374076747054355,
+     "write_ratio": 0.66856849193573,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.5824782848358154
+    },
+    "nn_overwrite": {
+     "edit_index": 0.29622580313899277,
+     "fidelity_ratio": 0.7994870685366766,
+     "write_ratio": 0.7223716378211975,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.42193368077278137
+    },
+    "delta@0.25": {
+     "edit_index": -0.6556466826206987,
+     "fidelity_ratio": 0.8387594101919861,
+     "write_ratio": 0.15269924700260162,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 3747.16357421875
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7537271128748125,
+     "fidelity_ratio": 0.9356388665604376,
+     "write_ratio": 0.14570730924606323,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.5285751223564148
+    },
+    "delta@0.5": {
+     "edit_index": -0.14144188948134911,
+     "fidelity_ratio": 0.5869286965255526,
+     "write_ratio": 0.30539849400520325,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 7494.28759765625
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.465100145358654,
+     "fidelity_ratio": 0.8417398767890617,
+     "write_ratio": 0.29141461849212646,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.49630123376846313
+    },
+    "delta@1": {
+     "edit_index": 0.5654496232728258,
+     "fidelity_ratio": 0.30538183230868116,
+     "write_ratio": 0.6107969880104065,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 14988.529296875
+    },
+    "nn_delta@1": {
+     "edit_index": -0.06102770304394824,
+     "fidelity_ratio": 0.7756437305656932,
+     "write_ratio": 0.5828292369842529,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.46462345123291016
+    },
+    "delta@1.5": {
+     "edit_index": 0.5887417731833033,
+     "fidelity_ratio": 0.3603701223739504,
+     "write_ratio": 0.9161954522132874,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 22482.76953125
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.10168021637582844,
+     "fidelity_ratio": 0.8035944682994774,
+     "write_ratio": 0.8742439150810242,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.5095660090446472
+    },
+    "delta@2": {
+     "edit_index": 0.557762324650535,
+     "fidelity_ratio": 0.44017380133065287,
+     "write_ratio": 1.221593976020813,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 29977.021484375
+    },
+    "nn_delta@2": {
+     "edit_index": 0.1656551265890909,
+     "fidelity_ratio": 0.8374453391617172,
+     "write_ratio": 1.1656584739685059,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.6125287413597107
+    },
+    "delta@3": {
+     "edit_index": 0.5089883281580498,
+     "fidelity_ratio": 0.5738511946028493,
+     "write_ratio": 1.8323909044265747,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 44965.53125
+    },
+    "nn_delta@3": {
+     "edit_index": 0.21623970897822187,
+     "fidelity_ratio": 0.8929944111316235,
+     "write_ratio": 1.7484878301620483,
+     "readout_err_before": 0.5696252584457397,
+     "readout_err_after": 0.8700145483016968
+    }
+   }
+  },
+  "1": {
+   "g_r2_heldout": 0.7362532856653221,
+   "g_rmse": 2.4504311084747314,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6652163459027132,
+     "fidelity_ratio": 0.26331268763137156,
+     "write_ratio": 0.6078758835792542,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.05226997658610344
+    },
+    "mean_overwrite": {
+     "edit_index": -0.030447677661130094,
+     "fidelity_ratio": 1.0007283374103595,
+     "write_ratio": 0.6021298170089722,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.2945460299390105,
+     "fidelity_ratio": 0.7972779731626931,
+     "write_ratio": 0.6551021933555603,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.1139899492263794
+    },
+    "delta@0.25": {
+     "edit_index": -0.6861292188327781,
+     "fidelity_ratio": 0.8586908561438861,
+     "write_ratio": 0.13042795658111572,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.37149977684020996
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.773326819980704,
+     "fidelity_ratio": 0.9420581690810347,
+     "write_ratio": 0.13105356693267822,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.3812711238861084
+    },
+    "delta@0.5": {
+     "edit_index": -0.18380044510901422,
+     "fidelity_ratio": 0.6089704574849618,
+     "write_ratio": 0.26085591316223145,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.25925567746162415
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.4886227271949674,
+     "fidelity_ratio": 0.8488245057428425,
+     "write_ratio": 0.26210713386535645,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.28234583139419556
+    },
+    "delta@1": {
+     "edit_index": 0.5541863979183734,
+     "fidelity_ratio": 0.30501904542317637,
+     "write_ratio": 0.5217118263244629,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.08669310063123703
+    },
+    "nn_delta@1": {
+     "edit_index": -0.04514259630091503,
+     "fidelity_ratio": 0.7680212184333165,
+     "write_ratio": 0.5242142677307129,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.15421055257320404
+    },
+    "delta@1.5": {
+     "edit_index": 0.6219152259319032,
+     "fidelity_ratio": 0.3447488878325645,
+     "write_ratio": 0.7825677394866943,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.2559336721897125
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.1262321848785555,
+     "fidelity_ratio": 0.7969555748922575,
+     "write_ratio": 0.7863214015960693,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.2785226106643677
+    },
+    "delta@2": {
+     "edit_index": 0.6023641685664461,
+     "fidelity_ratio": 0.4139975964233769,
+     "write_ratio": 1.0434236526489258,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.4838695228099823
+    },
+    "nn_delta@2": {
+     "edit_index": 0.18986327249815646,
+     "fidelity_ratio": 0.8353523166404253,
+     "write_ratio": 1.0484285354614258,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.4864049255847931
+    },
+    "delta@3": {
+     "edit_index": 0.5516392160205432,
+     "fidelity_ratio": 0.536432623262263,
+     "write_ratio": 1.5651354789733887,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.952040433883667
+    },
+    "nn_delta@3": {
+     "edit_index": 0.2366468272986971,
+     "fidelity_ratio": 0.9017292486217335,
+     "write_ratio": 1.5726428031921387,
+     "readout_err_before": 0.4863416254520416,
+     "readout_err_after": 0.9306288957595825
+    }
+   }
+  },
+  "2": {
+   "g_r2_heldout": 0.6673128207546634,
+   "g_rmse": 3.252525568008423,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6381683703691364,
+     "fidelity_ratio": 0.28872869431464115,
+     "write_ratio": 0.49689918756484985,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.0317557230591774
+    },
+    "mean_overwrite": {
+     "edit_index": -0.028963063411052568,
+     "fidelity_ratio": 0.9971026794667913,
+     "write_ratio": 0.4933284521102905,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.2951887742041044,
+     "fidelity_ratio": 0.7935292937874967,
+     "write_ratio": 0.5341622829437256,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.10611137002706528
+    },
+    "delta@0.25": {
+     "edit_index": -0.6963741790970882,
+     "fidelity_ratio": 0.8592100255360275,
+     "write_ratio": 0.10079871118068695,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.368713915348053
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7687456056878547,
+     "fidelity_ratio": 0.9361852775404558,
+     "write_ratio": 0.10706037282943726,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.3776472210884094
+    },
+    "delta@0.5": {
+     "edit_index": -0.2163042903265178,
+     "fidelity_ratio": 0.619158100700701,
+     "write_ratio": 0.2015974223613739,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.2537216246128082
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.4685283725024487,
+     "fidelity_ratio": 0.8347851388847215,
+     "write_ratio": 0.2141207456588745,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.2757071852684021
+    },
+    "delta@1": {
+     "edit_index": 0.49913616728640964,
+     "fidelity_ratio": 0.3284884235095693,
+     "write_ratio": 0.4031948447227478,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.059737563133239746
+    },
+    "nn_delta@1": {
+     "edit_index": -0.02420656435919421,
+     "fidelity_ratio": 0.7556615126108812,
+     "write_ratio": 0.428241491317749,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.13789333403110504
+    },
+    "delta@1.5": {
+     "edit_index": 0.5912617647218765,
+     "fidelity_ratio": 0.3642330584959801,
+     "write_ratio": 0.6047922372817993,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.23945218324661255
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.13611094723841463,
+     "fidelity_ratio": 0.7917263744368098,
+     "write_ratio": 0.6423622369766235,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.2655506730079651
+    },
+    "delta@2": {
+     "edit_index": 0.5779373984127886,
+     "fidelity_ratio": 0.4313068618796222,
+     "write_ratio": 0.8063896894454956,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.47055697441101074
+    },
+    "nn_delta@2": {
+     "edit_index": 0.1935528978654807,
+     "fidelity_ratio": 0.8316514877065425,
+     "write_ratio": 0.856482982635498,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.4768811762332916
+    },
+    "delta@3": {
+     "edit_index": 0.5368317746747262,
+     "fidelity_ratio": 0.5498517899697263,
+     "write_ratio": 1.2095844745635986,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.9394205212593079
+    },
+    "nn_delta@3": {
+     "edit_index": 0.2386325424811409,
+     "fidelity_ratio": 0.9030325809391004,
+     "write_ratio": 1.284724473953247,
+     "readout_err_before": 0.4850354790687561,
+     "readout_err_after": 0.9246586561203003
+    }
+   }
+  },
+  "3": {
+   "g_r2_heldout": 0.6439927938140505,
+   "g_rmse": 3.6435303688049316,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6555361119164768,
+     "fidelity_ratio": 0.27905179139102654,
+     "write_ratio": 0.44455182552337646,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.03358187898993492
+    },
+    "mean_overwrite": {
+     "edit_index": -0.029114409628195243,
+     "fidelity_ratio": 0.9884124550118994,
+     "write_ratio": 0.4425550401210785,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.29355659589847455,
+     "fidelity_ratio": 0.7822201657236076,
+     "write_ratio": 0.47633448243141174,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.10729274153709412
+    },
+    "delta@0.25": {
+     "edit_index": -0.6653991364507958,
+     "fidelity_ratio": 0.8424447627455098,
+     "write_ratio": 0.08892261981964111,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.36879628896713257
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.749474729170916,
+     "fidelity_ratio": 0.9247937140628183,
+     "write_ratio": 0.09487337619066238,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.3777250647544861
+    },
+    "delta@0.5": {
+     "edit_index": -0.18469091361859347,
+     "fidelity_ratio": 0.6029336426503775,
+     "write_ratio": 0.17784523963928223,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.2539967894554138
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.44513756899252754,
+     "fidelity_ratio": 0.8204626963960564,
+     "write_ratio": 0.18974676728248596,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.2757519781589508
+    },
+    "delta@1": {
+     "edit_index": 0.538564094425807,
+     "fidelity_ratio": 0.31165385259221473,
+     "write_ratio": 0.35569047927856445,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.06347459554672241
+    },
+    "nn_delta@1": {
+     "edit_index": -0.007121660674089818,
+     "fidelity_ratio": 0.7423583003144232,
+     "write_ratio": 0.37949350476264954,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.13791297376155853
+    },
+    "delta@1.5": {
+     "edit_index": 0.6005015129913795,
+     "fidelity_ratio": 0.35574588257217443,
+     "write_ratio": 0.5335357189178467,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.2435486912727356
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.15106278697800588,
+     "fidelity_ratio": 0.7868365488935177,
+     "write_ratio": 0.5692402720451355,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.2661568820476532
+    },
+    "delta@2": {
+     "edit_index": 0.5270288298581757,
+     "fidelity_ratio": 0.44936321801324336,
+     "write_ratio": 0.7113809585571289,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.47445741295814514
+    },
+    "nn_delta@2": {
+     "edit_index": 0.19281820859452461,
+     "fidelity_ratio": 0.8412460539178142,
+     "write_ratio": 0.7589870095252991,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.47702085971832275
+    },
+    "delta@3": {
+     "edit_index": 0.4279842809598647,
+     "fidelity_ratio": 0.6142732102276766,
+     "write_ratio": 1.0670714378356934,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.943789005279541
+    },
+    "nn_delta@3": {
+     "edit_index": 0.21511704716956093,
+     "fidelity_ratio": 0.9408003183712531,
+     "write_ratio": 1.138480544090271,
+     "readout_err_before": 0.485039085149765,
+     "readout_err_after": 0.9245023727416992
+    }
+   }
+  },
+  "4": {
+   "g_r2_heldout": 0.6311048576432574,
+   "g_rmse": 3.7739601135253906,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6021191603257596,
+     "fidelity_ratio": 0.3198385284489035,
+     "write_ratio": 0.1590716689825058,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.033413682132959366
+    },
+    "mean_overwrite": {
+     "edit_index": -0.031233381375027278,
+     "fidelity_ratio": 0.9820839577842245,
+     "write_ratio": 0.15748745203018188,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.5835816264152527
+    },
+    "nn_overwrite": {
+     "edit_index": 0.2877729963435246,
+     "fidelity_ratio": 0.7624294284951747,
+     "write_ratio": 0.1695944368839264,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.10821752995252609
+    },
+    "delta@0.25": {
+     "edit_index": -0.6224249394117228,
+     "fidelity_ratio": 0.8113535042157344,
+     "write_ratio": 0.03125955909490585,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.3691408932209015
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7069274246949167,
+     "fidelity_ratio": 0.8990621787269256,
+     "write_ratio": 0.03358419984579086,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.37811562418937683
+    },
+    "delta@0.5": {
+     "edit_index": -0.1965295966647593,
+     "fidelity_ratio": 0.6026008609920992,
+     "write_ratio": 0.0625191181898117,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.2545947730541229
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.4147702552792216,
+     "fidelity_ratio": 0.8033997501670028,
+     "write_ratio": 0.06716839969158173,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.2763323187828064
+    },
+    "delta@1": {
+     "edit_index": 0.45890193166072535,
+     "fidelity_ratio": 0.3428706000887523,
+     "write_ratio": 0.1250382363796234,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.06590744107961655
+    },
+    "nn_delta@1": {
+     "edit_index": -0.005628436279073396,
+     "fidelity_ratio": 0.7451911885702194,
+     "write_ratio": 0.13433679938316345,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.1398208737373352
+    },
+    "delta@1.5": {
+     "edit_index": 0.5406905931345812,
+     "fidelity_ratio": 0.40133752248418014,
+     "write_ratio": 0.18755735456943512,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.2454097718000412
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.16480213755433856,
+     "fidelity_ratio": 0.8126385965133925,
+     "write_ratio": 0.20150519907474518,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.2671843469142914
+    },
+    "delta@2": {
+     "edit_index": 0.47485595405840947,
+     "fidelity_ratio": 0.5354527551905095,
+     "write_ratio": 0.2500764727592468,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.47640883922576904
+    },
+    "nn_delta@2": {
+     "edit_index": 0.21217590879493728,
+     "fidelity_ratio": 0.9094131925088003,
+     "write_ratio": 0.2686735987663269,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.47763320803642273
+    },
+    "delta@3": {
+     "edit_index": 0.37200657361966694,
+     "fidelity_ratio": 0.8005841543974239,
+     "write_ratio": 0.37511470913887024,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.9462354183197021
+    },
+    "nn_delta@3": {
+     "edit_index": 0.22100527528601754,
+     "fidelity_ratio": 1.0938213709862086,
+     "write_ratio": 0.40301042795181274,
+     "readout_err_before": 0.4853484034538269,
+     "readout_err_after": 0.9248544573783875
+    }
+   }
+  },
+  "5": {
+   "g_r2_heldout": 0.6171609197193465,
+   "g_rmse": 3.8492279052734375,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.5940868654442265,
+     "fidelity_ratio": 0.31893331812015674,
+     "write_ratio": 0.1545621156692505,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.034006740897893906
+    },
+    "mean_overwrite": {
+     "edit_index": -0.03148445656261865,
+     "fidelity_ratio": 0.9811601126301477,
+     "write_ratio": 0.15362313389778137,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.2851103440087925,
+     "fidelity_ratio": 0.7608665509622993,
+     "write_ratio": 0.165549635887146,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.10865727812051773
+    },
+    "delta@0.25": {
+     "edit_index": -0.6194213078838882,
+     "fidelity_ratio": 0.8100677012679577,
+     "write_ratio": 0.030136188492178917,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.3695140779018402
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.7024744032248862,
+     "fidelity_ratio": 0.8967125325517235,
+     "write_ratio": 0.03259381279349327,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.3788314461708069
+    },
+    "delta@0.5": {
+     "edit_index": -0.1986088425855732,
+     "fidelity_ratio": 0.6040462838526081,
+     "write_ratio": 0.06027238070964813,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.2547914385795593
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.41193093758103777,
+     "fidelity_ratio": 0.8020779409465544,
+     "write_ratio": 0.06518763303756714,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.2771998345851898
+    },
+    "delta@1": {
+     "edit_index": 0.45016410529718004,
+     "fidelity_ratio": 0.3448780682318867,
+     "write_ratio": 0.12054475396871567,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.06658495217561722
+    },
+    "nn_delta@1": {
+     "edit_index": -0.004932623581148522,
+     "fidelity_ratio": 0.7456513740025236,
+     "write_ratio": 0.13037526607513428,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.1403636932373047
+    },
+    "delta@1.5": {
+     "edit_index": 0.5348326995138989,
+     "fidelity_ratio": 0.40263978882636925,
+     "write_ratio": 0.1808171272277832,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.24657976627349854
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.1646367827760685,
+     "fidelity_ratio": 0.8158224669666136,
+     "write_ratio": 0.19556289911270142,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.2664540410041809
+    },
+    "delta@2": {
+     "edit_index": 0.46917643318323,
+     "fidelity_ratio": 0.5397300003316368,
+     "write_ratio": 0.24108950793743134,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.4777398407459259
+    },
+    "nn_delta@2": {
+     "edit_index": 0.21033660887151978,
+     "fidelity_ratio": 0.9175974340793054,
+     "write_ratio": 0.26075053215026855,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.4763858914375305
+    },
+    "delta@3": {
+     "edit_index": 0.3678992314192742,
+     "fidelity_ratio": 0.8074095539801934,
+     "write_ratio": 0.3616342842578888,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.9480554461479187
+    },
+    "nn_delta@3": {
+     "edit_index": 0.21750542106622656,
+     "fidelity_ratio": 1.1130890697274105,
+     "write_ratio": 0.39112579822540283,
+     "readout_err_before": 0.4858960807323456,
+     "readout_err_after": 0.923072338104248
+    }
+   }
+  },
+  "6": {
+   "g_r2_heldout": 0.6178901174438409,
+   "g_rmse": 3.842804193496704,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.6029020584365291,
+     "fidelity_ratio": 0.31077319917311913,
+     "write_ratio": 0.15129996836185455,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.0365724042057991
+    },
+    "mean_overwrite": {
+     "edit_index": -0.03109907161995827,
+     "fidelity_ratio": 0.9807955491193466,
+     "write_ratio": 0.1503221094608307,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.2834432835088445,
+     "fidelity_ratio": 0.7595029713071066,
+     "write_ratio": 0.16223639249801636,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.1087409257888794
+    },
+    "delta@0.25": {
+     "edit_index": -0.6104011641956245,
+     "fidelity_ratio": 0.8035261669269752,
+     "write_ratio": 0.029574858024716377,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.37029287219047546
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.6974165650350611,
+     "fidelity_ratio": 0.8938257928091683,
+     "write_ratio": 0.031903225928545,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.3788934648036957
+    },
+    "delta@0.5": {
+     "edit_index": -0.19118714178785623,
+     "fidelity_ratio": 0.5978971073381731,
+     "write_ratio": 0.059149716049432755,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.25627443194389343
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.40946432637614477,
+     "fidelity_ratio": 0.8011110619797449,
+     "write_ratio": 0.06380645185709,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.27734261751174927
+    },
+    "delta@1": {
+     "edit_index": 0.4632097956502684,
+     "fidelity_ratio": 0.3380800286786803,
+     "write_ratio": 0.11829943209886551,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.06718605011701584
+    },
+    "nn_delta@1": {
+     "edit_index": -0.006599569571023975,
+     "fidelity_ratio": 0.7495376036562159,
+     "write_ratio": 0.12761290371418,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.14084720611572266
+    },
+    "delta@1.5": {
+     "edit_index": 0.5356061132107063,
+     "fidelity_ratio": 0.41009454805021295,
+     "write_ratio": 0.17744913697242737,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.2426602989435196
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.16173288601403005,
+     "fidelity_ratio": 0.8273564763124523,
+     "write_ratio": 0.19141936302185059,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.26689913868904114
+    },
+    "delta@2": {
+     "edit_index": 0.45709086513524416,
+     "fidelity_ratio": 0.5718508329609,
+     "write_ratio": 0.23659886419773102,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.47222012281417847
+    },
+    "nn_delta@2": {
+     "edit_index": 0.2037800872365237,
+     "fidelity_ratio": 0.9431935510870578,
+     "write_ratio": 0.25522580742836,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.4766981899738312
+    },
+    "delta@3": {
+     "edit_index": 0.34247946280952773,
+     "fidelity_ratio": 0.8939789773902717,
+     "write_ratio": 0.35489827394485474,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.9396823644638062
+    },
+    "nn_delta@3": {
+     "edit_index": 0.2029752534122526,
+     "fidelity_ratio": 1.1790277674689644,
+     "write_ratio": 0.38283872604370117,
+     "readout_err_before": 0.4859491288661957,
+     "readout_err_after": 0.9231939315795898
+    }
+   }
+  },
+  "7": {
+   "g_r2_heldout": 0.6023759206571687,
+   "g_rmse": 3.9212186336517334,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.5730050748113076,
+     "fidelity_ratio": 0.33765774458603054,
+     "write_ratio": 0.15092960000038147,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.033856071531772614
+    },
+    "mean_overwrite": {
+     "edit_index": -0.032429073782819756,
+     "fidelity_ratio": 0.9797227832848775,
+     "write_ratio": 0.14999441802501678,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.28041879880146686,
+     "fidelity_ratio": 0.7570298299335305,
+     "write_ratio": 0.1619013100862503,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.10913677513599396
+    },
+    "delta@0.25": {
+     "edit_index": -0.6016379619960914,
+     "fidelity_ratio": 0.8012591930488943,
+     "write_ratio": 0.029086580500006676,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.3696061074733734
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.6802750506620026,
+     "fidelity_ratio": 0.8881078229944269,
+     "write_ratio": 0.031736694276332855,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.3791331350803375
+    },
+    "delta@0.5": {
+     "edit_index": -0.2037589142732159,
+     "fidelity_ratio": 0.60748808081829,
+     "write_ratio": 0.05817316100001335,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.2547990679740906
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.39962861833701013,
+     "fidelity_ratio": 0.8020694921062564,
+     "write_ratio": 0.06347338855266571,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.27768856287002563
+    },
+    "delta@1": {
+     "edit_index": 0.4196678819432578,
+     "fidelity_ratio": 0.366469592860651,
+     "write_ratio": 0.1163463220000267,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.0666775181889534
+    },
+    "nn_delta@1": {
+     "edit_index": -0.006651282572094031,
+     "fidelity_ratio": 0.7652541047940457,
+     "write_ratio": 0.12694677710533142,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.14166897535324097
+    },
+    "delta@1.5": {
+     "edit_index": 0.49525712302741554,
+     "fidelity_ratio": 0.4479121889129106,
+     "write_ratio": 0.17451949417591095,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.24722687900066376
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.15282641324080692,
+     "fidelity_ratio": 0.8620080129748919,
+     "write_ratio": 0.19042018055915833,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.267424076795578
+    },
+    "delta@2": {
+     "edit_index": 0.4086902440054769,
+     "fidelity_ratio": 0.6282355110285003,
+     "write_ratio": 0.2326926440000534,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.47866299748420715
+    },
+    "nn_delta@2": {
+     "edit_index": 0.18521926370587874,
+     "fidelity_ratio": 0.9997726709231977,
+     "write_ratio": 0.25389355421066284,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.47719740867614746
+    },
+    "delta@3": {
+     "edit_index": 0.2898817778793198,
+     "fidelity_ratio": 0.9806878461458286,
+     "write_ratio": 0.3490389883518219,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.9493837356567383
+    },
+    "nn_delta@3": {
+     "edit_index": 0.1732256090695567,
+     "fidelity_ratio": 1.2755512670891613,
+     "write_ratio": 0.38084036111831665,
+     "readout_err_before": 0.4860785901546478,
+     "readout_err_after": 0.9234569668769836
+    }
+   }
+  },
+  "8": {
+   "g_r2_heldout": 0.6045830327832432,
+   "g_rmse": 3.9078242778778076,
+   "arms": {
+    "overwrite": {
+     "edit_index": 0.5728079697968245,
+     "fidelity_ratio": 0.35569361030790103,
+     "write_ratio": 0.15068642795085907,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.035461053252220154
+    },
+    "mean_overwrite": {
+     "edit_index": -0.03151750392441988,
+     "fidelity_ratio": 0.9784372961815979,
+     "write_ratio": 0.14972318708896637,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.5835815668106079
+    },
+    "nn_overwrite": {
+     "edit_index": 0.27927091642969737,
+     "fidelity_ratio": 0.755173453901706,
+     "write_ratio": 0.1615869402885437,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.1091490387916565
+    },
+    "delta@0.25": {
+     "edit_index": -0.5854919880695599,
+     "fidelity_ratio": 0.7966387828616459,
+     "write_ratio": 0.029119672253727913,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.3699827790260315
+    },
+    "nn_delta@0.25": {
+     "edit_index": -0.6617573257289814,
+     "fidelity_ratio": 0.8890735965054964,
+     "write_ratio": 0.031634919345378876,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.37914714217185974
+    },
+    "delta@0.5": {
+     "edit_index": -0.19494634185008164,
+     "fidelity_ratio": 0.6102732370744588,
+     "write_ratio": 0.058239344507455826,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.2556212842464447
+    },
+    "nn_delta@0.5": {
+     "edit_index": -0.38199673754263336,
+     "fidelity_ratio": 0.8227855747501275,
+     "write_ratio": 0.06326984614133835,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.27772414684295654
+    },
+    "delta@1": {
+     "edit_index": 0.4132889333775632,
+     "fidelity_ratio": 0.40796871718178274,
+     "write_ratio": 0.11647868901491165,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.06794729828834534
+    },
+    "nn_delta@1": {
+     "edit_index": 0.006413449781833208,
+     "fidelity_ratio": 0.861104144985258,
+     "write_ratio": 0.1265396773815155,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.14188861846923828
+    },
+    "delta@1.5": {
+     "edit_index": 0.4267349734971676,
+     "fidelity_ratio": 0.6186268107759826,
+     "write_ratio": 0.17471802234649658,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.24596023559570312
+    },
+    "nn_delta@1.5": {
+     "edit_index": 0.14403566399772616,
+     "fidelity_ratio": 1.0890915996418324,
+     "write_ratio": 0.18980953097343445,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.2673536539077759
+    },
+    "delta@2": {
+     "edit_index": 0.3264862349009129,
+     "fidelity_ratio": 0.9975984763661458,
+     "write_ratio": 0.2329573780298233,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.4765646457672119
+    },
+    "nn_delta@2": {
+     "edit_index": 0.16080286117050874,
+     "fidelity_ratio": 1.407886479170845,
+     "write_ratio": 0.253079354763031,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.47710615396499634
+    },
+    "delta@3": {
+     "edit_index": 0.2158581240442667,
+     "fidelity_ratio": 1.7890247195695672,
+     "write_ratio": 0.34943604469299316,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.9459388852119446
+    },
+    "nn_delta@3": {
+     "edit_index": 0.13733612216029945,
+     "fidelity_ratio": 2.1051886933986923,
+     "write_ratio": 0.3796190321445465,
+     "readout_err_before": 0.48607540130615234,
+     "readout_err_after": 0.9232836365699768
+    }
+   }
+  }
+ }
+}

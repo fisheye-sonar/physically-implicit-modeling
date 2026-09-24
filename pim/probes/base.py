@@ -315,8 +315,13 @@ def fit_probe(
         "r2": r2(pr_te, y_te, ym),
         "r2_insample": r2(pr_tr, y_tr, ym),
         "rmse": float(np.sqrt(((pr_te - y_te) ** 2).mean())),
+        # per-dim R²: NaN where a target dim is CONSTANT on the held-out split (a recurrent model's
+        # residual has units that never move — 721 of 1024 at point 0 on _R-dw-8ray-20m, 2026-09-15);
+        # the aggregate r2 above still raises if the WHOLE target is constant
         "per_dim_r2": [
-            r2(pr_te[:, [j]], y_te[:, [j]], ym[[j]]) for j in range(y_te.shape[1])
+            (r2(pr_te[:, [j]], y_te[:, [j]], ym[[j]])
+             if float(((y_te[:, j] - ym[j]) ** 2).sum()) > 0 else float("nan"))
+            for j in range(y_te.shape[1])
         ],
         "kind": probe.kind,
     }
