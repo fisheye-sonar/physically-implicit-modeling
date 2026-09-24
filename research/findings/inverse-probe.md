@@ -268,6 +268,22 @@ The first Othello launch failed on a 4 GB broadcast in the retrieval search (its
 the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.
 
 
+## 2026-09-23 (evening) — `adjacent-noflip` IS editable toward a legal board: balanced two-disc edits land (`observed`, n = 40)
+
+**Question (Sevan).** No single flip on `adjacent-noflip` is legal (colour counts are fixed). Is the model editable once the
+target is legal? Flip one black and one white disc (counts preserved); the exact search sorts such pairs into legal / illegal.
+**Method.** `scripts/two_flip_editability.py`: the first 40 bench cases (of the first 73) that have both a reachable and an
+unreachable balanced partner, partner order seeded by the case index; every legal pair's witness game replayed; the canonical
+`oa.inverse_arms` writing each group's board through its new `post_boards` argument at every point (single-flip boards checked
+equal to the default path's). → `runs/adjacency_ablation/L-oth-adjacent-20m/two_flip_editability.json`.
+**Result** (IM, Edit Index symdiff ± SE / fidelity): legal pairs **+0.88 ± 0.04 / 0.75** (point 3), +0.88 / 0.74 (point 4);
+illegal pairs from the same cases +0.65 ± 0.07 / 0.31 (point 4); the bench's single flip on the same cases ≤ +0.09 at every point
+(point 1, Table 2's setting: −0.04 / 0.24). The legal−illegal gap holds at points 2–8.
+**Reading.** The adjacent-noflip failure in Table 2 is a failure on boards that break an invariant every real board obeys (the
+colour counts); toward legal boards the model edits as well as standard Othello (+0.81 / 0.62). Illegal but count-consistent
+pairs land in between. Caveats: 40 cases, one seed, IM only (PI / GS would need two-tile writes), best point read after the fact
+(the gap holds at every point from 2 on). Paper: `tab:two_flip` in the reachability appendix.
+
 ## 2026-09-23 — Legal vs illegal target boards, decided EXACTLY: flip models edit both; `adjacent-noflip` has no legal flipped board at all (`replicated` for the split; supersedes 2026-09-15)
 
 **Method.** `pim.environments.othello.reachability.decide`: exhaustive search for a legal game (passes only when forced) of the

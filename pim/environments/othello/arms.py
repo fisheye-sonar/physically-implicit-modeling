@@ -432,7 +432,7 @@ def grad_steer_arm(model, bench: Benchmark, probes: dict, start_layer: int, *,
 def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_games: int,
                  seed: int = 0, k: int | None = None, points=None,
                  uns_probs: np.ndarray | None = None, log=print,
-                 return_probs: bool = False):
+                 return_probs: bool = False, post_boards: np.ndarray | None = None):
     """IM (h′ = g(board_post) at the last position) and IM-NN (the mean residual of the k
     training boards nearest the target board, Hamming) at every residual point, on the
     canonical cases. g: one-hot mine/theirs board (64 × 3) → residual, the mirror of the
@@ -441,7 +441,10 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     ``corpus.rules_of(instance)``, to replay the bench histories into boards.
     Returns the arm records (canonical scorecard + guard when ``uns_probs`` is given) and
     ``{"g_r2": [...], "g_rmse": [...]}``; with ``return_probs`` also ``{(editor, point): (n_cases, 64)
-    move distributions}`` — the qualitative figure draws them (2026-09-17)."""
+    move distributions}`` — the qualitative figure draws them (2026-09-17).
+    ``post_boards`` (2026-09-23): (n_cases, 64) post-edit boards in the mover's frame that REPLACE the
+    single-tile flip (a multi-tile edit, ``scripts/two_flip_editability.py``); the bench's ``legal_post``
+    must then describe those boards. None (default) = the canonical single-tile edit, unchanged."""
     from pim.editors.inverse import inverse_overwrite, retrieval_overwrite
     from pim.environments.othello.bench import case_targets
     from pim.environments.othello.data import (N_CLASSES, N_TILES, board_probs, canonical_vocab,
@@ -470,6 +473,10 @@ def inverse_arms(model, bench: Benchmark, data, *, rules: dict, cache_dir, n_gam
     s_post = s_pre.copy()
     s_post[np.arange(n_cases), bench.pos_int] = tgt_lab
     assert (s_pre[np.arange(n_cases), bench.pos_int] == cur_lab).all(), "pre-edit board disagrees with the bench"
+    if post_boards is not None:
+        post_boards = np.asarray(post_boards)
+        assert post_boards.shape == s_post.shape, f"post_boards must be {s_post.shape}, got {post_boards.shape}"
+        s_post = post_boards.astype(s_post.dtype)
     Xpost_t = torch.from_numpy(onehot(s_post)).to(DEV)
     X_tr_t = torch.from_numpy(X_all[tr_idx]).to(DEV)
     okind = getattr(model, "output_kind", "logits")
