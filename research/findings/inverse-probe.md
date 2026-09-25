@@ -268,6 +268,36 @@ The first Othello launch failed on a 4 GB broadcast in the retrieval search (its
 the 2026-09-11 NVML mismatch); fixed as a one-hot matmul, log kept as `*.failed-nvml-oom.log`.
 
 
+## 2026-09-25 — Two-token edits at n = 1000 per variant: the pilot holds, except IM's fidelity on illegal `adjacent-noflip` pairs (`replicated` across n; one training seed)
+
+**Evidence:** `scripts/two_flip_editability.py --n 1000 --pool <N> --out two_flip_editability_n1000.json` on all four Othello
+variants (driver `experiments/two_flip_full/run_n1000.sh`, logs `logs/two_flip_full/*_n1000.log`, outputs
+`runs/<run>/two_flip_editability_n1000.json`). Cases: each instance's `edits/v1/cases_<pool>.pkl` (made by
+`scripts/make_othello_edits.py --n <pool>`, same recipe and seed; its first 1000 cases equal the bench, checked). Every case keeps
+its bench flip and adds the first legal and the first illegal opposite-colour partner (exact search, witnesses replayed, colour
+counts asserted); PI / GS at the run's Table 2 setting reproduce scores.json on the full bench (asserted). The n = 40 pilot pairs
+are exactly the first 40 pairs of each set.
+
+| variant | cases tried for 1000 kept | group | PI | GS | IM |
+|---|---|---|---|---|---|
+| standard | 1800 | legal | +0.74 / 0.51 | +0.78 / 0.73 | +0.78 / 0.71 |
+| | | illegal | +0.72 / 0.61 | +0.76 / 0.69 | +0.76 / 0.69 |
+| adjacent-flip | 3390 | legal | +0.31 / 0.03 | +0.16 / 0.15 | +0.71 / 0.56 |
+| | | illegal | +0.18 / 0.02 | +0.05 / 0.08 | +0.64 / 0.54 |
+| adjacent-noflip | 2026 | legal | −0.04 / 0.18 | −0.94 / −0.00 | +0.88 / 0.78 |
+| | | illegal | −0.95 / −0.00 | −0.95 / −0.00 | +0.65 / 0.08 |
+| standard-noflip | 1000 (no legal pair: 12,000 partners, all unreachable) | illegal | −0.97 / 0.00 | −0.95 / −0.01 | −0.86 / −0.08 |
+
+Cells: Edit Index (symdiff) / Edit Fidelity, each group at the setting `best_arm` picks within it; SE of the index 0.01–0.03.
+
+**Reading.** The pilot's picture survives 25× the cases. Standard Othello edits legal and illegal two-token boards alike with all
+three editors. On `adjacent-noflip` a legal target rescues IM (+0.88 / 0.78, as good as standard) but not PI or GS. New at n = 1000:
+IM on `adjacent-noflip`'s ILLEGAL pairs keeps its index (+0.65) but its fidelity is 0.08, not the pilot's 0.31 — the write moves the
+changed cells toward the target while degrading the rest, so "lands less well" understates the gap; PI on legal pairs there is
+−0.04, not +0.13. `adjacent-flip` (first run) mirrors its single-flip row: IM lands on both, better on legal boards; PI and GS reach at
+most +0.31 at fidelity ≤ 0.15. Caveats: kept cases are the ones with both a legal and an illegal partner (29–56 % of those tried on the three variants with legal pairs), one
+training seed per variant, `adjacent-flip`'s search left 535 partners undecided at the 2M-node budget (skipped, not counted).
+
 ## 2026-09-23 (evening) — `adjacent-noflip` IS editable toward a legal board: balanced two-disc edits land (`observed`, n = 40)
 
 **Question (Sevan).** No single flip on `adjacent-noflip` is legal (colour counts are fixed). Is the model editable once the
