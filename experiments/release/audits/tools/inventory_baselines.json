@@ -1,0 +1,7479 @@
+{
+ "oth-uniform": {
+  "files": {
+   "baselines.json": 10198,
+   "bayes_floor.json": 706,
+   "bayes_floor.smoke.json": 699,
+   "corpus_stats.json": 299,
+   "reachability.json": 160937
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 3639,
+    "cat": "index"
+   },
+   {
+    "file": "probes_0371e7c056b67a18.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_226a07ed01bc9a2c.pt",
+    "bytes": 1978839,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2cb461ae28f6816b.pt",
+    "bytes": 6951823,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_38267002ff2af70c.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3c358964551fe02f.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3f76849d38f3a8ce.pt",
+    "bytes": 2799801,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_407187cfd54cca6a.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_427d106441cc9846.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_437c48fe610e3a6d.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_58e72ec4e9bce04f.pt",
+    "bytes": 1911767,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5ca54ac22475e59e.pt",
+    "bytes": 1978839,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6fa972cd0eba9b44.pt",
+    "bytes": 1978839,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8894e95199990e9e.pt",
+    "bytes": 3992591,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine_signed"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_bafb835c84ed138a.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c10e9ca38154f38d.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d80d45d21ece919c.pt",
+    "bytes": 2799801,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f2e85ca436195808.pt",
+    "bytes": 2799801,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10025757,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f952432c3d279247.pt",
+    "bytes": 1977879,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1179476,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l_tokens": [
+    "mine/theirs",
+    "mine_signed"
+   ]
+  }
+ },
+ "oth-adjacent-flip": {
+  "files": {
+   "baselines.json": 10177,
+   "bayes_floor.json": 714,
+   "bayes_floor.smoke.json": 706,
+   "corpus_stats.json": 300,
+   "reachability.json": 145035
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 3639,
+    "cat": "index"
+   },
+   {
+    "file": "probes_0921a94cc9471973.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0959fdeae0f62e50.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0b4b2c8ef5bbc2a2.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5fcb9b3b608f8efd.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6042bf12eb589127.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_747338701ee546b3.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_769aee07ad0f2ab1.pt",
+    "bytes": 6951823,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_78a2d51a3739ec4b.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8efcac5df96fe716.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9d5052a67b00274d.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a09f5e928014c535.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a147b52ee02e6064.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b8f59daebd5b2710.pt",
+    "bytes": 1911767,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dcf0221180335c5b.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e44b07bcb7a13952.pt",
+    "bytes": 1977879,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ebf1df5f2c938020.pt",
+    "bytes": 3992591,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine_signed"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f1d4a7392955cb36.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fb9cac4286c0925c.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l_tokens": [
+    "mine/theirs",
+    "mine_signed"
+   ]
+  }
+ },
+ "oth-adjacent": {
+  "files": {
+   "baselines.json": 10185,
+   "bayes_floor.json": 708,
+   "bayes_floor.smoke.json": 700,
+   "corpus_stats.json": 271,
+   "reachability.json": 91446
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 3639,
+    "cat": "index"
+   },
+   {
+    "file": "probes_0921a94cc9471973.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0959fdeae0f62e50.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0b4b2c8ef5bbc2a2.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5fcb9b3b608f8efd.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6042bf12eb589127.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_747338701ee546b3.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_769aee07ad0f2ab1.pt",
+    "bytes": 6951823,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_78a2d51a3739ec4b.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8efcac5df96fe716.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9d5052a67b00274d.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a09f5e928014c535.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a147b52ee02e6064.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b8f59daebd5b2710.pt",
+    "bytes": 1911767,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dcf0221180335c5b.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e44b07bcb7a13952.pt",
+    "bytes": 1977879,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ebf1df5f2c938020.pt",
+    "bytes": 3992591,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine_signed"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f1d4a7392955cb36.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fb9cac4286c0925c.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l_tokens": [
+    "mine/theirs",
+    "mine_signed"
+   ]
+  }
+ },
+ "oth-noflip": {
+  "files": {
+   "baselines.json": 10166,
+   "bayes_floor.json": 707,
+   "bayes_floor.smoke.json": 699,
+   "corpus_stats.json": 270,
+   "reachability.json": 90726
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 3639,
+    "cat": "index"
+   },
+   {
+    "file": "probes_0921a94cc9471973.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0959fdeae0f62e50.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0b4b2c8ef5bbc2a2.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5fcb9b3b608f8efd.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6042bf12eb589127.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_747338701ee546b3.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_769aee07ad0f2ab1.pt",
+    "bytes": 6951823,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_78a2d51a3739ec4b.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8efcac5df96fe716.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9d5052a67b00274d.pt",
+    "bytes": 1977943,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a09f5e928014c535.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a147b52ee02e6064.pt",
+    "bytes": 1911831,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b8f59daebd5b2710.pt",
+    "bytes": 1911767,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dcf0221180335c5b.pt",
+    "bytes": 956089,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine_signed",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e44b07bcb7a13952.pt",
+    "bytes": 1977879,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "mlp",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ebf1df5f2c938020.pt",
+    "bytes": 3992591,
+    "prov": {
+     "model": "5ae54dd313e0",
+     "span": 59,
+     "v": 2,
+     "kind": "othello_grid",
+     "targets": [
+      "mine_signed"
+     ],
+     "families": [
+      "linear",
+      "mlp"
+     ],
+     "splits": [
+      "sequence"
+     ],
+     "holdout": 0.2,
+     "epochs": 200,
+     "batch": 4096,
+     "lr": 0.001,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "n_points": 9
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f1d4a7392955cb36.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 20000,
+     "n_rows": 1180000,
+     "vocab": 61,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fb9cac4286c0925c.pt",
+    "bytes": 2799353,
+    "prov": {
+     "model": "none",
+     "span": -1,
+     "v": 2,
+     "kind": "othello_observation",
+     "target": "mine",
+     "family": "linear",
+     "holdout": 0.2,
+     "seed": 0,
+     "n_seq": 170000,
+     "n_rows": 10030000,
+     "vocab": 61,
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l_tokens": [
+    "mine/theirs",
+    "mine_signed"
+   ]
+  }
+ },
+ "dw-noiseless": {
+  "files": {
+   "baselines.json": 25117,
+   "bayes_floor.2026-09-23_1519.json": 604,
+   "bayes_floor.json": 5651,
+   "bayes_floor.smoke.json": 5712
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 7732,
+    "cat": "index"
+   },
+   {
+    "file": "probes_03a11d597e39352e.pt",
+    "bytes": 2705557,
+    "prov": {
+     "model": "0a43d12f1a3f",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[fp 0a43d12f1a3f not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_07244dd6430ad08f.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_09379eb390820468.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0abc5c699263aebb.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_10724cb359e8e20f.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_150683d7657556de.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_18181b374eaccfdf.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1be8b2441c09db98.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1f86b0cbd9ffe057.pt",
+    "bytes": 3143383,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_260111aa09860e07.pt",
+    "bytes": 7716089,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_36d477470d01342c.pt",
+    "bytes": 209401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3893c2275be87cfb.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3969463ba96f6839.pt",
+    "bytes": 218229,
+    "prov": {
+     "model": "0a43d12f1a3f",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[fp 0a43d12f1a3f not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3b1336ccdd50d545.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_417324a8d2533aee.pt",
+    "bytes": 19414709,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4533d292d7edec0a.pt",
+    "bytes": 2802903,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_47fbe06c8d10c9a6.pt",
+    "bytes": 2606551,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_481d3c8c484cf815.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4fc6ad16da704c9c.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_545d6462006709e1.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5749b29ceda6e97d.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6375e1c48b0ef686.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6a316416113dc239.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_79b17581499f2748.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_83b1d77cb49cd535.pt",
+    "bytes": 7303189,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_83c477c1754cf8cd.pt",
+    "bytes": 2606551,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8af7e448039f07c1.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8e7629f3a4832886.pt",
+    "bytes": 4240405,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_91e7d42594bd40bb.pt",
+    "bytes": 20975353,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_92a0a87078b5c202.pt",
+    "bytes": 218229,
+    "prov": {
+     "model": "0a43d12f1a3f",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[fp 0a43d12f1a3f not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_94350d67ba0ddcdf.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_99cc4f79565d93bf.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_9c605d16f9c1e79b.pt",
+    "bytes": 2673111,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a038471e721fc818.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ac0c0699391931e5.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ae230c84c1af4a12.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_b63440fd2f22deb6.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b95c8a08be59c0fd.pt",
+    "bytes": 209401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c8b443ad043f83a6.pt",
+    "bytes": 209465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c8dc393e7ea6d622.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c9de65d8f0c45b0a.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dabea3b212b604fd.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_dc2b687727d2bf41.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_de4a3ac9080610d1.pt",
+    "bytes": 2673111,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_eb5e791af332a6ba.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f43db9f134eea11b.pt",
+    "bytes": 7173365,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f8a3323246017e85.pt",
+    "bytes": 2673175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-noiseless",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fbbb5ee2b6aca936.pt",
+    "bytes": 2705557,
+    "prov": {
+     "model": "0a43d12f1a3f",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-noiseless"
+    },
+    "cat": "random-init[fp 0a43d12f1a3f not reproduced]",
+    "tables_read": true
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "recurrent_l": [
+    "cartesian",
+    "frustum"
+   ],
+   "transformer_l": [
+    "appearance-fac",
+    "cartesian",
+    "frustum",
+    "grid-16x8"
+   ]
+  }
+ },
+ "dw-blink": {
+  "files": {
+   "baselines.json": 13915,
+   "bayes_floor.2026-09-23_1529.json": 601,
+   "bayes_floor.json": 5627,
+   "bayes_floor.smoke.json": 5651
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 3976,
+    "cat": "index"
+   },
+   {
+    "file": "probes_278af17ecbf69db1.pt",
+    "bytes": 7303189,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2dac75d6445938cf.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3397f3cf09a9f7b7.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_37c74565f6df5fe5.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3b9b082998c25cd3.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3cde5578e02bf04f.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_43fce07552ada494.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4c7a6e44d7e0492d.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_516fcdb27ee3c741.pt",
+    "bytes": 2606551,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_53cad0a17c17843a.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_555733f39e5d8e4c.pt",
+    "bytes": 19414709,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_76ad0666f6784de4.pt",
+    "bytes": 3143383,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_815b64c66272d046.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_824c08dee6d48701.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_8a36bbd714cdc76d.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9fbc1b8a5f84d315.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_aad2a9a6e2b43648.pt",
+    "bytes": 2606551,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b9c062098706c553.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c44ec0e658fe6858.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c8522a5f44c68d4b.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d812dedc515a417a.pt",
+    "bytes": 204281,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-blink"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f1389d9ddd4dc62e.pt",
+    "bytes": 20975353,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fb231c471d7dbb58.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fd9014ee37db27a4.pt",
+    "bytes": 2606615,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-blink",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance-fac",
+    "cartesian",
+    "frustum"
+   ]
+  }
+ },
+ "dw-128ray": {
+  "files": {
+   "baselines.json": 13978,
+   "bayes_floor.2026-09-23_1540.json": 601,
+   "bayes_floor.json": 5666,
+   "bayes_floor.smoke.json": 5687
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 4000,
+    "cat": "index"
+   },
+   {
+    "file": "probes_05be72bc8306bd3f.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0db4d905b2b57f43.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_15bee6d9cbca023b.pt",
+    "bytes": 204793,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2182659405c383f5.pt",
+    "bytes": 3131031,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3056c9918cee87a0.pt",
+    "bytes": 2607127,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_386cb8aca26b463b.pt",
+    "bytes": 2473749,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_397b27d50b622043.pt",
+    "bytes": 20496057,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_415d72586126beaa.pt",
+    "bytes": 2606231,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_49ebccd40db9a4dc.pt",
+    "bytes": 2607191,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_567694e69fd7683f.pt",
+    "bytes": 204409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5888a31dc0081761.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_600c10ec82452300.pt",
+    "bytes": 2607191,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6402990c1717d4fa.pt",
+    "bytes": 2607127,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8c6498700d968f69.pt",
+    "bytes": 204793,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9ec144fa52b43e62.pt",
+    "bytes": 18971765,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9fc4c36f9bfe2638.pt",
+    "bytes": 2606231,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a004d246eee8b657.pt",
+    "bytes": 2607191,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a6371e6292057fee.pt",
+    "bytes": 204793,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b5569fef28cc3554.pt",
+    "bytes": 204793,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c9ff69ceb755bc09.pt",
+    "bytes": 2606231,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_df190aa1332e5e45.pt",
+    "bytes": 7192021,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e3d0b0709be64a41.pt",
+    "bytes": 2473749,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_f119f7652af576c9.pt",
+    "bytes": 208117,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_ff974b9cce93c14a.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-128ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance-fac",
+    "cartesian",
+    "frustum"
+   ]
+  }
+ },
+ "dw-16ray": {
+  "files": {
+   "baselines.json": 25451,
+   "bayes_floor.2026-09-23_1541.json": 600,
+   "bayes_floor.json": 5608,
+   "bayes_floor.smoke.json": 5639
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 5770,
+    "cat": "index"
+   },
+   {
+    "file": "probes_02746fd771c66c26.pt",
+    "bytes": 401431,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_04a1257a01f8b8a3.pt",
+    "bytes": 7171445,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_07ec32b759c52f2e.pt",
+    "bytes": 3067797,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0b539864d15326f7.pt",
+    "bytes": 335319,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0bc53e9c7a4c49a7.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1655c93d2b7474e2.pt",
+    "bytes": 2886869,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1d2018195c68c55c.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1d885c69ad472a0b.pt",
+    "bytes": 451735,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1f76ccd868230d46.pt",
+    "bytes": 335319,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_35804ab433a78e4e.pt",
+    "bytes": 335319,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3e61273a3d7e82a0.pt",
+    "bytes": 1837941,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_44e401de2f30cbb8.pt",
+    "bytes": 4239061,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_467926f891c2b459.pt",
+    "bytes": 2472597,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_5251cdbd9f666ff1.pt",
+    "bytes": 2571829,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_54d15cabaf8cd0d8.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_62012d1013a99b59.pt",
+    "bytes": 2473109,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_6444a1bb67b16f65.pt",
+    "bytes": 334871,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_809a590f8c8cf092.pt",
+    "bytes": 4337973,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8636a1a315bd67cb.pt",
+    "bytes": 29689,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_86af5099cf65a709.pt",
+    "bytes": 588537,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8ffc789f488f6f63.pt",
+    "bytes": 349753,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_95a5aa67d179ad22.pt",
+    "bytes": 3520661,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_99563c1590f88148.pt",
+    "bytes": 334871,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9fa8ea9355742871.pt",
+    "bytes": 334871,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a001d750feca5c0a.pt",
+    "bytes": 531607,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a9aabc03c33d62ef.pt",
+    "bytes": 334871,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ba30f405b12de8d5.pt",
+    "bytes": 971897,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_cf9a22821d140e46.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d096c99bd1190735.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d61926d6645e7731.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "3404846666c6",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_e0e08d8b9a48b2ea.pt",
+    "bytes": 381335,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e508f1511b8ee81f.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f1dcf20ae997e0a5.pt",
+    "bytes": 335319,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f594e8658e5956a7.pt",
+    "bytes": 250233,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f5c6cab6b40a240c.pt",
+    "bytes": 29689,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fad57f551631531a.pt",
+    "bytes": 29625,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-16ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance",
+    "appearance-fac",
+    "cartesian",
+    "frustum",
+    "grid-16x8",
+    "grid-8x4"
+   ]
+  }
+ },
+ "dw-8ray": {
+  "files": {
+   "baselines.json": 50178,
+   "bayes_floor.2026-09-23_1542.json": 802,
+   "bayes_floor.json": 5802,
+   "bayes_floor.smoke.json": 5822
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 11409,
+    "cat": "index"
+   },
+   {
+    "file": "probes_041f6687f824d058.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_071db99830f1afe6.pt",
+    "bytes": 17465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_090c542784ed9b43.pt",
+    "bytes": 17017,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_091bb83279e02782.pt",
+    "bytes": 107385,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_0a2a136704b7e6be.pt",
+    "bytes": 17401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1119db8990f55f9c.pt",
+    "bytes": 177175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1285c4719ea3ee03.pt",
+    "bytes": 2472661,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_183189dd814e7b17.pt",
+    "bytes": 1725877,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1ea311e3f70224d9.pt",
+    "bytes": 17401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1ef9c9a73a1a1e45.pt",
+    "bytes": 2808021,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_22099c98c1ff9ec5.pt",
+    "bytes": 2705557,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_2569885c9b4ad2f0.pt",
+    "bytes": 17145,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2ae5adf5a8c5525d.pt",
+    "bytes": 1537909,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2d67ced8301aacb9.pt",
+    "bytes": 177175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_344a8f28b29cf845.pt",
+    "bytes": 218229,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3480f6409e3366c6.pt",
+    "bytes": 1694965,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3b061e0d79524f7e.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3bff23133f8eb451.pt",
+    "bytes": 206901,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_3e7f4b042a648048.pt",
+    "bytes": 120249,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3e81c5ce5c8a62ac.pt",
+    "bytes": 12089,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3f9f6b24981c499b.pt",
+    "bytes": 172951,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_40feb908a4358ece.pt",
+    "bytes": 17465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4269054575f50bb3.pt",
+    "bytes": 2454357,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_44e8df32d07d5887.pt",
+    "bytes": 17081,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_455b93d1cf55d8a8.pt",
+    "bytes": 17081,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_48b12d8b58ca8839.pt",
+    "bytes": 12089,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_48cf7f207f8ff03e.pt",
+    "bytes": 17465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4c71145bff0b5cc4.pt",
+    "bytes": 214487,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_500c984405e67d45.pt",
+    "bytes": 1725941,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5080901432879d66.pt",
+    "bytes": 170903,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5179165d3b9c7681.pt",
+    "bytes": 17017,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_52bf4c5b15034e24.pt",
+    "bytes": 172951,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_57928426ca318310.pt",
+    "bytes": 170903,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_58800a8ccb66bcad.pt",
+    "bytes": 177111,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5b2845f733730d2a.pt",
+    "bytes": 177175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_667d967a27a30d74.pt",
+    "bytes": 12089,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_686f803d380c1a75.pt",
+    "bytes": 17145,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6a077e40e1a01515.pt",
+    "bytes": 177111,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6e4b13a019ec49a4.pt",
+    "bytes": 110073,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6e75870055db96ac.pt",
+    "bytes": 2705557,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_74a296358b4f4bb9.pt",
+    "bytes": 172631,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_74df72ae3b26c701.pt",
+    "bytes": 1537909,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_768b62f307b4160e.pt",
+    "bytes": 17145,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_76be10edf824aa16.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_79a34bc075e69fde.pt",
+    "bytes": 172951,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_7ac7d72b68a5771b.pt",
+    "bytes": 17401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_7e23563fc1defcbd.pt",
+    "bytes": 17081,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_81b3ed0d907de844.pt",
+    "bytes": 17465,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a01b039cbe5588ae.pt",
+    "bytes": 2471893,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000"
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_a2139792ce2ddeba.pt",
+    "bytes": 172887,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a38153a2be6a26b6.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_a8f326fe3b56f63d.pt",
+    "bytes": 133621,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_aaffe3d3a81799bf.pt",
+    "bytes": 206965,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000"
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_ad84cf7b15185e9b.pt",
+    "bytes": 172887,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ae4beb45d79f2239.pt",
+    "bytes": 17401,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b3c92a07ea95d2d9.pt",
+    "bytes": 172887,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b96112eab08c7a1c.pt",
+    "bytes": 17017,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b96d0ee23ff69029.pt",
+    "bytes": 172951,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c38e32a0306595c2.pt",
+    "bytes": 2471829,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_c3a09ae3bda3af96.pt",
+    "bytes": 2471893,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000"
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_c3d08c70c0f6322d.pt",
+    "bytes": 177175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c50e2b17d717c48c.pt",
+    "bytes": 2857237,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_cdd6fce82461b741.pt",
+    "bytes": 210263,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ce3ee535152915ae.pt",
+    "bytes": 17145,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d332e26a5787027a.pt",
+    "bytes": 177111,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_da5e33f35b227a18.pt",
+    "bytes": 2857173,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dc543ea3ccf11d0c.pt",
+    "bytes": 12089,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dc560240ae0f3195.pt",
+    "bytes": 215767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dd92c0c9fc4e6614.pt",
+    "bytes": 206965,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000"
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_e52be768d999b00e.pt",
+    "bytes": 17017,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_e81c875984323d20.pt",
+    "bytes": 172951,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_eab0ee0a8b7048cb.pt",
+    "bytes": 17081,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ed757d3b7795c1b8.pt",
+    "bytes": 170967,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ee5ac6001ea4e5de.pt",
+    "bytes": 218229,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray"
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_f0683d9fc630dda8.pt",
+    "bytes": 172631,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f09b07a188ecc76e.pt",
+    "bytes": 2892373,
+    "prov": {
+     "model": "1cea4d9fda0e",
+     "span": 10000,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50
+    },
+    "cat": "random-init[fp 1cea4d9fda0e not reproduced]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f4697975c6cd2a9f.pt",
+    "bytes": 172631,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f86096bfa0ad6e16.pt",
+    "bytes": 2808085,
+    "prov": {
+     "model": "2aab8bf51ab4",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "encoder": "tokens:V422:806000000",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l_tokens]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_f90c33fdd4019082.pt",
+    "bytes": 170967,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "pos@appearance",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fb6b394987857d2c.pt",
+    "bytes": 177175,
+    "prov": {
+     "model": "none",
+     "span": 10000,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fd623f4dd5730b3e.pt",
+    "bytes": 172631,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_fe853930cc201b32.pt",
+    "bytes": 2472661,
+    "prov": {
+     "model": "5053203ef435",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "test",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "/home/sevan/research/physically-implicit-modeling/datasets/discworld/dw-8ray/probe"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l_tokens": [
+    "appearance",
+    "appearance-fac",
+    "cartesian",
+    "frustum"
+   ],
+   "transformer_l": [
+    "appearance",
+    "appearance-fac",
+    "cartesian",
+    "frustum",
+    "pos@appearance"
+   ],
+   "recurrent_l": [
+    "appearance-fac",
+    "cartesian",
+    "frustum"
+   ]
+  }
+ },
+ "dw-5ray": {
+  "files": {
+   "baselines.json": 25536,
+   "bayes_floor.2026-09-23_1543.json": 799,
+   "bayes_floor.json": 5799,
+   "bayes_floor.smoke.json": 5804
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 5734,
+    "cat": "index"
+   },
+   {
+    "file": "probes_0b799194b58fe0d1.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_0dfb670726e452bf.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_116f3eefd1c1bd55.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_26759ec4444c9597.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_277c60fb1536279c.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_30b4051d76875301.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_385ae1b4b81ce170.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_386cbbb083f7ff01.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3a4df85578ebec91.pt",
+    "bytes": 1837941,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3f7c8fcdb53bf620.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4a82b0797e14d303.pt",
+    "bytes": 2677845,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_55cfed64f897bf64.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5b8f0527b94002a7.pt",
+    "bytes": 82041,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_614c3409a2ff4be6.pt",
+    "bytes": 7171445,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_670cb37da75a8a11.pt",
+    "bytes": 837685,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6ae435f9e0ce1f97.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_73a81283ae31ece3.pt",
+    "bytes": 39417,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_75d773b31f8e8ed7.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_80931c0bba015372.pt",
+    "bytes": 47033,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_88f57528d356bfd3.pt",
+    "bytes": 158231,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_8f4ed1c04b78a22c.pt",
+    "bytes": 308439,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9f2a2e2181a3f456.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_a009027997106ccc.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a955929a8526ff01.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_acf99d37c67cdf0f.pt",
+    "bytes": 2886869,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "grid-8x4",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ae2ef6478a7ff482.pt",
+    "bytes": 134999,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_b2904ce6a4f8b62e.pt",
+    "bytes": 130007,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c1b08cd9ef62bb00.pt",
+    "bytes": 2472597,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_c1e0fe72c330c11c.pt",
+    "bytes": 4239061,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_c5700fc1bca5ecce.pt",
+    "bytes": 2633109,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "appearance",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_cbd606029869dd49.pt",
+    "bytes": 1020661,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_cd35d7cbd7c78677.pt",
+    "bytes": 309497,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "grid-16x8",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d670f5cba84c8e64.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_dc2b663b90defc04.pt",
+    "bytes": 2472597,
+    "prov": {
+     "model": "8e083b96fdb7",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-5ray"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_e010ec2411090cb4.pt",
+    "bytes": 12409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ffd030f6f7acba8d.pt",
+    "bytes": 111767,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-5ray",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance",
+    "appearance-fac",
+    "cartesian",
+    "frustum",
+    "grid-16x8",
+    "grid-8x4"
+   ]
+  }
+ },
+ "dw-smooth": {
+  "files": {
+   "baselines.json": 13916
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 4000,
+    "cat": "index"
+   },
+   {
+    "file": "probes_000dc34be13a78a1.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_0243f53144ac0412.pt",
+    "bytes": 204409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_030873558aaedff9.pt",
+    "bytes": 2473109,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_0606b4153e72dde0.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_170eadc44fa36cc6.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_1f8d49c5c936cd66.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2bcf6362081699d5.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3aba0710caf73781.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_3becef5d416806df.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_4d650f87ba371fee.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_52ac6f6c3035269d.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5bb790493f99128b.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6234f073c5e00892.pt",
+    "bytes": 7302549,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_649f0461a5efc0fa.pt",
+    "bytes": 2473109,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_68fc38176c552be3.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_7a42afbdd88b75e9.pt",
+    "bytes": 20975353,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_919d4a6a843129f4.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_9c91456042683210.pt",
+    "bytes": 204409,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_aa288afe25273aee.pt",
+    "bytes": 3143383,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ac61934e78b94f68.pt",
+    "bytes": 19414709,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_af2ae3d8400837d2.pt",
+    "bytes": 2606679,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_cbf761532879efc3.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d48d36e54b67c843.pt",
+    "bytes": 204345,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "frustum",
+     "seed": 0,
+     "data": "discworld/dw-smooth",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_d95a9cc5421ba6fc.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "a295a3758336",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-smooth"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance-fac",
+    "cartesian",
+    "frustum"
+   ]
+  }
+ },
+ "dw-8ray-obs5": {
+  "files": {
+   "baselines.json": 9034
+  },
+  "probes": [
+   {
+    "file": "INDEX.md",
+    "bytes": 2597,
+    "cat": "index"
+   },
+   {
+    "file": "probes_09dc601935d035cc.pt",
+    "bytes": 67001,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_2a770dc0641cde6b.pt",
+    "bytes": 821975,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_48695587fb62e00b.pt",
+    "bytes": 207669,
+    "prov": {
+     "model": "7ff112cf2788",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_51ba79cf6ab4a846.pt",
+    "bytes": 821975,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_5b20f6d567220d00.pt",
+    "bytes": 40692277,
+    "prov": {
+     "model": "7ff112cf2788",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_675761938ff69d6f.pt",
+    "bytes": 67065,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6bd8c377304eda93.pt",
+    "bytes": 12654869,
+    "prov": {
+     "model": "7ff112cf2788",
+     "span": 39,
+     "v": 2,
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": false
+   },
+   {
+    "file": "probes_6f5b517ad49084cf.pt",
+    "bytes": 821975,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_789e39a3c6738354.pt",
+    "bytes": 821975,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_7a2395e2882b4af0.pt",
+    "bytes": 1953431,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_93fe4a7a3c1f3539.pt",
+    "bytes": 67001,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 250000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_a0877c73379fcfa7.pt",
+    "bytes": 2473109,
+    "prov": {
+     "model": "7ff112cf2788",
+     "span": 39,
+     "v": 2,
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "mlp",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5"
+    },
+    "cat": "random-init[transformer_l]",
+    "tables_read": true
+   },
+   {
+    "file": "probes_bdcb2c19a60de8f9.pt",
+    "bytes": 67001,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "full",
+     "n_seq": 30000,
+     "split": "probe_120k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   },
+   {
+    "file": "probes_ded55086ac146647.pt",
+    "bytes": 13754233,
+    "prov": {
+     "model": "none",
+     "span": 39,
+     "v": 2,
+     "kind": "observation",
+     "target": "appearance-fac",
+     "n_seq": 200000,
+     "split": "probe_250k",
+     "family": "linear",
+     "basis": "cartesian",
+     "seed": 0,
+     "data": "discworld/dw-8ray-obs5",
+     "epochs": 50,
+     "align": "right"
+    },
+    "cat": "observation",
+    "tables_read": false
+   }
+  ],
+  "baseline_version": "2026-09-06.b4",
+  "archs": {
+   "transformer_l": [
+    "appearance-fac",
+    "cartesian"
+   ]
+  }
+ }
+}

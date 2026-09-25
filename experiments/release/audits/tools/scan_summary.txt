@@ -1,0 +1,175 @@
+
+=== counts per category ===
+date	569
+name	84
+ip	54
+attribution	30
+time	19
+geography	10
+github	7
+hostname	5
+first_person	1
+
+=== per file ===
+notebooks/build_paper_tables_and_figs.ipynb {'date': 3, 'name': 2}
+notebooks/master_eval.ipynb {'date': 95, 'name': 5, 'attribution': 3}
+paper/figs/paper_style.py {'date': 2, 'name': 1, 'geography': 1, 'time': 1}
+paper/figs/qualitative_edits/README.md {'date': 5, 'name': 4, 'attribution': 1}
+paper/figs/qualitative_edits/make_figure.py {'date': 7, 'name': 4}
+paper/figs/qualitative_edits_othello/README.md {'date': 5, 'name': 1, 'attribution': 1}
+paper/figs/qualitative_edits_othello/make_figure.py {'name': 4, 'date': 4}
+paper/figs/qualitative_main/README.md {'date': 6, 'name': 5, 'attribution': 4}
+paper/figs/qualitative_main/common.py {'date': 2}
+paper/figs/qualitative_main/composite_final.json {'name': 1, 'date': 1}
+paper/figs/qualitative_main/composite_final.py {'name': 4, 'attribution': 2}
+paper/figs/qualitative_main/composite_final_sidebyside.json {'name': 1, 'date': 1}
+paper/figs/qualitative_main/composite_final_sidebyside_single.json {'name': 1, 'date': 1}
+paper/figs/qualitative_main/othello_panel.py {'name': 1, 'date': 1}
+paper/figs/qualitative_main/rayworld_panel.py {'name': 4, 'attribution': 1, 'date': 1}
+pim/__init__.py {'date': 1}
+pim/editors/__init__.py {'date': 2}
+pim/editors/freeze_interpolation.py {'date': 1}
+pim/editors/grad_steer.py {'date': 3}
+pim/editors/inverse.py {'name': 1, 'date': 2}
+pim/editors/nanda.py {'date': 1}
+pim/editors/nullspace.py {'date': 1}
+pim/editors/pinv.py {'date': 3}
+pim/environments/__init__.py {'date': 1}
+pim/environments/discworld/arms.py {'date': 26, 'hostname': 1, 'name': 1}
+pim/environments/discworld/bayes.py {'date': 2}
+pim/environments/discworld/bench.py {'date': 20, 'name': 1}
+pim/environments/discworld/bigcorpus.py {'date': 11, 'name': 4, 'attribution': 2}
+pim/environments/discworld/blink.py {'date': 1}
+pim/environments/discworld/config.py {'date': 4}
+pim/environments/discworld/edits_dataset.py {'date': 1}
+pim/environments/discworld/frustum.py {'date': 3, 'name': 1}
+pim/environments/discworld/grid_target.py {'date': 7, 'name': 1}
+pim/environments/discworld/observers.py {'name': 2, 'date': 2, 'attribution': 1}
+pim/environments/discworld/renderer.py {'date': 2}
+pim/environments/discworld/sim.py {'date': 3}
+pim/environments/discworld/soft_render.py {'date': 2}
+pim/environments/discworld/token_bench.py {'date': 6, 'name': 1}
+pim/environments/discworld/tokens.py {'date': 3}
+pim/environments/discworld/viz.py {'attribution': 4}
+pim/environments/layout.py {'date': 4}
+pim/environments/othello/arms.py {'date': 14}
+pim/environments/othello/bayes.py {'date': 2}
+pim/environments/othello/bench.py {'date': 5}
+pim/environments/othello/corpus.py {'date': 11}
+pim/environments/othello/counterfactual.py {'date': 2}
+pim/environments/othello/data.py {'date': 3, 'time': 1}
+pim/environments/othello/reachability.py {'date': 2}
+pim/environments/othello/vendor/mingpt_model.py {'github': 1, 'date': 1, 'first_person': 1}
+pim/environments/othello/vendor/othello.py {'github': 1, 'date': 5}
+pim/environments/prediction.py {'date': 2}
+pim/figures/probe_capacity.py {'date': 1}
+pim/figures/tables.py {'date': 17, 'name': 7}
+pim/figures/waterfall.py {'date': 1}
+pim/metrics/__init__.py {'date': 2}
+pim/metrics/decodability.py {'date': 1}
+pim/metrics/edit_index.py {'date': 3, 'name': 1}
+pim/metrics/prediction.py {'date': 2, 'name': 1}
+pim/metrics/replicates.py {'date': 2, 'name': 1}
+pim/metrics/selection.py {'date': 6, 'name': 1, 'attribution': 1}
+pim/metrics/set_editability.py {'date': 5}
+pim/metrics/zone_editability.py {'date': 9}
+pim/models/__init__.py {'date': 2}
+pim/models/blocks.py {'date': 1}
+pim/models/protocol.py {'date': 1}
+pim/models/recurrent.py {'date': 3, 'name': 2, 'attribution': 1}
+pim/models/registry.py {'date': 1}
+pim/models/transformer_l.py {'date': 4}
+pim/models/transformer_s.py {'date': 3, 'name': 1, 'attribution': 1}
+pim/probes/__init__.py {'date': 1}
+pim/probes/base.py {'date': 11}
+pim/probes/baselines.py {'date': 3, 'time': 1}
+pim/probes/cache.py {'date': 2}
+pim/probes/inverse.py {'name': 2, 'date': 6, 'attribution': 1}
+pim/probes/mlp.py {'date': 5}
+pim/probes/nullspace.py {'date': 1}
+pim/scoring/__init__.py {'date': 1}
+pim/scoring/baselines.py {'date': 11}
+pim/scoring/blocks.py {'date': 11}
+pim/scoring/discworld.py {'date': 6, 'name': 1}
+pim/scoring/driver.py {'date': 8}
+pim/scoring/othello.py {'date': 10, 'name': 1}
+pim/scoring/runs.py {'date': 4, 'name': 1}
+pim/scoring/summary.py {'date': 1}
+pim/training/sources.py {'date': 2}
+pim/training/stream.py {'date': 1}
+pim/training/train.py {'date': 7}
+poetry.lock {'ip': 54, 'github': 5, 'hostname': 1}
+pyproject.toml {'date': 1}
+scripts/demos/play.py {'attribution': 3}
+scripts/drivers/README.md {'date': 1}
+scripts/drivers/dw_128ray.sh {'date': 3, 'name': 2, 'hostname': 1}
+scripts/drivers/dw_5ray.sh {'date': 3, 'name': 1, 'attribution': 1, 'geography': 1, 'time': 1}
+scripts/drivers/dw_8ray.sh {'date': 2}
+scripts/drivers/dw_8ray_obs5.sh {'name': 1, 'date': 1, 'time': 1}
+scripts/drivers/dw_blink.sh {'date': 3}
+scripts/drivers/dw_smooth_gen.sh {'date': 1, 'name': 1, 'attribution': 1}
+scripts/drivers/dw_tokens.sh {'date': 1}
+scripts/drivers/oth_adjacent.sh {'date': 1}
+scripts/drivers/oth_adjflip_seeds.sh {'date': 2, 'name': 3, 'attribution': 1, 'time': 1}
+scripts/drivers/probe_targets.sh {'date': 1, 'geography': 4, 'time': 5}
+scripts/drivers/probe_targets_2.sh {'name': 1, 'geography': 1, 'date': 1, 'time': 1, 'attribution': 1}
+scripts/drivers/probe_targets_3.sh {'date': 1, 'time': 1}
+scripts/drivers/probe_targets_4.sh {'name': 1, 'geography': 1, 'date': 1, 'time': 1}
+scripts/drivers/probe_targets_5.sh {'name': 1, 'geography': 1, 'date': 1, 'time': 1}
+scripts/drivers/replicate.sh {'date': 4}
+scripts/drivers/rescore_2026-09-12.sh {'name': 1, 'date': 5}
+scripts/drivers/score_cartesian.sh {'name': 1, 'date': 1}
+scripts/drivers/score_im.sh {'name': 1, 'date': 1}
+scripts/drivers/score_pending.sh {'date': 1, 'hostname': 2}
+scripts/drivers/seed_variance.sh {'name': 1, 'date': 1, 'geography': 1, 'time': 1}
+scripts/drivers/verify_im.py {'date': 1}
+scripts/fit_probes.py {'date': 2}
+scripts/generate_dataset.py {'date': 1}
+scripts/index_ceiling.py {'date': 3}
+scripts/layout_checkpoint_replicate.py {'date': 3}
+scripts/make_edit_selection.py {'date': 2}
+scripts/make_othello_edits.py {'date': 1}
+scripts/migrate_datasets.py {'date': 4}
+scripts/othello_corpus_stats.py {'date': 1}
+scripts/reachability_table.py {'date': 1}
+scripts/train.py {'date': 4}
+scripts/two_flip_editability.py {'date': 1}
+tests/test_bench_target_alignment.py {'date': 1}
+tests/test_blink.py {'date': 1}
+tests/test_case_variance.py {'date': 1}
+tests/test_categorical_inverse.py {'date': 5}
+tests/test_corpus_provenance.py {'date': 1}
+tests/test_discworld_tokens.py {'date': 1}
+tests/test_drop_edge_rays.py {'date': 1}
+tests/test_edit_index_shared.py {'date': 1}
+tests/test_editors_canonical.py {'date': 7, 'time': 2}
+tests/test_fidelity_guard.py {'date': 3}
+tests/test_grid_target.py {'date': 1}
+tests/test_layout.py {'date': 2}
+tests/test_models_canonical.py {'date': 2}
+tests/test_mse_onehot_head.py {'date': 1, 'time': 1}
+tests/test_multiview_target.py {'date': 2}
+tests/test_observers.py {'date': 1}
+tests/test_oracle_editors.py {'date': 1}
+tests/test_othello_adjacent.py {'date': 2}
+tests/test_othello_adjacent_flip.py {'date': 1}
+tests/test_othello_bench.py {'date': 1}
+tests/test_othello_counterfactual.py {'date': 1}
+tests/test_othello_instances.py {'date': 1}
+tests/test_othello_noflip.py {'date': 1}
+tests/test_prediction_floor.py {'date': 1}
+tests/test_probe_cache_canonical.py {'date': 2}
+tests/test_probe_targets.py {'date': 3}
+tests/test_probes_canonical.py {'date': 1}
+tests/test_scoring_package.py {'date': 1}
+tests/test_soft_render.py {'date': 2}
+tests/test_tables_module.py {'date': 2}
+tests/test_tables_replicates.py {'date': 4}
+tests/test_token_bench.py {'date': 2}
+tests/test_training_canonical.py {'date': 1}
+tests/test_training_resume.py {'date': 1}
+tests/test_waterfall_grid.py {'date': 1}
+
+=== binary (not text-scanned) ===
+{'.pkl': 1, '.pdf': 114, '.png': 114}
+pim/environments/othello/vendor/intervention_benchmark.pkl

@@ -1,0 +1,59 @@
+run                                                           total  model    ckpt  probes  p.req p.paper  p.dead scores  s.old   var  figs   oth    MIN
+initial_othello_comparison/L-oth-20m                           1408    101    1217    88.7   14.4    10.4    74.3   0.30   0.54  0.02   0.0  0.11    116
+initial_othello_comparison/L-oth-20m__seed0_s512000             117    101       0    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+initial_othello_comparison/L-oth-20m__seed1                    2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+initial_othello_comparison/L-oth-20m__seed2                    2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+adjacent_flip_ablation/L-oth-adjacent-flip-20m                 2387    101    2231    53.9   14.4    10.4    39.6   0.30   0.54  0.02   0.0  0.00    116
+adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s421875      156    101       0    53.9   14.4    10.4    39.6   0.28   0.28  0.02   0.0  0.00    116
+adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s512000      157    101       0    53.9   14.4    10.4    39.6   0.63   0.63  0.02   0.0  0.00    116
+adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1          2340    101    2129   107.9   14.4    10.4    93.5   0.63   0.55  0.02   0.0  0.02    116
+adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed2          2185    101    2028    53.9   14.4    10.4    39.6   0.63   0.63  0.02   0.0  0.00    116
+adjacency_ablation/L-oth-adjacent-20m                          2348    101    2231    14.4   14.4    10.4     0.0   0.30   0.54  0.00   0.0  0.11    116
+adjacency_ablation/L-oth-adjacent-20m__seed0_s512000            117    101       0    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+adjacency_ablation/L-oth-adjacent-20m__seed1                   2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+adjacency_ablation/L-oth-adjacent-20m__seed2                   2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+flip_ablation/L-oth-noflip-20m                                 2348    101    2231    14.4   14.4    10.4     0.0   0.30   0.54  0.00   0.0  0.07    116
+flip_ablation/L-oth-noflip-20m__seed0_s512000                   117    101       0    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+flip_ablation/L-oth-noflip-20m__seed1                          2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+flip_ablation/L-oth-noflip-20m__seed2                          2145    101    2028    14.4   14.4    10.4     0.0   0.63   0.63  0.00   0.0  0.00    116
+noise_ablation/L-dw-noiseless-20m                              2559    102    2235   216.5  110.2    43.4   106.3   0.96   4.13  0.03   1.1  0.00    213
+noise_ablation/L-dw-noiseless-20m__seed0_s421875                141    102       0    37.2   37.2    31.9     0.0   0.43   1.72  0.00   0.0  0.00    139
+noise_ablation/L-dw-noiseless-20m__seed0_s512000                141    102       0    37.2   37.2    32.0     0.0   0.64   1.29  0.00   0.0  0.00    139
+noise_ablation/L-dw-noiseless-20m__seed1                       2314    102    2133    75.6   37.2    32.0    38.4   0.64   2.38  0.00   0.0  0.00    139
+noise_ablation/L-dw-noiseless-20m__seed2                       2312    102    2133    74.4   37.2    32.0    37.2   0.64   2.38  0.00   0.0  0.00    139
+blink_ablation/L-dw-blink-20m                                  2377    102    2235    37.2   37.2    31.9     0.0   0.45   2.02  0.00   0.5  0.00    139
+blink_ablation/L-dw-blink-20m__seed0_s512000                    140    102       0    37.2   37.2    32.0     0.0   0.64   0.64  0.00   0.0  0.00    139
+blink_ablation/L-dw-blink-20m__seed1                           2172    102    2032    37.2   37.2    32.0     0.0   0.64   0.64  0.00   0.0  0.00    139
+blink_ablation/L-dw-blink-20m__seed2                           2172    102    2032    37.2   37.2    32.0     0.0   0.64   0.64  0.00   0.0  0.00    139
+ray_ablation/L-dw-128ray-20m                                   2687    102    2540    43.9   43.9    38.7     0.0   0.46   1.20  0.00   0.0  0.00    146
+ray_ablation/L-dw-128ray-20m__seed0_s512000                     148    102       0    43.9   43.9    38.7     0.0   0.65   1.94  0.00   0.0  0.00    146
+ray_ablation/L-dw-128ray-20m__seed1                            2180    102    2032    43.9   43.9    38.7     0.0   0.65   1.94  0.00   0.0  0.00    146
+ray_ablation/L-dw-128ray-20m__seed2                            2180    102    2032    43.9   43.9    38.7     0.0   0.65   1.94  0.00   0.0  0.00    146
+ray_ablation/L-dw-16ray-20m                                    2676    101    2528    43.2   19.2    14.0    24.0   0.85   2.13  0.00   0.0  0.00    121
+ray_ablation/L-dw-16ray-20m__seed0_s512000                      123    101       0    19.2   19.2    14.0     0.0   0.65   1.76  0.00   0.0  0.00    121
+ray_ablation/L-dw-16ray-20m__seed1                             2145    101    2023    19.2   19.2    14.0     0.0   0.65   1.76  0.00   0.0  0.00    121
+ray_ablation/L-dw-16ray-20m__seed2                             2145    101    2023    19.2   19.2    14.0     0.0   0.65   1.94  0.00   0.0  0.00    121
+ray_ablation/L-dw-8ray-20m                                     2528    101    2224   191.8  123.3    53.2    68.4   1.94   8.52  0.02   0.7  0.00    226
+ray_ablation/L-dw-8ray-20m__seed0_s512000                       125    101       0    20.3   20.3    15.0     0.0   0.87   2.61  0.00   0.0  0.00    122
+ray_ablation/L-dw-8ray-20m__seed1                              2147    101    2022    20.3   20.3    15.0     0.0   0.87   2.61  0.00   0.0  0.00    122
+ray_ablation/L-dw-8ray-20m__seed2                              2147    101    2022    20.3   20.3    15.0     0.0   0.87   2.60  0.00   0.0  0.00    122
+ray_ablation/L-dw-5ray-20m                                     2365    101    2224    36.5   20.4    15.1    16.1   0.85   3.11  0.00   0.0  0.00    122
+ray_ablation/L-dw-5ray-20m__seed0_s512000                       121    101       0    16.9   16.9    11.7     0.0   0.65   1.95  0.00   0.0  0.00    119
+ray_ablation/L-dw-5ray-20m__seed1                              2142    101    2022    16.9   16.9    11.7     0.0   0.65   1.95  0.00   0.0  0.00    119
+ray_ablation/L-dw-5ray-20m__seed2                              2142    101    2022    16.9   16.9    11.7     0.0   0.65   1.94  0.00   0.0  0.00    119
+smooth_ablation/L-dw-smooth-20m                                2680    102    2540    37.2   37.2    32.0     0.0   0.44   1.29  0.00   0.0  0.00    139
+observer_ablation/L-dw-8ray-obs5-20m                           2692    101    2531    58.6   58.6    58.6     0.0   0.28   0.85  0.00   0.0  0.00    160
+interface_ablation/L-dw-8ray-tok-20m                           2496    103    2261   120.8  120.8    50.7     0.0   2.57   8.55  0.00   0.0  0.00    226
+
+main 10 {'total': 23683.0, 'model': 1013.7, 'ckpt': 21896.0, 'probes': 740.5, 'probes_req': 411.6, 'probes_paper': 237.8, 'probes_dead': 328.8, 'scores': 6.7, 'scores_old': 23.3, 'variance': 0.1, 'figures': 2.3, 'other_json': 0.3, 'minimal': 1432.2, 'minimal_tables': 6.7}
+extra 3 {'total': 7867.9, 'model': 305.6, 'ckpt': 7331.6, 'probes': 216.6, 'probes_req': 216.5, 'probes_paper': 141.2, 'probes_dead': 0.0, 'scores': 3.3, 'scores_old': 10.7, 'variance': 0.0, 'figures': 0.0, 'other_json': 0.0, 'minimal': 525.5, 'minimal_tables': 3.3}
+rep 32 {'total': 45194.6, 'model': 3244.2, 'ckpt': 40851.3, 'probes': 1035.8, 'probes_req': 747.8, 'probes_paper': 596.5, 'probes_dead': 287.8, 'scores': 20.6, 'scores_old': 42.4, 'variance': 0.1, 'figures': 0.0, 'other_json': 0.0, 'minimal': 4012.8, 'minimal_tables': 20.6}
+
+initial_othello_comparison/L-oth-20m ['editability_by_reachability.json', 'index_ceiling.json', 'two_flip_editability.json'] []
+adjacent_flip_ablation/L-oth-adjacent-flip-20m ['editability_by_reachability.json'] []
+adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1 ['variance.s390000.json'] []
+adjacency_ablation/L-oth-adjacent-20m ['editability_by_reachability.json', 'two_flip_editability.json'] []
+flip_ablation/L-oth-noflip-20m ['editability_by_reachability.json', 'two_flip_editability.json'] []
+
+{('arch', 'model_config', 'model_state', 'rung', 'step', 'train_config', 'val_loss', 'val_loss_step', 'vocab'), ('arch', 'epoch', 'model_config', 'model_state', 'step', 'train_config', 'val_loss', 'val_loss_step'), ('best', 'model_config', 'model_state', 'rung', 'step', 'train_config', 'val_loss', 'vocab'), ('arch', 'epoch', 'model_config', 'model_state', 'step', 'train_config', 'val_loss')}
+{'initial_othello_comparison/L-oth-20m': 11, 'initial_othello_comparison/L-oth-20m__seed1': 18, 'initial_othello_comparison/L-oth-20m__seed2': 18, 'adjacent_flip_ablation/L-oth-adjacent-flip-20m': 22, 'adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1': 19, 'adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed2': 18, 'adjacency_ablation/L-oth-adjacent-20m': 22, 'adjacency_ablation/L-oth-adjacent-20m__seed1': 18, 'adjacency_ablation/L-oth-adjacent-20m__seed2': 18, 'flip_ablation/L-oth-noflip-20m': 22, 'flip_ablation/L-oth-noflip-20m__seed1': 18, 'flip_ablation/L-oth-noflip-20m__seed2': 18, 'noise_ablation/L-dw-noiseless-20m': 22, 'noise_ablation/L-dw-noiseless-20m__seed1': 19, 'noise_ablation/L-dw-noiseless-20m__seed2': 19, 'blink_ablation/L-dw-blink-20m': 22, 'blink_ablation/L-dw-blink-20m__seed1': 18, 'blink_ablation/L-dw-blink-20m__seed2': 18, 'ray_ablation/L-dw-128ray-20m': 23, 'ray_ablation/L-dw-128ray-20m__seed1': 18, 'ray_ablation/L-dw-128ray-20m__seed2': 18, 'ray_ablation/L-dw-16ray-20m': 23, 'ray_ablation/L-dw-16ray-20m__seed1': 18, 'ray_ablation/L-dw-16ray-20m__seed2': 18, 'ray_ablation/L-dw-8ray-20m': 22, 'ray_ablation/L-dw-8ray-20m__seed1': 18, 'ray_ablation/L-dw-8ray-20m__seed2': 18, 'ray_ablation/L-dw-5ray-20m': 22, 'ray_ablation/L-dw-5ray-20m__seed1': 18, 'ray_ablation/L-dw-5ray-20m__seed2': 18, 'smooth_ablation/L-dw-smooth-20m': 23, 'observer_ablation/L-dw-8ray-obs5-20m': 23, 'interface_ablation/L-dw-8ray-tok-20m': 22}

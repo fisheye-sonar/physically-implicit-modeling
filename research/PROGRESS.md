@@ -5,6 +5,39 @@
 
 _Last updated: 2026-09-23 15:50 PT — QUEUE DRAINED (40 of 40): all ten families at n = 3, tables and Table A1 rendered; post-queue write-up in progress_
 
+## 2026-09-23 (night) — PUBLIC RELEASE build IN PROGRESS (anonymous code repo + HF artifact bundle)
+
+Sevan approved the plan (paper names for runs/instances, include the 8-ray token model, ship replicates, strip ND and
+unreported blocks ONLY in the release copies, no tests, keep `pim`, include the appendix prediction figures, history
+rewriting and the editability-over-points figure). Everything is driven from `experiments/release/`: **`SPEC.md` is the
+binding spec** (paths, naming map, scope, invariants, writing/anonymity rules, file ownership); `audits/` holds the four
+planning audits; `bootstrap_code.py` made the mechanical copy+rename into `../generative-models-as-simulators` (101 files,
+all import); workers report into `reports/`. Stage A (workflow wf_adcf6b65-3d5): rayworld-env, othello-env, core, and the
+artifact export (`export_artifacts.py` → `../gms-release-artifacts`, read-only after export; PRIVATE runs/ and datasets/ are
+never written). Stage B (scoring + master_eval, tables + two notebooks, scripts, figure scripts, infra) follows, then the
+gates (dry-run all-skip, table diff vs `reports/reference_tables.json`, two from-scratch rescores, figure regen, data
+bit-identity, train smoke, fresh-venv setup, two anonymization passes). Nothing is committed or pushed in either repo.
+**Stage A DONE (23:00):** rayworld-env 12/12 and othello-env 12/12 bitwise checks, core 8/8 (CPU); export → STAGING
+1490 files, 15 GB (core 2.9 GB / corpora 9.4 GB / replicates 3.5 GB), 1198 re-keyed probe files all hash-verified, 360,484
+numeric leaves identical, identity scan zero hits, 43 checkpoints fingerprint-identical; STAGING chmod a-w and symlinked
+into the release tree's runs/ datasets/. **Incident:** Sevan's 22:14 `git pull` deleted the (ignored, formerly tracked)
+`runs/initial_othello_comparison/L-oth-20m/scores.json` and `L-dw-20m/scores.json` (commit 2ebc669 untracked them); L-oth-20m
+was restored byte-identical at 22:42 (sha matches the wsl-sevan copy); L-dw-20m (out of scope) is still missing on the lab.
+Stage B (workflow wf_3f34392a-78a): scoring + master_eval, tables + 2 notebooks + by-point figure, scripts, figure scripts.
+**2026-09-24:** Stage B and C done (all gates pass; one worker sat overnight on a permission prompt for `rm -rf` in its
+own scratch dir — workers are now told never to delete). Independent 8-lens verification (wf_7d4e22f8-c01) →
+`reports/verify_findings.md` (3 blockers = the release repo's git remote/identity, a Sevan action; artifact timestamps in
+28 HDF5 attrs; legacy Othello config; small-scale pipeline gaps; ~15 paper-text mismatches incl. GS is Adam at α×act_scale,
+eval at best-val checkpoint, categorical Probe Skill uses a pooled majority class, ≥2-ray bench filter). Fix + re-verify
+workflow wf_3c4c4cba-a91 running (fix-lib, fix-tables, fix-scripts incl. new scripts/im_reconstruction.py, fix-export,
+fix-readme, then gates + two fresh anonymity passes). Paper text NOT edited; the mismatch list goes to Sevan.
+**RELEASE READY (2026-09-24 afternoon):** final gates (wf_6e229f43-bed) all pass — real rescores on the Othello, Rayworld-frame
+and token paths match (≤1e-6; GS on runs scored on the 4090 moves ≤0.02, no reported value changes), notebooks, both table
+gates, 31 figures byte-identical, README reproduce 9/9 + quick check 13/13, anonymity zero hits in anything shipped. Code:
+`../generative-models-as-simulators` (109 files, 1.7 MB, pim 10.7k lines; UNCOMMITTED — Sevan must set an anonymous git
+identity/remote first). Artifacts: `../gms-release-artifacts` (1548 files + MANIFEST.json + SHA256SUMS, 15.8 GB, read-only) → HF
+under an anonymous account. `experiments/release/work/` = 43 GB of throwaway trees (gitignored), deletable.
+
 ## 2026-09-23 (afternoon) — PAPER session: the selection FALLBACK changed; IM-vs-NN table filled (UNCOMMITTED)
 
 **Sevan: an editor with no arm inside the guard is now reported at its HIGHEST-FIDELITY arm** (lowest stored ratio), not

@@ -1,0 +1,52 @@
+## scoring
+- `jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=-1 notebooks/master_eval.ipynb --output master_eval.executed.ipynb   # score every unscored or incomplete run and fill in missing floors (a no-op on the shipped artifacts)`
+- `python scripts/fit_probes.py --run rayworld/8-ray --target appearance-fac [--random-init | --observation]   # fit categorical-target probes and floors first; the scorer only reads them from the cache`
+- `rm runs/<env>/<variant>/scores.json && jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=-1 notebooks/master_eval.ipynb --output master_eval.executed.ipynb   # rescore one run from scratch (also delete its probes/ to refit them)`
+- `python scripts/score_prediction.py --runs <env>/<variant>   # re-add the prediction block after a full rescore`
+## tables
+- `jupyter nbconvert --to notebook --execute --inplace notebooks/paper_tables.ipynb     # Table 1, Table 2 and the main-text numbers`
+- `jupyter nbconvert --to notebook --execute --inplace notebooks/appendix_tables.ipynb  # every appendix table in paper order, with its numbers`
+- `python scripts/figures/editability_by_point.py   # outputs/figures/editability_over_res_point.{pdf,png}`
+## scripts
+- `# Rayworld data, for I in standard blink smooth 128-ray 16-ray 8-ray 5-ray obs5:`
+- `python scripts/build_rayworld_corpus.py --instance I`
+- `python scripts/generate_dataset.py --instance I --role eval`
+- `python scripts/generate_dataset.py --instance I --role edits`
+- `python scripts/generate_dataset.py --instance I --role probe --size 120k`
+- `python scripts/generate_dataset.py --instance I --role probe --size 250k   # 128-ray, 16-ray, 8-ray, 5-ray`
+- `python scripts/make_rayworld_tokens.py --instance 8-ray   # after the 8-ray corpus and splits, before its selection`
+- `python scripts/make_edit_selection.py --instance I`
+- `# Othello data, for I in standard adjacent-flip adjacent-noflip standard-noflip:`
+- `python scripts/make_othello_corpus.py --instance I`
+- `python scripts/make_othello_edits.py --instance I`
+- `# Training (780k steps for the main runs; seed replicates at 512k)`
+- `python scripts/train.py --env rayworld --instance I --run rayworld/I --steps 780000`
+- `python scripts/train.py --env rayworld --instance 8-ray --repr tokens --run rayworld/8-ray-tokens --steps 780000`
+- `python scripts/train.py --env othello --instance I --run othello/I --steps 780000`
+- `python scripts/train.py --env ENV --instance I --run ENV/I__seedK --seed K --steps 512000 --replicate-of ENV/I   # K = 1, 2`
+- `python scripts/make_replicate_member.py --run ENV/I --step 512000   # the seed-0 member ENV/I__seed0`
+- `# Extra probe targets and their floors (run before notebooks/master_eval.ipynb)`
+- `python scripts/fit_probes.py --run rayworld/8-ray --target T   # T in appearance-fac appearance grid-6x5 grid-10x3 grid-16x8 pos@appearance`
+- `python scripts/fit_probes.py --run rayworld/R --target appearance-fac   # R in 128-ray 16-ray 5-ray 8-ray-tokens and every N-ray __seed0/1/2`
+- `python scripts/fit_probes.py --run rayworld/R --target appearance-fac --random-init   # R in 128-ray 16-ray 8-ray 5-ray 8-ray-tokens`
+- `python scripts/fit_probes.py --run rayworld/R --target appearance-fac --observation   # R in 128-ray 16-ray 8-ray 5-ray`
+- `python scripts/fit_probes.py --run rayworld/8-ray --target appearance --random-init   # and --observation`
+- `# Analyses`
+- `python scripts/score_prediction.py`
+- `python scripts/bayes_floor.py`
+- `python scripts/reachability_table.py`
+- `python scripts/two_flip_editability.py   # othello/adjacent-noflip`
+- `python scripts/two_flip_editability.py --run othello/standard`
+- `python scripts/two_flip_editability.py --run othello/standard-noflip --no-legal`
+- `python scripts/othello_flip_rates.py`
+- `python scripts/probe_refit_variance.py --run othello/standard --seeds 10   # also othello/adjacent-flip__seed0, __seed1, __seed2`
+- `python scripts/probe_refit_variance.py --run rayworld/8-ray --targets full appearance-fac --seeds 10 6`
+- `# Demos`
+- `python scripts/demos/demo.py --seed 7 --n-objects 4 --fixed-reflectivities`
+- `python scripts/demos/play.py`
+## figures
+- `python scripts/figures/qualitative_overview.py        # main-text figure: outputs/figures/qualitative_edits_overview.{pdf,png}`
+- `python scripts/figures/qualitative_rayworld.py        # appendix Rayworld edit grids: outputs/figures/appendix/rayworld_qualitative/ (seeds 5 7 9 10 12)`
+- `python scripts/figures/qualitative_othello.py         # appendix Othello edit grids: outputs/figures/appendix/othello_qualitative/ (seeds 1-5)`
+- `python scripts/figures/history_rewrite.py             # appendix history-rewriting figure + printed numbers: outputs/figures/appendix/history_rewrite.{pdf,png,json}`
+- `python scripts/figures/predictions.py                 # appendix prediction figures: outputs/figures/appendix/{rayworld,othello}_predictions.{pdf,png}`

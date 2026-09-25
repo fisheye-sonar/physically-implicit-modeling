@@ -1,0 +1,779 @@
+pim/__init__.py	29	date	2026-08-31	``scores.json``; the pre-2026-08-31 tree lives at the ``pre-cleanup-2026-08
+pim/environments/prediction.py	1	date	2026-09-19	diction`` block of its ``scores.json`` (2026-09-19).
+pim/environments/prediction.py	34	date	2026-09-19	PRED_VERSION = "2026-09-19.1"
+pim/environments/layout.py	3	date	2026-09-10	esearch/specs/DATASET_LAYOUT_SPEC.md`` (2026-09-10). One shape for both environment
+pim/environments/layout.py	22	date	2026-09-10	ves to the **v2** location. (During the 2026-09-10 migration window
+pim/environments/layout.py	47	date	2026-09-12	the GAMES the edit cases are cut from (2026-09-12)
+pim/environments/layout.py	204	date	2026-09-12	"""The instance's canonical edit cases (2026-09-12: 1000 single-tile flips at a fixed
+pim/environments/__init__.py	9	date	2026-09-10	lit lives is ``layout.py`` — layout v2 (2026-09-10): ``train/ probe/ eval/ edits/v1/``
+pim/environments/discworld/frustum.py	23	date	2026-09-01	r ``rho``. See ``research/GOTCHAS.md``, 2026-09-01. The depth candidates below exist
+pim/environments/discworld/frustum.py	59	name	Sevan	leftover of the renderer's internals. (Sevan, 2026-08-23.)
+pim/environments/discworld/frustum.py	59	date	2026-08-23	er of the renderer's internals. (Sevan, 2026-08-23.)
+pim/environments/discworld/frustum.py	73	date	2026-08-23	# `research/scratch/2026-08-23-frustum-basis.md`.
+pim/environments/discworld/renderer.py	29	date	2026-09-03	ys ``1..obs_res-2`` of the full render (2026-09-03).
+pim/environments/discworld/renderer.py	71	date	2026-09-13	# Several observers (2026-09-13, observers.py): each view is rendered b
+pim/environments/discworld/viz.py	150	attribution	my	mx, my = 0.7, 0.7
+pim/environments/discworld/viz.py	152	attribution	my	ax_w.set_ylim(cfg.y_near - my, cfg.y_far + my)
+pim/environments/discworld/viz.py	152	attribution	my	w.set_ylim(cfg.y_near - my, cfg.y_far + my)
+pim/environments/discworld/viz.py	246	attribution	my	cfg.y_far + my - 0.15,
+pim/environments/discworld/config.py	64	date	2026-09-07	# ---- blink (dw-blink, 2026-09-07; see blink.py) ------------------------
+pim/environments/discworld/config.py	79	date	2026-09-03	# 2026-09-03 for the 8-ray instance (10 cast, 8 kept
+pim/environments/discworld/config.py	125	date	2026-09-12	dome baked into the disc; dw-smooth, 2026-09-12).
+pim/environments/discworld/config.py	141	date	2026-09-13	# ---- multiple observers (OPTIONAL, 2026-09-13) -----------------------
+pim/environments/discworld/bigcorpus.py	3	date	2026-08-31	Ported verbatim 2026-08-31 from ``discworld_scale/corpus.py`` (pat
+pim/environments/discworld/bigcorpus.py	16	date	2026-08-24	objects, 40 frames, 128 rays. Verified 2026-08-24 that
+pim/environments/discworld/bigcorpus.py	73	date	2026-09-03	# dw-8ray (2026-09-03): 10 rays CAST, the two wall-aligned on
+pim/environments/discworld/bigcorpus.py	76	date	2026-09-07	# dw-blink (2026-09-07): dw-noiseless + object blackouts with
+pim/environments/discworld/bigcorpus.py	82	date	2026-09-10	# dw-5ray (2026-09-10 night): dw-8ray with 7 rays CAST, wall
+pim/environments/discworld/bigcorpus.py	89	name	Sevan	# dw-16ray (2026-09-14, Sevan): dw-8ray with 18 rays CAST, wall rays
+pim/environments/discworld/bigcorpus.py	89	date	2026-09-14	# dw-16ray (2026-09-14, Sevan): dw-8ray with 18 rays CAST, wal
+pim/environments/discworld/bigcorpus.py	96	name	Sevan	# dw-128ray (2026-09-15 night, Sevan): the ray-count axis closed at the top
+pim/environments/discworld/bigcorpus.py	96	date	2026-09-15	# dw-128ray (2026-09-15 night, Sevan): the ray-count axis close
+pim/environments/discworld/bigcorpus.py	105	date	2026-09-12	# dw-smooth (2026-09-12 night): dw-noiseless geometry (128 rays
+pim/environments/discworld/bigcorpus.py	107	name	Sevan	ofile H of experiments/antialias_pilot, Sevan's pick). soft_edge stays 0: the dome it
+pim/environments/discworld/bigcorpus.py	107	attribution	Sevan's	ofile H of experiments/antialias_pilot, Sevan's pick). soft_edge stays 0: the dome itse
+pim/environments/discworld/bigcorpus.py	114	date	2026-09-13	# dw-8ray-obs5 (2026-09-13 evening): dw-8ray seen by FIVE observer
+pim/environments/discworld/bigcorpus.py	116	name	Sevan	# (observers.py; Sevan's "increasing observers" control). Obse
+pim/environments/discworld/bigcorpus.py	116	attribution	Sevan's	# (observers.py; Sevan's "increasing observers" control). Observ
+pim/environments/discworld/bigcorpus.py	134	date	2026-08-31	# measured 2026-08-31: same seed, noise off => unrelated worl
+pim/environments/discworld/bigcorpus.py	511	date	2026-09-07	# added 2026-09-07 so readers (tokens.py) need not parse s
+pim/environments/discworld/bayes.py	3	date	2026-09-19	The question (2026-09-19): how well could ANY predictor do that
+pim/environments/discworld/bayes.py	56	date	2026-09-19	FLOOR_VERSION = "2026-09-19.1"
+pim/environments/discworld/sim.py	91	date	2026-09-07	ctive world's move guard all call this (2026-09-07); pass a
+pim/environments/discworld/sim.py	98	date	2026-09-13	"circle":   # the multi-observer arena (2026-09-13)
+pim/environments/discworld/sim.py	121	date	2026-09-13	"circle":   # the multi-observer arena (2026-09-13)
+pim/environments/discworld/arms.py	7	date	2026-09-07	s. (``bench.py`` held all of this until 2026-09-07.)
+pim/environments/discworld/arms.py	9	date	2026-08-22	Editors follow the 2026-08-22 spec (single-point PI with an α sweep —
+pim/environments/discworld/arms.py	12	date	2026-08-31	pim.editors.pinv``, canonical since the 2026-08-31 affine fix). The pre-fix behaviour
+pim/environments/discworld/arms.py	60	date	2026-09-08	E fit recipe of the grid-target probes (2026-09-08, canonicalised 2026-09-09): the
+pim/environments/discworld/arms.py	60	date	2026-09-09	arget probes (2026-09-08, canonicalised 2026-09-09): the
+pim/environments/discworld/arms.py	80	date	2026-09-10	`pim.environments.layout`` at fit time (2026-09-10, layout v2)."""
+pim/environments/discworld/arms.py	119	date	2026-09-10	y its cell centre in the frustum basis, 2026-09-10), or the grid's (…, cells) integer
+pim/environments/discworld/arms.py	145	date	2026-09-11	``seed`` (2026-09-11) drives the probe's init AND the 80/20
+pim/environments/discworld/arms.py	150	date	2026-09-10	``probe`` (2026-09-10) names the probe corpus logically — ``{
+pim/environments/discworld/arms.py	154	date	2026-09-09	16x8"`` (3-way classification per cell, 2026-09-09; ``basis_name`` must be
+pim/environments/discworld/arms.py	166	date	2026-09-05	``encoder`` (2026-09-05): maps the float frames (N, T, R) to wh
+pim/environments/discworld/arms.py	174	date	2026-09-07	the fitted probes LIVE and is REQUIRED (2026-09-07): canonical
+pim/environments/discworld/arms.py	184	date	2026-09-13	he cache key), so any basis is allowed (2026-09-13: dw-8ray-obs5 scores its
+pim/environments/discworld/arms.py	189	date	2026-09-10	eyed LOGICALLY (layout.probe_key) since 2026-09-10 — a path in the
+pim/environments/discworld/arms.py	190	date	2026-09-01	spelling once fitted every probe twice (2026-09-01),
+pim/environments/discworld/arms.py	226	hostname	the lab	system tempdir: /tmp is tmpfs (RAM) on the lab box, which is how the
+pim/environments/discworld/arms.py	227	date	2026-09-02	filled 24.6 GB of RAM and hit a quota (2026-09-02).
+pim/environments/discworld/arms.py	362	date	2026-09-18	# the guard's case-level interval (2026-09-18)
+pim/environments/discworld/arms.py	526	date	2026-09-07	on the bench (kept in the back pocket, 2026-09-07) ─
+pim/environments/discworld/arms.py	563	date	2026-09-07	y a window model: EI +0.04 on L-dw-20m, 2026-09-07.)"""
+pim/environments/discworld/arms.py	619	date	2026-08-21	Both axes are load-bearing: 2026-08-21 measured 28× across points and ~50× acr
+pim/environments/discworld/arms.py	669	date	2026-09-15	# ── IM: the inverse-map editor (2026-09-15) ──────────────────────────────────────
+pim/environments/discworld/arms.py	688	date	2026-09-20	``target`` (2026-09-20): ``"full"`` = the continuous full stat
+pim/environments/discworld/arms.py	755	date	2026-09-16	's held-out R² on the SAME rows as g's (2026-09-16): one axis for both
+pim/environments/discworld/arms.py	766	name	Sevan	ap, one per residual point (2026-09-20, Sevan): g maps the target's OWN
+pim/environments/discworld/arms.py	766	date	2026-09-20	al inverse map, one per residual point (2026-09-20, Sevan): g maps the target's OWN
+pim/environments/discworld/arms.py	842	date	2026-09-20	categorical ``target`` (2026-09-20): every bench must be that target's own
+pim/environments/discworld/arms.py	846	date	2026-09-20	"IM" silently was until 2026-09-20."""
+pim/environments/discworld/token_bench.py	1	date	2026-09-05	ld TOKEN model, scored the Othello way (2026-09-05).
+pim/environments/discworld/token_bench.py	61	date	2026-09-09	# the probe target's KIND (2026-09-09), as on `bench.Bench`: "regression" — t
+pim/environments/discworld/token_bench.py	87	date	2026-09-08	⛔ CASE SELECTION (2026-09-08). Taking the first ``n`` cases wastes a
+pim/environments/discworld/token_bench.py	151	name	Sevan	MEAN-FRAME readout's guard (2026-09-23, Sevan): the frame model's fidelity ratio appl
+pim/environments/discworld/token_bench.py	151	date	2026-09-23	# the MEAN-FRAME readout's guard (2026-09-23, Sevan): the frame model's fidelity rat
+pim/environments/discworld/token_bench.py	297	date	2026-09-15	nd IM-NN on the frames-as-tokens model (2026-09-15): ``arms.inverse_arms`` with the
+pim/environments/discworld/token_bench.py	302	date	2026-09-20	``target`` (2026-09-20) as in ``arms.inverse_arms``: a categor
+pim/environments/discworld/grid_target.py	9	date	2026-09-08	``GridTarget`` — ``"grid-<nu>x<nd>"`` (2026-09-08, canonicalised 2026-09-09 from
+pim/environments/discworld/grid_target.py	9	date	2026-09-09	<nu>x<nd>"`` (2026-09-08, canonicalised 2026-09-09 from
+pim/environments/discworld/grid_target.py	18	date	2026-09-09	`AppearanceTarget`` — ``"appearance"`` (2026-09-09). The observation-exact partition
+pim/environments/discworld/grid_target.py	284	date	2026-09-13	# ── several observers (2026-09-13, observers.py) ────────────────────────
+pim/environments/discworld/grid_target.py	380	date	2026-09-10	shot was ~60 GB and OOM-killed a unit (2026-09-10)
+pim/environments/discworld/grid_target.py	447	date	2026-09-10	gorical>"`` / ``"full@<categorical>"`` (2026-09-10). The same gridification as a
+pim/environments/discworld/grid_target.py	578	name	Sevan	# ``"<partition>-fac"`` (2026-09-10, Sevan). The cell-indexed categorical target i
+pim/environments/discworld/grid_target.py	578	date	2026-09-10	# ``"<partition>-fac"`` (2026-09-10, Sevan). The cell-indexed categorical t
+pim/environments/discworld/blink.py	1	date	2026-09-07	warning marker (the dw-blink instance, 2026-09-07).
+pim/environments/discworld/bench.py	3	date	2026-09-07	hello.bench`` (split out of ``arms.py`` 2026-09-07
+pim/environments/discworld/bench.py	67	date	2026-09-07	he world the oracle editors need (added 2026-09-07; default None keeps older
+pim/environments/discworld/bench.py	73	date	2026-09-09	# the probe target's KIND (2026-09-09): "regression" — tgt holds values in th
+pim/environments/discworld/bench.py	78	date	2026-09-10	a FACTORISED categorical target's move (2026-09-10): per case the edited object's tiles
+pim/environments/discworld/bench.py	98	date	2026-09-08	It exists for dw-8ray only (2026-09-08): with 8 rays a teleport renders an IDE
+pim/environments/discworld/bench.py	134	date	2026-09-12	f"(pre-dynamics target state, 2026-09-12)",
+pim/environments/discworld/bench.py	143	date	2026-09-17	``bench_arrays``, factored out (2026-09-17) so a synthetic, matched scenario (the
+pim/environments/discworld/bench.py	161	name	Sevan	IS THE PRE-DYNAMICS STATE (2026-09-12, Sevan). The probe at the
+pim/environments/discworld/bench.py	161	date	2026-09-12	WRITE TARGET IS THE PRE-DYNAMICS STATE (2026-09-12, Sevan). The probe at the
+pim/environments/discworld/bench.py	171	date	2026-09-12	# against a +1 ceiling (GOTCHAS 2026-09-12). Othello never had the problem — its
+pim/environments/discworld/bench.py	209	date	2026-09-10	# Snapped regression (2026-09-10): the edit asks for the CENTRE of the n
+pim/environments/discworld/bench.py	238	date	2026-09-05	2026-09-05, so a token model — ``token_bench`` — s
+pim/environments/discworld/bench.py	242	date	2026-09-10	layout-v2 form (2026-09-10). ``data_dir`` is the older form and st
+pim/environments/discworld/bench.py	247	date	2026-09-07	(e.g. the dw-blink reappearance cases, 2026-09-07). The
+pim/environments/discworld/bench.py	251	date	2026-09-10	egression target ``"pos@<partition>"`` (2026-09-10: positions replaced by their cell
+pim/environments/discworld/bench.py	254	date	2026-09-09	uch as ``"grid-16x8"`` (classification, 2026-09-09): then ``y`` holds the (N, cells)
+pim/environments/discworld/bench.py	275	date	2026-09-14	RECORD that the filtered list was used (2026-09-14): the regression blocks of
+pim/environments/discworld/bench.py	282	date	2026-09-07	never decompressed just to read a dict (2026-09-07)
+pim/environments/discworld/bench.py	327	date	2026-09-01	# reported number (2026-09-01). Nothing was lost in retiring the pos-
+pim/environments/discworld/bench.py	364	date	2026-09-15	— the inverse-map editor's input pair (2026-09-15).
+pim/environments/discworld/bench.py	367	date	2026-09-12	PRE-DYNAMICS target state (the 2026-09-12 write target, see ``bench_arrays``): th
+pim/environments/discworld/soft_render.py	13	date	2026-08-05	`research/scratch/2026-08-05-observation-space-geometry.md`:
+pim/environments/discworld/soft_render.py	38	date	2026-09-12	just at its edges. ``"power"`` (2026-09-12, the ``dw-smooth`` instance)
+pim/environments/discworld/tokens.py	1	date	2026-09-05	the categorical interface to discworld (2026-09-05).
+pim/environments/discworld/tokens.py	39	date	2026-09-10	# (`probe.npy` / `val.npy` left 2026-09-10 with layout v2, DATASET_LAYOUT_SPEC.md
+pim/environments/discworld/tokens.py	40	date	2026-09-19	# `test.npy` / `edits.npy` 2026-09-19 — both re-encoded byte-identically from
+pim/environments/discworld/edits_dataset.py	78	date	2026-09-13	"circle":   # the multi-observer arena (2026-09-13)
+pim/environments/discworld/observers.py	1	name	Sevan	rs around a circular arena (2026-09-13, Sevan's "increasing observers" control).
+pim/environments/discworld/observers.py	1	date	2026-09-13	iple observers around a circular arena (2026-09-13, Sevan's "increasing observers" control
+pim/environments/discworld/observers.py	1	attribution	Sevan's	rs around a circular arena (2026-09-13, Sevan's "increasing observers" control).
+pim/environments/discworld/observers.py	7	name	Sevan	The rule (Sevan, 2026-09-13):
+pim/environments/discworld/observers.py	7	date	2026-09-13	The rule (Sevan, 2026-09-13):
+pim/environments/othello/corpus.py	3	date	2026-08-31	Ported 2026-08-31 from ``ours_on_othello/corpus.py``; the
+pim/environments/othello/corpus.py	28	date	2026-08-20	index — the 2026-08-20 pid-seeding bug is exactly what that ca
+pim/environments/othello/corpus.py	47	date	2026-09-10	ayout`` (REPO-anchored, layout v2 since 2026-09-10: train/ probe/
+pim/environments/othello/corpus.py	49	date	2026-09-06	# oth-noflip (2026-09-06) never recolours enclosed discs — same
+pim/environments/othello/corpus.py	50	date	2026-09-08	# index law. `placement` (2026-09-08) is the second rule: "enclosure" = Othe
+pim/environments/othello/corpus.py	53	date	2026-09-09	e two rules compose: oth-adjacent-flip (2026-09-09) = adjacency
+pim/environments/othello/corpus.py	59	date	2026-09-09	oth-adjacent with recolouring back ON (2026-09-09): adjacency decides legality, the
+pim/environments/othello/corpus.py	93	date	2026-09-02	large: the probe-CAPACITY sweep corpus (2026-09-02) — 170k games ≈ 4.7M positions,
+pim/environments/othello/corpus.py	97	date	2026-09-12	# edits (2026-09-12): the games the canonical edit cases ar
+pim/environments/othello/corpus.py	156	date	2026-09-06	if "flip" in z.files else True   # pre-2026-09-06 files
+pim/environments/othello/corpus.py	157	date	2026-09-08	nt" in z.files else "enclosure"   # pre-2026-09-08
+pim/environments/othello/counterfactual.py	1	date	2026-09-11	factual GAMES for an Othello edit case (2026-09-11; in ``pim`` since 2026-09-19).
+pim/environments/othello/counterfactual.py	1	date	2026-09-19	edit case (2026-09-11; in ``pim`` since 2026-09-19).
+pim/environments/othello/bayes.py	1	date	2026-09-19	move prediction on an Othello instance (2026-09-19).
+pim/environments/othello/bayes.py	23	date	2026-09-19	FLOOR_VERSION = "2026-09-19.1"
+pim/environments/othello/arms.py	3	date	2026-08-31	Ported 2026-08-31 from ``ours_on_othello/evaluate.py`` (g
+pim/environments/othello/arms.py	8	date	2026-08-21	closing the same 2026-08-21 hole here that ``othello_arch`` had alr
+pim/environments/othello/arms.py	181	date	2026-09-09	# the signed mine/theirs values (2026-09-09)
+pim/environments/othello/arms.py	217	date	2026-09-01	Defaults narrowed 2026-09-01 from 72 fits to 18, both cuts settled b
+pim/environments/othello/arms.py	250	date	2026-09-09	's question, asked the other way round (2026-09-09)
+pim/environments/othello/arms.py	313	date	2026-09-07	this function carried until 2026-09-07 are pinned equal in
+pim/environments/othello/arms.py	324	date	2026-09-23	``second`` (2026-09-23): ``(squares, cur_labels, tgt_labels)``
+pim/environments/othello/arms.py	351	date	2026-09-09	he signed mine/theirs REGRESSION probe (2026-09-09): the flip asks the
+pim/environments/othello/arms.py	407	date	2026-08-31	e`` probes instead — the open question (2026-08-31) is whether GS is dead
+pim/environments/othello/arms.py	410	date	2026-09-23	``second`` (2026-09-23): ``(squares, target_labels)``, one per
+pim/environments/othello/arms.py	451	date	2026-09-15	IM: the inverse-map editor on Othello (2026-09-15) ──────────────────────────────────────
+pim/environments/othello/arms.py	467	date	2026-09-17	`` — the qualitative figure draws them (2026-09-17).
+pim/environments/othello/arms.py	468	date	2026-09-23	``post_boards`` (2026-09-23): (n_cases, 64) post-edit boards in the
+pim/environments/othello/arms.py	524	date	2026-09-16	rm's held-out R² on g's held-out games (2026-09-16)
+pim/environments/othello/bench.py	4	date	2026-08-31	r/intervention_benchmark.pkl``). Ported 2026-08-31 from
+pim/environments/othello/bench.py	88	date	2026-09-10	aset dir for EVERY instance (layout v2, 2026-09-10 — Li's shipped set is
+pim/environments/othello/bench.py	100	date	2026-09-12	"""The instance's CANONICAL edit cases (2026-09-12: 1000 single-tile flips at a fixed
+pim/environments/othello/bench.py	113	date	2026-09-12	the canonical bench since 2026-09-12, never mixed with it."""
+pim/environments/othello/bench.py	136	date	2026-09-02	he recipe measured on the shipped 1001 (2026-09-02) and used by
+pim/environments/othello/reachability.py	1	date	2026-09-23	ped board REACHABLE? An exact decision (2026-09-23).
+pim/environments/othello/reachability.py	44	date	2026-09-23	VERSION = "2026-09-23.1"
+pim/environments/othello/data.py	3	date	2026-08-31	Ported 2026-08-31 from ``othello_transfer/othello_data.py
+pim/environments/othello/data.py	86	date	2026-08-20	counts across three runs, 2026-08-20) and the probe cache could never hit. S
+pim/environments/othello/data.py	145	date	2026-09-09	rt of the canonical categorical target (2026-09-09):
+pim/environments/othello/data.py	216	time	27:33	out = torch.cat([p[:, :27], pad, p[:, 27:33], pad, p[:, 33:]], dim=1)
+pim/environments/othello/vendor/mingpt_model.py	2	github	github.com	# Source: https://github.com/likenneth/othello_world @ mingpt/model.
+pim/environments/othello/vendor/mingpt_model.py	2	date	2026-08-31	hello_world @ mingpt/model.py, vendored 2026-08-31,
+pim/environments/othello/vendor/mingpt_model.py	37	first_person	I am	se torch.nn.MultiheadAttention here but I am including an
+pim/environments/othello/vendor/othello.py	3	github	github.com	Source: https://github.com/likenneth/othello_world @ data/othello.
+pim/environments/othello/vendor/othello.py	3	date	2026-08-31	hello_world @ data/othello.py, vendored 2026-08-31.
+pim/environments/othello/vendor/othello.py	46	date	2026-09-06	False: the no-flip variant (oth-noflip, 2026-09-06) — same legality, same passes,
+pim/environments/othello/vendor/othello.py	48	date	2026-09-08	# placement="adjacent": oth-adjacent (2026-09-08) — a move is legal iff the square touch
+pim/environments/othello/vendor/othello.py	66	date	2026-09-08	# placement (2026-09-08): "enclosure" is Othello's rule — the m
+pim/environments/othello/vendor/othello.py	134	date	2026-09-09	# oth-adjacent-flip (2026-09-09): legality is adjacency, but a placed d
+pim/scoring/discworld.py	2	date	2026-09-19	master_eval cells [3] / [3b], 2026-09-19). Thin wiring over pim.environments.dis
+pim/scoring/discworld.py	3	date	2026-09-05	# [3b] The discworld TOKEN scorer (2026-09-05) — thin wiring over
+pim/scoring/discworld.py	17	date	2026-09-08	#      ⛔ FILTERED CASE SET (2026-09-08). The bench is NOT the first 192 cases:
+pim/scoring/discworld.py	45	name	Sevan	HE BLOCK'S OWN PROBES READ (2026-09-20, Sevan):
+pim/scoring/discworld.py	45	date	2026-09-20	THE STATE THE BLOCK'S OWN PROBES READ (2026-09-20, Sevan):
+pim/scoring/discworld.py	47	date	2026-09-15	nd inverse_map), IM and IM-NN, as since 2026-09-15;
+pim/scoring/discworld.py	51	date	2026-09-20	Until 2026-09-20 a categorical block was handed its basi
+pim/scoring/summary.py	2	date	2026-09-19	from master_eval cell [7], 2026-09-19)."""
+pim/scoring/baselines.py	2	date	2026-09-19	cell [5], 2026-09-19). `score_all_baselines` is the cell's t
+pim/scoring/baselines.py	16	date	2026-09-02	#     observation_large (b3, 2026-09-02) = the observation floor again on the i
+pim/scoring/baselines.py	25	date	2026-09-06	on_right / observation_right_large (b4, 2026-09-06) = the same two floors
+pim/scoring/baselines.py	33	date	2026-09-09	#     EXTRA PROBE TARGETS (2026-09-09): a run's extra targets get their two f
+pim/scoring/baselines.py	44	date	2026-09-01	nstance, ARCH), not per instance (fixed 2026-09-01).
+pim/scoring/baselines.py	74	date	2026-09-06	BASELINE_VERSION = "2026-09-06.b4"   # b4 = + right-aligned observatio
+pim/scoring/baselines.py	124	date	2026-09-10	regression targets (pos@<partition>, 2026-09-10), whose recipe is the canonical one."""
+pim/scoring/baselines.py	160	date	2026-09-14	probe basis (cartesian on dw-8ray-obs5, 2026-09-14)
+pim/scoring/baselines.py	221	date	2026-09-05	# a frames-as-tokens architecture (2026-09-05) is probed on TOKEN inputs — the same
+pim/scoring/baselines.py	286	date	2026-09-15	r BASES a CURRENT baselines file lacks (2026-09-15).
+pim/scoring/baselines.py	330	date	2026-09-15	regression BASES a current file lacks (2026-09-15) — see score_baseline_bases
+pim/scoring/driver.py	2	date	2026-09-19	cell [6], 2026-09-19). `score_all` is the cell's top-level l
+pim/scoring/driver.py	5	date	2026-09-09	odel EMITS and which world it lives in (2026-09-09) —
+pim/scoring/driver.py	13	date	2026-09-09	ask of it (an extra target added later, 2026-09-09) gets that block ADDED — the
+pim/scoring/driver.py	53	date	2026-09-15	val version (runs/<run>/scores_backup/; 2026-09-15)."""
+pim/scoring/driver.py	68	date	2026-09-15	ored run whose arms lack the IM editor (2026-09-15) — the Othello canonical
+pim/scoring/driver.py	71	date	2026-09-20	A CATEGORICAL discworld block (2026-09-20) is owed an IM arm only where SETTINGS
+pim/scoring/driver.py	81	date	2026-09-23	# PIM_ADD_NN_R2=1 (2026-09-23): a block that HAS its IM arms but whos
+pim/scoring/driver.py	154	date	2026-09-23	# PIM_FORCE_RESCORE (2026-09-23): a comma list of run names scored from
+pim/scoring/runs.py	1	date	2026-09-19	ved verbatim from master_eval cell [1], 2026-09-19)."""
+pim/scoring/runs.py	5	date	2026-09-05	TILL TRAINING is listed but not scored (2026-09-05): best_model.pt appears at
+pim/scoring/runs.py	51	date	2026-09-15	IM_ONLY_RUNS", "")        # smoke hook (2026-09-15): a comma list of run names
+pim/scoring/runs.py	54	name	Sevan	t of topics to leave alone (2026-09-15, Sevan:
+pim/scoring/runs.py	54	date	2026-09-15	a comma list of topics to leave alone (2026-09-15, Sevan:
+pim/scoring/blocks.py	2	date	2026-09-19	master_eval cells [3] / [4], 2026-09-19). `probe_block` is the on-disk contract
+pim/scoring/blocks.py	6	date	2026-09-07	#     othello/{bench,arms}.py since 2026-09-07).
+pim/scoring/blocks.py	8	date	2026-09-01	NOT REPORTED for the REGRESSION target (2026-09-01): one fixed
+pim/scoring/blocks.py	16	date	2026-09-10	pim.environments.layout (layout v2, 2026-09-10): the bench is edits/v1, the probe
+pim/scoring/blocks.py	48	date	2026-09-13	ression bases an INSTANCE is scored in (2026-09-13: dw-8ray-obs5 → cartesian)."""
+pim/scoring/blocks.py	67	date	2026-09-14	cate: {"of": "<topic>/<parent>", ...}`, 2026-09-14) — its
+pim/scoring/blocks.py	89	date	2026-09-15	# The editors every block scores (2026-09-15): PI / ND / GS through the probes, IM (
+pim/scoring/blocks.py	93	date	2026-09-15	IM_VERSION = "2026-09-15.1"
+pim/scoring/blocks.py	97	date	2026-09-20	instances": (...), "targets": (...)}`` (2026-09-20: the ray family and
+pim/scoring/blocks.py	120	date	2026-09-23	# (2026-09-23; computed since 2026-09-16, stored only
+pim/scoring/blocks.py	120	date	2026-09-16	# (2026-09-23; computed since 2026-09-16, stored only now — Table 1b's NN column
+pim/scoring/__init__.py	1	date	2026-09-19	behind ``notebooks/master_eval.ipynb`` (2026-09-19).
+pim/scoring/othello.py	1	date	2026-09-19	ved verbatim from master_eval cell [4], 2026-09-19). Thin wiring over
+pim/scoring/othello.py	5	date	2026-09-01	is mine/theirs, sequence-split (settled 2026-09-01): once the GS
+pim/scoring/othello.py	11	date	2026-09-06	⛔ The INSTANCE travels with the run (2026-09-06): its corpus splits, its RULES
+pim/scoring/othello.py	13	date	2026-09-08	#     2026-09-08, `placement` — oth-adjacent places next
+pim/scoring/othello.py	17	date	2026-09-09	#     EXTRA PROBE TARGETS (2026-09-09): SETTINGS["oth_extra_targets"] — the s
+pim/scoring/othello.py	40	date	2026-09-01	AST direction (was "ND-sub"), canonical 2026-09-01:
+pim/scoring/othello.py	64	name	Sevan	's case-level 95% interval (2026-09-19, Sevan) — new fields only,
+pim/scoring/othello.py	64	date	2026-09-19	# the guard's case-level 95% interval (2026-09-19, Sevan) — new fields only,
+pim/scoring/othello.py	69	date	2026-08-31	te-colour labels to these probes is the 2026-08-31 bug, worth
+pim/scoring/othello.py	95	date	2026-09-12	prefix, from {inst}'s own edits games (2026-09-12)",
+pim/scoring/othello.py	97	date	2026-09-15	# IM / IM-NN (2026-09-15): the state write needs no probe, so ON
+pim/probes/base.py	3	date	2026-08-31	Moved verbatim 2026-08-31 from ``othello_gpt/othello_probe.py`` (
+pim/probes/base.py	28	date	2026-08-31	Li et al.'s §3.2 width (canonical since 2026-08-31)
+pim/probes/base.py	42	date	2026-08-20	ification over ``d_out`` tiles**, added 2026-08-20
+pim/probes/base.py	125	date	2026-09-02	(2026-09-02). File-backed pages are RECLAIMABLE und
+pim/probes/base.py	135	date	2026-09-01	# 44.9 GB near-miss under a 45G cap, 2026-09-01) and 2 x 24.6 GB for Recurrent-L,
+pim/probes/base.py	136	date	2026-09-02	# which was OOM-killed mid-score (2026-09-02). Peak is now one copy.
+pim/probes/base.py	141	date	2026-09-05	# (discworld frames-as-tokens, 2026-09-05) — the embed decides what it wants
+pim/probes/base.py	185	date	2026-08-20	``n_classes=C`` (added 2026-08-20) is the **classification** fit for a st
+pim/probes/base.py	286	date	2026-08-19	# trained: measured 2026-08-19, mean velocity R2 0.158 with the raw-un
+pim/probes/base.py	295	date	2026-08-11	# the repo standard records for its own 2026-08-11 undertraining fix.
+pim/probes/base.py	319	date	2026-09-15	1 of 1024 at point 0 on _R-dw-8ray-20m, 2026-09-15);
+pim/probes/baselines.py	49	date	2026-09-06	``align`` (2026-09-06): ``"left"`` (the original layout) puts
+pim/probes/baselines.py	203	date	2026-09-06	whose columns sum to one per position (2026-09-06, the
+pim/probes/baselines.py	240	date	2026-09-10	d the grid-32x16 fit under a 45 GB cap (2026-09-10 04:47). Same numbers:
+pim/probes/baselines.py	240	time	04:47	32x16 fit under a 45 GB cap (2026-09-10 04:47). Same numbers:
+pim/probes/cache.py	3	date	2026-08-31	Ported 2026-08-31 from ``othello_arch/editability.py``. T
+pim/probes/cache.py	7	date	2026-08-21	once served the trained model's probes (2026-08-21), and
+pim/probes/inverse.py	2	name	Sevan	residual E[h | state] (2026-09-14, Sevan's instrument; canonical 2026-09-15).
+pim/probes/inverse.py	2	date	2026-09-14	residual E[h | state] (2026-09-14, Sevan's instrument; canonical 2026-09-
+pim/probes/inverse.py	2	date	2026-09-15	26-09-14, Sevan's instrument; canonical 2026-09-15).
+pim/probes/inverse.py	2	attribution	Sevan's	residual E[h | state] (2026-09-14, Sevan's instrument; canonical 2026-09-15).
+pim/probes/inverse.py	14	date	2026-09-14	Measured 2026-09-14 (`findings/inverse-probe.md`): the over
+pim/probes/inverse.py	49	name	Sevan	he CATEGORICAL inverse map (2026-09-20, Sevan) ──────────────────────────────────────
+pim/probes/inverse.py	49	date	2026-09-20	# ── the CATEGORICAL inverse map (2026-09-20, Sevan) ───────────────────────────────
+pim/probes/inverse.py	174	date	2026-09-16	⛔ The residual bank is FLOAT32 (2026-09-16). It was half — 0.9 M × 512 rows in ~1
+pim/probes/inverse.py	216	date	2026-09-16	o instruments are compared on one axis (2026-09-16).
+pim/probes/__init__.py	13	date	2026-09-15	The INVERSE map (canonical since 2026-09-15, the IM editor's instrument):
+pim/probes/nullspace.py	3	date	2026-08-31	Ported 2026-08-31 from ``iterative_probing/iterative_prob
+pim/probes/mlp.py	9	date	2026-08-31	Width 128 became canonical 2026-08-31: the earlier 512 was an inherited defau
+pim/probes/mlp.py	13	date	2026-08-22	e memorisation regime that produced the 2026-08-22 bad numbers.
+pim/probes/mlp.py	17	date	2026-08-19	t is a ~1000× tilt toward position (the 2026-08-19
+pim/probes/mlp.py	66	date	2026-08-22	This is not hypothetical. On 2026-08-22 MLP probes on 1,500 sequences reported
+pim/probes/mlp.py	75	date	2026-09-09	Kind-agnostic since 2026-09-09: the comparison is on **Probe Skill**
+pim/metrics/selection.py	1	date	2026-09-19	ts — the selection rules, in one place (2026-09-19).
+pim/metrics/selection.py	16	name	Sevan	⛔ 2026-09-23 (Sevan): the fallback was the highest-index ar
+pim/metrics/selection.py	16	date	2026-09-23	⛔ 2026-09-23 (Sevan): the fallback was the highest-i
+pim/metrics/selection.py	16	date	2026-09-19	back was the highest-index arm overall (2026-09-19 → 09-23), which on a
+pim/metrics/selection.py	16	attribution	(Sevan)	⛔ 2026-09-23 (Sevan): the fallback was the highest-index arm
+pim/metrics/selection.py	21	date	2026-09-19	⛔ Until 2026-09-19 the tables took the highest Edit Index
+pim/metrics/selection.py	36	date	2026-09-23	e NaN per point (no bank), stored since 2026-09-23."""
+pim/metrics/selection.py	54	date	2026-09-19	=None`` = the unguarded argmax (the pre-2026-09-19 rule)."""
+pim/metrics/set_editability.py	3	date	2026-09-07	onstruction (``othello_moves.py`` until 2026-09-07 — renamed because it
+pim/metrics/set_editability.py	60	date	2026-09-05	(2026-09-05) scores the same construction over its
+pim/metrics/set_editability.py	91	date	2026-08-20	scores exactly −1 on both. (Measured 2026-08-20: the unedited model sits 0.0016
+pim/metrics/set_editability.py	132	date	2026-09-18	ase-level spread of both constructions (2026-09-18; ``edit_index.case_stats``) and
+pim/metrics/set_editability.py	186	date	2026-09-01	(measured 2026-09-01: it renders GS-mine vs PI as 0.013 vs 0
+pim/metrics/prediction.py	3	date	2026-09-19	Arrays in, numbers out (2026-09-19). The floor is a property of the ENVIRO
+pim/metrics/prediction.py	104	name	Sevan	mber with its uncertainty, for display (Sevan, 2026-09-19).
+pim/metrics/prediction.py	104	date	2026-09-19	th its uncertainty, for display (Sevan, 2026-09-19).
+pim/metrics/zone_editability.py	3	date	2026-09-07	(``editability.py`` until 2026-09-07; renamed beside ``set_editability.py``
+pim/metrics/zone_editability.py	8	date	2026-08-31	**One implementation** (moved here 2026-08-31 from ``scripts/editability_metrics.py``
+pim/metrics/zone_editability.py	18	date	2026-07-30	Replaces (2026-07-30) the old ratio-style `reach % of swap`
+pim/metrics/zone_editability.py	148	date	2026-09-03	edge_rays", False),   # 8-ray instance (2026-09-03)
+pim/metrics/zone_editability.py	157	date	2026-09-12	ft_profile_power", 2.0),   # dw-smooth (2026-09-12)
+pim/metrics/zone_editability.py	158	date	2026-09-13	),                    # multi-observer (2026-09-13)
+pim/metrics/zone_editability.py	367	date	2026-09-18	# case-level spread of the index (2026-09-18; ``edit_index.case_stats``) and the per
+pim/metrics/zone_editability.py	388	date	2026-09-01	d, one definition in both environments (2026-09-01):
+pim/metrics/zone_editability.py	397	date	2026-09-01	Why step 0 and not the rollout (changed 2026-09-01; it used to be `gt_traj_rmse`):
+pim/metrics/replicates.py	3	date	2026-09-19	Moved here 2026-09-19 from ``pim.figures.tables`` (which re-e
+pim/metrics/replicates.py	59	name	Sevan	ate of the parent regardless of budget (Sevan, 2026-09-14) — the ± then mixes
+pim/metrics/replicates.py	59	date	2026-09-14	the parent regardless of budget (Sevan, 2026-09-14) — the ± then mixes
+pim/metrics/__init__.py	23	date	2026-09-01	and one polarity in both environments (2026-09-01):
+pim/metrics/__init__.py	29	date	2026-09-22	(``edit_index.fidelity``, 2026-09-22): 1 = perfect, 0 = the guard, < 0 = deg
+pim/metrics/decodability.py	45	date	2026-09-09	nes — reads the two kinds the same way (2026-09-09;
+pim/metrics/edit_index.py	1	date	2026-09-07	ity guard — THE formulas, defined once (2026-09-07).
+pim/metrics/edit_index.py	65	name	Sevan	"""THE REPORTED fidelity (2026-09-22, Sevan): ``1 - fidelity_ratio``, so that every
+pim/metrics/edit_index.py	65	date	2026-09-22	"""THE REPORTED fidelity (2026-09-22, Sevan): ``1 - fidelity_ratio``, so tha
+pim/metrics/edit_index.py	75	date	2026-09-18	# ── case-level spread (2026-09-18) ──────────────────────────────────────
+pim/editors/nanda.py	8	date	2026-08-31	Consolidates (2026-08-31) the three copies that used to exist —
+pim/editors/grad_steer.py	3	date	2026-08-31	Moved verbatim 2026-08-31 from ``othello_gpt/othello_probe.py`` (
+pim/editors/grad_steer.py	5	date	2026-08-20	d intervention on their own checkpoint (2026-08-20), used unmodified on every
+pim/editors/grad_steer.py	164	date	2026-08-20	# size once it does (measured 2026-08-20: 1.000 at every alpha in a 50x range).
+pim/editors/inverse.py	2	name	Sevan	target state (2026-09-14, Sevan; canonical 2026-09-15). Pairs with ``pi
+pim/editors/inverse.py	2	date	2026-09-14	target state (2026-09-14, Sevan; canonical 2026-09-15). Pairs wi
+pim/editors/inverse.py	2	date	2026-09-15	get state (2026-09-14, Sevan; canonical 2026-09-15). Pairs with ``pim.probes.inverse``.
+pim/editors/__init__.py	7	date	2026-08-31	"legacy" space reproduces pre-2026-08-31 discworld numbers).
+pim/editors/__init__.py	12	date	2026-09-15	of the residual (canonical 2026-09-15; pairs with pim.probes.inverse).
+pim/editors/freeze_interpolation.py	3	date	2026-08-31	Ported 2026-08-31 from ``multistep_steering.ipynb`` cells
+pim/editors/nullspace.py	3	date	2026-08-31	rs with ``pim.probes.nullspace``. Kept (2026-08-31, ported from
+pim/editors/pinv.py	5	date	2026-08-31	adds (2026-08-31) is the **decomposition layer** — how a
+pim/editors/pinv.py	9	date	2026-08-31	⛔ **The y-affine bug (found 2026-08-31).** The probe's forward pass is
+pim/editors/pinv.py	161	date	2026-09-09	ened square; the discworld grid target (2026-09-09) swaps empty ↔ the object's
+pim/models/registry.py	47	date	2026-09-09	ault; a config naming `input` / `head` (2026-09-09)
+pim/models/protocol.py	71	date	2026-09-07	out) — THE free-run loop, defined once (2026-09-07).
+pim/models/blocks.py	3	date	2026-08-31	Extracted verbatim 2026-08-31 from ``pim/world_models/dit/blocks.py``
+pim/models/__init__.py	10	date	2026-09-09	interface parameters (2026-09-09) — `input` linear | embedding,
+pim/models/__init__.py	15	date	2026-09-02	recomputation control, 2026-09-02). `RecurrentL` (regression only).
+pim/models/recurrent.py	3	date	2026-09-02	Added 2026-09-02 to test ONE candidate gate for the disc
+pim/models/recurrent.py	19	name	Sevan	L: d=1024, 4 layers ≈ 25.4M parameters (Sevan's call,
+pim/models/recurrent.py	19	attribution	Sevan's	L: d=1024, 4 layers ≈ 25.4M parameters (Sevan's call,
+pim/models/recurrent.py	20	date	2026-09-02	2026-09-02: parameter-matched rather than width-ma
+pim/models/recurrent.py	53	name	Sevan	a matched comparison. Default ``True`` (Sevan, 2026-09-02).
+pim/models/recurrent.py	53	date	2026-09-02	ed comparison. Default ``True`` (Sevan, 2026-09-02).
+pim/models/transformer_s.py	3	date	2026-08-31	Ported verbatim 2026-08-31 from `pim/world_models/transformer/mode
+pim/models/transformer_s.py	251	date	2026-09-07	and Recurrent-L (2026-09-07): the trainer's ``model(x[:, :-1])`` vs
+pim/models/transformer_s.py	402	name	Sevan	, so a ReLU would only zero half of it (Sevan's call, 2026-08-21).
+pim/models/transformer_s.py	402	date	2026-08-21	uld only zero half of it (Sevan's call, 2026-08-21).
+pim/models/transformer_s.py	402	attribution	Sevan's	, so a ReLU would only zero half of it (Sevan's call, 2026-08-21).
+pim/models/transformer_l.py	3	date	2026-08-31	ONE bridge (2026-08-31) replacing the four that used to exist
+pim/models/transformer_l.py	10	date	2026-09-09	ONE class, two parameters (2026-09-09; before that, two classes whose input l
+pim/models/transformer_l.py	26	date	2026-09-04	the one-hot next token, 2026-09-04: the outputs ARE the estimates)
+pim/models/transformer_l.py	36	date	2026-09-09	2026-09-09 unification was gated on every canonica
+pim/training/stream.py	3	date	2026-08-31	Moved verbatim 2026-08-31 from ``discworld_scale/train.py``. The
+pim/training/sources.py	73	date	2026-09-05	frames-as-tokens (block T-1, 2026-09-05). ``block`` is the model's INPUT length
+pim/training/sources.py	75	date	2026-09-04	one-hot next token, 2026-09-04) — selects the loss AND the matching va
+pim/training/train.py	3	date	2026-08-31	Merges (2026-08-31) the three trainers that produced every
+pim/training/train.py	62	date	2026-08-24	data loader (cost three smoke tests on 2026-08-24).
+pim/training/train.py	78	date	2026-09-11	uninterrupted one batch for batch (2026-09-11). A source without it
+pim/training/train.py	98	date	2026-09-07	the protocol's forward convention since 2026-09-07), so the
+pim/training/train.py	130	date	2026-09-04	ession counterpart of ``ce_next_move`` (2026-09-04): identical inputs,
+pim/training/train.py	183	date	2026-09-11	cally at every val pass and at the end (2026-09-11)
+pim/training/train.py	233	date	2026-09-11	# `replicate` (2026-09-11): this run is a SEED REPLICATE of a can
+pim/figures/tables.py	1	date	2026-09-12	tables — the master tables, as figures (2026-09-12).
+pim/figures/tables.py	8	date	2026-09-19	under ``experiments/`` (2026-09-19).
+pim/figures/tables.py	22	name	Sevan	Conventions (Sevan, 2026-09-12): rows follow the run lists
+pim/figures/tables.py	22	date	2026-09-12	Conventions (Sevan, 2026-09-12): rows follow the run lists as given, O
+pim/figures/tables.py	46	name	Sevan	itors SHOWN in every editability table (Sevan, 2026-09-15): PI, GS, IM — the inverse-
+pim/figures/tables.py	46	date	2026-09-15	HOWN in every editability table (Sevan, 2026-09-15): PI, GS, IM — the inverse-map
+pim/figures/tables.py	53	name	Sevan	e drawn tables and figures (2026-09-15, Sevan): a notebook sets ``T.SHOW_TITLES = Fal
+pim/figures/tables.py	53	date	2026-09-15	Titles on the drawn tables and figures (2026-09-15, Sevan): a notebook sets ``T.SHOW_TITLE
+pim/figures/tables.py	69	name	Sevan	le to one regression basis (2026-09-15, Sevan): decodability,
+pim/figures/tables.py	69	date	2026-09-15	iscworld table to one regression basis (2026-09-15, Sevan): decodability,
+pim/figures/tables.py	82	name	Sevan	raction + depth) is not defined for it; Sevan (2026-09-15) asked that it still show,
+pim/figures/tables.py	82	date	2026-09-15	+ depth) is not defined for it; Sevan (2026-09-15) asked that it still show,
+pim/figures/tables.py	91	name	Sevan	blank, never the other basis's numbers (Sevan, 2026-09-15: "if they don't
+pim/figures/tables.py	91	date	2026-09-15	never the other basis's numbers (Sevan, 2026-09-15: "if they don't
+pim/figures/tables.py	120	date	2026-09-12	# the Othello headline construction (2026-09-12)
+pim/figures/tables.py	139	date	2026-09-19	ON RULE lives in pim.metrics.selection (2026-09-19): the best Edit Index among the arms
+pim/figures/tables.py	140	date	2026-09-23	n an editor has no arm inside it (since 2026-09-23;
+pim/figures/tables.py	186	date	2026-09-22	PORTED fidelity = 1 - the stored ratio (2026-09-22)
+pim/figures/tables.py	466	date	2026-09-15	asis (dw-smooth, dw-16ray in cartesian, 2026-09-15) gets BLANK
+pim/figures/tables.py	515	date	2026-09-16	canonical block (2026-09-16): the inverse map g (MLP-128, `inverse_
+pim/figures/tables.py	555	date	2026-09-19	as the row (until 2026-09-19 this read the frustum caches whatever t
+pim/figures/tables.py	679	date	2026-09-19	predictive loss beside the Bayes floor (2026-09-19; supersedes table_bayes) ──
+pim/figures/tables.py	801	name	Sevan	(the readout, 2026-09-18 Sevan); ``which="ci"``: the t-based 95% inter
+pim/figures/tables.py	801	date	2026-09-18	(the readout, 2026-09-18 Sevan); ``which="ci"``: the t-based 95%
+pim/figures/waterfall.py	5	date	2026-08-17	rate copies of this panel existed as of 2026-08-17, which is exactly the drift
+pim/figures/probe_capacity.py	10	date	2026-09-01	follow the ENTITY (Okabe-Ito, validated 2026-09-01): trained = blue, random-init =
+scripts/two_flip_editability.py	59	date	2026-09-23	VERSION = "2026-09-23.1"
+scripts/reachability_table.py	45	date	2026-09-23	VERSION = "2026-09-23.1"
+scripts/migrate_datasets.py	34	date	2026-09-10	SNAPSHOT = SCRATCH / "2026-09-10-layout-snapshot.json"
+scripts/migrate_datasets.py	35	date	2026-09-10	LOG = SCRATCH / "2026-09-10-layout-migration-log.json"
+scripts/migrate_datasets.py	36	date	2026-09-10	DAY = "2026-09-10"
+scripts/migrate_datasets.py	161	date	2026-09-01	(the pre-2026-09-01 double-fit) is superseded by the live o
+scripts/fit_probes.py	3	date	2026-09-09	target's probes get fitted (2026-09-09).
+scripts/fit_probes.py	11	date	2026-09-10	regression target (``pos@<partition>``, 2026-09-10) is cheap (the canonical 30k
+scripts/generate_dataset.py	11	date	2026-09-10	# layout v2 (2026-09-10): ONE split per call, straight into the
+scripts/layout_checkpoint_replicate.py	10	date	2026-09-19	te.sh`` stage B). In ``scripts/`` since 2026-09-19 (was
+scripts/layout_checkpoint_replicate.py	33	date	2026-09-18	# (2026-09-18: the Othello sets moved from 390k to 51
+scripts/layout_checkpoint_replicate.py	49	date	2026-09-11	ckpoint at the replicates' step budget (2026-09-11)"}
+scripts/train.py	14	date	2026-09-09	ter, not a property of the environment (2026-09-09):
+scripts/train.py	42	date	2026-08-24	d 32 CPU threads buy nothing — measured 2026-08-24).
+scripts/train.py	156	date	2026-09-11	vocabulary size (tokens). ``dropout`` (2026-09-11)
+scripts/train.py	163	date	2026-09-02	24 GRU ~= Transformer-L's 25.4M params (2026-09-02)
+scripts/othello_corpus_stats.py	11	date	2026-09-19	Moved 2026-09-19 from ``experiments/adjacent_flip_ablati
+scripts/make_othello_edits.py	32	date	2026-09-12	XED prefix length every case is cut at (2026-09-12: 20 moves — the "
+scripts/make_edit_selection.py	7	date	2026-09-12	The rule (2026-09-12, every instance, one rule): the first `
+scripts/make_edit_selection.py	18	date	2026-09-08	riments/interface_ablation/edits_audit (2026-09-08).
+scripts/index_ceiling.py	28	date	2026-09-19	Moved 2026-09-19 from ``experiments/adjacent_flip_ablati
+scripts/index_ceiling.py	29	date	2026-09-07	it reproduces those files) and from the 2026-09-07 oracle runs
+scripts/index_ceiling.py	48	date	2026-09-19	VERSION = "2026-09-19.1"
+scripts/drivers/dw_smooth_gen.sh	2	date	2026-09-12	# dw-smooth GENERATION (2026-09-12 night): the anti-aliasing instance — dw
+scripts/drivers/dw_smooth_gen.sh	5	name	Sevan	# experiments/antialias_pilot, Sevan's pick). CPU only; runs as its own unit
+scripts/drivers/dw_smooth_gen.sh	5	attribution	Sevan's	# experiments/antialias_pilot, Sevan's pick). CPU only; runs as its own unit s
+scripts/drivers/score_pending.sh	28	date	2026-09-18	# scoring only (2026-09-18, the multi-machine replicate queue): th
+scripts/drivers/score_pending.sh	29	hostname	the lab	# on the lab box when the queue drains — on the remo
+scripts/drivers/score_pending.sh	29	hostname	remote	lab box when the queue drains — on the remote they would read a partial run tree
+scripts/drivers/probe_targets_4.sh	3	name	Sevan	#   Sevan (2026-09-10 05:30 PT): does L-dw-noisel
+scripts/drivers/probe_targets_4.sh	3	geography	PT	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128 rays, ra
+scripts/drivers/probe_targets_4.sh	3	date	2026-09-10	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128
+scripts/drivers/probe_targets_4.sh	3	time	05:30	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128 rays,
+scripts/drivers/replicate.sh	2	date	2026-09-14	plicate of a canonical run, end to end (2026-09-14) ─────────
+scripts/drivers/replicate.sh	50	date	2026-09-18	# (2026-09-18: the Othello sets moved 390k -> 512k)
+scripts/drivers/replicate.sh	54	date	2026-09-23	the old-budget scores BEFORE training (2026-09-23; was after): the trainer writes the new
+scripts/drivers/replicate.sh	56	date	2026-09-20	390k scores under the 512k budget (seen 2026-09-20; the queue's dispatcher parks at launch
+scripts/drivers/dw_tokens.sh	4	date	2026-09-05	# The interface ablation (2026-09-05). Same instance (dw-8ray), same 20M seq
+scripts/drivers/dw_8ray.sh	46	date	2026-09-03	50 attempts fails ~1 case in 100 (smoke 2026-09-03).
+scripts/drivers/dw_8ray.sh	52	date	2026-09-10	# Layout v2 (2026-09-10, research/specs/DATASET_LAYOUT_SPEC.md
+scripts/drivers/README.md	9	date	2026-09-02	ee `experiments/README.md`. Moved there 2026-09-02.
+scripts/drivers/seed_variance.sh	2	name	Sevan	n L-dw-noiseless-20m (2026-09-11 night, Sevan) ────────────────────
+scripts/drivers/seed_variance.sh	2	date	2026-09-11	d-variance pilot on L-dw-noiseless-20m (2026-09-11 night, Sevan) ────────────────────
+scripts/drivers/seed_variance.sh	32	geography	PT	be seeds x 3 runs -> tables. ETA ~10:30 PT."
+scripts/drivers/seed_variance.sh	32	time	10:30	+6 probe seeds x 3 runs -> tables. ETA ~10:30 PT."
+scripts/drivers/dw_5ray.sh	2	date	2026-09-10	-5ray: the whole programme, unattended (2026-09-10 night) ─────────────────────────
+scripts/drivers/dw_5ray.sh	9	name	Sevan	# Question (Sevan): dw-8ray is the best-edited discworld
+scripts/drivers/dw_5ray.sh	9	attribution	(Sevan)	# Question (Sevan): dw-8ray is the best-edited discworld r
+scripts/drivers/dw_5ray.sh	43	geography	PT	ce-fac probes + score (~1h). ETA ~11:30 PT."
+scripts/drivers/dw_5ray.sh	43	time	11:30	pearance-fac probes + score (~1h). ETA ~11:30 PT."
+scripts/drivers/dw_5ray.sh	58	date	2026-09-03	50 attempts fails ~1 case in 100 (smoke 2026-09-03).
+scripts/drivers/dw_5ray.sh	64	date	2026-09-10	# Layout v2 (2026-09-10, research/specs/DATASET_LAYOUT_SPEC.md
+scripts/drivers/probe_targets.sh	2	date	2026-09-09	# ── probe-target controls, overnight 2026-09-09 → 10 ──────────────────────────────────
+scripts/drivers/probe_targets.sh	8	geography	PT	×2, ×3, the 16×8 grid; if before 06:00 PT:
+scripts/drivers/probe_targets.sh	8	time	06:00	-split ×2, ×3, the 16×8 grid; if before 06:00 PT:
+scripts/drivers/probe_targets.sh	24	time	06:00	Z=America/Los_Angeles date -d "tomorrow 06:00" +%s)
+scripts/drivers/probe_targets.sh	41	geography	PT	d-16x8 (~70 min each) → if before 06:00 PT: appearance-lat, grid-8x4, grid-32x16.
+scripts/drivers/probe_targets.sh	41	geography	PT	-8x4, grid-32x16. ETA main chain ~03:00 PT."
+scripts/drivers/probe_targets.sh	41	time	06:00	3, grid-16x8 (~70 min each) → if before 06:00 PT: appearance-lat, grid-8x4, grid-32x1
+scripts/drivers/probe_targets.sh	41	time	03:00	, grid-8x4, grid-32x16. ETA main chain ~03:00 PT."
+scripts/drivers/probe_targets.sh	80	geography	PT	stage "past 06:00 PT after the first three variants — no ext
+scripts/drivers/probe_targets.sh	80	time	06:00	stage "past 06:00 PT after the first three variants — no
+scripts/drivers/score_cartesian.sh	2	name	Sevan	ock to every discworld run (2026-09-14, Sevan) ──
+scripts/drivers/score_cartesian.sh	2	date	2026-09-14	egression block to every discworld run (2026-09-14, Sevan) ──
+scripts/drivers/dw_128ray.sh	2	date	2026-09-15	28ray: the whole programme, unattended (2026-09-15 night) ───────────────────────
+scripts/drivers/dw_128ray.sh	13	name	Sevan	# Question (Sevan, 2026-09-15): is the editability loss a
+scripts/drivers/dw_128ray.sh	13	date	2026-09-15	# Question (Sevan, 2026-09-15): is the editability loss at 128 rays a
+scripts/drivers/dw_128ray.sh	19	hostname	5090	cipe                       (~8 h on the 5090)
+scripts/drivers/dw_128ray.sh	33	name	Sevan	KIP_TOPICS=training_curve   # paused by Sevan 2026-09-15; the scorer must not pick th
+scripts/drivers/dw_128ray.sh	33	date	2026-09-15	PICS=training_curve   # paused by Sevan 2026-09-15; the scorer must not pick those runs up
+scripts/drivers/probe_targets_3.sh	3	date	2026-09-10	-killed at its 45 GB cap on grid-32x16 (2026-09-10 04:47): the streamed
+scripts/drivers/probe_targets_3.sh	3	time	04:47	its 45 GB cap on grid-32x16 (2026-09-10 04:47): the streamed
+scripts/drivers/dw_blink.sh	2	date	2026-09-07	blink: the whole programme, unattended (2026-09-07) ───────────────────
+scripts/drivers/dw_blink.sh	55	date	2026-09-07	cases, so 20k gives ~600 of them (pilot 2026-09-07).
+scripts/drivers/dw_blink.sh	56	date	2026-09-10	# Layout v2 (2026-09-10, research/specs/DATASET_LAYOUT_SPEC.md
+scripts/drivers/oth_adjflip_seeds.sh	2	date	2026-09-16	re-seeded replicates + probe reseeding (2026-09-16) ──
+scripts/drivers/oth_adjflip_seeds.sh	4	name	Sevan	# Sevan: variance estimates for `adjacent_flip_
+scripts/drivers/oth_adjflip_seeds.sh	17	name	Sevan	# ORDER (Sevan): the first reseed is fully trained, sc
+scripts/drivers/oth_adjflip_seeds.sh	17	attribution	(Sevan)	# ORDER (Sevan): the first reseed is fully trained, sco
+scripts/drivers/oth_adjflip_seeds.sh	29	name	Sevan	OPICS=training_curve      # ⛔ paused by Sevan 2026-09-15 — master_eval must not enter
+scripts/drivers/oth_adjflip_seeds.sh	29	date	2026-09-15	training_curve      # ⛔ paused by Sevan 2026-09-15 — master_eval must not enter them
+scripts/drivers/oth_adjflip_seeds.sh	68	time	14:00	obe seeds (~1 h) -> seed 2 (same). ETA ~14:00 tomorrow. Safe to stop and relaunch."
+scripts/drivers/score_im.sh	2	name	Sevan	run, both discworld bases (2026-09-15, Sevan) ──
+scripts/drivers/score_im.sh	2	date	2026-09-15	every scored run, both discworld bases (2026-09-15, Sevan) ──
+scripts/drivers/dw_8ray_obs5.sh	2	name	Sevan	# dw-8ray-obs5 (2026-09-13 evening, Sevan): dw-8ray seen by FIVE observers on a r
+scripts/drivers/dw_8ray_obs5.sh	2	date	2026-09-13	# dw-8ray-obs5 (2026-09-13 evening, Sevan): dw-8ray seen by FIVE o
+scripts/drivers/dw_8ray_obs5.sh	32	time	05:30	-> D fac probes + score + tables. ETA ~05:30." rocket
+scripts/drivers/verify_im.py	2	date	2026-09-14	2026-09-14 inverse-probe experiment scored the sam
+scripts/drivers/probe_targets_2.sh	3	name	Sevan	#   Sevan's additions (2026-09-09 23:30 PT): the
+scripts/drivers/probe_targets_2.sh	3	geography	PT	#   Sevan's additions (2026-09-09 23:30 PT): the MISALIGNED 30-cell controls — pro
+scripts/drivers/probe_targets_2.sh	3	date	2026-09-09	#   Sevan's additions (2026-09-09 23:30 PT): the MISALIGNED 30-cell contr
+scripts/drivers/probe_targets_2.sh	3	time	23:30	#   Sevan's additions (2026-09-09 23:30 PT): the MISALIGNED 30-cell controls —
+scripts/drivers/probe_targets_2.sh	3	attribution	Sevan's	#   Sevan's additions (2026-09-09 23:30 PT): the MI
+scripts/drivers/probe_targets_5.sh	7	name	Sevan	#   Sevan (2026-09-10 05:30 PT): does L-dw-noisel
+scripts/drivers/probe_targets_5.sh	7	geography	PT	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128 rays, ra
+scripts/drivers/probe_targets_5.sh	7	date	2026-09-10	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128
+scripts/drivers/probe_targets_5.sh	7	time	05:30	#   Sevan (2026-09-10 05:30 PT): does L-dw-noiseless-20m (128 rays,
+scripts/drivers/rescore_2026-09-12.sh	2	name	Sevan	THE OVERNIGHT CHAIN (2026-09-12 night, Sevan: "kick off the big run"). Two products:
+scripts/drivers/rescore_2026-09-12.sh	2	date	2026-09-12	# THE OVERNIGHT CHAIN (2026-09-12 night, Sevan: "kick off the big run").
+scripts/drivers/rescore_2026-09-12.sh	21	date	2026-09-12	orld run (EVAL_VERSION_BY_ENV discworld 2026-09-12.2)
+scripts/drivers/rescore_2026-09-12.sh	22	date	2026-09-12	#      and every Othello run (othello 2026-09-12.1) on the new benches; fits the canonic
+scripts/drivers/rescore_2026-09-12.sh	71	date	2026-09-12	N_NEW=$(grep -l '"eval_version": "2026-09-12' runs/*/*/scores.json 2>/dev/null | wc
+scripts/drivers/rescore_2026-09-12.sh	94	date	2026-09-12	(s.get("eval_version", "")).startswith("2026-09-12"): continue
+scripts/drivers/oth_adjacent.sh	2	date	2026-09-08	r-L on the ADJACENCY-PLACEMENT variant (2026-09-08) ──
+scripts/demos/play.py	311	attribution	my	mx, my = 0.7, 0.7
+scripts/demos/play.py	313	attribution	my	axw.set_ylim(sim.y_near - my, sim.y_far + my)
+scripts/demos/play.py	313	attribution	my	w.set_ylim(sim.y_near - my, sim.y_far + my)
+tests/test_observers.py	91	date	2026-09-13	own sampler must follow the region too (2026-09-13: it drew
+tests/test_waterfall_grid.py	126	date	2026-09-01	# ── signed-error columns (added 2026-09-01) ──────────────────────────────────
+tests/test_probe_targets.py	1	date	2026-09-09	"""The 2026-09-09 probe targets: the discworld APPEARANCE
+tests/test_probe_targets.py	201	date	2026-09-10	# ── the SNAPPED regression target (2026-09-10) ────────────────────────────────────
+tests/test_probe_targets.py	301	date	2026-09-10	# ── the FACTORISED categorical target (2026-09-10) ────────────────────────────────
+tests/test_bench_target_alignment.py	1	date	2026-09-12	write target is the PRE-dynamics state (2026-09-12).
+tests/test_prediction_floor.py	1	date	2026-09-19	"""Predictive loss + Bayes floor (2026-09-19): the metric arithmetic, the sampler's
+tests/test_othello_adjacent_flip.py	1	date	2026-09-09	"""oth-adjacent-flip (2026-09-09): adjacency decides legality, the enclo
+tests/test_probes_canonical.py	4	date	2026-08-31	obe.fit_probe`` was gated at port time (2026-08-31); these keep the
+tests/test_othello_bench.py	3	date	2026-09-02	The refactor (2026-09-02) that made the Benchmark constructible
+tests/test_scoring_package.py	1	date	2026-09-19	"""pim.scoring (2026-09-19) — the contracts the scoring queue lean
+tests/test_blink.py	2	date	2026-09-07	on agreeing with the sim's own renders (2026-09-07)."""
+tests/test_corpus_provenance.py	1	date	2026-09-07	` — the Othello split provenance check (2026-09-07).
+tests/test_token_bench.py	1	date	2026-09-05	del editability scored the Othello way (2026-09-05): shapes, sets, arms.
+tests/test_token_bench.py	40	date	2026-09-08	8ray carries edits_selection.json since 2026-09-08 — 20% of its teleports render
+tests/test_grid_target.py	2	date	2026-09-09	canonical pipeline gained with it (2026-09-09): the shared class-logit swap, the
+tests/test_layout.py	1	date	2026-09-10	ace dataset paths are built (layout v2, 2026-09-10).
+tests/test_layout.py	46	date	2026-09-12	dits" / "v1" / "cases_1000.pkl"   # the 2026-09-12 bench
+tests/test_fidelity_guard.py	1	date	2026-09-01	one polarity, both environments (locked 2026-09-01).
+tests/test_fidelity_guard.py	31	date	2026-09-01	"""Changed 2026-09-01. The rollout dilutes an edit that only
+tests/test_fidelity_guard.py	91	date	2026-09-22	The tables report fidelity = 1 - ratio (2026-09-22): 1 perfect, 0 = the guard, < 0 degrade
+tests/test_training_canonical.py	17	date	2026-08-24	"""`s *= 2` never advances from 0 — the 2026-08-24 stall, now unrepresentable."""
+tests/test_tables_replicates.py	1	date	2026-09-14	"""Seed replicates in the tables (2026-09-14): pooled per (parent, basis) at a MATCH
+tests/test_tables_replicates.py	49	date	2026-09-15	─ the basis switch and the editor list (2026-09-15) ──────────────────────────────────────
+tests/test_tables_replicates.py	81	date	2026-09-22	α1"   # fid = 1 - the stored ratio 0.3 (2026-09-22)
+tests/test_tables_replicates.py	96	date	2026-09-15	"""dw-smooth / dw-16ray (2026-09-15): the RUN has a cartesian block, its ba
+tests/test_training_resume.py	1	date	2026-09-11	"""Resume from ckpt/latest.pt (2026-09-11): a run stopped and resumed reproduces
+tests/test_tables_module.py	1	date	2026-09-12	enderer behind the two table notebooks (2026-09-12).
+tests/test_tables_module.py	49	date	2026-09-23	s one NaN per point (no retrieval bank, 2026-09-23); the
+tests/test_soft_render.py	136	date	2026-08-05	knob that actually matters -- corrected 2026-08-05.
+tests/test_soft_render.py	193	date	2026-09-12	"""The "power" profile (dw-smooth, 2026-09-12) is (1 - u^2)^p on the disc, u = perp /
+tests/test_othello_noflip.py	1	date	2026-09-06	"""The no-flip Othello variant (2026-09-06): same legality and passes, no recolour
+tests/test_othello_instances.py	1	date	2026-09-06	"""Othello instances (2026-09-06): corpus paths and rules per instance;
+tests/test_models_canonical.py	5	date	2026-08-31	checkpoints at port time (2026-08-31); what these tests keep permanent is th
+tests/test_models_canonical.py	102	date	2026-09-09	ransformer-L, two interface parameters (2026-09-09) ─────────────────
+tests/test_othello_adjacent.py	1	date	2026-09-08	lacement Othello variant (oth-adjacent, 2026-09-08): a move must touch one
+tests/test_othello_adjacent.py	12	date	2026-09-08	ure games at (seed 0, i 0/7) before the 2026-09-08 refactor
+tests/test_edit_index_shared.py	2	date	2026-09-07	must reproduce their pre-2026-09-07 standalone implementations exactly."""
+tests/test_editors_canonical.py	3	date	2026-08-31	nding test is the permanent form of the 2026-08-31 y-affine finding: the
+tests/test_editors_canonical.py	71	date	2026-08-31	raw-units target. This is the check the 2026-08-31 bug could not have survived."""
+tests/test_editors_canonical.py	156	date	2026-09-01	# ── dims-restricted PI (added 2026-09-01) ────────────────────────────────────
+tests/test_editors_canonical.py	192	date	2026-09-01	# ── the discworld dim sets (added 2026-09-01) ────────────────────────────────
+tests/test_editors_canonical.py	252	date	2026-08-31	# ND writes (2026-08-31 .. 2026-09-07). These pin that the cano
+tests/test_editors_canonical.py	252	date	2026-09-07	# ND writes (2026-08-31 .. 2026-09-07). These pin that the canonical editors,
+tests/test_editors_canonical.py	312	date	2026-09-15	# ── IM: the inverse-map editor (2026-09-15) ──────────────────────────────────────
+tests/test_editors_canonical.py	327	time	8:16	]).to(dev); s_post = torch.from_numpy(S[8:16]).to(dev)
+tests/test_editors_canonical.py	333	time	8:16	assert float((ow - torch.from_numpy(S[8:16] @ A + 3.0).to(dev)).abs().mean()) < 0.
+tests/test_oracle_editors.py	1	date	2026-09-07	editors stay usable — and stay ORACLES (2026-09-07).
+tests/test_probe_cache_canonical.py	3	date	2026-08-21	Guards the 2026-08-21 failure directly: a cache key that cove
+tests/test_probe_cache_canonical.py	43	date	2026-08-21	"""The 2026-08-21 bug, as an assertion."""
+tests/test_drop_edge_rays.py	1	date	2026-09-03	"""`drop_edge_rays` (2026-09-03, the 8-ray instance): cast obs_res rays
+tests/test_mse_onehot_head.py	1	date	2026-09-04	"""The MSE-on-one-hot Othello head (2026-09-04): loss and the output-kind mapping.
+tests/test_mse_onehot_head.py	53	time	1:28	assert np.allclose(b[:, :27], out[:, 1:28].numpy())
+tests/test_categorical_inverse.py	1	date	2026-09-20	"""The categorical inverse map (2026-09-20): g inverts the state the block's OWN p
+tests/test_categorical_inverse.py	132	date	2026-09-20	assert mod.clear(s, "2026-09-20") == ["appearance-fac"]
+tests/test_categorical_inverse.py	136	date	2026-09-20	and fac["inverse_cleared"]["date"] == "2026-09-20"
+tests/test_categorical_inverse.py	138	date	2026-09-20	assert mod.clear(s, "2026-09-20") == []
+tests/test_categorical_inverse.py	139	date	2026-09-20	mine_signed": blk("classification")}}, "2026-09-20") == []
+tests/test_discworld_tokens.py	1	date	2026-09-05	"""Frames as tokens (2026-09-05): coding, vocabulary, round trips, the
+tests/test_case_variance.py	1	date	2026-09-18	"""Case-level spread beside every arm (2026-09-18): the helpers are deterministic, drop N
+tests/test_othello_counterfactual.py	1	date	2026-09-19	im.environments.othello.counterfactual, 2026-09-19)."""
+tests/test_multiview_target.py	1	date	2026-09-13	orisation on a MULTI-OBSERVER instance (2026-09-13).
+tests/test_multiview_target.py	61	date	2026-09-13	# geometry fact (scanned 2026-09-13): every arena position lights >= 1 kept
+notebooks/master_eval.ipynb#cell0:source	8	date	2026-09-19	**Since 2026-09-19 no wiring lives here either.** The scor
+notebooks/master_eval.ipynb#cell1:source	10	date	2026-09-10	nments.layout (REPO-anchored, layout v2 2026-09-10)
+notebooks/master_eval.ipynb#cell2:source	6	date	2026-09-01	EVAL_VERSION = "2026-09-01.4"   # OTHELLO (and the default): discw
+notebooks/master_eval.ipynb#cell2:source	10	date	2026-09-12	# DISCWORLD has its own version since 2026-09-12: the write target became the PRE-dynami
+notebooks/master_eval.ipynb#cell2:source	14	name	Sevan	# 2026-09-12 (evening, Sevan): ONE edit protocol in both environment
+notebooks/master_eval.ipynb#cell2:source	14	date	2026-09-12	# 2026-09-12 (evening, Sevan): ONE edit protocol in
+notebooks/master_eval.ipynb#cell2:source	19	date	2026-09-12	EVAL_VERSION_BY_ENV = {"discworld": "2026-09-12.2", "othello": "2026-09-12.1"}
+notebooks/master_eval.ipynb#cell2:source	19	date	2026-09-12	discworld": "2026-09-12.2", "othello": "2026-09-12.1"}
+notebooks/master_eval.ipynb#cell2:source	38	date	2026-08-22	# -- discworld editability (the 2026-08-22 spec: both axes swept) ----------
+notebooks/master_eval.ipynb#cell2:source	45	date	2026-09-01	both are swept rather than one assumed. 2026-09-01.
+notebooks/master_eval.ipynb#cell2:source	47	date	2026-09-12	),         # the FULL state is written (2026-09-12); "pos" retired
+notebooks/master_eval.ipynb#cell2:source	50	date	2026-09-01	# settled by the 2026-09-01 depth pilot: the inverse-depth family b
+notebooks/master_eval.ipynb#cell2:source	53	name	Sevan	# 2026-09-11 (Sevan): cartesian DROPPED from new scoring —
+notebooks/master_eval.ipynb#cell2:source	53	date	2026-09-11	# 2026-09-11 (Sevan): cartesian DROPPED from new sco
+notebooks/master_eval.ipynb#cell2:source	53	attribution	(Sevan)	# 2026-09-11 (Sevan): cartesian DROPPED from new scoring — f
+notebooks/master_eval.ipynb#cell2:source	54	date	2026-09-01	# basis since 2026-09-01 and the cartesian row had become a fixe
+notebooks/master_eval.ipynb#cell2:source	58	name	Sevan	# 2026-09-19 (Sevan): Cartesian is actually our default bas
+notebooks/master_eval.ipynb#cell2:source	58	date	2026-09-19	# 2026-09-19 (Sevan): Cartesian is actually our defa
+notebooks/master_eval.ipynb#cell2:source	58	attribution	(Sevan)	# 2026-09-19 (Sevan): Cartesian is actually our default basi
+notebooks/master_eval.ipynb#cell2:source	64	date	2026-09-19	le already carries both blocks (dry run 2026-09-19).
+notebooks/master_eval.ipynb#cell2:source	66	date	2026-09-13	# per-INSTANCE override (2026-09-13): dw-8ray-obs5 has five observers, so t
+notebooks/master_eval.ipynb#cell2:source	74	date	2026-09-09	extra discworld probe TARGETS, per run (2026-09-09) -------------------
+notebooks/master_eval.ipynb#cell2:source	78	date	2026-09-08	(the noiseless run; probes fitted 2026-09-08, re-keyed 2026-09-09)
+notebooks/master_eval.ipynb#cell2:source	78	date	2026-09-09	run; probes fitted 2026-09-08, re-keyed 2026-09-09)
+notebooks/master_eval.ipynb#cell2:source	82	date	2026-09-09	olutions — the target-resolution sweep (2026-09-09→10)
+notebooks/master_eval.ipynb#cell2:source	83	date	2026-09-10	partition> a SNAPPED REGRESSION target (2026-09-10): the same gridification kept as
+notebooks/master_eval.ipynb#cell2:source	89	date	2026-09-10	-fac the FACTORISED categorical target (2026-09-10): per object one softmax
+notebooks/master_eval.ipynb#cell2:source	99	date	2026-09-10	rid-32x16",                  # chain 4, 2026-09-10 (grid-64x32 stopped, never fitted)
+notebooks/master_eval.ipynb#cell2:source	100	date	2026-09-10	arance-fac"),             # factorised, 2026-09-10 pm
+notebooks/master_eval.ipynb#cell2:source	101	date	2026-09-10	e-fac",),                 # factorised, 2026-09-10 pm
+notebooks/master_eval.ipynb#cell2:source	102	date	2026-09-12	# anti-aliasing instance, 2026-09-12 night
+notebooks/master_eval.ipynb#cell2:source	103	date	2026-09-13	# five observers: per-view factors, 2026-09-13
+notebooks/master_eval.ipynb#cell2:source	104	date	2026-09-11	, "appearance"),      # 5-ray instance, 2026-09-11
+notebooks/master_eval.ipynb#cell2:source	105	date	2026-09-15	ay at radius 1.0 (the ray axis closed), 2026-09-15 night
+notebooks/master_eval.ipynb#cell2:source	106	date	2026-09-11	# recurrent 8-ray, un-quarantined 2026-09-11
+notebooks/master_eval.ipynb#cell2:source	107	date	2026-09-11	# loss-matched to the GRU's best (2026-09-11)
+notebooks/master_eval.ipynb#cell2:source	109	date	2026-09-14	s (discworld_blocks → extra_targets_of, 2026-09-14).
+notebooks/master_eval.ipynb#cell2:source	113	date	2026-09-10	arance",                     # snapped, 2026-09-10
+notebooks/master_eval.ipynb#cell2:source	114	date	2026-09-10	fac"),                    # factorised, 2026-09-10
+notebooks/master_eval.ipynb#cell2:source	118	date	2026-09-10	ppearance-fac"),          # factorised, 2026-09-10 night
+notebooks/master_eval.ipynb#cell2:source	123	date	2026-09-08	so these are the extended grids of the 2026-09-08 sweep.
+notebooks/master_eval.ipynb#cell2:source	132	date	2026-09-09	hello probe TARGETS, every Othello run (2026-09-09) --------------
+notebooks/master_eval.ipynb#cell2:output0	1	date	2026-09-01	EVAL_VERSION 2026-09-01.4
+notebooks/master_eval.ipynb#cell3:source	1	name	Sevan	] CATEGORICAL INVERSE MAPS (2026-09-20, Sevan) — which categorical discworld blocks g
+notebooks/master_eval.ipynb#cell3:source	1	date	2026-09-20	# [2b] CATEGORICAL INVERSE MAPS (2026-09-20, Sevan) — which categorical discworld b
+notebooks/master_eval.ipynb#cell3:source	15	name	Sevan	#      2026-09-23 (Sevan): the appendix's bins-vs-grids table (t
+notebooks/master_eval.ipynb#cell3:source	15	date	2026-09-23	#      2026-09-23 (Sevan): the appendix's bins-vs-grids t
+notebooks/master_eval.ipynb#cell3:source	15	attribution	(Sevan)	#      2026-09-23 (Sevan): the appendix's bins-vs-grids table (th
+notebooks/master_eval.ipynb#cell4:output0	1	date	2026-09-06	skip  baselines/oth-adjacent  (2026-09-06.b4, archs ['transformer_l_tokens'])
+notebooks/master_eval.ipynb#cell4:output0	2	date	2026-09-06	skip  baselines/oth-adjacent-flip  (2026-09-06.b4, archs ['transformer_l_tokens'])
+notebooks/master_eval.ipynb#cell4:output0	3	date	2026-09-06	skip  baselines/dw-blink  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output0	4	date	2026-09-06	skip  baselines/oth-noflip  (2026-09-06.b4, archs ['transformer_l_tokens'])
+notebooks/master_eval.ipynb#cell4:output0	5	date	2026-09-06	skip  baselines/dw-pn04  (2026-09-06.b4, archs ['recurrent_l', 'transformer_
+notebooks/master_eval.ipynb#cell4:output0	6	date	2026-09-06	skip  baselines/oth-uniform  (2026-09-06.b4, archs ['transformer_l_tokens'])
+notebooks/master_eval.ipynb#cell4:output23	2	date	2026-09-06	skip  baselines/dw-8ray-obs5  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output23	3	date	2026-09-06	skip  baselines/dw-pair  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output23	4	date	2026-09-06	skip  baselines/dw-128ray  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output23	5	date	2026-09-06	skip  baselines/dw-16ray  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output23	6	date	2026-09-06	skip  baselines/dw-5ray  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell4:output23	7	date	2026-09-06	skip  baselines/dw-smooth  (2026-09-06.b4, archs ['transformer_l'])
+notebooks/master_eval.ipynb#cell5:output0	1	date	2026-09-12	ablation/L-oth-adjacent-20m  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	2	date	2026-09-12	adjacent-20m__seed0_s512000  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	3	date	2026-09-12	n/L-oth-adjacent-20m__seed1  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	4	date	2026-09-12	n/L-oth-adjacent-20m__seed2  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	5	date	2026-09-12	ion/L-oth-adjacent-flip-20m  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	6	date	2026-09-12	ent-flip-20m__seed0_s421875  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	7	date	2026-09-12	ent-flip-20m__seed0_s512000  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	8	date	2026-09-12	th-adjacent-flip-20m__seed1  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	9	date	2026-09-12	th-adjacent-flip-20m__seed2  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	10	date	2026-09-12	ink_ablation/L-dw-blink-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	11	date	2026-09-12	dw-blink-20m__seed0_s512000  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	12	date	2026-09-12	ation/L-dw-blink-20m__seed1  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	13	date	2026-09-12	ation/L-dw-blink-20m__seed2  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	14	date	2026-09-12	/L-oth-adjacent-drop03-390k  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	15	date	2026-09-12	/L-oth-adjacent-drop07-390k  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	16	date	2026-09-12	n/L-oth-adjacent-nodrop-20m  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	17	date	2026-09-12	/L-oth-adjacent-nodrop-390k  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	18	date	2026-09-12	p_ablation/L-oth-noflip-20m  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	19	date	2026-09-12	h-noflip-20m__seed0_s512000  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	20	date	2026-09-12	ion/L-oth-noflip-20m__seed1  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	21	date	2026-09-12	ion/L-oth-noflip-20m__seed2  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	22	date	2026-09-12	othello_comparison/L-dw-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	23	date	2026-09-12	thello_comparison/L-oth-20m  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	24	date	2026-09-12	on/L-oth-20m__seed0_s512000  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	25	date	2026-09-12	comparison/L-oth-20m__seed1  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	26	date	2026-09-12	comparison/L-oth-20m__seed2  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output0	27	date	2026-09-12	_ablation/L-dw-8ray-tok-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output0	28	date	2026-09-12	ablation/L-dw-noiseless-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	1	date	2026-09-12	tive_ablation/L-oth-20m-mse  (scored at 2026-09-12.1)
+notebooks/master_eval.ipynb#cell5:output25	2	date	2026-09-12	ablation/L-dw-8ray-obs5-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	3	date	2026-09-12	pair_ablation/L-dw-pair-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	4	date	2026-09-12	ay_ablation/L-dw-128ray-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	5	date	2026-09-12	w-128ray-20m__seed0_s512000  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	6	date	2026-09-12	tion/L-dw-128ray-20m__seed1  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	7	date	2026-09-12	tion/L-dw-128ray-20m__seed2  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	8	date	2026-09-12	ray_ablation/L-dw-16ray-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	9	date	2026-09-12	dw-16ray-20m__seed0_s512000  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	10	date	2026-09-12	ation/L-dw-16ray-20m__seed1  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	11	date	2026-09-12	ation/L-dw-16ray-20m__seed2  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output25	12	date	2026-09-12	ray_ablation/L-dw-5ray-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output35	1	date	2026-09-12	ray_ablation/L-dw-8ray-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output72	1	date	2026-09-12	ray_ablation/_R-dw-8ray-20m  (scored at 2026-09-12.2)
+notebooks/master_eval.ipynb#cell5:output73	2	date	2026-09-12	th_ablation/L-dw-smooth-20m  (scored at 2026-09-12.2)
+notebooks/build_paper_tables_and_figs.ipynb#cell0:source	9	date	2026-09-19	t replaced the old "Table 4" cell here, 2026-09-19). The long list of every run and target
+notebooks/build_paper_tables_and_figs.ipynb#cell1:source	14	name	Sevan	# THE BASIS (2026-09-15, Sevan): every discworld number in these table
+notebooks/build_paper_tables_and_figs.ipynb#cell1:source	14	date	2026-09-15	# THE BASIS (2026-09-15, Sevan): every discworld number in thes
+notebooks/build_paper_tables_and_figs.ipynb#cell1:source	21	name	Sevan	# TITLES (2026-09-15, Sevan): none on the panels in THIS notebook —
+notebooks/build_paper_tables_and_figs.ipynb#cell1:source	21	date	2026-09-15	# TITLES (2026-09-15, Sevan): none on the panels in THIS not
+paper/figs/qualitative_edits/README.md	27	date	2026-09-21	## 2026-09-21, rounds 4-5: the scenario filter and th
+paper/figs/qualitative_edits/README.md	29	name	Sevan	- **Filter (Sevan: "only show examples which change for a
+paper/figs/qualitative_edits/README.md	48	name	Sevan	8); Sevan caught that `more_seeds/seed2` redrew t
+paper/figs/qualitative_edits/README.md	50	name	Sevan	xample 1 (both seed 0); deliberate, and Sevan's call whether to move it.
+paper/figs/qualitative_edits/README.md	50	attribution	Sevan's	xample 1 (both seed 0); deliberate, and Sevan's call whether to move it.
+paper/figs/qualitative_edits/README.md	86	date	2026-09-21	## 2026-09-21: Arial, the categorical inverse map, bl
+paper/figs/qualitative_edits/README.md	90	date	2026-09-20	the categorical inverse map** (deployed 2026-09-20,
+paper/figs/qualitative_edits/README.md	99	name	Sevan	frame, no strip; the row label stays (Sevan, round 3): today the categorical IM on
+paper/figs/qualitative_edits/README.md	105	date	2026-09-19	## Which arm is drawn (2026-09-19)
+paper/figs/qualitative_edits/README.md	108	date	2026-09-19	st only where an editor has none. Until 2026-09-19 the
+paper/figs/qualitative_edits/make_figure.py	17	date	2026-09-20	Cartesian velocity, 2026-09-20); a block with no IM arm (Standard, Bli
+paper/figs/qualitative_edits/make_figure.py	20	date	2026-09-21	The scenario filter (2026-09-21, tightened in round 5): a seed is drawn
+paper/figs/qualitative_edits/make_figure.py	138	name	Sevan	# ── the scenario filter (Sevan: "only show examples which change for a
+paper/figs/qualitative_edits/make_figure.py	139	date	2026-09-21	e under the coarsest renderer; round 5 (2026-09-21) tightened it,
+paper/figs/qualitative_edits/make_figure.py	187	name	Sevan	more_seeds/ set is disjoint from them (Sevan, round 5: more_seeds/seed2 was redrawin
+paper/figs/qualitative_edits/make_figure.py	204	date	2026-09-19	whose numbers the paper quotes. Until 2026-09-19 this read the scorer's unguarded ``best
+paper/figs/qualitative_edits/make_figure.py	205	date	2026-09-20	ies no arm for the editor at all (since 2026-09-20 the categorical IM on every
+paper/figs/qualitative_edits/make_figure.py	234	name	Sevan	# ``unedited_gt`` (Sevan, round 6): the clean observation of the
+paper/figs/qualitative_edits/make_figure.py	258	date	2026-09-20	# probes read (2026-09-20). REGRESSION block: g is the continuous
+paper/figs/qualitative_edits/make_figure.py	370	name	Sevan	(no panel, no frame; Sevan, round 3), the axes only holds the plac
+paper/figs/qualitative_edits/make_figure.py	479	date	2026-09-21	a time) and cached. ``_catim`` (2026-09-21): the categorical blocks' IM through th
+paper/figs/qualitative_edits_othello/README.md	22	date	2026-09-21	## 2026-09-21: Arial and the marking
+paper/figs/qualitative_edits_othello/README.md	26	name	Sevan	- **Marking (Sevan's semantics, shared with the main-text
+paper/figs/qualitative_edits_othello/README.md	26	attribution	Sevan's	- **Marking (Sevan's semantics, shared with the main-text fi
+paper/figs/qualitative_edits_othello/README.md	33	date	2026-09-19	- The writes are the 2026-09-19 guarded cache, unchanged (`.scratch/oth
+paper/figs/qualitative_edits_othello/README.md	34	date	2026-09-21	2026-09-21 outputs (seed 0 and `more_seeds/`) are
+paper/figs/qualitative_edits_othello/README.md	36	date	2026-09-19	## Which arm is drawn (2026-09-19)
+paper/figs/qualitative_edits_othello/README.md	39	date	2026-09-19	st only where an editor has none. Until 2026-09-19 the
+paper/figs/qualitative_edits_othello/make_figure.py	60	name	Sevan	# ── the two ground-truth conditions (Sevan, round 6, 2026-09-22) ─────────────────
+paper/figs/qualitative_edits_othello/make_figure.py	60	date	2026-09-22	round-truth conditions (Sevan, round 6, 2026-09-22) ─────────────────────────────────
+paper/figs/qualitative_edits_othello/make_figure.py	89	date	2026-09-19	rded best only if there is none). Until 2026-09-19: the unguarded argmax."""
+paper/figs/qualitative_edits_othello/make_figure.py	149	name	Sevan	lity at which a square is fully tinted (Sevan: 10x louder than 0.2)
+paper/figs/qualitative_edits_othello/make_figure.py	151	name	Sevan	# ── the marking (Sevan, 2026-09-21) — one helper for the appen
+paper/figs/qualitative_edits_othello/make_figure.py	151	date	2026-09-21	# ── the marking (Sevan, 2026-09-21) — one helper for the appendix and the
+paper/figs/qualitative_edits_othello/make_figure.py	175	name	Sevan	DOT "pre-edit", a pink DOT "post-edit" (Sevan, round 3; the "gt"
+paper/figs/qualitative_edits_othello/make_figure.py	272	date	2026-09-19	pkl"      # writes at the guarded arms (2026-09-19)
+paper/figs/qualitative_main/othello_panel.py	8	name	Sevan	Marking (Sevan, 2026-09-21, the appendix's ``mark``):
+paper/figs/qualitative_main/othello_panel.py	8	date	2026-09-21	Marking (Sevan, 2026-09-21, the appendix's ``mark``): on the Unedi
+paper/figs/qualitative_main/composite_final_sidebyside.json	781	name	Sevan	rical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the
+paper/figs/qualitative_main/composite_final_sidebyside.json	781	date	2026-09-21	"selection": "Scenario filter (2026-09-21, tightened in round 5): a seed is drawn
+paper/figs/qualitative_main/README.md	3	date	2026-09-22	Three deliverables (round 6, 2026-09-22): **`composite_final`**, **`composite_f
+paper/figs/qualitative_main/README.md	4	name	Sevan	*`composite_final_sidebyside_single`**, Sevan's spec
+paper/figs/qualitative_main/README.md	4	attribution	Sevan's	*`composite_final_sidebyside_single`**, Sevan's spec
+paper/figs/qualitative_main/README.md	16	date	2026-09-20	categorical inverse map deployed 2026-09-20 (`_catim` caches). The Othello cache is
+paper/figs/qualitative_main/README.md	17	date	2026-09-19	ratch/othello_edits_guarded_cache.pkl` (2026-09-19 guarded arms).
+paper/figs/qualitative_main/README.md	67	name	Sevan	- **Scenario filter (Sevan: "only show examples which change for a
+paper/figs/qualitative_main/README.md	78	name	Sevan	Which one the categorical pair takes is Sevan's editorial
+paper/figs/qualitative_main/README.md	78	attribution	Sevan's	Which one the categorical pair takes is Sevan's editorial
+paper/figs/qualitative_main/README.md	97	name	Sevan	uses **rank 2** (Sevan's ask): **342 / 261 / 39**. An editoria
+paper/figs/qualitative_main/README.md	97	attribution	Sevan's	uses **rank 2** (Sevan's ask): **342 / 261 / 39**. An editorial
+paper/figs/qualitative_main/README.md	164	name	Sevan	mn is the same world as Example 1 here; Sevan's call whether to move it.
+paper/figs/qualitative_main/README.md	164	attribution	Sevan's	mn is the same world as Example 1 here; Sevan's call whether to move it.
+paper/figs/qualitative_main/README.md	168	date	2026-09-19	paper/paper_draft.tex` still quotes pre-2026-09-19 cells (and, for the
+paper/figs/qualitative_main/README.md	169	date	2026-09-20	categorical IM, the pre-2026-09-20 continuous-map arm: it says 5-ray categ
+paper/figs/qualitative_main/README.md	182	date	2026-09-19	- The Othello writes are the 2026-09-19 guarded cache (unchanged by the categor
+paper/figs/qualitative_main/composite_final.json	774	name	Sevan	rical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the
+paper/figs/qualitative_main/composite_final.json	774	date	2026-09-21	"selection": "Scenario filter (2026-09-21, tightened in round 5): a seed is drawn
+paper/figs/qualitative_main/composite_final.py	1	name	Sevan	"""The main-text qualitative figure (Sevan's spec, rounds 2-5), two files:
+paper/figs/qualitative_main/composite_final.py	1	attribution	Sevan's	"""The main-text qualitative figure (Sevan's spec, rounds 2-5), two files:
+paper/figs/qualitative_main/composite_final.py	37	name	Sevan	ks key at the top right needs the room (Sevan: wider is fine, taller is not)
+paper/figs/qualitative_main/composite_final.py	39	name	Sevan	the case nearest the population means; Sevan asked for the next)
+paper/figs/qualitative_main/composite_final.py	39	attribution	Sevan asked	the case nearest the population means; Sevan asked for the next)
+paper/figs/qualitative_main/composite_final.py	50	name	Sevan	# (Sevan, round 7: out of (a)'s header and into
+paper/figs/qualitative_main/composite_final_sidebyside_single.json	539	name	Sevan	rical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the
+paper/figs/qualitative_main/composite_final_sidebyside_single.json	539	date	2026-09-21	"selection": "Scenario filter (2026-09-21, tightened in round 5): a seed is drawn
+paper/figs/qualitative_main/rayworld_panel.py	7	name	Sevan	A3  the final cut (rounds 4-6, Sevan's spec), four columns: Standard (contin
+paper/figs/qualitative_main/rayworld_panel.py	7	attribution	Sevan's	A3  the final cut (rounds 4-6, Sevan's spec), four columns: Standard (continuo
+paper/figs/qualitative_main/rayworld_panel.py	47	name	Sevan	eeds the two categorical columns share (Sevan, round 5: the second,
+paper/figs/qualitative_main/rayworld_panel.py	213	name	Sevan	the RIGHT of the three reference rows (Sevan, round 7): the history strip runs 0 to
+paper/figs/qualitative_main/rayworld_panel.py	343	date	2026-09-21	f"Scenario filter (2026-09-21, tightened in round 5): a seed is drawn
+paper/figs/qualitative_main/rayworld_panel.py	347	name	Sevan	rical columns share the SECOND of them (Sevan, round 5) and are titled Example 3, the
+paper/figs/qualitative_main/common.py	1	date	2026-09-21	ve figure (paper/figs/qualitative_main, 2026-09-21).
+paper/figs/qualitative_main/common.py	6	date	2026-09-21	IM through the categorical inverse map, 2026-09-21). Scenarios are chosen by the appendix'
+paper/figs/paper_style.py	1	date	2026-09-21	"""One look for every paper figure (2026-09-21). Import this FIRST, before pyplot.
+paper/figs/paper_style.py	7	name	Sevan	iberation Sans / Nimbus Sans fall back; Sevan 2026-09-21 — was Times New Roman until
+paper/figs/paper_style.py	7	geography	PT	09-21 — was Times New Roman until 11:50 PT), text
+paper/figs/paper_style.py	7	date	2026-09-21	ion Sans / Nimbus Sans fall back; Sevan 2026-09-21 — was Times New Roman until 11:50 PT),
+paper/figs/paper_style.py	7	time	11:50	2026-09-21 — was Times New Roman until 11:50 PT), text
+pyproject.toml	46	date	2026-09-19	M out of notebooks/master_eval.ipynb on 2026-09-19 while the
+poetry.lock	390	ip	13.1.0.3	nvidia-cublas = {version = "==13.1.0.3.*", optional = true, markers = "(sys_pl
+poetry.lock	394	ip	12.0.0.61	nvidia-cufft = {version = "==12.0.0.61.*", optional = true, markers = "(sys_pl
+poetry.lock	395	ip	1.15.1.6	nvidia-cufile = {version = "==1.15.1.6.*", optional = true, markers = "sys_pla
+poetry.lock	396	ip	10.4.0.35	nvidia-curand = {version = "==10.4.0.35.*", optional = true, markers = "(sys_pl
+poetry.lock	397	ip	12.0.4.66	nvidia-cusolver = {version = "==12.0.4.66.*", optional = true, markers = "(sys_pl
+poetry.lock	398	ip	12.6.3.3	nvidia-cusparse = {version = "==12.6.3.3.*", optional = true, markers = "(sys_pl
+poetry.lock	403	ip	13.1.0.3	all = ["nvidia-cublas (==13.1.0.3.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	12.0.0.61	latform == \"win32\"", "nvidia-cufft (==12.0.0.61.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	1.15.1.6	atform == \"win32\"", "nvidia-cufile (==1.15.1.6.*) ; sys_platform == \"linux\"", "nvidi
+poetry.lock	403	ip	10.4.0.35	atform == \"linux\"", "nvidia-curand (==10.4.0.35.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	12.0.4.66	form == \"win32\"", "nvidia-cusolver (==12.0.4.66.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	12.6.3.3	form == \"win32\"", "nvidia-cusparse (==12.6.3.3.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	13.0.1.2	_platform == \"win32\"", "nvidia-npp (==13.0.1.2.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	403	ip	13.0.1.86	atform == \"win32\"", "nvidia-nvjpeg (==13.0.1.86.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	406	ip	13.1.0.3	cublas = ["nvidia-cublas (==13.1.0.3.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	408	ip	12.0.0.61	cufft = ["nvidia-cufft (==12.0.0.61.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	409	ip	1.15.1.6	cufile = ["nvidia-cufile (==1.15.1.6.*) ; sys_platform == \"linux\""]
+poetry.lock	412	ip	10.4.0.35	curand = ["nvidia-curand (==10.4.0.35.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	413	ip	12.0.4.66	cusolver = ["nvidia-cusolver (==12.0.4.66.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	414	ip	12.6.3.3	cusparse = ["nvidia-cusparse (==12.6.3.3.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	416	ip	13.0.1.2	npp = ["nvidia-npp (==13.0.1.2.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	420	ip	13.0.1.86	nvjpeg = ["nvidia-nvjpeg (==13.0.1.86.*) ; sys_platform == \"linux\" or sys_p
+poetry.lock	601	ip	1.7.4.2	= \"CPython\"", "lxml (>=4.0)", "lz4 (>=1.7.4.2)", "matplotlib", "munkres ; platform_py
+poetry.lock	602	ip	1.7.4.2	graphite = ["lz4 (>=1.7.4.2)"]
+poetry.lock	637	github	github	github = ["requests"]
+poetry.lock	647	hostname	ssh	ssh = ["paramiko"]
+poetry.lock	755	github	github	hinx-autodoc-typehints", "sphinxcontrib-github-alt", "sphinxcontrib-spelling", "trio"]
+poetry.lock	846	ip	67.2.0.1	"mypy (==0.971)", "types-setuptools (==67.2.0.1)"]
+poetry.lock	924	github	github	hinx-autodoc-typehints", "sphinxcontrib-github-alt", "sphinxcontrib-spelling"]
+poetry.lock	1332	github	github	sphinx-theme", "sphinx", "sphinxcontrib-github-alt", "sphinxcontrib-spelling"]
+poetry.lock	1469	ip	13.1.0.3	version = "13.1.0.3"
+poetry.lock	1476	ip	13.1.0.3	{file = "nvidia_cublas-13.1.0.3-py3-none-manylinux_2_27_aarch64.whl", h
+poetry.lock	1477	ip	13.1.0.3	{file = "nvidia_cublas-13.1.0.3-py3-none-manylinux_2_27_x86_64.whl", ha
+poetry.lock	1478	ip	13.1.0.3	{file = "nvidia_cublas-13.1.0.3-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1525	ip	9.19.0.56	version = "9.19.0.56"
+poetry.lock	1532	ip	9.19.0.56	{file = "nvidia_cudnn_cu13-9.19.0.56-py3-none-manylinux_2_27_aarch64.whl", h
+poetry.lock	1533	ip	9.19.0.56	{file = "nvidia_cudnn_cu13-9.19.0.56-py3-none-manylinux_2_27_x86_64.whl", ha
+poetry.lock	1534	ip	9.19.0.56	{file = "nvidia_cudnn_cu13-9.19.0.56-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1542	ip	12.0.0.61	version = "12.0.0.61"
+poetry.lock	1549	ip	12.0.0.61	{file = "nvidia_cufft-12.0.0.61-py3-none-manylinux2014_aarch64.manylinu
+poetry.lock	1550	ip	12.0.0.61	{file = "nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux
+poetry.lock	1551	ip	12.0.0.61	{file = "nvidia_cufft-12.0.0.61-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1559	ip	1.15.1.6	version = "1.15.1.6"
+poetry.lock	1566	ip	1.15.1.6	{file = "nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux
+poetry.lock	1567	ip	1.15.1.6	{file = "nvidia_cufile-1.15.1.6-py3-none-manylinux_2_27_aarch64.whl", h
+poetry.lock	1572	ip	10.4.0.35	version = "10.4.0.35"
+poetry.lock	1579	ip	10.4.0.35	{file = "nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_aarch64.whl", h
+poetry.lock	1580	ip	10.4.0.35	{file = "nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl", ha
+poetry.lock	1581	ip	10.4.0.35	{file = "nvidia_curand-10.4.0.35-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1586	ip	12.0.4.66	version = "12.0.4.66"
+poetry.lock	1593	ip	12.0.4.66	{file = "nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_aarch64.whl", h
+poetry.lock	1594	ip	12.0.4.66	{file = "nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl", ha
+poetry.lock	1595	ip	12.0.4.66	{file = "nvidia_cusolver-12.0.4.66-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1605	ip	12.6.3.3	version = "12.6.3.3"
+poetry.lock	1612	ip	12.6.3.3	{file = "nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_aarch64.manylinu
+poetry.lock	1613	ip	12.6.3.3	{file = "nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux
+poetry.lock	1614	ip	12.6.3.3	{file = "nvidia_cusparse-12.6.3.3-py3-none-win_amd64.whl", hash = "sha256
+poetry.lock	1713	ip	67.2.0.1	flake8 (==5.0.4)", "types-setuptools (==67.2.0.1)", "zuban (==0.5.1)"]
+poetry.lock	2391	github	github	", "jaraco.tidelift (>=1.4)", "pygments-github-lexers (==0.0.5)", "pyproject-hooks (!=
+poetry.lock	2503	ip	9.19.0.56	nvidia-cudnn-cu13 = {version = "9.19.0.56", markers = "platform_system == \"Linux

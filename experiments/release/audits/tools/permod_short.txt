@@ -1,0 +1,85 @@
+pim                                        0
+pim.editors                                0
+pim.editors.freeze_interpolation           0
+pim.editors.grad_steer                     5 QOTH QRW ME reach 2flip
+pim.editors.inverse                        5 QOTH QRW ME reach 2flip
+pim.editors.nanda                          4 QOTH ME reach 2flip
+pim.editors.nullspace                      0
+pim.editors.oracle_overwrite               0
+pim.editors.pinv                           5 QOTH QRW ME reach 2flip
+pim.environments                           0
+env.discworld                 0
+env.discworld.arms            3 QRW ME fit_probes
+env.discworld.bayes           2 bayes_floor score_pred
+env.discworld.bench           4 QRW ME fit_probes mk_sel
+env.discworld.bigcorpus       1 train
+env.discworld.blink           6 QRW ME bayes_floor demo gen_ds mk_sel
+env.discworld.config          9 QRW AT ME PT demo play fit_probes gen_ds mk_sel
+env.discworld.dataset         4 QRW ME gen_ds mk_sel
+env.discworld.edits_dataset   2 QRW gen_ds
+env.discworld.frustum         6 QRW AT ME PT fit_probes mk_sel
+env.discworld.grid_target     6 QRW AT ME PT fit_probes mk_sel
+env.discworld.interactive     1 play
+env.discworld.loading         2 ME mk_sel
+env.discworld.observers       9 QRW AT ME PT demo play fit_probes gen_ds mk_sel
+env.discworld.render2d        6 QRW ME demo play gen_ds mk_sel
+env.discworld.renderer        6 QRW ME demo play gen_ds mk_sel
+env.discworld.sim             4 QRW demo play gen_ds
+env.discworld.soft_render     6 QRW ME demo play gen_ds mk_sel
+env.discworld.token_bench     2 ME fit_probes
+env.discworld.tokens          6 ME fit_probes mk_tok mk_sel score_pred train
+env.discworld.viz             2 QRW demo
+env.layout                    16 QOTH QRW AT ME PT bayes_floor fit_probes gen_ds mk_tok mk_sel mk_oedits ocstats reach score_pred train 2flip
+env.othello                   0
+env.othello.arms              5 QOTH ME bayes_floor reach 2flip
+env.othello.bayes             1 bayes_floor
+env.othello.bench             5 QOTH ME mk_oedits reach 2flip
+env.othello.corpus            8 QOTH ME bayes_floor mk_oedits ocstats reach train 2flip
+env.othello.counterfactual    3 ocstats reach 2flip
+env.othello.data              8 QOTH ME bayes_floor mk_oedits ocstats reach train 2flip
+env.othello.reachability      2 reach 2flip
+env.othello.vendor            0
+env.othello.vendor.mingpt_model 8 QOTH QRW ME fit_probes reach score_pred train 2flip
+env.othello.vendor.othello    8 QOTH ME bayes_floor mk_oedits ocstats reach train 2flip
+env.prediction                1 score_pred
+pim.figures                                0
+pim.figures.probe_capacity                 0
+pim.figures.probe_targets                  0
+pim.figures.tables                         2 AT PT
+pim.figures.theme                          0
+pim.figures.waterfall                      1 QRW
+pim.metrics                                0
+pim.metrics.decodability                   8 QOTH QRW AT ME PT fit_probes reach 2flip
+pim.metrics.edit_index                     7 QOTH QM AT ME PT reach 2flip
+pim.metrics.prediction                     3 AT bayes_floor score_pred
+pim.metrics.replicates                     2 AT PT
+pim.metrics.selection                      7 QOTH QRW QM AT PT reach 2flip
+pim.metrics.set_editability                5 QOTH QM ME reach 2flip
+pim.metrics.zone_editability               3 QRW ME mk_sel
+pim.models                                 0
+pim.models.blocks                          8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.models.protocol                        8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.models.recurrent                       8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.models.registry                        8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.models.transformer_l                   8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.models.transformer_s                   8 QOTH QRW ME fit_probes reach score_pred train 2flip
+pim.probes                                 0
+pim.probes.base                            6 QOTH QRW ME fit_probes reach 2flip
+pim.probes.baselines                       3 QRW ME fit_probes
+pim.probes.cache                           6 QOTH QRW ME fit_probes reach 2flip
+pim.probes.inverse                         5 QOTH QRW ME reach 2flip
+pim.probes.linear                          3 QRW ME fit_probes
+pim.probes.mlp                             3 QRW ME fit_probes
+pim.probes.nullspace                       0
+pim.scoring                                0
+pim.scoring.baselines                      1 ME
+pim.scoring.blocks                         1 ME
+pim.scoring.discworld                      1 ME
+pim.scoring.driver                         1 ME
+pim.scoring.othello                        3 ME reach 2flip
+pim.scoring.runs                           1 ME
+pim.scoring.summary                        1 ME
+pim.training                               0
+pim.training.sources                       1 train
+pim.training.stream                        1 train
+pim.training.train                         1 train

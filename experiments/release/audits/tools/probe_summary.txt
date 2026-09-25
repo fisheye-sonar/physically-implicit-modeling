@@ -1,0 +1,360 @@
+== initial_othello_comparison/L-oth-20m fp_bad= 0
+   dead   grid ['mine'] ['linear', 'mlp'] ['sequence'] n=10000         n=1       6.95 MB
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.17 MB
+   dead   grid ['state', 'mine'] ['linear', 'mlp'] ['frame', 'sequence'] n=20000 n=1      27.80 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.42 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== initial_othello_comparison/L-oth-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== initial_othello_comparison/L-oth-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== initial_othello_comparison/L-oth-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacent_flip_ablation/L-oth-adjacent-flip-20m fp_bad= 0
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.17 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.42 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s421875 fp_bad= 0
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.16 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.41 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed0_s512000 fp_bad= 0
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.16 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.41 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1 fp_bad= 30
+   dead   fingerprint ead6ad39006e != 97d588cd6499                     n=30     53.93 MB
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.16 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.41 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed2 fp_bad= 0
+   dead   grid ['mine'] ['linear'] ['sequence'] n=20000                n=10     36.16 MB
+   dead   kind inverse_map target mine-onehot                          n=9       3.41 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacency_ablation/L-oth-adjacent-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacency_ablation/L-oth-adjacent-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacency_ablation/L-oth-adjacent-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== adjacency_ablation/L-oth-adjacent-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== flip_ablation/L-oth-noflip-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== flip_ablation/L-oth-noflip-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== flip_ablation/L-oth-noflip-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== flip_ablation/L-oth-noflip-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM mine-onehot                                               n=9       3.41 MB
+   req    grid mine                                                    n=1       6.95 MB
+   req    grid mine_signed                                             n=1       3.99 MB
+== noise_ablation/L-dw-noiseless-20m fp_bad= 0
+   dead   probe-seed replicate (seed != 0)                             n=24    101.03 MB
+   dead   retired pos target                                           n=4       5.17 MB
+   dead   subdir/other                                                 n=1       0.13 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd cat appearance-lat                                       n=2      18.72 MB
+   req    fwd cat grid-16x8                                            n=2      11.41 MB
+   req    fwd cat grid-32x16                                           n=2      38.15 MB
+   req    fwd cat grid-8x4                                             n=2       4.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== noise_ablation/L-dw-noiseless-20m__seed0_s421875 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== noise_ablation/L-dw-noiseless-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== noise_ablation/L-dw-noiseless-20m__seed1 fp_bad= 30
+   dead   fingerprint 3f4c563c6c34 != 25390b4ce89c                     n=30     38.43 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== noise_ablation/L-dw-noiseless-20m__seed2 fp_bad= 24
+   dead   fingerprint 5f81b28035ff != 92878e0dd5d4                     n=24     37.18 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== blink_ablation/L-dw-blink-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== blink_ablation/L-dw-blink-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== blink_ablation/L-dw-blink-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== blink_ablation/L-dw-blink-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-128ray-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       7.28 MB
+   req    IM full/cartesian                                            n=9       2.56 MB
+   req    IM full/frustum                                              n=9       2.56 MB
+   req    fwd cat appearance-fac                                       n=2      26.16 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-128ray-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       7.28 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.16 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-128ray-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       7.28 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.16 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-128ray-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       7.28 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.16 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-16ray-20m fp_bad= 0
+   dead   fwd cat appearance/frustum not requested                     n=2       7.86 MB
+   dead   fwd cat grid-16x8/frustum not requested                      n=2      11.41 MB
+   dead   fwd cat grid-8x4/frustum not requested                       n=2       4.72 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       3.13 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       5.64 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-16ray-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       3.13 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       5.64 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-16ray-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       3.13 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       5.64 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-16ray-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       3.13 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       5.64 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-8ray-20m fp_bad= 0
+   dead   kind nullspace_cascade                                       n=18     58.84 MB
+   dead   probe-seed replicate (seed != 0)                             n=14      9.56 MB
+   index  INDEX.md (derived)                                           n=1       0.02 MB
+   req    IM cat appearance                                            n=9       2.91 MB
+   req    IM cat appearance-fac                                        n=9       2.86 MB
+   req    IM cat grid-10x3                                             n=9       2.91 MB
+   req    IM cat grid-16x8                                             n=9       4.29 MB
+   req    IM cat grid-6x5                                              n=9       2.91 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance                                           n=2       4.58 MB
+   req    fwd cat appearance-d2                                        n=2       6.67 MB
+   req    fwd cat appearance-d3                                        n=2       8.76 MB
+   req    fwd cat appearance-fac                                       n=2       4.35 MB
+   req    fwd cat appearance-lat                                       n=2       3.54 MB
+   req    fwd cat grid-10x3                                            n=2       4.58 MB
+   req    fwd cat grid-16x8                                            n=2      11.41 MB
+   req    fwd cat grid-32x16                                           n=2      38.15 MB
+   req    fwd cat grid-4x2                                             n=2       3.05 MB
+   req    fwd cat grid-6x5                                             n=2       4.58 MB
+   req    fwd cat grid-8x4                                             n=2       4.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+   req    fwd snapped pos@appearance                                   n=2       2.59 MB
+== ray_ablation/L-dw-8ray-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.86 MB
+   req    IM full/cartesian                                            n=9       2.56 MB
+   req    IM full/frustum                                              n=9       2.56 MB
+   req    fwd cat appearance-fac                                       n=2       4.35 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+   req    fwd snapped pos@appearance                                   n=2       2.59 MB
+== ray_ablation/L-dw-8ray-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.86 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       4.35 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+   req    fwd snapped pos@appearance                                   n=2       2.59 MB
+== ray_ablation/L-dw-8ray-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.86 MB
+   req    IM full/cartesian                                            n=9       2.56 MB
+   req    IM full/frustum                                              n=9       2.56 MB
+   req    fwd cat appearance-fac                                       n=2       4.35 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+   req    fwd snapped pos@appearance                                   n=2       2.59 MB
+== ray_ablation/L-dw-5ray-20m fp_bad= 0
+   dead   fwd cat grid-16x8/frustum not requested                      n=2      11.41 MB
+   dead   fwd cat grid-8x4/frustum not requested                       n=2       4.72 MB
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.73 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance                                           n=2       3.47 MB
+   req    fwd cat appearance-fac                                       n=2       3.70 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-5ray-20m__seed0_s512000 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.73 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       3.70 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-5ray-20m__seed1 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.73 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       3.70 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== ray_ablation/L-dw-5ray-20m__seed2 fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.01 MB
+   req    IM cat appearance-fac                                        n=9       2.73 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2       3.70 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== smooth_ablation/L-dw-smooth-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      26.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB
+== observer_ablation/L-dw-8ray-obs5-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.00 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    fwd cat appearance-fac                                       n=2      53.35 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+== interface_ablation/L-dw-8ray-tok-20m fp_bad= 0
+   index  INDEX.md (derived)                                           n=1       0.02 MB
+   req    IM cat appearance                                            n=9       2.92 MB
+   req    IM cat appearance-fac                                        n=9       2.86 MB
+   req    IM cat grid-10x3                                             n=9       2.92 MB
+   req    IM cat grid-16x8                                             n=9       4.30 MB
+   req    IM cat grid-6x5                                              n=9       2.92 MB
+   req    IM full/cartesian                                            n=9       2.55 MB
+   req    IM full/frustum                                              n=9       2.55 MB
+   req    fwd cat appearance                                           n=2       4.58 MB
+   req    fwd cat appearance-d2                                        n=2       6.67 MB
+   req    fwd cat appearance-d3                                        n=2       8.76 MB
+   req    fwd cat appearance-fac                                       n=2       4.35 MB
+   req    fwd cat appearance-lat                                       n=2       3.54 MB
+   req    fwd cat grid-10x3                                            n=2       4.58 MB
+   req    fwd cat grid-16x8                                            n=2      11.41 MB
+   req    fwd cat grid-32x16                                           n=2      38.15 MB
+   req    fwd cat grid-4x2                                             n=2       3.05 MB
+   req    fwd cat grid-6x5                                             n=2       4.58 MB
+   req    fwd cat grid-8x4                                             n=2       4.72 MB
+   req    fwd full/cartesian                                           n=2       2.68 MB
+   req    fwd full/frustum                                             n=2       2.68 MB

@@ -1,0 +1,85 @@
+pim                                      — (not reached at symbol level)
+pim.editors                              — (not reached at symbol level)
+pim.editors.freeze_interpolation         — (not reached at symbol level)
+pim.editors.grad_steer                   QOTH, QRW, ME, reach, 2flip
+pim.editors.inverse                      QOTH, QRW, ME, reach, 2flip
+pim.editors.nanda                        QOTH, ME, reach, 2flip
+pim.editors.nullspace                    — (not reached at symbol level)
+pim.editors.oracle_overwrite             — (not reached at symbol level)
+pim.editors.pinv                         QOTH, QRW, ME, reach, 2flip
+pim.environments                         — (not reached at symbol level)
+env.discworld                            — (not reached at symbol level)
+env.discworld.arms                       QRW, ME, fit_probes
+env.discworld.bayes                      bayes_floor, score_pred
+env.discworld.bench                      QRW, ME, fit_probes, mk_sel
+env.discworld.bigcorpus                  train
+env.discworld.blink                      QRW, ME, bayes_floor, demo, gen_ds, mk_sel
+env.discworld.config                     QRW, AT, ME, PT, demo, play, fit_probes, gen_ds, mk_sel
+env.discworld.dataset                    QRW, ME, gen_ds, mk_sel
+env.discworld.edits_dataset              QRW, gen_ds
+env.discworld.frustum                    QRW, AT, ME, PT, fit_probes, mk_sel
+env.discworld.grid_target                QRW, AT, ME, PT, fit_probes, mk_sel
+env.discworld.interactive                play
+env.discworld.loading                    ME, mk_sel
+env.discworld.observers                  QRW, AT, ME, PT, demo, play, fit_probes, gen_ds, mk_sel
+env.discworld.render2d                   QRW, ME, demo, play, gen_ds, mk_sel
+env.discworld.renderer                   QRW, ME, demo, play, gen_ds, mk_sel
+env.discworld.sim                        QRW, demo, play, gen_ds
+env.discworld.soft_render                QRW, ME, demo, play, gen_ds, mk_sel
+env.discworld.token_bench                ME, fit_probes
+env.discworld.tokens                     ME, fit_probes, mk_tok, mk_sel, score_pred, train
+env.discworld.viz                        QRW, demo
+env.layout                               QOTH, QRW, AT, ME, PT, bayes_floor, fit_probes, gen_ds, mk_tok, mk_sel, mk_oedits, ocstats, reach, score_pred, train, 2flip
+env.othello                              — (not reached at symbol level)
+env.othello.arms                         QOTH, ME, bayes_floor, reach, 2flip
+env.othello.bayes                        bayes_floor
+env.othello.bench                        QOTH, ME, mk_oedits, reach, 2flip
+env.othello.corpus                       QOTH, ME, bayes_floor, mk_oedits, ocstats, reach, train, 2flip
+env.othello.counterfactual               ocstats, reach, 2flip
+env.othello.data                         QOTH, ME, bayes_floor, mk_oedits, ocstats, reach, train, 2flip
+env.othello.reachability                 reach, 2flip
+env.othello.vendor                       — (not reached at symbol level)
+env.othello.vendor.mingpt_model          QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+env.othello.vendor.othello               QOTH, ME, bayes_floor, mk_oedits, ocstats, reach, train, 2flip
+env.prediction                           score_pred
+pim.figures                              — (not reached at symbol level)
+pim.figures.probe_capacity               — (not reached at symbol level)
+pim.figures.probe_targets                — (not reached at symbol level)
+pim.figures.tables                       AT, PT
+pim.figures.theme                        — (not reached at symbol level)
+pim.figures.waterfall                    QRW
+pim.metrics                              — (not reached at symbol level)
+pim.metrics.decodability                 QOTH, QRW, AT, ME, PT, fit_probes, reach, 2flip
+pim.metrics.edit_index                   QOTH, QM, AT, ME, PT, reach, 2flip
+pim.metrics.prediction                   AT, bayes_floor, score_pred
+pim.metrics.replicates                   AT, PT
+pim.metrics.selection                    QOTH, QRW, QM, AT, PT, reach, 2flip
+pim.metrics.set_editability              QOTH, QM, ME, reach, 2flip
+pim.metrics.zone_editability             QRW, ME, mk_sel
+pim.models                               — (not reached at symbol level)
+pim.models.blocks                        QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.models.protocol                      QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.models.recurrent                     QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.models.registry                      QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.models.transformer_l                 QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.models.transformer_s                 QOTH, QRW, ME, fit_probes, reach, score_pred, train, 2flip
+pim.probes                               — (not reached at symbol level)
+pim.probes.base                          QOTH, QRW, ME, fit_probes, reach, 2flip
+pim.probes.baselines                     QRW, ME, fit_probes
+pim.probes.cache                         QOTH, QRW, ME, fit_probes, reach, 2flip
+pim.probes.inverse                       QOTH, QRW, ME, reach, 2flip
+pim.probes.linear                        QRW, ME, fit_probes
+pim.probes.mlp                           QRW, ME, fit_probes
+pim.probes.nullspace                     — (not reached at symbol level)
+pim.scoring                              — (not reached at symbol level)
+pim.scoring.baselines                    ME
+pim.scoring.blocks                       ME
+pim.scoring.discworld                    ME
+pim.scoring.driver                       ME
+pim.scoring.othello                      ME, reach, 2flip
+pim.scoring.runs                         ME
+pim.scoring.summary                      ME
+pim.training                             — (not reached at symbol level)
+pim.training.sources                     train
+pim.training.stream                      train
+pim.training.train                       train

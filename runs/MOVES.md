@@ -128,3 +128,7 @@ files were in the experiment's gitignored `probes/` dirs, which are gone with th
 - 2026-09-20 runs/noise_ablation/L-dw-noiseless-20m__seed2/scores.json -> scores.s390000.json (replicate being extended 390000 -> 512000; parked at the START of the extension by the queue operator so the tables never pool 390k scores under the 512k budget the trainer has already written to config.json; rescored at the new budget when training ends)
 - 2026-09-21 runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1/scores.json -> scores.s390000.json (parked by the dispatcher at the START of the extension 390000 -> 512000; rescored at the new budget when training ends)
 - 2026-09-21 runs/adjacent_flip_ablation/L-oth-adjacent-flip-20m__seed1/variance.json -> variance.s390000.json (parked by the dispatcher at the START of the extension 390000 -> 512000; rescored at the new budget when training ends)
+
+## 2026-09-23 22:50 — L-oth-20m/scores.json restored
+
+Deleted from the lab at 22:14 by `git pull origin main` (the file was still tracked on main; commit 2ebc669 untracks it). Restored from the WSL remote copy (dated 2026-09-23 09:33), verified identical to the lab copy as read at 21:15 (Table 2 row, IM and g_r2 per point, PI alpha=1 arms). `L-dw-20m/scores.json` was deleted the same way and is NOT restored (not a paper run; remote copy dated 2026-09-18).

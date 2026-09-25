@@ -1,0 +1,20 @@
+{
+ "map": {
+  "2026-09-01.4": "1.0",
+  "2026-09-12.1": "1.0",
+  "2026-09-12.2": "1.0",
+  "2026-09-06.b4": "1.0",
+  "2026-09-15.1": "1.0",
+  "2026-09-19.1": "1.0",
+  "2026-09-23.1": "1.0"
+ },
+ "applied_counts": {
+  "2026-09-12.1": 16,
+  "2026-09-15.1": 91,
+  "2026-09-19.1": 53,
+  "2026-09-23.1": 19,
+  "2026-09-12.2": 27,
+  "2026-09-06.b4": 12
+ },
+ "fields": "every string under a key named 'version' or ending in '_version' (eval_version, baseline_version, script_version, inverse_map.version, prediction.version, ...) whose value is date-shaped; probe-cache provenance stores none"
+}
