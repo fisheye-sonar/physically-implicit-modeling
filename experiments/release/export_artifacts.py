@@ -64,6 +64,7 @@ EXTRA_RUNS = [
     ("smooth_ablation/L-dw-smooth-20m", "rayworld/smooth"),
     ("observer_ablation/L-dw-8ray-obs5-20m", "rayworld/obs5"),
     ("interface_ablation/L-dw-8ray-tok-20m", "rayworld/8-ray-tokens"),
+    ("pair_ablation/L-dw-pair-20m", "rayworld/pair"),
 ]
 REPLICATE_SUFFIX = [("__seed0_s512000", "__seed0"), ("__seed1", "__seed1"), ("__seed2", "__seed2")]
 
@@ -80,6 +81,7 @@ INSTANCES = {  # (old env, old instance) -> new instance
     ("discworld", "dw-5ray"): "5-ray",
     ("discworld", "dw-smooth"): "smooth",
     ("discworld", "dw-8ray-obs5"): "obs5",
+    ("discworld", "dw-pair"): "pair",
 }
 ENV_NEW = {"othello": "othello", "discworld": "rayworld"}
 RAY_FAMILY = {"128-ray", "16-ray", "8-ray", "5-ray"}
@@ -101,9 +103,12 @@ SCORES_OVERRIDE = {
 
 # SPEC "Versions": every date-shaped version string -> "1.0"
 VERSION_MAP = {v: "1.0" for v in ("2026-09-01.4", "2026-09-12.1", "2026-09-12.2", "2026-09-06.b4",
-                                   "2026-09-15.1", "2026-09-19.1", "2026-09-23.1")}
+                                   "2026-09-15.1", "2026-09-19.1", "2026-09-23.1",
+                                   "2026-09-24.1")}
 DATE_RE = re.compile(r"20\d\d-\d\d-\d\d")
 VERSION_KEY = re.compile(r"(^|_)version$")
+# the two-token table ships the n = 1000 run (bench extended by --pool), else the bench-only run
+TWO_FLIP_FULL = ("two_flip_editability_n1000.json", "two_flip_editability_full.json")
 DROP_KEYS = {"created", "written", "generated_at", "commit_sha", "files_revised", "migrated"}
 CATEGORICAL_STATE = "onehot-labels+cartesian-velocity"
 
@@ -168,8 +173,8 @@ _INST_RES = [(re.compile(p), n) for p, n in [
     (r"oth-adjacent-flip", "adjacent-flip"), (r"oth-adjacent(?![-\w])", "adjacent-noflip"),
     (r"oth-noflip", "standard-noflip"), (r"oth-uniform", "standard"), (r"dw-8ray-obs5", "obs5"),
     (r"dw-noiseless", "standard"), (r"dw-blink", "blink"), (r"dw-128ray", "128-ray"), (r"dw-16ray", "16-ray"),
-    (r"dw-8ray(?![-\w])", "8-ray"), (r"dw-5ray", "5-ray"), (r"dw-smooth", "smooth")]]
-_OLD_INST = r"(?:oth-adjacent-flip|oth-adjacent|oth-noflip|oth-uniform|dw-8ray-obs5|dw-8ray|dw-noiseless|dw-blink|dw-128ray|dw-16ray|dw-5ray|dw-smooth)"
+    (r"dw-8ray(?![-\w])", "8-ray"), (r"dw-5ray", "5-ray"), (r"dw-smooth", "smooth"), (r"dw-pair", "pair")]]
+_OLD_INST = r"(?:oth-adjacent-flip|oth-adjacent|oth-noflip|oth-uniform|dw-8ray-obs5|dw-8ray|dw-noiseless|dw-blink|dw-128ray|dw-16ray|dw-5ray|dw-smooth|dw-pair)"
 
 
 def _run_sub(m: re.Match) -> str:
@@ -752,12 +757,18 @@ def export_runs(runs: list[Run]):
             if (run.src / name).exists():
                 put_copy(f"{rd}/{name}", run.src / name)
         for name in ("variance.json", "editability_by_reachability.json", "two_flip_editability.json"):
-            if (run.src / name).exists() and (run.new, name) in UNREAD_RUN_FILES:
-                acc["dropped"].append((name + " (read by nothing)", du(run.src / name)))
-            elif (run.src / name).exists():
-                n2, e2 = transform_generic(read_json(run.src / name))
-                put_bytes(f"{rd}/{name}", dump_json(n2), private_rel(run.src / name), "transformed")
-                record_number_check(f"{rd}/{name}", e2, n2, private_rel(run.src / name))
+            src = run.src / name
+            if name == "two_flip_editability.json":
+                for alt in TWO_FLIP_FULL:
+                    if (run.src / alt).exists():
+                        src = run.src / alt
+                        break
+            if src.exists() and (run.new, name) in UNREAD_RUN_FILES:
+                acc["dropped"].append((name + " (read by nothing)", du(src)))
+            elif src.exists():
+                n2, e2 = transform_generic(read_json(src))
+                put_bytes(f"{rd}/{name}", dump_json(n2), private_rel(src), "transformed")
+                record_number_check(f"{rd}/{name}", e2, n2, private_rel(src))
         for p in sorted(run.src.iterdir()):
             if p.name not in ("best_model.pt", "config.json", "scores.json", "metrics.jsonl", "vocab.npz",
                               "variance.json", "editability_by_reachability.json", "two_flip_editability.json",
