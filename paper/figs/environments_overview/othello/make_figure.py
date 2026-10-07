@@ -251,6 +251,7 @@ KEY_W, KEY_H = 0.78, 3 * KEY_ROW                         # the key column, inche
 CELL = 1.0875                    # ONE board on the composite page, inches, fixed so the key's size sets the
                                  # figure's width and never eats into board area
 ROW_LABELS = ("Legal Moves", "Board Update")
+LETTER_W = 0.21                  # where the variant name starts after the panel letter, inches (measured 0.151 + a gap)
 
 
 def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, labels=ROW_LABELS,
@@ -269,7 +270,10 @@ def composite(all_views: dict, keys: list[str], stem: Path, *, arrows: bool, lab
     rows_y = [H - top - (r + 1) * s - r * rg for r in range(n)]
     for c, (name, _) in enumerate(VARIANTS):
         x0 = left + c * (s + cg)
+        # letter and variant name share the existing top strip, so naming the columns costs no height:
+        # "(a)" is 0.151 in at 9 pt bold and the longest name 0.736 in at 8 pt, against a 1.0875 in board
         fig.text(x0 / W, 1 - 0.5 * top / H, f"({'abcd'[c]})", ha="left", va="center", fontsize=9, fontweight="bold")
+        fig.text((x0 + LETTER_W) / W, 1 - 0.5 * top / H, name.replace("_", "-"), ha="left", va="center", fontsize=8)
         for r, k in enumerate(keys):
             y0 = rows_y[r]
             board(fig.add_axes([x0 / W, y0 / H, s / W, s / H]), **all_views[name][k], lw=1.1, dot_r=0.1)

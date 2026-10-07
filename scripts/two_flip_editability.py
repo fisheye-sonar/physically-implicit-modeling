@@ -4,6 +4,8 @@
     .pim/bin/python scripts/two_flip_editability.py                    # 40 cases, the paper's table
     .pim/bin/python scripts/two_flip_editability.py --n 100
     .pim/bin/python scripts/two_flip_editability.py --run flip_ablation/L-oth-noflip-20m --no-legal   # standard-noflip
+    .pim/bin/python scripts/two_flip_editability.py --run <topic>/<run> --n 1000 --out two_flip_editability_full.json
+                                                   # the full bench: every one of the 1000 cases is tried
 
 On ``oth-adjacent`` (the paper's adjacent-noflip) no single flipped disc is reachable by a legal
 game: discs never change colour, so each colour's count is fixed by the number of moves
@@ -16,7 +18,11 @@ occupied squares of the opposite colour, in an order seeded by the case index. T
 whose two-disc board is REACHABLE and the first whose board is UNREACHABLE are kept
 (``pim.environments.othello.reachability.search``, exact; a partner whose search is undecided is
 skipped). The first ``--n`` cases with both are used, so every case contributes one single flip
-(its bench edit), one legal pair and one illegal pair.
+(its bench edit), one legal pair and one illegal pair. With ``--n`` at or above the bench size every
+case is tried, and the output records why each dropped case was dropped (no reachable partner, no
+unreachable partner, or only undecided searches), so the kept n can be checked. The pair search is
+cached beside the output (``<out>.pairs.json``) and reused when its settings match. While it runs it
+is logged case by case (``<out>.pairs.partial.jsonl``), so an interrupted search resumes.
 
 ``--no-legal`` is for a variant with no legal pair at all (standard-noflip, where every disc's colour
 equals its square parity, so any flip is off parity): EVERY partner of each case is searched, the
@@ -32,7 +38,8 @@ settings grid, and each group is reported at the setting Table 2's rule picks wi
 
 Checks. Every legal pair's witness game replays to its target through the vendored engine, every
 pair keeps both colour counts, the single-flip boards equal the ones ``inverse_arms`` builds itself
-for the bench edit, and PI / GS at the run's Table 2 setting reproduce scores.json on the full bench. Output: runs/adjacency_ablation/L-oth-adjacent-20m/two_flip_editability.json.
+for the bench edit, and PI / GS at the run's Table 2 setting reproduce scores.json on the full bench.
+Output: runs/<run>/<--out> (default two_flip_editability.json, the n = 40 pilot the paper table was built from).
 """
 from __future__ import annotations
 
@@ -45,6 +52,10 @@ import sys
 import time
 from pathlib import Path
 
+from collections import deque
+from concurrent.futures import ProcessPoolExecutor
+from multiprocessing import get_context
+
 import numpy as np
 
 _REPO = Path(__file__).resolve().parents[1]
@@ -56,7 +67,7 @@ from pim.environments.othello.counterfactual import replay  # noqa: E402
 from pim.environments.othello.reachability import search, state_of  # noqa: E402
 from pim.environments.othello.vendor.othello import OthelloBoardState  # noqa: E402
 
-VERSION = "2026-09-23.1"
+VERSION = "2026-09-24.1"
 RUN = "adjacency_ablation/L-oth-adjacent-20m"
 GROUPS = ("single", "legal", "illegal")
 
@@ -85,27 +96,80 @@ def _case_pairs(args: tuple) -> dict | None:
             illegal = {"t": t}
         if require_legal and legal and illegal:
             break
-    if illegal and (legal or not require_legal):
-        return {"case": i, "s": s, "legal": legal, "illegal": illegal, "partners_searched": counts}
-    return None
+    kept = bool(illegal and (legal or not require_legal))
+    why = None if kept else ("no unreachable partner" if not illegal else "no reachable partner")
+    if not kept and not legal and counts["undecided"]:
+        why += " (some searches undecided)"
+    return {"case": i, "s": s, "legal": legal, "illegal": illegal, "partners_searched": counts,
+            "kept": kept, "dropped_because": why}
+
+
+def _compatible(k1: dict, k2: dict) -> bool:
+    """Two search keys whose per-case results are interchangeable: the target n and the size of the
+    case pool do not change any case's result (pools extend the bench, checked at load)."""
+    drop = ("n", "pool")
+    return {k: v for k, v in k1.items() if k not in drop} == {k: v for k, v in k2.items() if k not in drop}
 
 
 def find_pairs(cases: list[dict], rules: dict, n: int, budget: int, require_legal: bool = True,
-               workers: int = 1) -> list[dict]:
-    """The first ``n`` bench cases (in bench order) that qualify. Cases are independent, so a pool
-    gives exactly the serial result: results are consumed in bench order and the pool stops at ``n``."""
-    from multiprocessing import Pool
+               workers: int = 1, log_every: int = 50, partial: Path | None = None,
+               key: dict | None = None) -> tuple[list[dict], list[dict]]:
+    """The first ``n`` bench cases (in bench order) that qualify, and every case tried (kept or
+    dropped, with the reason). Cases are independent, so a pool gives exactly the serial result:
+    results are consumed in bench order and the pool stops at ``n``.
 
-    args = [(i, c, rules, budget, require_legal) for i, c in enumerate(cases)]
-    out = []
-    with Pool(workers) as pool:
-        for r in pool.imap(_case_pairs, args, chunksize=1):
-            if r is not None:
-                out.append(r)
-                if len(out) >= n:
-                    pool.terminate()
+    ``partial``: a JSON-lines log (first line ``key``, then one tried case per line, in bench order),
+    appended as each case finishes, so an interrupted search resumes where it stopped. Records are
+    reused only under the same ``key``. Workers are recycled every few cases so the memory of a hard
+    search is returned to the system."""
+    tried: list[dict] = []
+    if partial is not None and partial.exists():
+        lines = partial.read_text().splitlines()
+        if lines and _compatible(json.loads(lines[0]), key):
+            for ln in lines[1:]:
+                try:
+                    tried.append(json.loads(ln))
+                except json.JSONDecodeError:          # a line cut short by the interruption
                     break
-    return out
+            assert [r["case"] for r in tried] == list(range(len(tried))), "partial log out of order"
+            assert all(r["s"] == int(cases[r["case"]]["pos_int"]) for r in tried), "partial log is for other cases"
+            print(f"  pair search: resuming after {len(tried)} cases from {partial}", flush=True)
+        else:
+            tried = []
+    out = [r for r in tried if r["kept"]][:n]
+    if partial is not None:
+        with open(partial, "w") as f:
+            f.write(json.dumps(key) + "\n")
+            for r in tried:
+                f.write(json.dumps(r, default=int) + "\n")
+    log = open(partial, "a") if partial is not None else None
+    args = [(i, c, rules, budget, require_legal) for i, c in enumerate(cases)][len(tried):]
+    t0 = time.time()
+    if len(out) < n and args:
+        # results are consumed strictly in bench order from a sliding window of submitted cases; a worker
+        # that dies (e.g. killed at a memory cap) raises BrokenProcessPool here instead of hanging, and a
+        # rerun resumes from the partial log
+        ex = ProcessPoolExecutor(workers, mp_context=get_context("spawn"), max_tasks_per_child=8)
+        window, nxt = deque(), 0
+        try:
+            while len(out) < n and (window or nxt < len(args)):
+                while nxt < len(args) and len(window) < 4 * workers:
+                    window.append(ex.submit(_case_pairs, args[nxt]))
+                    nxt += 1
+                r = window.popleft().result()
+                tried.append(r)
+                if log is not None:
+                    log.write(json.dumps(r, default=int) + "\n")
+                    log.flush()
+                if r["kept"]:
+                    out.append(r)
+                if log_every and len(tried) % log_every == 0:
+                    print(f"  pair search: {len(tried)} cases tried, {len(out)} kept [{(time.time() - t0) / 60:.1f} min]", flush=True)
+        finally:
+            ex.shutdown(wait=False, cancel_futures=True)
+    if log is not None:
+        log.close()
+    return out, tried
 
 
 def main() -> None:
@@ -126,6 +190,10 @@ def main() -> None:
     ap.add_argument("--run", default=RUN, help="<topic>/<run> of an Othello run")
     ap.add_argument("--no-legal", action="store_true", help="the variant has no legal pair: single flip vs illegal pair only")
     ap.add_argument("--workers", type=int, default=16, help="processes for the pair search (the result does not depend on it)")
+    ap.add_argument("--out", default="two_flip_editability.json", help="output file name inside runs/<run>/")
+    ap.add_argument("--pool", type=int, default=1000,
+                    help="cases to draw from: the 1000-case bench, or a larger set from scripts/make_othello_edits.py "
+                         "--n <pool> (same recipe and seed, so its first 1000 cases ARE the bench; checked)")
     a = ap.parse_args()
     groups = ("single", "illegal") if a.no_legal else GROUPS
     two = [g for g in groups if g != "single"]
@@ -135,10 +203,42 @@ def main() -> None:
     inst, settings = S["instance"], S["settings"]
     rules = oc.rules_of(inst)
     cases = pickle.load(open(cases_path(inst), "rb"))
-    pairs = find_pairs(cases, rules, a.n, a.budget, require_legal=not a.no_legal, workers=a.workers)
+    if a.pool != len(cases):
+        from pim.environments.layout import othello_cases_file
+
+        pool = pickle.load(open(othello_cases_file(inst, a.pool), "rb"))
+        assert len(pool) == a.pool and all(x["history"] == y["history"] and x["pos_int"] == y["pos_int"]
+                                           for x, y in zip(cases, pool)), "the pool does not begin with the bench"
+        cases = pool
+    path = run_dir / a.out
+    cache = path.with_suffix(".pairs.json")
+    key = {"version": VERSION, "instance": inst, "n": a.n, "pool": len(cases), "budget": a.budget,
+           "require_legal": not a.no_legal}
+    partial = path.with_suffix(".pairs.partial.jsonl")
+    c_ = json.loads(cache.read_text()) if cache.exists() else None
+    if c_ is not None and c_.get("key") == key:
+        pairs, tried = c_["pairs"], c_["tried"]
+        print(f"pair search reused from {cache}", flush=True)
+    else:
+        if c_ is not None and _compatible(c_["key"], key):
+            done = sum(1 for _ in open(partial)) - 1 if partial.exists() else 0
+            if len(c_["tried"]) > done:                    # an earlier, smaller search seeds this one
+                with open(partial, "w") as f:
+                    f.write(json.dumps(key) + "\n")
+                    for r in c_["tried"]:
+                        f.write(json.dumps(r, default=int) + "\n")
+        pairs, tried = find_pairs(cases, rules, a.n, a.budget, require_legal=not a.no_legal, workers=a.workers,
+                                  partial=partial, key=key)
+        tmp_ = cache.with_suffix(".json.tmp")
+        tmp_.write_text(json.dumps({"key": key, "pairs": pairs, "tried": tried}, default=int))
+        os.replace(tmp_, cache)
     searched = {k: sum(p_["partners_searched"][k] for p_ in pairs) for k in ("reachable", "unreachable", "undecided")}
-    print(f"{len(pairs)} cases kept, from the first {pairs[-1]['case'] + 1} bench cases; partners searched {searched} "
-          f"[{(time.time() - t0) / 60:.1f} min]", flush=True)
+    dropped = {}
+    for r in tried:
+        if not r["kept"]:
+            dropped[r["dropped_because"]] = dropped.get(r["dropped_because"], 0) + 1
+    print(f"{len(pairs)} cases kept of {len(tried)} bench cases tried; dropped {dropped}; partners searched (kept cases) "
+          f"{searched} [{(time.time() - t0) / 60:.1f} min]", flush=True)
     if a.no_legal and searched["reachable"]:
         print(f"  WARNING: --no-legal, but {searched['reachable']} reachable balanced pairs exist on this variant", flush=True)
 
@@ -263,17 +363,16 @@ def main() -> None:
                           and x["alpha"] == float(t2[ed]["alpha"])) for ed in ("PI", "GS", "IM")} for g in groups}
 
     out = {"run": a.run, "instance": inst, "groups_run": list(groups), "partners_searched": searched, "version": VERSION, "created": time.strftime("%Y-%m-%d %H:%M"),
-           "n_cases": n, "budget": a.budget, "editor": "IM (canonical inverse_arms, post_boards)",
+           "n_cases": n, "case_pool": len(cases), "cases_tried": len(tried), "cases_dropped": dropped, "budget": a.budget, "editor": "IM (canonical inverse_arms, post_boards)",
            "reported": reported, "at_table2_setting": at_t2,
            "table2_setting": {ed: {"point": int(t2[ed]["point"]), "alpha": float(t2[ed]["alpha"])} for ed in ("PI", "GS", "IM")},
            "arms_by_group": arms,
            "edit_index": "symmetric difference (legal-set)", "groups": res, "g_r2": stats["g_r2"],
            "pairs": pairs, "minutes": round((time.time() - t0) / 60, 1)}
-    path = run_dir / "two_flip_editability.json"
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(out, indent=1, default=float))
     os.replace(tmp, path)
-    print(f"wrote {path.relative_to(_REPO)}")
+    print(f"wrote {path.relative_to(_REPO) if path.is_relative_to(_REPO) else path}")
     print(f"\nIM, n = {n} cases per group, Edit Index (symdiff) ± SE / Edit Fidelity")
     print("point | " + " | ".join(f"{g:^24}" for g in groups))
     print("unedited " + "  ".join(f"| {res[g]['unedited_index']:+.3f}{'':18}" for g in groups))
@@ -292,4 +391,14 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    # exit explicitly: the process pool's manager thread can block interpreter shutdown after an early stop,
+    # which would hang a finished run and, worse, turn a crash into a hang that the driver's retry never sees
+    import traceback
+    try:
+        main()
+    except BaseException:
+        traceback.print_exc()
+        sys.stdout.flush(); sys.stderr.flush()
+        os._exit(1)
+    sys.stdout.flush(); sys.stderr.flush()
+    os._exit(0)
